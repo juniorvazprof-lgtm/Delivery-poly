@@ -1,8 +1,8 @@
 // Entrada: joystick flutuante (metade esquerda), botões à direita, teclado no computador.
 // Cada dedo mantém sua captura de ponteiro. Perder foco ou abrir menu limpa tudo.
-export function createInput({ layer, stick, knob, attackBtn, dodgeBtn, onPause }) {
+export function createInput({ layer, stick, knob, attackBtn, dodgeBtn, skillBtn, onPause }) {
   const R = 58, DEAD = 0.15;
-  const s = { id: null, ox: 0, oy: 0, mx: 0, mz: 0, atkT: -1e9, dodgeT: -1e9, atkHeld: false, keyAtk: false, keys: new Set() };
+  const s = { skillT: -1e9, id: null, ox: 0, oy: 0, mx: 0, mz: 0, atkT: -1e9, dodgeT: -1e9, atkHeld: false, keyAtk: false, keys: new Set() };
   const now = () => performance.now();
 
   const showStick = (x, y) => { stick.style.left = x + 'px'; stick.style.top = y + 'px'; stick.classList.add('on'); knob.style.transform = ''; };
@@ -40,6 +40,7 @@ export function createInput({ layer, stick, knob, attackBtn, dodgeBtn, onPause }
   }
   bindButton(attackBtn, () => { s.atkT = now(); s.atkHeld = true; }, () => { s.atkHeld = false; });
   bindButton(dodgeBtn, () => { s.dodgeT = now(); });
+  bindButton(skillBtn, () => { s.skillT = now(); });
 
   const MOVE = { w: [0, -1], arrowup: [0, -1], s: [0, 1], arrowdown: [0, 1], a: [-1, 0], arrowleft: [-1, 0], d: [1, 0], arrowright: [1, 0] };
   addEventListener('keydown', e => {
@@ -47,6 +48,7 @@ export function createInput({ layer, stick, knob, attackBtn, dodgeBtn, onPause }
     if (MOVE[k]) { s.keys.add(k); e.preventDefault(); }
     if ((k === 'j' || k === 'enter') && !e.repeat) { s.atkT = now(); s.keyAtk = true; }
     if ((k === 'k' || k === ' ' || k === 'shift') && !e.repeat) { s.dodgeT = now(); e.preventDefault(); }
+    if ((k === 'l' || k === 'i') && !e.repeat) s.skillT = now();
     if ((k === 'escape' || k === 'p') && !e.repeat) onPause();
   });
   addEventListener('keyup', e => {
@@ -67,9 +69,11 @@ export function createInput({ layer, stick, knob, attackBtn, dodgeBtn, onPause }
     dodge: buf => now() - s.dodgeT < buf * 1000,
     consumeAttack() { s.atkT = -1e9; },
     consumeDodge() { s.dodgeT = -1e9; },
+    skill: buf => now() - s.skillT < buf * 1000,
+    consumeSkill() { s.skillT = -1e9; },
     clear() {
-      s.id = null; s.mx = s.mz = 0; s.atkT = s.dodgeT = -1e9; s.atkHeld = s.keyAtk = false; s.keys.clear();
-      hideStick(); attackBtn.classList.remove('down'); dodgeBtn.classList.remove('down');
+      s.id = null; s.mx = s.mz = 0; s.atkT = s.dodgeT = s.skillT = -1e9; s.atkHeld = s.keyAtk = false; s.keys.clear();
+      hideStick(); attackBtn.classList.remove('down'); dodgeBtn.classList.remove('down'); skillBtn.classList.remove('down');
     },
   };
 }

@@ -88,6 +88,7 @@ export class Run {
     g.projectiles.forEach(p => g.scene.remove(p.mesh)); g.projectiles = [];
     this.drops.forEach(d => this.collectOrRemove(d)); this.drops = [];
     g.fx.clear(); this.ui.clearDoors();
+    g.effects.forEach(e => g.scene.remove(e.group)); g.effects = [];
     g.arena?.dispose();
 
     const final = !!info.final;
@@ -113,6 +114,7 @@ export class Run {
       const before = k.hp; k.hp = Math.min(CFG.kay.hp, k.hp + info.heal); this.ui.hearts();
       this.ui.toast(k.hp > before ? `Descanso · +${k.hp - before} de vida` : 'Descanso · vida já está cheia', COL.friend);
     }
+    g.comp?.placeNearKay();
     this.ui.snapCamera(); this.ui.objective();
   }
   collectOrRemove(d) { if (d.alive) { d.remove(); this.addMaterial(); } }

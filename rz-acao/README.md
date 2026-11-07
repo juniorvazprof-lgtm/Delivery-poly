@@ -42,3 +42,9 @@ Espécies dos inimigos (Arborion e Fanaluz) são provisórias até a definição
 - Cenário em camadas (`js/game/scenery.js`): chão com iluminação de palco, 4 anéis de folhagem do claro ao quase preto, rochas e restos da cidade, ruínas de Kanda-9 ao fundo (parallax lento), silhuetas de folhas em primeiro plano (parallax rápido), esporos flutuando e detalhes baixos no chão.
 - Mapa da Fenda: 8 camadas de 2–3 salas ligadas + câmara final. Ao limpar a sala, a saída leva ao mapa, onde se escolhe o próximo caminho.
 - Tipos de sala: Combate, Recurso, Resgate, Baú (quebrar o baú), Evento (altar com escolha) e Descanso (+2 de vida).
+
+## MVP 1 · etapa 2 (companheira)
+- Escolha no início da incursão: Brasque (faixa de fogo), Marolho (onda que empurra, interrompe e apaga projéteis) ou Brogume (raízes que prendem por 2 s).
+- A companheira segue Kay sem bloquear, dá um golpe leve automático a cada 3,5 s e não tem vida própria.
+- Botão de Habilidade com recarga em preenchimento progressivo e segundos restantes. Teclado: L.
+- Código em `js/game/companion.js`; valores em `CFG.companions`.

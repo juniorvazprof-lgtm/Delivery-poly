@@ -3,6 +3,7 @@ import * as T from '../lib/three.js';
 import { CFG } from './config.js';
 import { createInput } from './input.js';
 import { Run } from './run.js';
+import { Companion } from './companion.js';
 import { Kay } from './kay.js';
 import { Fx } from './fx.js';
 
@@ -37,7 +38,9 @@ function resize() {
 // ---------- estado ----------
 const fx = new Fx(scene, settings);
 const game = {
-  mode: 'play', time: 0, scene, cam, fx, settings, enemies: [], projectiles: [], hitstop: 0, arena: null,
+  mode: 'play', time: 0, scene, cam, fx, settings, enemies: [], projectiles: [], effects: [], comp: null, hitstop: 0, arena: null,
+  onSkillNotReady() { const b = $('btn-skill'); b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); },
+  onSkill() { vibrate(20); },
   onKayHurt() { renderHearts(); if (!settings.reduceFx) { document.body.classList.remove('hurt'); void document.body.offsetWidth; document.body.classList.add('hurt'); } vibrate(40); },
   onEnemyHit(fin) { game.hitstop = Math.max(game.hitstop, fin ? CFG.hitstop.heavy : CFG.hitstop.light); if (fin) vibrate(15); },
   onGuardBreak() { vibrate(25); },
@@ -45,7 +48,7 @@ const game = {
 };
 game.kay = new Kay(scene);
 
-const input = createInput({ layer: $('touch'), stick: $('stick'), knob: $('stick-knob'), attackBtn: $('btn-attack'), dodgeBtn: $('btn-dodge'), onPause: () => (game.mode === 'paused' ? resume() : pause()) });
+const input = createInput({ layer: $('touch'), stick: $('stick'), knob: $('stick-knob'), attackBtn: $('btn-attack'), dodgeBtn: $('btn-dodge'), skillBtn: $('btn-skill'), onPause: () => (game.mode === 'paused' ? resume() : pause()) });
 function vibrate(ms) { if (settings.vibrate !== false && navigator.vibrate) try { navigator.vibrate(ms); } catch { /* ignorar */ } }
 
 // ---------- HUD ----------
@@ -135,6 +138,14 @@ function renderMap() {
   $('map-legend').innerHTML = Object.values(CFG.roomTypes).map(t => `<span style="--c:${t.color}"><b>${t.glyph}</b>${t.label}</span>`).join('');
 }
 
+// botão de habilidade: preenchimento progressivo da recarga + segundos restantes
+function skillHud() {
+  const c = game.comp, b = $('btn-skill'); if (!c) return;
+  b.style.setProperty('--cd', c.cdFrac.toFixed(3));
+  b.classList.toggle('ready', c.ready);
+  $('skill-cd').textContent = c.ready ? 'pronta' : Math.ceil(c.cd) + ' s';
+}
+
 function placeLabels() {
   const v = new T.Vector3();
   for (const { el, door } of doorLabels) {
@@ -146,10 +157,21 @@ function placeLabels() {
 
 // ---------- fluxo ----------
 game.run = new Run(game, ui);
+// início da incursão: escolher a companheira (uma por incursão)
 function restart() {
+  game.mode = 'select'; input.clear(); $('map').hidden = true;
+  overlay('Escolha a companheira', 'Ela acompanha Kay nesta incursão. Toque em Habilidade para usar o poder dela.',
+    Object.entries(CFG.companions).map(([key, c]) => [`${c.glyph}  ${c.name} · ${c.element}: ${c.desc}`, () => startRun(key), key === settings.companion ? 'primary' : '']));
+}
+function startRun(kind) {
+  settings.companion = kind; saveSettings();
   game.kay.reset(); game.time = 0; game.hitstop = 0;
   hideOverlay(); input.clear(); renderHearts();
-  game.run.start(); ui.materials(0);
+  game.comp?.destroy(); game.comp = new Companion(kind, game);
+  const c = CFG.companions[kind], b = $('btn-skill');
+  b.style.setProperty('--sc', c.color); $('skill-glyph').textContent = c.glyph; $('skill-name').textContent = c.name;
+  b.setAttribute('aria-label', `Habilidade de ${c.name}`);
+  game.run.start(); ui.materials(0); game.comp.placeNearKay();
   game.mode = 'play';
 }
 function pause() {
@@ -183,6 +205,8 @@ function step(dt) {
   game.time += dt;
   const k = game.kay;
   k.update(dt, game, input);
+  game.comp?.update(dt, input);
+  game.effects = game.effects.filter(e => e.update(dt));
   for (const e of game.enemies) e.update(dt);
   // separação entre corpos (esquiva atravessa inimigos)
   const bodies = game.enemies.filter(e => e.targetable);
@@ -215,6 +239,7 @@ function camTarget() {
 }
 function snapCamera() { const [x, z] = camTarget(); camAt.set(x, 0, z); cam.position.copy(camAt).add(camOff); cam.lookAt(camAt); }
 function updateCamera(dt) {
+  if (!game.arena) return;
   const [tx, tz] = camTarget(), f = 1 - Math.exp(-CFG.cam.follow * dt);
   camAt.x += (tx - camAt.x) * f; camAt.z += (tz - camAt.z) * f;
   cam.position.copy(camAt).add(camOff); cam.lookAt(camAt);
@@ -240,6 +265,7 @@ function frame(now) {
   if (game.arena && game.mode !== 'paused') game.arena.update(dt, performance.now() / 1000, camAt);
   renderer.render(scene, cam);
   placeLabels();
+  skillHud();
   frames++; fpsT += dt;
   if (fpsT >= 0.5) {
     if (settings.showFps) $('fps').textContent = `${Math.round(frames / fpsT)} fps · ${renderer.info.render.calls} draws`;

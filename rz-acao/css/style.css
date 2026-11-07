@@ -107,3 +107,17 @@ body.hurt::after { content: ""; position: fixed; inset: 0; z-index: 4; pointer-e
 #map-legend span { display: flex; gap: 5px; align-items: center; }
 #map-legend b { color: var(--c); }
 @media (prefers-reduced-motion: reduce) { .node.choice { animation: none; } }
+
+/* habilidade da companheira: recarga como preenchimento progressivo */
+.skill { --cd: 0; --sc: var(--friendL); border-color: color-mix(in srgb, var(--sc) 55%, #3a4048); overflow: hidden; }
+.skill::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(rgba(7, 8, 13, .72) calc(var(--cd) * 1turn), transparent 0); }
+.skill b { color: var(--sc); }
+.skill small { font-variant-numeric: tabular-nums; }
+.skill.ready { border-color: var(--sc); border-width: 4px; }
+.skill.ready small { color: var(--sc); }
+.skill.down { background: color-mix(in srgb, var(--sc) 70%, #000); }
+.skill.nope { animation: nope .25s; }
+@keyframes nope { 25% { translate: -4px 0; } 75% { translate: 4px 0; } }
+#ov-buttons button { text-align: left; padding: 8px 14px; }
+#ov-buttons button.primary, #ov-buttons button:only-child { text-align: center; }

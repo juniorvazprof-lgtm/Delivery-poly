@@ -136,6 +136,9 @@ export class Enemy {
       case 'flinch':
         if (this.t >= CFG.flinch) { this.setState('move'); this.cd = Math.max(this.cd, 0.25); }
         break;
+      case 'rooted':   // preso pelas raízes de Brogume: não anda nem ataca
+        if (this.t >= this.rootFor) { this.setState('move'); this.cd = Math.max(this.cd, 0.3); }
+        break;
       case 'stunned':
         if (this.t >= c.stun) { this.guard = c.guard; this.drawPips(); this.setState('move'); this.cd = 0.3; }
         break;
@@ -167,6 +170,12 @@ export class Enemy {
     this.g.projectiles.push(new Projectile(this.pos.clone().addScaledVector(dir, 0.5), dir.multiplyScalar(c.projSpeed), c, this.g));
   }
 
+  // companheira: prende no lugar (interrompe a preparação)
+  entangle(dur) {
+    if (!this.targetable || this.state === 'stunned') return;
+    this.cancelAttack(); this.rootFor = dur; this.setState('rooted');
+  }
+
   rollWindup() { const j = CFG.windupJitter; this.wu = this.cfg.windup * (1 - j + Math.random() * 2 * j); }
 
   cancelAttack() { if (this.tele) { this.tele.remove(); this.tele = null; } }
@@ -177,16 +186,16 @@ export class Enemy {
     this.hp -= atk.dmg * (stunned ? 1.5 : 1);
     this.sinceHit = 0; this.flash = 0.07; this.bars.g.visible = true;
     const dx = this.pos.x - from.x, dz = this.pos.z - from.z, l = Math.hypot(dx, dz) || 1;
-    const kb = (finisher ? 4.5 : 2) * (stunned ? 0.5 : 1);
+    const kb = atk.knock ?? (finisher ? 4.5 : 2) * (stunned ? 0.5 : 1);
     this.knock.set(dx / l * kb, 0, dz / l * kb);
-    g.fx.burst(this.pos, '#e8fbff', finisher ? 9 : 5, 3);
-    g.onEnemyHit(finisher);
+    g.fx.burst(this.pos, atk.spark || '#e8fbff', finisher ? 9 : atk.quiet ? 3 : 5, 3);
+    if (!atk.quiet) g.onEnemyHit(finisher);
     if (this.hp <= 0) {
       this.cancelAttack(); this.setState('dying'); this.bars.g.visible = false; g.onEnemyKilled?.(this);
       g.fx.burst(this.pos, COL.rift, 14, 4); g.fx.ring(this.pos, COL.rift, 0.45, 0.3, 1.4);
       return;
     }
-    if (!stunned && this.state !== 'dash') {
+    if (!stunned && this.state !== 'dash' && this.state !== 'rooted' && !atk.quiet) {
       this.poiseHits = (this.poiseHits || 0) + 1;
       if (this.poiseHits >= (c0.poise || 1)) {   // recuo: interrompe a preparação
         this.poiseHits = 0; this.cancelAttack(); this.setState('flinch');
@@ -236,6 +245,7 @@ export class Enemy {
         break;
       }
       case 'recover': b.rotation.x = this.kind === 'shooter' ? 0 : 0.2; b.scale.y = s * 0.92; if (this.stunT) b.rotation.z = Math.sin(this.t * 9) * 0.15; break;      // recuperação visível
+      case 'rooted': b.position.x = Math.sin(this.t * 30) * 0.02; b.scale.y = s * 0.95; break;
       case 'flinch': b.rotation.x = -0.35 * (1 - this.t / CFG.flinch); break;
       case 'stunned': b.rotation.z = Math.sin(this.t * 9) * 0.18; b.scale.y = s * 0.85; break;
       case 'dying': { const q = 1 - this.t / 0.35; b.scale.setScalar(s * Math.max(0.01, q)); b.position.y = -0.2 * (1 - q); break; }

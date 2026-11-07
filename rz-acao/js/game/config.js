@@ -55,6 +55,16 @@ export const CFG = {
   flinch: 0.28,          // recuo ao levar golpe (interrompe a preparação)
   tell: 0.32,            // brilho branco no fim da preparação: o único aviso dos inimigos comuns
   windupJitter: 0.15,    // variação aleatória da preparação (±15%) para não ficar previsível
+  // companheiras: uma por incursão, sem vida própria; habilidade com recarga
+  companions: {
+    brasque: { name: 'Brasque', element: 'Ember', glyph: '✹', color: '#F07944', scale: 0.55, cooldown: 7,
+      desc: 'Faixa de fogo à frente que queima por 2,5 s', fire: { len: 5.5, width: 1.2, dur: 2.5, tick: 0.45, dmg: 1, guard: 1 } },
+    marolho: { name: 'Marolho', element: 'Tide', glyph: '≈', color: '#36B6D5', scale: 0.55, cooldown: 6,
+      desc: 'Onda que empurra, interrompe ataques e apaga projéteis', wave: { range: 4.8, arc: 110, time: 0.35, dmg: 1, guard: 2, knock: 10 } },
+    brogume: { name: 'Brogume', element: 'Flora', glyph: '✿', color: '#76B868', scale: 0.55, cooldown: 8,
+      desc: 'Raízes prendem inimigos numa área por 2 s', roots: { radius: 1.9, delay: 0.3, hold: 2.2, dmg: 1, guard: 1, reach: 6 } },
+  },
+  companionPoke: { every: 3.5, range: 2.4, dmg: 0.5 },   // apoio automático discreto
   guardRegen: 2.5,                                   // guarda volta cheia após esse tempo sem apanhar
 
   // incursão: salas normais + câmara final. Encontros por profundidade (cada um = lista de ondas).
