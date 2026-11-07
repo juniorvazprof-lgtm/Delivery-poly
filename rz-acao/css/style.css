@@ -1,0 +1,66 @@
+:root {
+  --bg: #121815; --ink: #07080d; --text: #eef3f6; --muted: #9fb0b8;
+  --friend: #2fb8d6; --friendL: #9be7f2; --loot: #ffc96b; --threat: #ff3d8b; --rift: #b77bff;
+  --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px);
+  --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+  font: 16px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; }
+#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* HUD */
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+#hearts { position: absolute; top: calc(12px + var(--st)); left: calc(16px + var(--sl)); display: flex; gap: 6px; }
+#hearts i { width: 22px; height: 22px; background: #f2f4f8; border: 3px solid var(--ink); border-radius: 4px; transform: rotate(45deg); margin: 4px; }
+#hearts i.empty { background: transparent; border-color: #5b6470; }
+#objective { position: absolute; top: calc(14px + var(--st)); left: 50%; transform: translateX(-50%);
+  background: rgba(7, 8, 13, .6); padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: 15px; white-space: nowrap; }
+#objective:empty { display: none; }
+.hud-btn { pointer-events: auto; position: absolute; top: calc(10px + var(--st)); right: calc(16px + var(--sr));
+  width: 48px; height: 48px; border-radius: 12px; border: 2px solid var(--friendL); background: rgba(7, 8, 13, .65); }
+.pause-ico { display: block; margin: auto; width: 14px; height: 16px; border-left: 5px solid var(--text); border-right: 5px solid var(--text); }
+#fps { position: absolute; top: calc(66px + var(--st)); right: calc(16px + var(--sr)); font: 12px ui-monospace, monospace; background: rgba(0,0,0,.5); padding: 2px 6px; border-radius: 4px; }
+
+/* controles por toque */
+#touch { position: fixed; inset: 0; z-index: 3; touch-action: none; }
+#stick { position: absolute; width: 132px; height: 132px; margin: -66px 0 0 -66px; border-radius: 50%;
+  border: 3px solid rgba(155, 231, 242, .55); background: rgba(7, 8, 13, .3); opacity: 0; pointer-events: none; transition: opacity .08s; }
+#stick.on { opacity: 1; }
+#stick-knob { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%;
+  background: rgba(155, 231, 242, .85); border: 3px solid var(--ink); }
+#touch::before { content: "Toque e arraste para mover"; position: absolute; left: calc(28px + var(--sl)); bottom: calc(22px + var(--sb));
+  color: rgba(238, 243, 246, .38); font-size: 13px; pointer-events: none; }
+#actions { position: absolute; right: calc(18px + var(--sr)); bottom: calc(16px + var(--sb)); width: 232px; height: 200px; }
+.act { position: absolute; border-radius: 50%; border: 3px solid var(--friendL); background: rgba(7, 8, 13, .62); color: var(--text);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; touch-action: none; font: inherit; }
+.act b { font-size: 26px; line-height: 1; }
+.act span { font-size: 11px; font-weight: 700; letter-spacing: .02em; margin-top: 2px; }
+.act small { font-size: 9px; color: var(--muted); }
+.act.down { background: var(--friend); border-color: #fff; transform: scale(.94); }
+.act:disabled { border-style: dashed; border-color: #5b6470; color: #7d8893; background: rgba(7, 8, 13, .4); }
+.attack { width: 96px; height: 96px; right: 0; bottom: 0; }
+.attack b { font-size: 34px; }
+.dodge { width: 72px; height: 72px; right: 112px; bottom: 6px; }
+.skill { width: 68px; height: 68px; right: 20px; bottom: 116px; }
+
+/* overlays */
+#overlay, #rotate { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: rgba(7, 8, 13, .72); padding: 16px; }
+#overlay[hidden] { display: none; }
+#rotate { display: none; }
+body.portrait #rotate { display: grid; }
+.card { background: #1b2321; border: 2px solid #2e3a37; border-radius: 16px; padding: 20px 24px; max-width: 460px; width: 100%; text-align: center; }
+.card h1 { margin: 0 0 8px; font-size: 24px; }
+.card p { margin: 0 0 16px; color: var(--muted); }
+#ov-buttons { display: flex; flex-direction: column; gap: 10px; }
+#ov-buttons button { min-height: 48px; border-radius: 12px; border: 2px solid #3d4a47; background: #263130; color: var(--text); font: 600 16px system-ui, sans-serif; }
+#ov-buttons button.primary { background: var(--friend); border-color: var(--friendL); color: #04161b; }
+#count { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; font-size: 72px; font-weight: 800; color: var(--text);
+  text-shadow: 0 3px 0 var(--ink); pointer-events: none; }
+#count[hidden] { display: none; }
+
+/* dano: borda vermelha curta, uma vez por golpe */
+body.hurt::after { content: ""; position: fixed; inset: 0; z-index: 4; pointer-events: none; box-shadow: inset 0 0 70px 10px rgba(255, 61, 90, .55); animation: hurt .35s ease-out forwards; }
+@keyframes hurt { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .act.down { transform: none; } #stick { transition: none; } }
