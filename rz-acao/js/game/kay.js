@@ -132,7 +132,7 @@ export class Kay {
       this.hits.add(e); e.takeHit(a, this.pos, g, this.combo === CFG.combo.length - 1);
     }
     for (const b of g.arena.breakIn(this.pos, this.face, a.range, half)) {   // objetos quebráveis
-      g.fx.burst(b, b.kind === 'crate' ? '#a9b4c4' : '#8fd06a', 8, 3, 0.4); g.run.dropAt(new T.Vector3(b.x, 0, b.z), 1); g.hitstop = Math.max(g.hitstop, 0.02);
+      g.fx.burst(b, b.kind === 'crate' ? '#a9b4c4' : '#8fd06a', 8, 3, 0.4); g.run.dropAt(new T.Vector3(b.x, 0, b.z), b.kind === 'chest' ? CFG.chestDrop : 1); g.hitstop = Math.max(g.hitstop, 0.02);
     }
   }
 

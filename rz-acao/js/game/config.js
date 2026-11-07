@@ -58,7 +58,7 @@ export const CFG = {
   guardRegen: 2.5,                                   // guarda volta cheia após esse tempo sem apanhar
 
   // incursão: salas normais + câmara final. Encontros por profundidade (cada um = lista de ondas).
-  run: { rooms: 5, doorChoices: 2 },
+  run: { layers: 8 },   // salas antes da câmara final
   encounters: [
     [[['chaser', 'chaser']], [['chaser', 'shooter']]],
     [[['charger', 'chaser']], [['chaser', 'shooter'], ['chaser']]],
@@ -67,12 +67,16 @@ export const CFG = {
     [[['charger', 'shooter', 'chaser'], ['chaser', 'chaser', 'shooter', 'shooter']]],
   ],
   finalEncounter: [['charger', 'chaser', 'chaser'], ['shooter', 'shooter', 'charger'], ['charger', 'charger', 'chaser', 'shooter']],
-  // tipos de porta: o que a sala oferece
+  // tipos de sala do mapa (weight = chance relativa de aparecer)
   roomTypes: {
-    combate: { label: 'Combate', glyph: '⚔', color: '#ff7ad9', materials: 2 },
-    recurso: { label: 'Recurso', glyph: '◆', color: '#ffc96b', materials: 5, light: true },
-    resgate: { label: 'Resgate', glyph: '✚', color: '#5ff2ff', materials: 1, rescue: true },
+    combate: { label: 'Combate', glyph: '⚔', color: '#ff7ad9', materials: 2, weight: 46 },
+    recurso: { label: 'Recurso', glyph: '◆', color: '#ffc96b', materials: 5, light: true, weight: 14 },
+    resgate: { label: 'Resgate', glyph: '✚', color: '#5ff2ff', materials: 1, rescue: true, weight: 12 },
+    bau: { label: 'Baú', glyph: '▣', color: '#ffe066', materials: 0, peaceful: true, chest: true, weight: 10 },
+    evento: { label: 'Evento', glyph: '?', color: '#c9a6ff', materials: 0, peaceful: true, event: true, weight: 10 },
+    descanso: { label: 'Descanso', glyph: '☾', color: '#9be7f2', materials: 0, peaceful: true, heal: 2, weight: 8 },
   },
+  chestDrop: 8,
   drops: { perEnemy: [1, 2], magnetDelay: 0.45, magnetSpeed: 14 },
   spawnTime: 0.6,
   waveDelay: 0.8,

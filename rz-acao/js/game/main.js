@@ -79,11 +79,25 @@ const ui = {
   },
   clearDoors() { doorLabels.forEach(d => d.el.remove()); doorLabels.length = 0; },
   snapCamera,
+  hearts: renderHearts,
   transition(fn) {
-    if (game.mode !== 'play') return;
+    if (game.mode !== 'play' && game.mode !== 'map') return;
     game.mode = 'transition'; input.clear();
     $('fade').classList.add('on');
     setTimeout(() => { fn(); $('fade').classList.remove('on'); setTimeout(() => { if (game.mode === 'transition') game.mode = 'play'; }, 200); }, 320);
+  },
+  openMap() {
+    if (game.mode !== 'play') return;
+    game.mode = 'map'; input.clear(); renderMap(); $('map').hidden = false;
+  },
+  event() {
+    game.mode = 'event'; input.clear();
+    const k = game.kay, done = () => { hideOverlay(); game.mode = 'play'; input.clear(); ui.objective(); };
+    overlay('Fissura pulsante', 'Uma fissura da Fenda vibra sobre o altar. A Liga de Fenda se acumula em volta dela.', [
+      [`Tocar a fissura: −1 de vida, +8 Liga de Fenda`, () => { if (k.hp > 1) k.hp--; renderHearts(); game.run.dropAt(k.pos.clone().setZ(k.pos.z - 0.8), 8); done(); }, 'primary'],
+      [`Absorver o eco: +1 de vida`, () => { k.hp = Math.min(CFG.kay.hp, k.hp + 1); renderHearts(); done(); }],
+      ['Seguir em frente', done],
+    ]);
   },
   finish() {
     game.mode = 'won';
@@ -93,6 +107,34 @@ const ui = {
     }, 1200);
   },
 };
+// mapa da Fenda: camadas da esquerda para a direita; só as salas ligadas à atual podem ser escolhidas
+function renderMap() {
+  const run = game.run, { layers } = run.map, L = layers.length, area = $('map-area');
+  area.innerHTML = '';
+  const choices = new Set(run.choices.map(n => n.id)), pos = n => [(n.layer + 0.5) / L * 100, n.y * 100];
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none');
+  for (const layer of layers) for (const a of layer) for (const id of a.next) {
+    const b = run.map.byId[id], [x1, y1] = pos(a), [x2, y2] = pos(b), l = document.createElementNS(svg.namespaceURI, 'line');
+    Object.entries({ x1, y1, x2, y2 }).forEach(([k, v]) => l.setAttribute(k, v));
+    const walked = run.visited.includes(a.id) && (run.visited.includes(b.id) || (a.id === run.node.id && choices.has(b.id)));
+    l.setAttribute('class', walked ? (choices.has(b.id) ? 'path open' : 'path walked') : 'path');
+    svg.appendChild(l);
+  }
+  area.appendChild(svg);
+  for (const layer of layers) for (const n of layer) {
+    const info = n.key === 'final' ? { label: 'Câmara final', glyph: '☗', color: '#b77bff' } : CFG.roomTypes[n.key];
+    const b = document.createElement('button'), [x, y] = pos(n);
+    b.className = 'node' + (n.id === run.node.id ? ' current' : run.visited.includes(n.id) ? ' visited' : choices.has(n.id) ? ' choice' : '') + (n.key === 'final' ? ' final' : '');
+    b.style.left = x + '%'; b.style.top = y + '%'; b.style.setProperty('--c', info.color);
+    b.innerHTML = `<b>${info.glyph}</b>`; b.setAttribute('aria-label', info.label); b.title = info.label;
+    if (choices.has(n.id)) { b.innerHTML += `<span>${info.label}</span>`; b.onclick = () => { $('map').hidden = true; run.choose(n); }; }
+    else b.disabled = true;
+    area.appendChild(b);
+  }
+  $('map-legend').innerHTML = Object.values(CFG.roomTypes).map(t => `<span style="--c:${t.color}"><b>${t.glyph}</b>${t.label}</span>`).join('');
+}
+
 function placeLabels() {
   const v = new T.Vector3();
   for (const { el, door } of doorLabels) {

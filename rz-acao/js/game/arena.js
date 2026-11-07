@@ -61,6 +61,16 @@ export class Arena {
     this.spores.update(dt, t);
   }
 
+  addBreakable(x, z, kind) {
+    const body = buildModel({ ...PROPS[kind], scale: kind === 'chest' ? 1.3 : 0.75 }); mergeModel(body);
+    body.position.set(x, 0, z); this.group.add(body);
+    this.breakables.push({ x, z, r: kind === 'chest' ? 0.5 : 0.35, body, kind, alive: true });
+  }
+  addProp(kind, x, z, scale, r) {
+    const body = buildModel({ ...PROPS[kind], scale }); mergeModel(body);
+    body.position.set(x, 0, z); this.group.add(body); this.colliders.push([x, z, r]);
+  }
+
   // ponto aleatório numa faixa a [a, b] unidades da parede
   edgePoint(rnd, a, b) {
     const side = Math.floor(rnd() * 4), t = rnd(), inset = a + rnd() * (b - a);

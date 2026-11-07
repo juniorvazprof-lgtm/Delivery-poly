@@ -37,3 +37,8 @@ Espécies dos inimigos (Arborion e Fanaluz) são provisórias até a definição
 - Salas em clareira: centro livre, decoração e obstáculos só nas bordas, objetos quebráveis que soltam Liga de Fenda.
 - Saídas em cima, à esquerda ou à direita, conforme a sala.
 - Recuo ao golpe: perseguidor e disparador recuam a cada golpe; o investidor só no 3º.
+
+## Cenário e mapa da Fenda
+- Cenário em camadas (`js/game/scenery.js`): chão com iluminação de palco, 4 anéis de folhagem do claro ao quase preto, rochas e restos da cidade, ruínas de Kanda-9 ao fundo (parallax lento), silhuetas de folhas em primeiro plano (parallax rápido), esporos flutuando e detalhes baixos no chão.
+- Mapa da Fenda: 8 camadas de 2–3 salas ligadas + câmara final. Ao limpar a sala, a saída leva ao mapa, onde se escolhe o próximo caminho.
+- Tipos de sala: Combate, Recurso, Resgate, Baú (quebrar o baú), Evento (altar com escolha) e Descanso (+2 de vida).

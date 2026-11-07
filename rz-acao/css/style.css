@@ -80,3 +80,30 @@ body.portrait #rotate { display: grid; }
 body.hurt::after { content: ""; position: fixed; inset: 0; z-index: 4; pointer-events: none; box-shadow: inset 0 0 70px 10px rgba(255, 61, 90, .55); animation: hurt .35s ease-out forwards; }
 @keyframes hurt { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .act.down { transform: none; } #stick { transition: none; } }
+
+/* mapa da Fenda */
+#map { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: rgba(5, 9, 7, .95);
+  padding: max(10px, var(--st)) max(16px, var(--sr)) max(10px, var(--sb)) max(16px, var(--sl)); }
+#map[hidden] { display: none; }
+.map-card { width: min(900px, 100%); height: 100%; max-height: 520px; display: flex; flex-direction: column; gap: 6px; }
+.map-card h1 { margin: 0; font-size: 22px; letter-spacing: .02em; }
+.map-card p { margin: 0; color: var(--muted); font-size: 14px; }
+#map-area { position: relative; flex: 1; min-height: 0; margin: 14px 60px 14px 28px; }
+#map-area svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.path { stroke: #33413c; stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-dasharray: 2 5; }
+.path.walked { stroke: #7d8f88; stroke-dasharray: none; }
+.path.open { stroke: #e8f6f2; stroke-dasharray: none; stroke-width: 3; }
+.node { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 3px solid var(--c);
+  background: #121a17; color: var(--c); display: grid; place-items: center; padding: 0; font: inherit; opacity: .55; }
+.node b { font-size: 18px; line-height: 1; }
+.node span { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 8px; background: rgba(7, 8, 13, .85); padding: 2px 8px; border-radius: 8px; white-space: nowrap; font-size: 12px; font-weight: 700; color: var(--text); }
+.node.final { width: 54px; height: 54px; margin: -27px 0 0 -27px; }
+.node.visited { opacity: .35; background: #26302c; }
+.node.current { opacity: 1; box-shadow: 0 0 0 4px rgba(232, 246, 242, .5); }
+.node.choice { opacity: 1; width: 52px; height: 52px; margin: -26px 0 0 -26px; z-index: 1; background: #1a2421; animation: beat 1.4s ease-in-out infinite; }
+.node.choice:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+@keyframes beat { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--c) 30%, transparent); } }
+#map-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+#map-legend span { display: flex; gap: 5px; align-items: center; }
+#map-legend b { color: var(--c); }
+@media (prefers-reduced-motion: reduce) { .node.choice { animation: none; } }
