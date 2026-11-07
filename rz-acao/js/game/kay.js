@@ -152,7 +152,7 @@ export class Kay {
     const b = this.body, sp = this.staffPivot;
     b.rotation.set(0, 0, 0); b.scale.setScalar(this.base); b.position.y = 0;
     setFlash(this.flashMeshes, this.flash > 0);
-    this.marker.visible = true;
+    this.marker.visible = false;   // sem círculo sob os pés (pedido do autor)
     this.marker.children[0].children[0].material.opacity = this.invuln > 0 ? 0.25 + 0.35 * (Math.sin(this.invuln * 12) * 0.5 + 0.5) : 0.55;
 
     if (this.state === 'free') {

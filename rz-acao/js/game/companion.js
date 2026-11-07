@@ -19,7 +19,7 @@ export class Companion {
     this.root = new T.Group();
     this.body = buildModel(MODELS[kind]); this.body.scale.multiplyScalar(this.cfg.scale); this.base = this.body.scale.x;
     mergeModel(this.body);
-    this.root.add(this.body, blobShadow(0.28), footMarker(COL.friend, 0.32, 32, 0.35));
+    this.root.add(this.body, blobShadow(0.28));
     g.scene.add(this.root);
     this.pos = g.kay.pos.clone().add(new T.Vector3(0.8, 0, 0.6));
     this.vel = new T.Vector3(); this.side = 1; this.flipT = 0;

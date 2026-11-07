@@ -41,7 +41,7 @@ export class Enemy {
     this.body.scale.multiplyScalar(c.scale);
     this.base = this.body.scale.x;
     this.flashMeshes = mergeModel(this.body);
-    this.root.add(this.body, blobShadow(c.radius * 0.95), footMarker(COL.threat, c.radius + 0.12, 6, 0.75));
+    this.root.add(this.body, blobShadow(c.radius * 0.95));
     g.scene.add(this.root);
     this.bars = makeBars(g.cam); g.scene.add(this.bars.g);
     this.drawPips();
