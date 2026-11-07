@@ -78,7 +78,8 @@ export class Enemy {
           let s = 0;
           if (dist < c.keep - 1) s = -1; else if (dist > c.keep + 2) s = 1;
           if (s) this.step(s * dx / dist, s * dz / dist, c.speed, dt);
-          if (this.cd <= 0 && dist < c.projRange - 1 && k.state !== 'dead') this.beginShooterWindup();
+          const range = this.kind === 'charger' ? c.dashDist + 0.5 : c.projRange - 1;
+          if (this.cd <= 0 && dist < range && k.state !== 'dead') this.beginLineWindup();
         }
         break;
       case 'windup': {
@@ -90,8 +91,12 @@ export class Enemy {
           const locked = this.t >= c.windup * c.track;
           if (!locked) this.aim = turn(this.aim, toK, 3 * dt);
           this.face = this.aim;
-          this.tele.set(this.pos, this.aim, p, locked);
-          if (this.t >= c.windup) { this.fire(); this.tele.remove(); this.tele = null; this.setState('recover'); }
+          if (!locked) this.origin.copy(this.pos);
+          this.tele.set(this.origin, this.aim, p, locked);
+          if (this.t >= c.windup) {
+            if (this.kind === 'charger') { this.setState('dash'); this.dashed = 0; this.hitDone = false; }
+            else { this.fire(); this.tele.remove(); this.tele = null; this.setState('recover'); }
+          }
         }
         break;
       }
@@ -108,8 +113,22 @@ export class Enemy {
         if (this.t >= c.active) { this.tele.remove(); this.tele = null; this.setState('recover'); }
         break;
       }
+      case 'dash': {   // investida em linha reta; termina na distância marcada ou ao bater
+        const step = c.dashSpeed * dt, nx = this.pos.x + Math.sin(this.aim) * step, nz = this.pos.z + Math.cos(this.aim) * step;
+        const hitWall = g.arena.blocked({ x: nx, z: nz }, this.radius);
+        if (!hitWall) { this.pos.x = nx; this.pos.z = nz; this.dashed += step; }
+        if (!this.hitDone && Math.hypot(k.pos.x - this.pos.x, k.pos.z - this.pos.z) < this.radius + CFG.kay.radius + 0.1) {
+          if (k.hurt(c.dmg, this.pos, g)) { this.hitDone = true; g.onKayHurt(); }
+        }
+        if (hitWall || this.dashed >= c.dashDist) {
+          this.tele.remove(); this.tele = null;
+          if (hitWall) { g.fx.ring(this.pos, COL.guard, 0.4, 0.3, 1); this.stunT = c.wallStun; } else this.stunT = 0;
+          this.setState('recover');
+        }
+        break;
+      }
       case 'recover':
-        if (this.t >= c.recovery) { this.setState('move'); this.cd = this.kind === 'chaser' ? c.cooldown : c.cooldown; }
+        if (this.t >= c.recovery + (this.stunT || 0)) { this.setState('move'); this.cd = c.cooldown; this.stunT = 0; }
         break;
       case 'stunned':
         if (this.t >= c.stun) { this.guard = c.guard; this.drawPips(); this.setState('move'); this.cd = 0.3; }
@@ -131,10 +150,10 @@ export class Enemy {
     this.tele = this.g.fx.sector(c.range + c.lunge * c.active, c.arc);
     this.setState('windup');
   }
-  beginShooterWindup() {
+  beginLineWindup() {
     const c = this.cfg;
-    this.aim = this.face;
-    this.tele = this.g.fx.line(c.projRange, c.projRadius * 2 + 0.12);
+    this.aim = this.face; this.origin = this.pos.clone();
+    this.tele = this.kind === 'charger' ? this.g.fx.line(c.dashDist + this.radius, c.width) : this.g.fx.line(c.projRange, c.projRadius * 2 + 0.12);
     this.setState('windup');
   }
   fire() {
@@ -155,7 +174,7 @@ export class Enemy {
     g.fx.burst(this.pos, '#e8fbff', finisher ? 9 : 5, 3);
     g.onEnemyHit(finisher);
     if (this.hp <= 0) {
-      this.cancelAttack(); this.setState('dying'); this.bars.g.visible = false;
+      this.cancelAttack(); this.setState('dying'); this.bars.g.visible = false; g.onEnemyKilled?.(this);
       g.fx.burst(this.pos, COL.rift, 14, 4); g.fx.ring(this.pos, COL.rift, 0.45, 0.3, 1.4);
       return;
     }
@@ -182,10 +201,26 @@ export class Enemy {
       case 'move': b.position.y += this.kind === 'chaser' ? Math.abs(Math.sin(this.g.time * 8 + this.phase)) * 0.05 : 0; break;
       case 'windup':
         if (this.kind === 'chaser') { b.rotation.x = -0.35 * p; b.scale.y = s * (1 + 0.15 * p); }   // ergue o corpo
+        else if (this.kind === 'charger') { b.rotation.x = -0.3 * p; b.position.z = -0.35 * p; b.scale.y = s * (1 - 0.12 * p); }   // recua o corpo
         else { b.scale.y = s * (1 - 0.22 * p); b.scale.x = b.scale.z = s * (1 + 0.1 * p); }     // comprime o foco
         break;
       case 'active': b.rotation.x = 0.35; break;
-      case 'recover': b.rotation.x = this.kind === 'chaser' ? 0.2 : 0; b.scale.y = s * 0.92; break;      // recuperação visível
+      case 'dash': b.rotation.x = 0.3; b.position.y = Math.abs(Math.sin(this.g.time * 30)) * 0.05; break;
+      case 'dash': {   // investida em linha reta; termina na distância marcada ou ao bater
+        const step = c.dashSpeed * dt, nx = this.pos.x + Math.sin(this.aim) * step, nz = this.pos.z + Math.cos(this.aim) * step;
+        const hitWall = g.arena.blocked({ x: nx, z: nz }, this.radius);
+        if (!hitWall) { this.pos.x = nx; this.pos.z = nz; this.dashed += step; }
+        if (!this.hitDone && Math.hypot(k.pos.x - this.pos.x, k.pos.z - this.pos.z) < this.radius + CFG.kay.radius + 0.1) {
+          if (k.hurt(c.dmg, this.pos, g)) { this.hitDone = true; g.onKayHurt(); }
+        }
+        if (hitWall || this.dashed >= c.dashDist) {
+          this.tele.remove(); this.tele = null;
+          if (hitWall) { g.fx.ring(this.pos, COL.guard, 0.4, 0.3, 1); this.stunT = c.wallStun; } else this.stunT = 0;
+          this.setState('recover');
+        }
+        break;
+      }
+      case 'recover': b.rotation.x = this.kind === 'shooter' ? 0 : 0.2; b.scale.y = s * 0.92; if (this.stunT) b.rotation.z = Math.sin(this.t * 9) * 0.15; break;      // recuperação visível
       case 'stunned': b.rotation.z = Math.sin(this.t * 9) * 0.18; b.scale.y = s * 0.85; break;
       case 'dying': { const q = 1 - this.t / 0.35; b.scale.setScalar(s * Math.max(0.01, q)); b.position.y = -0.2 * (1 - q); break; }
     }

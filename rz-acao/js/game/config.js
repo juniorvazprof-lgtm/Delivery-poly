@@ -4,11 +4,15 @@ export const CFG = {
   sim: { dt: 1 / 60, maxSteps: 5 },                 // simulação em passo fixo, separada da renderização
   cam: { viewH: 7.2, offset: [0, 8, 8.5], follow: 9 },
 
-  arena: {
-    w: 17, d: 10.5,
-    // obstáculos baixos (não escondem Kay): [x, z, raio]
-    pillars: [[-4.2, -1.6, 0.6], [4.4, 1.4, 0.6], [0.4, -2.9, 0.5], [-1.2, 2.6, 0.5]],
-  },
+  // salas da Fenda feitas à mão: tamanho e obstáculos baixos [x, z, raio]. Portas ficam na parede de cima.
+  rooms: [
+    { w: 15, d: 9, pillars: [[-3.6, 0.4, 0.6], [3.6, 0.4, 0.6]] },
+    { w: 17, d: 10.5, pillars: [[-4.2, -1.2, 0.6], [4.4, 1.4, 0.6], [0.4, 0.2, 0.5], [-1.2, 2.6, 0.5]] },
+    { w: 16, d: 10, pillars: [[-0.9, 0, 0.55], [0.9, 0, 0.55], [0, 1.4, 0.55]] },
+    { w: 19, d: 9, pillars: [[-5, -0.8, 0.6], [-1.6, 1.4, 0.5], [1.8, -0.8, 0.5], [5.2, 1.2, 0.6]] },
+    { w: 14, d: 11, pillars: [[-3, -1, 0.6], [3, 2, 0.6], [-2.4, 3, 0.45]] },
+  ],
+  finalRoom: { w: 17, d: 11, pillars: [[-5, 0, 0.6], [5, 0, 0.6]] },
 
   kay: {
     hp: 6, speed: 6.4, radius: 0.32,
@@ -41,14 +45,32 @@ export const CFG = {
       speed: 2.2, keep: 5, windup: 0.75, track: 0.6, recovery: 0.7, cooldown: 1.1,
       projSpeed: 6, projRadius: 0.22, projRange: 11, dmg: 1, stun: 1.3,
     },
+    // investidor: recua o corpo, marca a linha e dispara correndo; se bater em obstáculo, fica atordoado
+    charger: {
+      model: 'cascalco', scale: 0.62, hp: 5, guard: 3, radius: 0.5,
+      speed: 2.2, keep: 4, windup: 0.6, track: 0.5, dashSpeed: 13, dashDist: 6, width: 1.0,
+      recovery: 0.6, wallStun: 1.1, dmg: 1, cooldown: 1.2, stun: 1.3,
+    },
   },
   guardRegen: 2.5,                                   // guarda volta cheia após esse tempo sem apanhar
 
-  waves: [
-    ['chaser', 'chaser'],
-    ['chaser', 'shooter'],
-    ['chaser', 'chaser', 'shooter', 'shooter'],
+  // incursão: salas normais + câmara final. Encontros por profundidade (cada um = lista de ondas).
+  run: { rooms: 5, doorChoices: 2 },
+  encounters: [
+    [[['chaser', 'chaser']], [['chaser', 'shooter']]],
+    [[['charger', 'chaser']], [['chaser', 'shooter'], ['chaser']]],
+    [[['charger', 'shooter'], ['chaser', 'chaser']], [['chaser', 'chaser', 'shooter']]],
+    [[['charger', 'charger'], ['shooter', 'chaser', 'chaser']], [['chaser', 'shooter', 'shooter'], ['charger', 'chaser']]],
+    [[['charger', 'shooter', 'chaser'], ['chaser', 'chaser', 'shooter', 'shooter']]],
   ],
+  finalEncounter: [['charger', 'chaser', 'chaser'], ['shooter', 'shooter', 'charger'], ['charger', 'charger', 'chaser', 'shooter']],
+  // tipos de porta: o que a sala oferece
+  roomTypes: {
+    combate: { label: 'Combate', glyph: '⚔', color: '#ff7ad9', materials: 2 },
+    recurso: { label: 'Recurso', glyph: '◆', color: '#ffc96b', materials: 5, light: true },
+    resgate: { label: 'Resgate', glyph: '✚', color: '#5ff2ff', materials: 1, rescue: true },
+  },
+  drops: { perEnemy: [1, 2], magnetDelay: 0.45, magnetSpeed: 14 },
   spawnTime: 0.6,
   waveDelay: 0.8,
   hitstop: { light: 0.035, heavy: 0.07 },   // pausa curtíssima no impacto: dá peso ao golpe

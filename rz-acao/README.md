@@ -1,4 +1,4 @@
-# Ressonância Zero — MVP 0 (Ação)
+# Ressonância Zero — Protótipo de ação (MVP 0 + MVP 1 etapa 1)
 
 Protótipo separado do RPG v21. Objetivo: validar se o combate em tempo real é bom no celular (paisagem).
 Não lê nem grava o save do RPG (`rz_save_v1`); só guarda preferências em `rz_acao_settings_v1`.
@@ -24,3 +24,10 @@ No Android: Acode com servidor local, ou qualquer hospedagem estática. Three.js
 - `js/game/{input,kay,enemies,arena,fx,main}.js`: código novo do modo ação.
 
 Espécies dos inimigos (Arborion e Fanaluz) são provisórias até a definição do bioma e da Bíblia Visual.
+
+## MVP 1 · etapa 1 (Fenda)
+- Arma de Kay: lâmina de pulso (espada cyberpunk de cuboides com fio ciano).
+- Incursão de 6 salas: 5 salas sorteadas entre 5 layouts + câmara final. Ao limpar, 2 portas mostram o tipo da próxima sala (Combate, Recurso, Resgate).
+- Investidor (`charger`): recua, marca a linha e corre; bater em obstáculo o atordoa.
+- Liga de Fenda cai dos inimigos e é atraída até Kay; na derrota, metade é perdida.
+- Resgate e Guardião são marcadores provisórios (etapa 3). Lógica em `js/game/run.js`.

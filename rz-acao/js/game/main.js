@@ -2,9 +2,8 @@
 import * as T from '../lib/three.js';
 import { CFG } from './config.js';
 import { createInput } from './input.js';
-import { Arena } from './arena.js';
+import { Run } from './run.js';
 import { Kay } from './kay.js';
-import { Enemy } from './enemies.js';
 import { Fx } from './fx.js';
 
 const $ = id => document.getElementById(id);
@@ -38,11 +37,11 @@ function resize() {
 // ---------- estado ----------
 const fx = new Fx(scene, settings);
 const game = {
-  mode: 'play', time: 0, scene, cam, fx, settings, enemies: [], projectiles: [], wave: -1, waveT: 0, hitstop: 0,
-  arena: new Arena(scene),
+  mode: 'play', time: 0, scene, cam, fx, settings, enemies: [], projectiles: [], hitstop: 0, arena: null,
   onKayHurt() { renderHearts(); if (!settings.reduceFx) { document.body.classList.remove('hurt'); void document.body.offsetWidth; document.body.classList.add('hurt'); } vibrate(40); },
   onEnemyHit(fin) { game.hitstop = Math.max(game.hitstop, fin ? CFG.hitstop.heavy : CFG.hitstop.light); if (fin) vibrate(15); },
   onGuardBreak() { vibrate(25); },
+  onEnemyKilled(e) { game.run.onEnemyKilled(e); },
 };
 game.kay = new Kay(scene);
 
@@ -56,10 +55,6 @@ function renderHearts() {
   for (let i = 0; i < CFG.kay.hp; i++) { const s = document.createElement('i'); if (i >= k.hp) s.className = 'empty'; el.appendChild(s); }
   el.setAttribute('aria-label', `Vida ${k.hp} de ${CFG.kay.hp}`);
 }
-function objective() {
-  const n = game.enemies.filter(e => e.state !== 'dying').length;
-  $('objective').textContent = game.wave < 0 ? '' : `Onda ${game.wave + 1}/${CFG.waves.length} · ${n} ${n === 1 ? 'inimigo' : 'inimigos'}`;
-}
 function overlay(title, text, buttons) {
   $('ov-title').textContent = title; $('ov-text').innerHTML = text;
   const box = $('ov-buttons'); box.innerHTML = '';
@@ -68,30 +63,59 @@ function overlay(title, text, buttons) {
 }
 const hideOverlay = () => { $('overlay').hidden = true; };
 
-// ---------- fluxo ----------
-function startWave(i) {
-  game.wave = i; game.waveT = 0;
-  const taken = [];
-  for (const kind of CFG.waves[i]) {
-    const p = game.arena.spawnPoint(game.kay.pos, taken); taken.push(p);
-    game.enemies.push(new Enemy(kind, p, game));
+const doorLabels = [];
+let toastTimer = 0;
+const ui = {
+  objective() { $('objective').textContent = game.run.status(); },
+  materials(n) { const el = $('mats'); el.querySelector('b').textContent = n; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); },
+  toast(text, color) {
+    const el = $('toast'); el.textContent = text; el.style.borderColor = color; el.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2200);
+  },
+  addDoor(door) {
+    const el = document.createElement('div'); el.className = 'door-label';
+    el.innerHTML = `<b>${door.info.glyph}</b>${door.info.label}`; el.style.borderColor = door.info.color;
+    $('labels').appendChild(el); doorLabels.push({ el, door });
+  },
+  clearDoors() { doorLabels.forEach(d => d.el.remove()); doorLabels.length = 0; },
+  snapCamera,
+  transition(fn) {
+    if (game.mode !== 'play') return;
+    game.mode = 'transition'; input.clear();
+    $('fade').classList.add('on');
+    setTimeout(() => { fn(); $('fade').classList.remove('on'); setTimeout(() => { if (game.mode === 'transition') game.mode = 'play'; }, 200); }, 320);
+  },
+  finish() {
+    game.mode = 'won';
+    setTimeout(() => {
+      const s = game.run.summary();
+      overlay('Fenda concluída', `${s.rooms} salas · ${s.time.toFixed(0)} s · golpes recebidos: ${game.kay.stats.hitsTaken}<br>Liga de Fenda: <b>${s.materials}</b> · Ressonas encontradas: <b>${s.rescued}</b><br><small>O Guardião entra na etapa 3.</small>`, [['Nova incursão', restart, 'primary']]);
+    }, 1200);
+  },
+};
+function placeLabels() {
+  const v = new T.Vector3();
+  for (const { el, door } of doorLabels) {
+    v.set(door.x, 2.1, door.z).project(cam);
+    const x = T.MathUtils.clamp((v.x * 0.5 + 0.5) * innerWidth, 80, innerWidth - 80), y = T.MathUtils.clamp((-v.y * 0.5 + 0.5) * innerHeight, 110, innerHeight - 20);
+    el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
   }
-  objective();
 }
+
+// ---------- fluxo ----------
+game.run = new Run(game, ui);
 function restart() {
-  game.enemies.forEach(e => e.destroy()); game.enemies = [];
-  game.projectiles.forEach(p => scene.remove(p.mesh)); game.projectiles = [];
-  fx.clear(); game.kay.reset(); game.time = 0; game.wave = -1; game.hitstop = 0;
-  renderHearts(); hideOverlay(); input.clear();
-  game.mode = 'play'; game.waveT = CFG.waveDelay - 0.6;
-  snapCamera();
+  game.kay.reset(); game.time = 0; game.hitstop = 0;
+  hideOverlay(); input.clear(); renderHearts();
+  game.run.start(); ui.materials(0);
+  game.mode = 'play';
 }
 function pause() {
   if (game.mode !== 'play' && game.mode !== 'countdown') return;
   game.mode = 'paused'; input.clear();
   overlay('Pausa', 'Joystick à esquerda · Ataque, Esquiva à direita.<br>Teclado: WASD · J ataque · K/Espaço esquiva · Esc pausa', [
     ['Continuar', resume, 'primary'],
-    ['Reiniciar arena', restart],
+    ['Recomeçar incursão', restart],
     [`Efeitos reduzidos: ${settings.reduceFx ? 'sim' : 'não'}`, () => { settings.reduceFx = !settings.reduceFx; saveSettings(); game.mode = 'play'; pause(); }],
     [`Mostrar FPS: ${settings.showFps ? 'sim' : 'não'}`, () => { settings.showFps = !settings.showFps; $('fps').hidden = !settings.showFps; saveSettings(); game.mode = 'play'; pause(); }],
   ]);
@@ -101,13 +125,10 @@ function resume() {
   hideOverlay(); input.clear();
   game.mode = 'countdown'; game.countT = 0.9;      // breve contagem antes de reativar perigos
 }
-function win() {
-  game.mode = 'won';
-  overlay('Arena limpa', `Tempo: ${game.time.toFixed(1)} s · Golpes recebidos: ${game.kay.stats.hitsTaken}`, [['Jogar de novo', restart, 'primary']]);
-}
 function lose() {
   game.mode = 'lost';
-  setTimeout(() => overlay('Kay caiu', `Chegou à onda ${game.wave + 1} de ${CFG.waves.length}.`, [['Tentar de novo', restart, 'primary']]), 700);
+  const s = game.run.summary(), kept = Math.floor(s.materials / 2);
+  setTimeout(() => overlay('Kay caiu', `Sala ${s.depth} de ${game.run.total} · ${s.rooms} salas limpas<br>Liga de Fenda recuperada: <b>${kept}</b> de ${s.materials} (metade se perde na derrota)`, [['Nova incursão', restart, 'primary']]), 700);
 }
 
 $('btn-pause').addEventListener('click', () => (game.mode === 'paused' ? resume() : pause()));
@@ -132,17 +153,10 @@ function step(dt) {
   game.projectiles = game.projectiles.filter(p => p.alive);
   const before = game.enemies.length;
   game.enemies = game.enemies.filter(e => e.alive);
-  if (game.enemies.length !== before) objective();
+  if (game.enemies.length !== before) ui.objective();
   fx.update(dt);
-
   if (k.state === 'dead' && game.mode === 'play') return lose();
-  if (game.mode === 'play' && game.enemies.length === 0) {
-    game.waveT += dt;
-    if (game.waveT >= CFG.waveDelay) {
-      if (game.wave + 1 < CFG.waves.length) startWave(game.wave + 1);
-      else win();
-    }
-  }
+  game.run.update(dt);
 }
 function push(a, b, min, wa) {   // wa = parte do empurrão que vai para "a"
   const dx = b.x - a.x, dz = b.z - a.z, d = Math.hypot(dx, dz);
@@ -151,11 +165,15 @@ function push(a, b, min, wa) {   // wa = parte do empurrão que vai para "a"
   a.x -= dx * o * wa; a.z -= dz * o * wa; b.x += dx * o * (1 - wa); b.z += dz * o * (1 - wa);
 }
 
-function snapCamera() { camAt.set(game.kay.pos.x * 0.6, 0, game.kay.pos.z * 0.5); cam.position.copy(camAt).add(camOff); cam.lookAt(camAt); }
+// câmera acompanha Kay sem mostrar muito além da borda da sala
+function camTarget() {
+  const a = game.arena, hx = Math.max(0, a.w / 2 + 1 - cam.right), hz = Math.max(0, a.d / 2 - 1.6);
+  const r = game.run.room, lookDoors = r.clear && !r.final ? 3.5 : 0;   // sala limpa: puxa a câmera para as portas
+  return [T.MathUtils.clamp(game.kay.pos.x, -hx, hx), T.MathUtils.clamp(game.kay.pos.z - lookDoors, -hz - 1.8, hz)];
+}
+function snapCamera() { const [x, z] = camTarget(); camAt.set(x, 0, z); cam.position.copy(camAt).add(camOff); cam.lookAt(camAt); }
 function updateCamera(dt) {
-  // acompanha a arena com suavidade, sem solavancos a cada alvo
-  const tx = T.MathUtils.clamp(game.kay.pos.x * 0.85, -4.5, 4.5), tz = T.MathUtils.clamp(game.kay.pos.z * 0.8, -2.2, 2.2);
-  const f = 1 - Math.exp(-CFG.cam.follow * dt);
+  const [tx, tz] = camTarget(), f = 1 - Math.exp(-CFG.cam.follow * dt);
   camAt.x += (tx - camAt.x) * f; camAt.z += (tz - camAt.z) * f;
   cam.position.copy(camAt).add(camOff); cam.lookAt(camAt);
 }
@@ -178,6 +196,7 @@ function frame(now) {
   } else acc = 0;
   updateCamera(dt);
   renderer.render(scene, cam);
+  placeLabels();
   frames++; fpsT += dt;
   if (fpsT >= 0.5) {
     if (settings.showFps) $('fps').textContent = `${Math.round(frames / fpsT)} fps · ${renderer.info.render.calls} draws`;
@@ -190,4 +209,4 @@ resize(); restart();
 requestAnimationFrame(frame);
 
 // gancho para testes automatizados
-window.__rz = { game, CFG, pause, resume, restart, startWave };
+window.__rz = { game, CFG, pause, resume, restart };

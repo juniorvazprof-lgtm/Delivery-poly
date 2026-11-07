@@ -23,6 +23,20 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); c
 .pause-ico { display: block; margin: auto; width: 14px; height: 16px; border-left: 5px solid var(--text); border-right: 5px solid var(--text); }
 #fps { position: absolute; top: calc(66px + var(--st)); right: calc(16px + var(--sr)); font: 12px ui-monospace, monospace; background: rgba(0,0,0,.5); padding: 2px 6px; border-radius: 4px; }
 
+#mats { position: absolute; top: calc(52px + var(--st)); left: calc(18px + var(--sl)); display: flex; align-items: center; gap: 8px;
+  background: rgba(7, 8, 13, .55); padding: 3px 10px 3px 8px; border-radius: 999px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#mats i { width: 12px; height: 12px; background: var(--loot); border: 2px solid var(--ink); transform: rotate(45deg); }
+#mats.pop { animation: pop .25s ease-out; }
+@keyframes pop { 50% { transform: scale(1.15); } }
+#labels { position: absolute; inset: 0; }
+.door-label { position: absolute; left: 0; top: 0; background: rgba(7, 8, 13, .78); border: 2px solid; border-radius: 10px;
+  padding: 4px 10px; font-weight: 700; font-size: 14px; white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.door-label b { font-size: 16px; }
+#toast { position: absolute; top: calc(58px + var(--st)); left: 50%; transform: translateX(-50%); background: rgba(7, 8, 13, .8);
+  border: 2px solid var(--loot); border-radius: 10px; padding: 6px 14px; font-size: 14px; font-weight: 600; max-width: 70vw; text-align: center; }
+#fade { position: fixed; inset: 0; z-index: 8; background: #07080d; opacity: 0; pointer-events: none; transition: opacity .3s; }
+#fade.on { opacity: 1; }
+
 /* controles por toque */
 #touch { position: fixed; inset: 0; z-index: 3; touch-action: none; }
 #stick { position: absolute; width: 132px; height: 132px; margin: -66px 0 0 -66px; border-radius: 50%;

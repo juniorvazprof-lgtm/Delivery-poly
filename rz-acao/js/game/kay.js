@@ -1,6 +1,6 @@
 // Kay: estados livre → ataque (preparação/ativo/recuperação) → livre; esquiva; dano; derrota.
 import * as T from '../lib/three.js';
-import { buildModel, blobShadow, mat } from '../engine/voxel.js';
+import { buildModel, blobShadow, mat, inkMat } from '../engine/voxel.js';
 import { MODELS } from '../data/models.js';
 import { CFG } from './config.js';
 import { mergeModel, setFlash } from './merge.js';
@@ -20,13 +20,22 @@ export class Kay {
     this.marker = footMarker(COL.friend, 0.46, 32, 0.55);
     this.root.add(this.marker);
 
-    // bastão: pivô na mão; em repouso fica nas costas
+    // lâmina de pulso: cabo escuro, guarda de aço, lâmina com fio ciano e núcleo Nexo. Pivô na mão; em repouso fica nas costas.
     this.staffPivot = new T.Group(); this.staffPivot.rotation.order = 'YXZ';
-    const staff = new T.Mesh(new T.BoxGeometry(0.07, 0.07, 1.15), mat('steelL'));
-    staff.position.z = 0.6;
-    const tip = new T.Mesh(new T.BoxGeometry(0.12, 0.12, 0.14), mat('glowC'));
-    tip.position.z = 1.15;
-    this.staffPivot.add(staff, tip);
+    const box = (w, h, d, c, z, y = 0, x = 0) => {
+      const m = new T.Mesh(new T.BoxGeometry(w, h, d), mat(c)); m.position.set(x, y, z);
+      if (!c.startsWith('glow')) { const ink = new T.Mesh(m.geometry, inkMat); ink.scale.set(1 + 0.05 / w, 1 + 0.05 / h, 1 + 0.05 / d); m.add(ink); }
+      return m;
+    };
+    this.staffPivot.add(
+      box(0.08, 0.08, 0.26, 'black', 0.08),                 // cabo
+      box(0.07, 0.07, 0.05, 'orange', -0.02),               // pomo (cor do cachecol)
+      box(0.3, 0.1, 0.07, 'steelD', 0.23),                  // guarda
+      box(0.07, 0.07, 0.06, 'glowC', 0.23, 0.07),           // núcleo Nexo na guarda
+      box(0.13, 0.035, 0.82, 'steelL', 0.67),               // lâmina
+      box(0.03, 0.045, 0.78, 'glowC', 0.67, 0, 0.075),      // fio emissivo
+      box(0.09, 0.035, 0.12, 'steelL', 1.11),               // ponta
+    );
     this.root.add(this.staffPivot);
     scene.add(this.root);
     this.reset();
@@ -145,7 +154,7 @@ export class Kay {
 
     if (this.state === 'free') {
       b.position.y = Math.abs(Math.sin(this.walk)) * 0.06;
-      sp.position.set(0.24, 0.42, -0.2); sp.rotation.set(-1.95, 0, 0.2);
+      sp.position.set(0.22, 0.62, -0.22); sp.rotation.set(-2.5, 0, 0.35);   // espada nas costas
     } else if (this.state === 'attack') {
       const a = CFG.combo[this.combo], half = T.MathUtils.degToRad(a.arc) / 2, dir = this.combo === 1 ? -1 : 1;
       let k;
