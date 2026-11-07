@@ -28,7 +28,8 @@ export class Companion {
   destroy() { this.g.scene.remove(this.root); }
   placeNearKay() { this.pos.copy(this.g.kay.pos).add(new T.Vector3(-(this.side || 1) * 1.0, 0, 0.35)); this.vel?.set(0, 0, 0); }
   get ready() { return this.cd <= 0; }
-  get cdFrac() { return Math.max(0, this.cd / this.cfg.cooldown); }
+  get cdMax() { return this.cfg.cooldown * (this.g.mods.skillCd || 1); }
+  get cdFrac() { return Math.max(0, this.cd / this.cdMax); }
 
   // alvo assistido: inimigo mais próximo no cone frontal de Kay; senão o mais próximo; senão à frente de Kay
   target(maxRange = 9) {
@@ -84,7 +85,7 @@ export class Companion {
   useSkill() {
     const g = this.g, k = g.kay, c = this.cfg, e = this.target();
     const aim = e ? faceOf(e.pos.x - k.pos.x, e.pos.z - k.pos.z) : k.face;
-    this.cd = c.cooldown; this.cast = 0.35; this.face = aim;
+    this.cd = this.cdMax; this.cast = 0.35; this.face = aim;
     if (this.kind === 'brasque') g.effects.push(new FireStrip(g, this.pos.clone(), e ? faceOf(e.pos.x - this.pos.x, e.pos.z - this.pos.z) : aim, c.fire));
     if (this.kind === 'marolho') g.effects.push(new Wave(g, k.pos.clone(), aim, c.wave));
     if (this.kind === 'brogume') {

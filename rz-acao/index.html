@@ -3,18 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#121815">
+<meta name="theme-color" content="#0d150f">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Ressonância Zero — Protótipo de ação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Inter:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <canvas id="view"></canvas>
 
 <div id="hud">
-  <div id="hearts" role="img"></div>
-  <div id="mats" aria-label="Liga de Fenda"><i></i><b>0</b></div>
+  <div id="status">
+    <div id="hearts" role="img"></div>
+    <div class="chips">
+      <div id="mats" class="chip loot" aria-label="Liga de Fenda"><i></i><b>0</b></div>
+      <div id="cubes" class="chip cube" aria-label="Cubos Nexus"><i></i><b>0</b></div>
+      <div id="boons" aria-label="Bênçãos ativas"></div>
+    </div>
+  </div>
   <div id="objective" aria-live="polite"></div>
+  <div id="bossbar" hidden><span id="boss-name"></span><div class="track"><div id="boss-fill"></div></div></div>
   <div id="labels"></div>
   <div id="toast" hidden></div>
   <button id="btn-pause" class="hud-btn" aria-label="Pausa"><span class="pause-ico"></span></button>
@@ -24,6 +33,7 @@
 <div id="touch">
   <div id="stick"><div id="stick-knob"></div></div>
   <div id="actions">
+    <button id="btn-interact" class="interact" hidden><span>Sincronizar</span><small></small></button>
     <button id="btn-skill" class="act skill" aria-label="Habilidade"><b id="skill-glyph">✦</b><span id="skill-name">Habilidade</span><small id="skill-cd"></small></button>
     <button id="btn-dodge" class="act dodge" aria-label="Esquiva"><b>»</b><span>Esquiva</span></button>
     <button id="btn-attack" class="act attack" aria-label="Ataque"><b>⟋</b><span>Ataque</span></button>
@@ -32,9 +42,24 @@
 
 <div id="count" hidden></div>
 <div id="fade"></div>
-<div id="map" hidden><div class="map-card"><h1>Fenda Verde</h1><p>Escolha o próximo caminho</p><div id="map-area"></div><div id="map-legend"></div></div></div>
-<div id="overlay" hidden><div class="card"><h1 id="ov-title"></h1><p id="ov-text"></p><div id="ov-buttons"></div></div></div>
-<div id="rotate"><div class="card"><h1>Gire o aparelho</h1><p>Este protótipo é jogado na horizontal.</p></div></div>
+
+<!-- telas de escolha -->
+<section id="select" class="screen" hidden>
+  <header><small class="eyebrow">Ressonância Zero · Fenda Verde</small><h1>Escolha a companheira</h1><p>Ela segue Kay durante a incursão. O botão Habilidade usa o poder dela.</p></header>
+  <div id="select-cards" class="picks"></div>
+</section>
+<section id="boon" class="screen" hidden>
+  <header><small class="eyebrow">Bênção da Fenda</small><h1>Escolha uma</h1><p>Vale só até o fim desta incursão.</p></header>
+  <div id="boon-cards" class="picks"></div>
+</section>
+<section id="map" class="screen map" hidden>
+  <header class="map-head"><div><small class="eyebrow">Fenda Verde</small><h1>Próximo caminho</h1></div><div id="map-stats"></div></header>
+  <div id="map-area"></div>
+  <div id="map-choices"></div>
+</section>
+
+<div id="overlay" hidden><div class="card"><small id="ov-eyebrow" class="eyebrow"></small><h1 id="ov-title"></h1><div id="ov-text"></div><div id="ov-buttons"></div></div></div>
+<div id="rotate"><div class="card"><h1>Gire o aparelho</h1><div>Este protótipo é jogado na horizontal.</div></div></div>
 
 <script type="module" src="js/game/main.js"></script>
 </body>

@@ -51,6 +51,7 @@ export class Kay {
   get dodging() { return this.state === 'dodge'; }
 
   update(dt, g, input) {
+    this.g = g;
     this.invuln = Math.max(0, this.invuln - dt);
     this.dodgeCd = Math.max(0, this.dodgeCd - dt);
     this.flash = Math.max(0, this.flash - dt);
@@ -102,6 +103,13 @@ export class Kay {
     if (l > 0.1) { this.dodgeDir.set(mv.x / l, 0, mv.z / l); this.face = faceOf(mv.x, mv.z); }
     else this.dodgeDir.set(Math.sin(this.face), 0, Math.cos(this.face));   // sem direção: última orientação
     this.state = 'dodge'; this.t = 0; this.combo = -1;
+    const g = this.g;
+    if (g?.mods.dodgePush) {   // bênção: esquiva de choque
+      for (const e of g.enemies) if (e.targetable && !e.boss && Math.hypot(e.pos.x - this.pos.x, e.pos.z - this.pos.z) < 1.9) {
+        e.takeHit({ dmg: 0, guard: 1, quiet: true, knock: 7, spark: '#ffe066' }, this.pos, g, false);
+      }
+      g.fx.ring(this.pos, '#ffe066', 0.3, 0.3, 1.9, 0.6);
+    }
   }
 
   startAttack(i, g, mv, input) {
@@ -121,7 +129,10 @@ export class Kay {
     this.state = 'attack'; this.combo = i; this.t = 0; this.hits.clear(); this.slashed = false;
   }
 
-  hitTest(a, g) {
+  hitTest(a0, g) {
+    // bênçãos da incursão alteram o golpe
+    const m = g.mods, fin = this.combo === CFG.combo.length - 1;
+    const a = { ...a0, dmg: a0.dmg + (m.dmg || 0), arc: a0.arc + (fin ? m.finArc || 0 : 0), range: a0.range + (fin ? m.finRange || 0 : 0) };
     if (!this.slashed) { g.fx.slash(this.pos, this.face, a.range + 0.2, a.arc); this.slashed = true; }
     const half = T.MathUtils.degToRad(a.arc) / 2;
     for (const e of g.enemies) {
@@ -132,7 +143,7 @@ export class Kay {
       this.hits.add(e); e.takeHit(a, this.pos, g, this.combo === CFG.combo.length - 1);
     }
     for (const b of g.arena.breakIn(this.pos, this.face, a.range, half)) {   // objetos quebráveis
-      g.fx.burst(b, b.kind === 'crate' ? '#a9b4c4' : '#8fd06a', 8, 3, 0.4); g.run.dropAt(new T.Vector3(b.x, 0, b.z), b.kind === 'chest' ? CFG.chestDrop : 1); g.hitstop = Math.max(g.hitstop, 0.02);
+      g.fx.burst(b, b.kind === 'crate' ? '#a9b4c4' : '#8fd06a', 8, 3, 0.4); g.run.dropAt(new T.Vector3(b.x, 0, b.z), b.kind === 'chest' ? CFG.chestDrop : 1); if (b.kind === 'chest') g.run.addCube(1); g.hitstop = Math.max(g.hitstop, 0.02);
     }
   }
 

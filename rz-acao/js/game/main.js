@@ -38,46 +38,73 @@ function resize() {
 // ---------- estado ----------
 const fx = new Fx(scene, settings);
 const game = {
-  mode: 'play', time: 0, scene, cam, fx, settings, enemies: [], projectiles: [], effects: [], comp: null, hitstop: 0, arena: null,
+  mode: 'play', time: 0, scene, cam, fx, settings, enemies: [], projectiles: [], effects: [], comp: null, hitstop: 0, arena: null, mods: {},
+  maxHp: () => CFG.kay.hp + (game.mods.maxHp || 0),
   onSkillNotReady() { const b = $('btn-skill'); b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); },
   onSkill() { vibrate(20); },
   onKayHurt() { renderHearts(); if (!settings.reduceFx) { document.body.classList.remove('hurt'); void document.body.offsetWidth; document.body.classList.add('hurt'); } vibrate(40); },
   onEnemyHit(fin) { game.hitstop = Math.max(game.hitstop, fin ? CFG.hitstop.heavy : CFG.hitstop.light); if (fin) vibrate(15); },
   onGuardBreak() { vibrate(25); },
-  onEnemyKilled(e) { game.run.onEnemyKilled(e); },
+  onEnemyKilled(e) { game.run.onEnemyKilled(e); if (e.boss) $('bossbar').hidden = true; },
+  onBoss(b) { $('boss-name').textContent = CFG.guardian.name; $('bossbar').hidden = false; game.onBossHp(b); },
+  onBossHp(b) { $('boss-fill').style.width = Math.max(0, b.hp / b.cfg.hp * 100) + '%'; $('bossbar').classList.toggle('p2', b.phase2); },
 };
 game.kay = new Kay(scene);
 
 const input = createInput({ layer: $('touch'), stick: $('stick'), knob: $('stick-knob'), attackBtn: $('btn-attack'), dodgeBtn: $('btn-dodge'), skillBtn: $('btn-skill'), onPause: () => (game.mode === 'paused' ? resume() : pause()) });
 function vibrate(ms) { if (settings.vibrate !== false && navigator.vibrate) try { navigator.vibrate(ms); } catch { /* ignorar */ } }
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---------- HUD ----------
 function renderHearts() {
-  const k = game.kay, el = $('hearts');
+  const k = game.kay, el = $('hearts'), max = game.maxHp();
   el.innerHTML = '';
-  for (let i = 0; i < CFG.kay.hp; i++) { const s = document.createElement('i'); if (i >= k.hp) s.className = 'empty'; el.appendChild(s); }
-  el.setAttribute('aria-label', `Vida ${k.hp} de ${CFG.kay.hp}`);
+  for (let i = 0; i < max; i++) { const s = document.createElement('i'); if (i >= k.hp) s.className = 'empty'; el.appendChild(s); }
+  el.setAttribute('aria-label', `Vida ${k.hp} de ${max}`);
 }
-function overlay(title, text, buttons) {
-  $('ov-title').textContent = title; $('ov-text').innerHTML = text;
+// painel genérico (pausa, evento, resultado). buttons: [rótulo, ação, classe, detalhe]
+function overlay(title, html, buttons, eyebrow = '') {
+  $('ov-eyebrow').textContent = eyebrow; $('ov-title').textContent = title; $('ov-text').innerHTML = html;
   const box = $('ov-buttons'); box.innerHTML = '';
-  for (const [label, fn, cls] of buttons) { const b = document.createElement('button'); b.textContent = label; if (cls) b.className = cls; b.onclick = fn; box.appendChild(b); }
+  for (const [label, fn, cls, sub] of buttons) {
+    const b = document.createElement('button'); b.className = 'opt ' + (cls || '');
+    b.innerHTML = `<span>${esc(label)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}`; b.onclick = fn; box.appendChild(b);
+  }
   $('overlay').hidden = false;
+  box.querySelector('button')?.focus({ preventScroll: true });
 }
 const hideOverlay = () => { $('overlay').hidden = true; };
+const showScreen = id => { for (const s of ['select', 'boon', 'map']) $(s).hidden = s !== id; };
+
+// cartões de escolha (companheira e bênçãos): mesmo componente
+function cards(container, items, onPick) {
+  container.innerHTML = '';
+  for (const it of items) {
+    const b = document.createElement('button'); b.className = 'pick' + (it.selected ? ' selected' : ''); b.style.setProperty('--c', it.color);
+    b.innerHTML = `<span class="pick-glyph">${it.glyph}</span><span class="pick-body"><strong>${esc(it.name)}</strong>${it.tag ? `<em>${esc(it.tag)}</em>` : ''}<span class="pick-desc">${esc(it.desc)}</span>${it.foot ? `<small>${esc(it.foot)}</small>` : ''}</span>`;
+    b.onclick = () => onPick(it.key); container.appendChild(b);
+  }
+}
 
 const doorLabels = [];
 let toastTimer = 0;
 const ui = {
   objective() { $('objective').textContent = game.run.status(); },
   materials(n) { const el = $('mats'); el.querySelector('b').textContent = n; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); },
+  cubes(n) { $('cubes').querySelector('b').textContent = n; },
   toast(text, color) {
-    const el = $('toast'); el.textContent = text; el.style.borderColor = color; el.hidden = false;
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2200);
+    const el = $('toast'); el.textContent = text; el.style.setProperty('--c', color || '#ffc96b'); el.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2400);
+  },
+  // botão contextual: aparece só em segurança, acima das ações
+  interact(opt) {
+    const b = $('btn-interact');
+    if (!opt) { b.hidden = true; return; }
+    b.hidden = false; b.disabled = !opt.ok; b.querySelector('span').textContent = opt.label; b.querySelector('small').textContent = opt.sub;
   },
   addDoor(door) {
     const el = document.createElement('div'); el.className = 'door-label';
-    el.innerHTML = `<b>${door.info.glyph}</b>${door.info.label}`; el.style.borderColor = door.info.color;
+    el.innerHTML = `<b>${door.info.glyph}</b>${door.info.label}`; el.style.setProperty('--c', door.info.color);
     $('labels').appendChild(el); doorLabels.push({ el, door });
   },
   clearDoors() { doorLabels.forEach(d => d.el.remove()); doorLabels.length = 0; },
@@ -91,51 +118,92 @@ const ui = {
   },
   openMap() {
     if (game.mode !== 'play') return;
-    game.mode = 'map'; input.clear(); renderMap(); $('map').hidden = false;
+    game.mode = 'map'; input.clear(); renderMap(); showScreen('map');
+  },
+  boon() {
+    if (game.mode !== 'play') return setTimeout(() => ui.boon(), 400);
+    const left = Object.keys(CFG.boons).filter(k => !game.run.boons.includes(k)).sort(() => Math.random() - 0.5).slice(0, 3);
+    if (!left.length) return;
+    game.mode = 'boon'; input.clear();
+    cards($('boon-cards'), left.map(k => ({ key: k, ...CFG.boons[k], tag: 'Só nesta incursão' })), key => {
+      applyBoon(key); showScreen(null); game.mode = 'play'; input.clear();
+      ui.toast(`${CFG.boons[key].name} ativada`, CFG.boons[key].color);
+    });
+    showScreen('boon');
   },
   event() {
     game.mode = 'event'; input.clear();
     const k = game.kay, done = () => { hideOverlay(); game.mode = 'play'; input.clear(); ui.objective(); };
     overlay('Fissura pulsante', 'Uma fissura da Fenda vibra sobre o altar. A Liga de Fenda se acumula em volta dela.', [
-      [`Tocar a fissura: −1 de vida, +8 Liga de Fenda`, () => { if (k.hp > 1) k.hp--; renderHearts(); game.run.dropAt(k.pos.clone().setZ(k.pos.z - 0.8), 8); done(); }, 'primary'],
-      [`Absorver o eco: +1 de vida`, () => { k.hp = Math.min(CFG.kay.hp, k.hp + 1); renderHearts(); done(); }],
-      ['Seguir em frente', done],
-    ]);
+      ['Tocar a fissura', () => { if (k.hp > 1) k.hp--; renderHearts(); game.run.dropAt(k.pos.clone().setZ(k.pos.z - 0.8), 8); done(); }, 'risk', '−1 de vida · +8 Liga de Fenda'],
+      ['Absorver o eco', () => { k.hp = Math.min(game.maxHp(), k.hp + 1); renderHearts(); done(); }, '', '+1 de vida'],
+      ['Seguir em frente', done, 'ghost'],
+    ], 'Evento');
   },
   finish() {
     game.mode = 'won';
-    setTimeout(() => {
-      const s = game.run.summary();
-      overlay('Fenda concluída', `${s.rooms} salas · ${s.time.toFixed(0)} s · golpes recebidos: ${game.kay.stats.hitsTaken}<br>Liga de Fenda: <b>${s.materials}</b> · Ressonas encontradas: <b>${s.rescued}</b><br><small>O Guardião entra na etapa 3.</small>`, [['Nova incursão', restart, 'primary']]);
-    }, 1200);
+    setTimeout(() => result('Fenda estabilizada', 'Vitória', true), 1400);
   },
 };
-// mapa da Fenda: camadas da esquerda para a direita; só as salas ligadas à atual podem ser escolhidas
+function result(title, eyebrow, won) {
+  const s = game.run.summary(), kept = won ? s.materials : Math.floor(s.materials / 2);
+  const names = s.rescued.map(k => CFG.companions[k].name);
+  overlay(title, `<dl class="stats">
+    <div><dt>Salas</dt><dd>${s.rooms}<small> / ${game.run.total}</small></dd></div>
+    <div><dt>Tempo</dt><dd>${Math.floor(s.time / 60)}:${String(Math.floor(s.time % 60)).padStart(2, '0')}</dd></div>
+    <div><dt>Liga de Fenda</dt><dd>${kept}${won ? '' : `<small> de ${s.materials}</small>`}</dd></div>
+    <div><dt>Ressonas</dt><dd>${names.length}</dd></div>
+  </dl>
+  <p class="note">${names.length ? `Sincronizadas: ${esc(names.join(', '))}. Elas seguem para o refúgio.` : 'Nenhuma Ressona sincronizada nesta incursão.'}${won ? '' : ' Na derrota, metade da Liga se perde.'}</p>`,
+  [['Nova incursão', restart, 'primary']], eyebrow);
+}
+function applyBoon(key) {
+  const m = game.mods, k = game.kay; game.run.boons.push(key);
+  if (key === 'lamina') { m.finArc = 50; m.finRange = 0.35; }
+  if (key === 'corte') m.dmg = 0.5;
+  if (key === 'recarga') m.skillCd = 0.7;
+  if (key === 'pulso') m.dodgePush = true;
+  if (key === 'vigor') { m.maxHp = 2; k.hp = Math.min(game.maxHp(), k.hp + 2); renderHearts(); }
+  if (key === 'ima') m.extraDrop = 1;
+  renderBoons();
+}
+function renderBoons() {
+  $('boons').innerHTML = game.run.boons.map(k => `<i style="--c:${CFG.boons[k].color}" title="${esc(CFG.boons[k].name)}">${CFG.boons[k].glyph}</i>`).join('');
+}
+
+// mapa da Fenda: grafo da esquerda para a direita + barra de escolhas grande embaixo
 function renderMap() {
   const run = game.run, { layers } = run.map, L = layers.length, area = $('map-area');
   area.innerHTML = '';
-  const choices = new Set(run.choices.map(n => n.id)), pos = n => [(n.layer + 0.5) / L * 100, n.y * 100];
+  const choices = run.choices, ids = new Set(choices.map(n => n.id)), pos = n => [(n.layer + 0.5) / L * 100, 8 + n.y * 84];
+  const infoOf = n => n.key === 'final' ? { label: 'Câmara final', glyph: '☗', color: '#b77bff', desc: CFG.guardian.name } : CFG.roomTypes[n.key];
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none');
   for (const layer of layers) for (const a of layer) for (const id of a.next) {
     const b = run.map.byId[id], [x1, y1] = pos(a), [x2, y2] = pos(b), l = document.createElementNS(svg.namespaceURI, 'line');
     Object.entries({ x1, y1, x2, y2 }).forEach(([k, v]) => l.setAttribute(k, v));
-    const walked = run.visited.includes(a.id) && (run.visited.includes(b.id) || (a.id === run.node.id && choices.has(b.id)));
-    l.setAttribute('class', walked ? (choices.has(b.id) ? 'path open' : 'path walked') : 'path');
+    const walked = run.visited.includes(a.id) && run.visited.includes(b.id), open = a.id === run.node.id && ids.has(b.id);
+    l.setAttribute('class', open ? 'path open' : walked ? 'path walked' : 'path');
     svg.appendChild(l);
   }
   area.appendChild(svg);
+  const pickNode = n => { showScreen(null); run.choose(n); };
   for (const layer of layers) for (const n of layer) {
-    const info = n.key === 'final' ? { label: 'Câmara final', glyph: '☗', color: '#b77bff' } : CFG.roomTypes[n.key];
-    const b = document.createElement('button'), [x, y] = pos(n);
-    b.className = 'node' + (n.id === run.node.id ? ' current' : run.visited.includes(n.id) ? ' visited' : choices.has(n.id) ? ' choice' : '') + (n.key === 'final' ? ' final' : '');
+    const info = infoOf(n), b = document.createElement('button'), [x, y] = pos(n);
+    b.className = 'node' + (n.id === run.node.id ? ' current' : run.visited.includes(n.id) ? ' visited' : ids.has(n.id) ? ' choice' : '') + (n.key === 'final' ? ' final' : '');
     b.style.left = x + '%'; b.style.top = y + '%'; b.style.setProperty('--c', info.color);
-    b.innerHTML = `<b>${info.glyph}</b>`; b.setAttribute('aria-label', info.label); b.title = info.label;
-    if (choices.has(n.id)) { b.innerHTML += `<span>${info.label}</span>`; b.onclick = () => { $('map').hidden = true; run.choose(n); }; }
-    else b.disabled = true;
+    b.innerHTML = `<b>${info.glyph}</b>`; b.setAttribute('aria-label', info.label);
+    if (ids.has(n.id)) b.onclick = () => pickNode(n); else b.tabIndex = -1;
     area.appendChild(b);
   }
-  $('map-legend').innerHTML = Object.values(CFG.roomTypes).map(t => `<span style="--c:${t.color}"><b>${t.glyph}</b>${t.label}</span>`).join('');
+  const bar = $('map-choices'); bar.innerHTML = '';
+  for (const n of choices) {
+    const info = infoOf(n), b = document.createElement('button'); b.className = 'route'; b.style.setProperty('--c', info.color);
+    b.innerHTML = `<b>${info.glyph}</b><span><strong>${esc(info.label)}</strong><small>${esc(info.desc || '')}</small></span>`;
+    b.onclick = () => pickNode(n); bar.appendChild(b);
+  }
+  $('map-stats').innerHTML = `<span>Sala <b>${run.node.layer + 1}</b>/${run.total}</span><span class="c-life"><b>${game.kay.hp}</b>/${game.maxHp()} vida</span><span class="c-loot"><b>${run.materials}</b> Liga</span><span class="c-cube"><b>${run.cubes}</b> Cubos</span>`;
+  bar.querySelector('button')?.focus({ preventScroll: true });
 }
 
 // botão de habilidade: preenchimento progressivo da recarga + segundos restantes
@@ -157,32 +225,37 @@ function placeLabels() {
 
 // ---------- fluxo ----------
 game.run = new Run(game, ui);
+game.ui = ui;
+$('btn-interact').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); game.run.trySync(); });
 // início da incursão: escolher a companheira (uma por incursão)
 function restart() {
-  game.mode = 'select'; input.clear(); $('map').hidden = true;
-  overlay('Escolha a companheira', 'Ela acompanha Kay nesta incursão. Toque em Habilidade para usar o poder dela.',
-    Object.entries(CFG.companions).map(([key, c]) => [`${c.glyph}  ${c.name} · ${c.element}: ${c.desc}`, () => startRun(key), key === settings.companion ? 'primary' : '']));
+  game.mode = 'select'; input.clear(); hideOverlay(); $('bossbar').hidden = true; ui.interact(null);
+  const sel = settings.companion || 'brogume';
+  cards($('select-cards'), Object.entries(CFG.companions).map(([key, c]) => ({ key, ...c, tag: c.element, foot: `Recarga ${c.cooldown} s`, selected: key === sel })), startRun);
+  showScreen('select');
+  $('select-cards').querySelector('.selected')?.focus({ preventScroll: true });
 }
 function startRun(kind) {
   settings.companion = kind; saveSettings();
-  game.kay.reset(); game.time = 0; game.hitstop = 0;
-  hideOverlay(); input.clear(); renderHearts();
+  showScreen(null); hideOverlay(); input.clear();
+  game.mods = {}; game.kay.reset(); game.time = 0; game.hitstop = 0;
+  renderHearts();
   game.comp?.destroy(); game.comp = new Companion(kind, game);
   const c = CFG.companions[kind], b = $('btn-skill');
   b.style.setProperty('--sc', c.color); $('skill-glyph').textContent = c.glyph; $('skill-name').textContent = c.name;
   b.setAttribute('aria-label', `Habilidade de ${c.name}`);
-  game.run.start(); ui.materials(0); game.comp.placeNearKay();
+  game.run.start(); ui.materials(0); renderBoons(); game.comp.placeNearKay();
   game.mode = 'play';
 }
 function pause() {
   if (game.mode !== 'play' && game.mode !== 'countdown') return;
   game.mode = 'paused'; input.clear();
-  overlay('Pausa', 'Joystick à esquerda · Ataque, Esquiva à direita.<br>Teclado: WASD · J ataque · K/Espaço esquiva · Esc pausa', [
+  overlay('Pausa', '<p class="keys"><span>Joystick</span> mover · <span>Ataque</span> combo · <span>Esquiva</span> · <span>Habilidade</span> companheira<br>Teclado: WASD · J · K/Espaço · L · Esc</p>', [
     ['Continuar', resume, 'primary'],
-    ['Recomeçar incursão', restart],
-    [`Efeitos reduzidos: ${settings.reduceFx ? 'sim' : 'não'}`, () => { settings.reduceFx = !settings.reduceFx; saveSettings(); game.mode = 'play'; pause(); }],
-    [`Mostrar FPS: ${settings.showFps ? 'sim' : 'não'}`, () => { settings.showFps = !settings.showFps; $('fps').hidden = !settings.showFps; saveSettings(); game.mode = 'play'; pause(); }],
-  ]);
+    ['Recomeçar incursão', restart, 'ghost'],
+    ['Efeitos reduzidos', () => { settings.reduceFx = !settings.reduceFx; saveSettings(); game.mode = 'play'; pause(); }, 'toggle' + (settings.reduceFx ? ' on' : ''), settings.reduceFx ? 'Ligado' : 'Desligado'],
+    ['Mostrar FPS', () => { settings.showFps = !settings.showFps; $('fps').hidden = !settings.showFps; saveSettings(); game.mode = 'play'; pause(); }, 'toggle' + (settings.showFps ? ' on' : ''), settings.showFps ? 'Ligado' : 'Desligado'],
+  ], `Sala ${game.run.node ? game.run.node.layer + 1 : 1} de ${game.run.total}`);
 }
 function resume() {
   if (game.mode !== 'paused' || document.body.classList.contains('portrait')) return;
@@ -190,9 +263,8 @@ function resume() {
   game.mode = 'countdown'; game.countT = 0.9;      // breve contagem antes de reativar perigos
 }
 function lose() {
-  game.mode = 'lost';
-  const s = game.run.summary(), kept = Math.floor(s.materials / 2);
-  setTimeout(() => overlay('Kay caiu', `Sala ${s.depth} de ${game.run.total} · ${s.rooms} salas limpas<br>Liga de Fenda recuperada: <b>${kept}</b> de ${s.materials} (metade se perde na derrota)`, [['Nova incursão', restart, 'primary']]), 700);
+  game.mode = 'lost'; ui.interact(null);
+  setTimeout(() => result('Kay caiu', 'Derrota', false), 800);
 }
 
 $('btn-pause').addEventListener('click', () => (game.mode === 'paused' ? resume() : pause()));
@@ -235,7 +307,10 @@ function push(a, b, min, wa) {   // wa = parte do empurrão que vai para "a"
 function camTarget() {
   const a = game.arena, hx = Math.max(0, a.w / 2 + 1 - cam.right), hz = Math.max(0, a.d / 2 - 1.6);
   const r = game.run.room, lookDoors = r.clear && !r.final && a.doors.some(d => d.side === 'top') ? 3 : 0;   // sala limpa: puxa a câmera para as portas
-  return [T.MathUtils.clamp(game.kay.pos.x, -hx, hx), T.MathUtils.clamp(game.kay.pos.z - lookDoors, -hz - 1.8, hz)];
+  // luta com o Guardião: enquadra Kay e o chefe juntos
+  const boss = game.enemies.find(e => e.boss && e.state !== 'dying');
+  const fx_ = boss ? game.kay.pos.x * 0.55 + boss.pos.x * 0.45 : game.kay.pos.x, fz = boss ? game.kay.pos.z * 0.55 + boss.pos.z * 0.45 : game.kay.pos.z - lookDoors;
+  return [T.MathUtils.clamp(fx_, -hx, hx), T.MathUtils.clamp(fz, -hz - 1.8, hz)];
 }
 function snapCamera() { const [x, z] = camTarget(); camAt.set(x, 0, z); cam.position.copy(camAt).add(camOff); cam.lookAt(camAt); }
 function updateCamera(dt) {

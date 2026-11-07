@@ -48,3 +48,9 @@ Espécies dos inimigos (Arborion e Fanaluz) são provisórias até a definição
 - A companheira segue Kay sem bloquear, dá um golpe leve automático a cada 3,5 s e não tem vida própria.
 - Botão de Habilidade com recarga em preenchimento progressivo e segundos restantes. Teclado: L.
 - Código em `js/game/companion.js`; valores em `CFG.companions`.
+
+## MVP 1 · etapa 3 (Guardião, resgate, bênçãos) e novas telas
+- Guardião (`js/game/boss.js`): Arborion Ancião, 2 fases. Pisão em área e investida marcados no chão; na fase 2, três impactos seguidos e anel de esporos. Bater em obstáculo durante a investida o atordoa.
+- Resgate: na sala de Resgate, após limpar, uma Ressona debilitada aparece; o botão contextual "Sincronizar" consome um Cubo Nexus (começa com 2; baús dão +1).
+- Bênçãos: a cada 2 salas de combate, escolher 1 de 3 (só nesta incursão). Ícones ativos aparecem no HUD.
+- Telas refeitas: escolha da companheira em cartões, mapa com barra de rotas grande e status, painel de pausa/evento e resultado com estatísticas.

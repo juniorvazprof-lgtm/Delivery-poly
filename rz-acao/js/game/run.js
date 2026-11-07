@@ -5,6 +5,10 @@ import { Arena } from './arena.js';
 import { Enemy } from './enemies.js';
 import { mat } from '../engine/voxel.js';
 import { COL } from './fx.js';
+import { Guardian } from './boss.js';
+import { buildModel } from '../engine/voxel.js';
+import { MODELS } from '../data/models.js';
+import { mergeModel } from './merge.js';
 
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const FINAL = { label: 'Câmara final', glyph: '☗', color: '#b77bff', materials: 6, final: true, key: 'final' };
@@ -58,7 +62,7 @@ class Drop {
       if (this.pos.y < 0.15) { this.pos.y = 0.15; this.vel.set(0, 0, 0); }
     } else {
       const to = new T.Vector3(k.pos.x - this.pos.x, 0.5 - this.pos.y, k.pos.z - this.pos.z), d = to.length();
-      const sp = CFG.drops.magnetSpeed * Math.min(1, 0.3 + this.t);
+      const sp = CFG.drops.magnetSpeed * (this.g.mods.extraDrop ? 1.6 : 1) * Math.min(1, 0.3 + this.t);
       if (d < 0.35) return this.collect();
       this.pos.addScaledVector(to.normalize(), Math.min(d, sp * dt));
     }
@@ -72,7 +76,8 @@ export class Run {
   constructor(g, ui) { this.g = g; this.ui = ui; this.drops = []; this.lastLayout = -1; }
 
   start() {
-    this.materials = 0; this.rescued = 0; this.cleared = 0; this.t0 = this.g.time;
+    this.materials = 0; this.rescued = []; this.cleared = 0; this.fights = 0; this.t0 = this.g.time;
+    this.cubes = CFG.rescue.startCubes; this.boons = []; this.ui.cubes(this.cubes);
     this.map = buildMap(); this.visited = ['0-0'];
     this.enterNode(this.map.byId['0-0']);
   }
@@ -111,9 +116,10 @@ export class Run {
     if (info.event) { this.altar = { x: 0, z: -0.8, used: false }; g.arena.addProp('glyph', 0, -0.8, 1.2, 0.55); } else this.altar = null;
     if (info.heal) {
       g.arena.addProp('campfire', 0, -0.6, 1.4, 0.5);
-      const before = k.hp; k.hp = Math.min(CFG.kay.hp, k.hp + info.heal); this.ui.hearts();
+      const before = k.hp; k.hp = Math.min(g.maxHp(), k.hp + info.heal); this.ui.hearts();
       this.ui.toast(k.hp > before ? `Descanso · +${k.hp - before} de vida` : 'Descanso · vida já está cheia', COL.friend);
     }
+    this.rescue = null; this.ui.interact(null);
     g.comp?.placeNearKay();
     this.ui.snapCamera(); this.ui.objective();
   }
@@ -124,6 +130,8 @@ export class Run {
     const r = this.room, n = this.g.enemies.filter(e => e.state !== 'dying').length;
     const where = `Sala ${r.depth + 1}/${this.total} · ${r.info.label}`;
     if (this.altar && !this.altar.used) return `${where} · toque o altar`;
+    if (this.rescue?.state === 'waiting') return `${where} · sincronize a Ressona`;
+    if (r.final && !r.clear) { const b = this.g.enemies.find(e => e.boss); if (b) return `${where} · ${CFG.guardian.name}`; }
     if (r.clear) return r.final ? `${where} · concluída` : `${where} · siga pela saída`;
     return `${where} · ${n} ${n === 1 ? 'inimigo' : 'inimigos'}`;
   }
@@ -132,6 +140,7 @@ export class Run {
     const r = this.room, g = this.g, taken = [];
     r.wave = i; r.waveT = 0;
     for (const kind of r.waves[i]) {
+      if (kind === 'guardian') { g.enemies.push(new Guardian(new T.Vector3(0, 0, -g.arena.d / 2 + 2.6), g)); continue; }
       const p = g.arena.spawnPoint(g.kay.pos, taken); taken.push(p);
       g.enemies.push(new Enemy(kind, p, g));
     }
@@ -150,6 +159,7 @@ export class Run {
     if (this.altar && !this.altar.used && g.mode === 'play' && Math.hypot(g.kay.pos.x - this.altar.x, g.kay.pos.z - this.altar.z) < 1.3) {
       this.altar.used = true; this.ui.event(); this.ui.objective();
     }
+    this.updateRescue(dt);
     for (const d of this.drops) d.update(dt, r.clear);
     this.drops = this.drops.filter(d => d.alive);
     if (r.clear && !r.final && g.mode === 'play') {
@@ -162,15 +172,61 @@ export class Run {
   }
 
   dropAt(pos, n) { for (let i = 0; i < n; i++) this.drops.push(new Drop(pos, this.g)); }
-  onEnemyKilled(e) { const [a, b] = CFG.drops.perEnemy; this.dropAt(e.pos, a + Math.floor(Math.random() * (b - a + 1))); }
+  onEnemyKilled(e) {
+    if (e.boss) { this.dropAt(e.pos, 12); return; }
+    const [a, b] = CFG.drops.perEnemy; this.dropAt(e.pos, a + Math.floor(Math.random() * (b - a + 1)) + (this.g.mods.extraDrop || 0));
+  }
+  addCube(n = 1) { this.cubes += n; this.ui.cubes(this.cubes); this.ui.toast(`+${n} Cubo Nexus`, COL.friend); }
+
+  // ---- resgate seguro: só depois da sala limpa ----
+  spawnRescue() {
+    const g = this.g, species = pick(CFG.rescue.species), body = buildModel(MODELS[species]);
+    body.scale.multiplyScalar(0.5); mergeModel(body); body.rotation.z = 1.25; body.position.set(0, 0.12, -0.6);
+    const ring = new T.Mesh(new T.RingGeometry(0.55, 0.62, 32), new T.MeshBasicMaterial({ color: COL.friend, transparent: true, opacity: 0.6, depthWrite: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.set(0, 0.04, -0.6);
+    g.arena.group.add(body, ring);
+    this.rescue = { species, body, ring, x: 0, z: -0.6, state: 'waiting', t: 0 };
+    this.ui.toast(`${CFG.companions[species].name} debilitada · aproxime-se para sincronizar`, COL.friend);
+  }
+  trySync() {
+    const r = this.rescue; if (!r || r.state !== 'waiting') return;
+    if (this.cubes <= 0) { this.ui.toast('Sem Cubo Nexus · baús podem trazer mais', COL.threat); return; }
+    r.state = 'sync'; r.t = 0; this.ui.interact(null);
+    const g = this.g;
+    r.beam = new T.Mesh(new T.BoxGeometry(1, 0.05, 0.05), new T.MeshBasicMaterial({ color: COL.friend, transparent: true, opacity: 0.85 }));
+    g.arena.group.add(r.beam);
+  }
+  updateRescue(dt) {
+    const r = this.rescue, g = this.g, k = g.kay; if (!r) return;
+    r.t += dt; r.ring.material.opacity = 0.35 + Math.sin(g.time * 4) * 0.25;
+    if (r.state === 'waiting') {
+      r.body.position.y = 0.12 + Math.abs(Math.sin(g.time * 1.5)) * 0.02;
+      const near = Math.hypot(k.pos.x - r.x, k.pos.z - r.z) < CFG.rescue.range && g.mode === 'play';
+      this.ui.interact(near ? { label: 'Sincronizar', sub: `Cubo Nexus: ${this.cubes}`, ok: this.cubes > 0 } : null);
+    } else if (r.state === 'sync') {   // conexão do Nexo → transferência → confirmação
+      const p = Math.min(1, r.t / CFG.rescue.syncTime);
+      const mx = (k.pos.x + r.x) / 2, mz = (k.pos.z + r.z) / 2, len = Math.hypot(k.pos.x - r.x, k.pos.z - r.z);
+      r.beam.position.set(mx, 0.55, mz); r.beam.rotation.y = Math.atan2(k.pos.x - r.x, k.pos.z - r.z) + Math.PI / 2; r.beam.scale.x = Math.max(0.01, len * Math.min(1, p * 2.5));
+      const s = Math.max(0.01, 1 - Math.max(0, p - 0.45) / 0.55); r.body.scale.setScalar(r.body.userData.s0 ||= r.body.scale.x); r.body.scale.setScalar(r.body.userData.s0 * s);
+      r.body.rotation.y += dt * 8 * p;
+      if (p >= 1) {
+        g.arena.group.remove(r.body, r.ring, r.beam); r.state = 'done';
+        this.cubes--; this.ui.cubes(this.cubes); this.rescued.push(r.species);
+        g.fx.ring(k.pos, COL.friend, 0.6, 0.3, 1.6); g.fx.burst(k.pos, COL.friend, 12, 3, 0.8);
+        this.ui.toast(`${CFG.companions[r.species].name} sincronizada · vai para o refúgio`, COL.friend);
+        this.ui.objective();
+      }
+    }
+  }
   addMaterial() { this.materials++; this.ui.materials(this.materials); }
 
   clearRoom() {
     const r = this.room, g = this.g;
     r.clear = true; this.cleared++;
     this.dropAt(g.kay.pos.clone().setZ(g.kay.pos.z - 0.6), r.info.materials);
-    if (r.info.rescue) { this.rescued++; this.ui.toast('Ressona debilitada encontrada · resgate completo na etapa 3', COL.friend); }
+    if (r.info.rescue) this.spawnRescue();
     if (r.final) { this.ui.finish(); return; }
+    if (!r.info.peaceful) { this.fights++; if (this.fights % CFG.boonEvery === 0) setTimeout(() => this.ui.boon(), 900); }
     const side = pick(this.layout.exits);
     this.ui.addDoor(g.arena.addDoor(side, EXIT));
     if (!r.info.peaceful) this.ui.toast('Sala limpa · a saída abriu', COL.loot);
@@ -178,6 +234,6 @@ export class Run {
   }
 
   summary() {
-    return { time: this.g.time - this.t0, materials: this.materials, rescued: this.rescued, rooms: this.cleared, depth: this.room.depth + 1 };
+    return { time: this.g.time - this.t0, materials: this.materials, rescued: this.rescued, rooms: this.cleared, depth: this.room.depth + 1, boons: this.boons };
   }
 }

@@ -65,6 +65,25 @@ export const CFG = {
       desc: 'Raízes prendem inimigos numa área por 2 s', roots: { radius: 1.9, delay: 0.3, hold: 2.2, dmg: 1, guard: 1, reach: 6 } },
   },
   companionPoke: { every: 3.5, range: 2.4, dmg: 0.5 },   // apoio automático discreto
+  // Guardião da Fenda Verde (câmara final). Só ele marca o chão nos golpes grandes.
+  guardian: {
+    name: 'Arborion Ancião', model: 'arborion', scale: 1.7, radius: 1.0, hp: 46, guard: 12, stun: 2.2, speed: 1.6, dmg: 1,
+    slamRadius: 2.6, dashSpeed: 11, dashDist: 8, wallStun: 1.6, tripleRadius: 1.4, ringShots: 8, ringSpeed: 3.6,
+    p1: { slamWind: 0.95, chargeWind: 0.85, recover: 0.9, between: 1.2, chain: 0.6, tripleEach: 0.8 },
+    p2: { slamWind: 0.75, chargeWind: 0.7, recover: 0.65, between: 0.8, chain: 0.4, tripleEach: 0.65 },
+  },
+  // resgate: Ressona debilitada após limpar a sala; sincronizar consome um Cubo Nexus
+  rescue: { startCubes: 2, species: ['brasque', 'marolho', 'brogume'], range: 1.5, syncTime: 1.1 },
+  // bênçãos da incursão: a cada 2 salas de combate limpas, escolher 1 de 3 (só valem nesta incursão)
+  boonEvery: 2,
+  boons: {
+    lamina: { name: 'Lâmina larga', glyph: '⟋', color: '#5ff2ff', desc: 'O 3º golpe do combo fica mais largo e alcança mais longe.' },
+    corte: { name: 'Fio de pulso', glyph: '✦', color: '#9be7f2', desc: 'Todos os golpes da espada causam mais dano.' },
+    recarga: { name: 'Vínculo rápido', glyph: '↻', color: '#8fd06a', desc: 'A habilidade da companheira recarrega 30% mais rápido.' },
+    pulso: { name: 'Esquiva de choque', glyph: '»', color: '#ffe066', desc: 'Ao esquivar, Kay empurra os inimigos próximos.' },
+    vigor: { name: 'Coração da Fenda', glyph: '◆', color: '#ff7ad9', desc: '+2 de vida máxima e recupera 2 de vida agora.' },
+    ima: { name: 'Ímã de Liga', glyph: '⬢', color: '#ffc96b', desc: 'Inimigos soltam +1 Liga de Fenda e ela chega mais rápido.' },
+  },
   guardRegen: 2.5,                                   // guarda volta cheia após esse tempo sem apanhar
 
   // incursão: salas normais + câmara final. Encontros por profundidade (cada um = lista de ondas).
@@ -76,15 +95,16 @@ export const CFG = {
     [[['charger', 'charger'], ['shooter', 'chaser', 'chaser']], [['chaser', 'shooter', 'shooter'], ['charger', 'chaser']]],
     [[['charger', 'shooter', 'chaser'], ['chaser', 'chaser', 'shooter', 'shooter']]],
   ],
-  finalEncounter: [['charger', 'chaser', 'chaser'], ['shooter', 'shooter', 'charger'], ['charger', 'charger', 'chaser', 'shooter']],
+  finalEncounter: [['guardian']],
+  _oldFinal: [['charger', 'chaser', 'chaser'], ['shooter', 'shooter', 'charger'], ['charger', 'charger', 'chaser', 'shooter']],
   // tipos de sala do mapa (weight = chance relativa de aparecer)
   roomTypes: {
-    combate: { label: 'Combate', glyph: '⚔', color: '#ff7ad9', materials: 2, weight: 46 },
-    recurso: { label: 'Recurso', glyph: '◆', color: '#ffc96b', materials: 5, light: true, weight: 14 },
-    resgate: { label: 'Resgate', glyph: '✚', color: '#5ff2ff', materials: 1, rescue: true, weight: 12 },
-    bau: { label: 'Baú', glyph: '▣', color: '#ffe066', materials: 0, peaceful: true, chest: true, weight: 10 },
-    evento: { label: 'Evento', glyph: '?', color: '#c9a6ff', materials: 0, peaceful: true, event: true, weight: 10 },
-    descanso: { label: 'Descanso', glyph: '☾', color: '#9be7f2', materials: 0, peaceful: true, heal: 2, weight: 8 },
+    combate: { desc: 'Inimigos e Liga de Fenda', label: 'Combate', glyph: '⚔', color: '#ff7ad9', materials: 2, weight: 46 },
+    recurso: { desc: 'Uma onda curta e muita Liga', label: 'Recurso', glyph: '◆', color: '#ffc96b', materials: 5, light: true, weight: 14 },
+    resgate: { desc: 'Uma Ressona para sincronizar', label: 'Resgate', glyph: '✚', color: '#5ff2ff', materials: 1, rescue: true, weight: 12 },
+    bau: { desc: 'Um baú com Liga e Cubo Nexus', label: 'Baú', glyph: '▣', color: '#ffe066', materials: 0, peaceful: true, chest: true, weight: 10 },
+    evento: { desc: 'Uma escolha com risco', label: 'Evento', glyph: '?', color: '#c9a6ff', materials: 0, peaceful: true, event: true, weight: 10 },
+    descanso: { desc: 'Recupera 2 de vida', label: 'Descanso', glyph: '☾', color: '#9be7f2', materials: 0, peaceful: true, heal: 2, weight: 8 },
   },
   chestDrop: 8,
   drops: { perEnemy: [1, 2], magnetDelay: 0.45, magnetSpeed: 14 },
