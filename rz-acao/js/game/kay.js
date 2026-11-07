@@ -55,7 +55,7 @@ export class Kay {
         if (wantAtk) { this.startAttack(0, g, mv, input); break; }
         if (mlen > 0) {
           this.pos.x += mv.x * K.speed * dt; this.pos.z += mv.z * K.speed * dt;
-          this.face = faceOf(mv.x, mv.z); this.walk += dt * 11 * mlen;
+          this.face = faceOf(mv.x, mv.z); this.walk += dt * 14 * mlen;
         }
         break;
       case 'attack': {

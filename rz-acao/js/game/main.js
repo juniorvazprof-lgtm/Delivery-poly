@@ -38,10 +38,10 @@ function resize() {
 // ---------- estado ----------
 const fx = new Fx(scene, settings);
 const game = {
-  mode: 'play', time: 0, scene, cam, fx, settings, enemies: [], projectiles: [], wave: -1, waveT: 0,
+  mode: 'play', time: 0, scene, cam, fx, settings, enemies: [], projectiles: [], wave: -1, waveT: 0, hitstop: 0,
   arena: new Arena(scene),
   onKayHurt() { renderHearts(); if (!settings.reduceFx) { document.body.classList.remove('hurt'); void document.body.offsetWidth; document.body.classList.add('hurt'); } vibrate(40); },
-  onEnemyHit(fin) { if (fin) vibrate(15); },
+  onEnemyHit(fin) { game.hitstop = Math.max(game.hitstop, fin ? CFG.hitstop.heavy : CFG.hitstop.light); if (fin) vibrate(15); },
   onGuardBreak() { vibrate(25); },
 };
 game.kay = new Kay(scene);
@@ -81,7 +81,7 @@ function startWave(i) {
 function restart() {
   game.enemies.forEach(e => e.destroy()); game.enemies = [];
   game.projectiles.forEach(p => scene.remove(p.mesh)); game.projectiles = [];
-  fx.clear(); game.kay.reset(); game.time = 0; game.wave = -1;
+  fx.clear(); game.kay.reset(); game.time = 0; game.wave = -1; game.hitstop = 0;
   renderHearts(); hideOverlay(); input.clear();
   game.mode = 'play'; game.waveT = CFG.waveDelay - 0.6;
   snapCamera();
@@ -171,7 +171,7 @@ function frame(now) {
     if (game.countT <= 0) { game.mode = 'play'; $('count').hidden = true; input.clear(); }
   }
   if (game.mode === 'play' || game.mode === 'lost' || game.mode === 'won') {
-    acc += dt;
+    if (game.hitstop > 0) { game.hitstop -= dt; acc = 0; } else acc += dt;
     let n = 0;
     while (acc >= CFG.sim.dt && n++ < CFG.sim.maxSteps) { step(CFG.sim.dt); acc -= CFG.sim.dt; }
     if (n >= CFG.sim.maxSteps) acc = 0;
