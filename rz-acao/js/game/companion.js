@@ -22,10 +22,11 @@ export class Companion {
     this.root.add(this.body, blobShadow(0.28), footMarker(COL.friend, 0.32, 32, 0.35));
     g.scene.add(this.root);
     this.pos = g.kay.pos.clone().add(new T.Vector3(0.8, 0, 0.6));
+    this.vel = new T.Vector3(); this.side = 1; this.flipT = 0;
     this.face = Math.PI; this.cd = 0; this.cast = 0; this.poke = CFG.companionPoke.every; this.phase = Math.random() * 6;
   }
   destroy() { this.g.scene.remove(this.root); }
-  placeNearKay() { this.pos.copy(this.g.kay.pos).add(new T.Vector3(0.9, 0, 0.5)); }
+  placeNearKay() { this.pos.copy(this.g.kay.pos).add(new T.Vector3(-(this.side || 1) * 1.0, 0, 0.35)); this.vel?.set(0, 0, 0); }
   get ready() { return this.cd <= 0; }
   get cdFrac() { return Math.max(0, this.cd / this.cfg.cooldown); }
 
@@ -45,14 +46,21 @@ export class Companion {
   update(dt, input) {
     const g = this.g, k = g.kay, c = this.cfg;
     this.cd = Math.max(0, this.cd - dt); this.cast = Math.max(0, this.cast - dt);
-    // seguir: um pouco atrás e ao lado de Kay
-    const side = Math.sin(this.phase) > 0 ? 1 : -1;
-    const tx = k.pos.x - Math.sin(k.face) * 0.9 + Math.cos(k.face) * 0.7 * side, tz = k.pos.z - Math.cos(k.face) * 0.9 - Math.sin(k.face) * 0.7 * side;
+    // seguir sem tontura: ponto fixo ao lado de Kay (não gira com ele), zona morta e aceleração suave.
+    // O lado só troca quando Kay anda um tempo na direção oposta.
+    const mv = k.state === 'free' ? input.move() : { x: 0, z: 0 };
+    if (Math.abs(mv.x) > 0.5 && Math.sign(mv.x) === this.side) { this.flipT += dt; if (this.flipT > 0.7) { this.side *= -1; this.flipT = 0; } } else this.flipT = 0;
+    const tx = k.pos.x - this.side * 1.0, tz = k.pos.z + 0.35;
     const dx = tx - this.pos.x, dz = tz - this.pos.z, d = Math.hypot(dx, dz);
-    if (d > 8) this.placeNearKay();
-    else if (d > 0.25 && this.cast <= 0) {
-      const sp = Math.min(d * 5, 9); this.pos.x += dx / d * sp * dt; this.pos.z += dz / d * sp * dt; this.face = faceOf(dx, dz); this.walk = (this.walk || 0) + dt * 12;
-    }
+    if (d > 8) { this.placeNearKay(); this.vel.set(0, 0, 0); }
+    const want = this.cast > 0 || d < 0.9 ? 0 : Math.min(CFG.kay.speed * 1.05, (d - 0.6) * 4);
+    const wx = d > 1e-3 ? dx / d * want : 0, wz = d > 1e-3 ? dz / d * want : 0, f = 1 - Math.exp(-6 * dt);
+    this.vel.x += (wx - this.vel.x) * f; this.vel.z += (wz - this.vel.z) * f;
+    this.pos.addScaledVector(this.vel, dt);
+    const sp = Math.hypot(this.vel.x, this.vel.z);
+    const faceTo = sp > 0.4 ? faceOf(this.vel.x, this.vel.z) : k.face;
+    if (this.cast <= 0) this.face += Math.max(-7 * dt, Math.min(7 * dt, angDiff(faceTo, this.face)));
+    this.walk = (this.walk || 0) + dt * sp * 2.2;
     g.arena.resolve(this.pos, 0.25);
 
     // habilidade
@@ -96,7 +104,7 @@ export class Companion {
       if (this.kind === 'brasque') { b.scale.y = s * (0.8 + 0.2 * (1 - p)); b.rotation.x = 0.25 * p; }   // abaixa o corpo e projeta
       if (this.kind === 'marolho') { b.scale.x = b.scale.z = s * (1 + 0.15 * p); b.rotation.x = -0.2 * p; }   // abre e recua
       if (this.kind === 'brogume') { b.position.y = Math.abs(Math.sin(p * 9)) * 0.06; }   // finca as patas
-    } else if (this.walk) b.position.y += Math.abs(Math.sin(this.walk)) * 0.04;
+    } else b.position.y += Math.abs(Math.sin(this.walk || 0)) * 0.03;
   }
 }
 
