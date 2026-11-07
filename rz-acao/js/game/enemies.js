@@ -23,6 +23,9 @@ function makeBars(cam) {
   return { g, hp, pips };
 }
 
+// inimigos comuns não marcam o chão: o aviso é só a pose de preparação e o brilho branco no corpo
+const NO_TELE = { set() {}, strike() {}, remove() {} };
+
 export class Enemy {
   constructor(kind, pos, g) {
     this.kind = kind; this.cfg = CFG.enemies[kind]; this.g = g;
@@ -83,17 +86,17 @@ export class Enemy {
         }
         break;
       case 'windup': {
-        const p = Math.min(1, this.t / c.windup);
+        const p = Math.min(1, this.t / this.wu);
         if (this.kind === 'chaser') {
           this.tele.set(this.origin, this.aim, p);
-          if (this.t >= c.windup) { this.tele.strike(); this.setState('active'); this.hitDone = false; }
+          if (this.t >= this.wu) { this.tele.strike(); this.setState('active'); this.hitDone = false; }
         } else {
-          const locked = this.t >= c.windup * c.track;
+          const locked = this.t >= this.wu * c.track;
           if (!locked) this.aim = turn(this.aim, toK, 3 * dt);
           this.face = this.aim;
           if (!locked) this.origin.copy(this.pos);
           this.tele.set(this.origin, this.aim, p, locked);
-          if (this.t >= c.windup) {
+          if (this.t >= this.wu) {
             if (this.kind === 'charger') { this.setState('dash'); this.dashed = 0; this.hitDone = false; }
             else { this.fire(); this.tele.remove(); this.tele = null; this.setState('recover'); }
           }
@@ -130,6 +133,9 @@ export class Enemy {
       case 'recover':
         if (this.t >= c.recovery + (this.stunT || 0)) { this.setState('move'); this.cd = c.cooldown; this.stunT = 0; }
         break;
+      case 'flinch':
+        if (this.t >= CFG.flinch) { this.setState('move'); this.cd = Math.max(this.cd, 0.25); }
+        break;
       case 'stunned':
         if (this.t >= c.stun) { this.guard = c.guard; this.drawPips(); this.setState('move'); this.cd = 0.3; }
         break;
@@ -147,13 +153,13 @@ export class Enemy {
     const c = this.cfg;
     this.aim = this.face = faceOf(this.g.kay.pos.x - this.pos.x, this.g.kay.pos.z - this.pos.z);   // compromete a direção
     this.origin = this.pos.clone();
-    this.tele = this.g.fx.sector(c.range + c.lunge * c.active, c.arc);
+    this.tele = NO_TELE; this.rollWindup();
     this.setState('windup');
   }
   beginLineWindup() {
     const c = this.cfg;
     this.aim = this.face; this.origin = this.pos.clone();
-    this.tele = this.kind === 'charger' ? this.g.fx.line(c.dashDist + this.radius, c.width) : this.g.fx.line(c.projRange, c.projRadius * 2 + 0.12);
+    this.tele = NO_TELE; this.rollWindup();
     this.setState('windup');
   }
   fire() {
@@ -161,11 +167,13 @@ export class Enemy {
     this.g.projectiles.push(new Projectile(this.pos.clone().addScaledVector(dir, 0.5), dir.multiplyScalar(c.projSpeed), c, this.g));
   }
 
+  rollWindup() { const j = CFG.windupJitter; this.wu = this.cfg.windup * (1 - j + Math.random() * 2 * j); }
+
   cancelAttack() { if (this.tele) { this.tele.remove(); this.tele = null; } }
 
   takeHit(atk, from, g, finisher) {
     if (!this.targetable) return;
-    const stunned = this.state === 'stunned';
+    const stunned = this.state === 'stunned', c0 = this.cfg;
     this.hp -= atk.dmg * (stunned ? 1.5 : 1);
     this.sinceHit = 0; this.flash = 0.07; this.bars.g.visible = true;
     const dx = this.pos.x - from.x, dz = this.pos.z - from.z, l = Math.hypot(dx, dz) || 1;
@@ -177,6 +185,12 @@ export class Enemy {
       this.cancelAttack(); this.setState('dying'); this.bars.g.visible = false; g.onEnemyKilled?.(this);
       g.fx.burst(this.pos, COL.rift, 14, 4); g.fx.ring(this.pos, COL.rift, 0.45, 0.3, 1.4);
       return;
+    }
+    if (!stunned && this.state !== 'dash') {
+      this.poiseHits = (this.poiseHits || 0) + 1;
+      if (this.poiseHits >= (c0.poise || 1)) {   // recuo: interrompe a preparação
+        this.poiseHits = 0; this.cancelAttack(); this.setState('flinch');
+      }
     }
     if (!stunned) {
       this.guard = Math.max(0, this.guard - atk.guard);
@@ -194,8 +208,9 @@ export class Enemy {
     this.root.position.copy(this.pos); this.root.rotation.y = this.face;
     b.rotation.set(0, 0, 0); b.scale.setScalar(s); b.position.set(0, 0, 0);
     animateIdle(b, this.g.time, this.phase);
-    setFlash(this.flashMeshes, this.flash > 0);
-    const p = Math.min(1, this.t / (c.windup || 1));
+    const tell = this.state === 'windup' && this.t > this.wu - CFG.tell;
+    setFlash(this.flashMeshes, this.flash > 0 || tell);
+    const p = Math.min(1, this.t / (this.wu || c.windup || 1));
     switch (this.state) {
       case 'spawn': b.scale.setScalar(s * Math.min(1, this.t / CFG.spawnTime)); break;
       case 'move': b.position.y += this.kind === 'chaser' ? Math.abs(Math.sin(this.g.time * 8 + this.phase)) * 0.05 : 0; break;
@@ -221,6 +236,7 @@ export class Enemy {
         break;
       }
       case 'recover': b.rotation.x = this.kind === 'shooter' ? 0 : 0.2; b.scale.y = s * 0.92; if (this.stunT) b.rotation.z = Math.sin(this.t * 9) * 0.15; break;      // recuperação visível
+      case 'flinch': b.rotation.x = -0.35 * (1 - this.t / CFG.flinch); break;
       case 'stunned': b.rotation.z = Math.sin(this.t * 9) * 0.18; b.scale.y = s * 0.85; break;
       case 'dying': { const q = 1 - this.t / 0.35; b.scale.setScalar(s * Math.max(0.01, q)); b.position.y = -0.2 * (1 - q); break; }
     }

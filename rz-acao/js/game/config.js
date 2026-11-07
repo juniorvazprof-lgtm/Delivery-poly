@@ -4,15 +4,15 @@ export const CFG = {
   sim: { dt: 1 / 60, maxSteps: 5 },                 // simulação em passo fixo, separada da renderização
   cam: { viewH: 7.2, offset: [0, 8, 8.5], follow: 9 },
 
-  // salas da Fenda feitas à mão: tamanho e obstáculos baixos [x, z, raio]. Portas ficam na parede de cima.
+  // salas da Fenda em clareira: centro livre, decoração só nas bordas. exits = lados onde podem abrir portas.
   rooms: [
-    { w: 15, d: 9, pillars: [[-3.6, 0.4, 0.6], [3.6, 0.4, 0.6]] },
-    { w: 17, d: 10.5, pillars: [[-4.2, -1.2, 0.6], [4.4, 1.4, 0.6], [0.4, 0.2, 0.5], [-1.2, 2.6, 0.5]] },
-    { w: 16, d: 10, pillars: [[-0.9, 0, 0.55], [0.9, 0, 0.55], [0, 1.4, 0.55]] },
-    { w: 19, d: 9, pillars: [[-5, -0.8, 0.6], [-1.6, 1.4, 0.5], [1.8, -0.8, 0.5], [5.2, 1.2, 0.6]] },
-    { w: 14, d: 11, pillars: [[-3, -1, 0.6], [3, 2, 0.6], [-2.4, 3, 0.45]] },
+    { w: 15, d: 9.5, exits: ['top', 'left', 'right'] },
+    { w: 17, d: 10.5, exits: ['top', 'left', 'right'] },
+    { w: 16, d: 10, exits: ['left', 'right'] },
+    { w: 19, d: 9.5, exits: ['top', 'right'] },
+    { w: 14, d: 11, exits: ['top', 'left'] },
   ],
-  finalRoom: { w: 17, d: 11, pillars: [[-5, 0, 0.6], [5, 0, 0.6]] },
+  finalRoom: { w: 17, d: 11, exits: [], breakables: 2 },
 
   kay: {
     hp: 6, speed: 6.4, radius: 0.32,
@@ -36,22 +36,25 @@ export const CFG = {
     // perseguidor corpo a corpo: ergue o corpo, marca o setor e investe curto
     chaser: {
       model: 'arborion', scale: 0.8, hp: 5, guard: 4, radius: 0.5,
-      speed: 3.0, reach: 1.5, windup: 0.5, active: 0.12, recovery: 0.6, lunge: 4.5,
-      range: 1.25, arc: 100, dmg: 1, cooldown: 0.35, stun: 1.3,
+      speed: 3.0, reach: 1.5, windup: 0.45, active: 0.12, recovery: 0.6, lunge: 4.5,
+      range: 1.25, arc: 100, dmg: 1, cooldown: 0.35, stun: 1.3, poise: 1,
     },
     // disparador: comprime o corpo, mostra a linha e dispara um projétil lento
     shooter: {
       model: 'fanaluz', scale: 0.75, hp: 4, guard: 3, radius: 0.45,
-      speed: 2.2, keep: 5, windup: 0.75, track: 0.6, recovery: 0.7, cooldown: 1.1,
-      projSpeed: 6, projRadius: 0.22, projRange: 11, dmg: 1, stun: 1.3,
+      speed: 2.2, keep: 5, windup: 0.6, track: 0.6, recovery: 0.7, cooldown: 1.1,
+      projSpeed: 6, projRadius: 0.22, projRange: 11, dmg: 1, stun: 1.3, poise: 1,
     },
     // investidor: recua o corpo, marca a linha e dispara correndo; se bater em obstáculo, fica atordoado
     charger: {
       model: 'cascalco', scale: 0.62, hp: 5, guard: 3, radius: 0.5,
-      speed: 2.2, keep: 4, windup: 0.6, track: 0.5, dashSpeed: 13, dashDist: 6, width: 1.0,
-      recovery: 0.6, wallStun: 1.1, dmg: 1, cooldown: 1.2, stun: 1.3,
+      speed: 2.2, keep: 4, windup: 0.5, track: 0.5, dashSpeed: 13, dashDist: 6, width: 1.0,
+      recovery: 0.6, wallStun: 1.1, dmg: 1, cooldown: 1.2, stun: 1.3, poise: 3,
     },
   },
+  flinch: 0.28,          // recuo ao levar golpe (interrompe a preparação)
+  tell: 0.32,            // brilho branco no fim da preparação: o único aviso dos inimigos comuns
+  windupJitter: 0.15,    // variação aleatória da preparação (±15%) para não ficar previsível
   guardRegen: 2.5,                                   // guarda volta cheia após esse tempo sem apanhar
 
   // incursão: salas normais + câmara final. Encontros por profundidade (cada um = lista de ondas).

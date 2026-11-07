@@ -168,7 +168,7 @@ function push(a, b, min, wa) {   // wa = parte do empurrão que vai para "a"
 // câmera acompanha Kay sem mostrar muito além da borda da sala
 function camTarget() {
   const a = game.arena, hx = Math.max(0, a.w / 2 + 1 - cam.right), hz = Math.max(0, a.d / 2 - 1.6);
-  const r = game.run.room, lookDoors = r.clear && !r.final ? 3.5 : 0;   // sala limpa: puxa a câmera para as portas
+  const r = game.run.room, lookDoors = r.clear && !r.final && a.doors.some(d => d.side === 'top') ? 3 : 0;   // sala limpa: puxa a câmera para as portas
   return [T.MathUtils.clamp(game.kay.pos.x, -hx, hx), T.MathUtils.clamp(game.kay.pos.z - lookDoors, -hz - 1.8, hz)];
 }
 function snapCamera() { const [x, z] = camTarget(); camAt.set(x, 0, z); cam.position.copy(camAt).add(camOff); cam.lookAt(camAt); }

@@ -31,3 +31,9 @@ Espécies dos inimigos (Arborion e Fanaluz) são provisórias até a definição
 - Investidor (`charger`): recua, marca a linha e corre; bater em obstáculo o atordoa.
 - Liga de Fenda cai dos inimigos e é atraída até Kay; na derrota, metade é perdida.
 - Resgate e Guardião são marcadores provisórios (etapa 3). Lógica em `js/game/run.js`.
+
+## Ajustes de jogabilidade (pedido do autor, substituem o GDD nestes pontos)
+- Inimigos comuns não marcam o chão: o aviso é só a pose de preparação e o brilho branco no corpo; a preparação varia ±15%.
+- Salas em clareira: centro livre, decoração e obstáculos só nas bordas, objetos quebráveis que soltam Liga de Fenda.
+- Saídas em cima, à esquerda ou à direita, conforme a sala.
+- Recuo ao golpe: perseguidor e disparador recuam a cada golpe; o investidor só no 3º.

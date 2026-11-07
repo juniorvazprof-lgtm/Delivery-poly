@@ -57,7 +57,8 @@ export class Run {
     if (li === this.lastLayout) li = (li + 1) % CFG.rooms.length;
     this.lastLayout = li;
     const layout = final ? CFG.finalRoom : CFG.rooms[li];
-    g.arena = new Arena(g.scene, layout, depth + 1);
+    this.layout = layout;
+    g.arena = new Arena(g.scene, layout, depth + 1 + Math.floor(Math.random() * 50));
 
     let waves = final ? CFG.finalEncounter : pick(CFG.encounters[Math.min(depth, CFG.encounters.length - 1)]);
     if (info.light) waves = waves.slice(0, 1);
@@ -102,7 +103,7 @@ export class Run {
       const k = g.kay;
       for (const door of g.arena.doors) {
         door.veil.material.opacity = 0.45 + Math.sin(g.time * 3) * 0.12;
-        if (Math.abs(k.pos.x - door.x) < 0.9 && k.pos.z < door.z + 0.75) { this.ui.transition(() => this.enter(door.info, r.depth + 1)); break; }
+        if (door.inside(k.pos)) { this.ui.transition(() => this.enter(door.info, r.depth + 1)); break; }
       }
     }
   }
@@ -118,12 +119,12 @@ export class Run {
     if (r.info.rescue) { this.rescued++; this.ui.toast('Ressona debilitada encontrada · resgate completo na etapa 3', COL.friend); }
     if (r.final) { this.ui.finish(); return; }
     const next = r.depth + 1;
+    const sides = [...this.layout.exits].sort(() => Math.random() - 0.5);
     if (next >= CFG.run.rooms) {
-      this.ui.addDoor(g.arena.addDoor(0, FINAL));
+      this.ui.addDoor(g.arena.addDoor(sides[0] || 'top', FINAL));
     } else {
-      const keys = Object.keys(CFG.roomTypes).sort(() => Math.random() - 0.5).slice(0, CFG.run.doorChoices);
-      const w = g.arena.w;
-      keys.forEach((key, i) => this.ui.addDoor(g.arena.addDoor(i === 0 ? -w / 4 : w / 4, { ...CFG.roomTypes[key], key })));
+      const keys = Object.keys(CFG.roomTypes).sort(() => Math.random() - 0.5).slice(0, Math.min(CFG.run.doorChoices, sides.length));
+      keys.forEach((key, i) => this.ui.addDoor(g.arena.addDoor(sides[i], { ...CFG.roomTypes[key], key })));
     }
     this.ui.toast('Sala limpa · as portas abriram', COL.loot);
     this.ui.objective();
