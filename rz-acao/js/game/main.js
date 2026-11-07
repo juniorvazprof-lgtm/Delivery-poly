@@ -16,7 +16,7 @@ const saveSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.strin
 const renderer = new T.WebGLRenderer({ canvas: $('view'), antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 const scene = new T.Scene();
-scene.background = new T.Color('#121815');
+scene.background = new T.Color('#0d150f');
 scene.add(new T.HemisphereLight('#fff2d6', '#3a4a3a', 1.25));
 const sun = new T.DirectionalLight('#fff1cf', 2.3); sun.position.set(-6, 10, 5); scene.add(sun);
 const cam = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
@@ -195,6 +195,7 @@ function frame(now) {
     if (n >= CFG.sim.maxSteps) acc = 0;
   } else acc = 0;
   updateCamera(dt);
+  if (game.arena && game.mode !== 'paused') game.arena.update(dt, performance.now() / 1000, camAt);
   renderer.render(scene, cam);
   placeLabels();
   frames++; fpsT += dt;

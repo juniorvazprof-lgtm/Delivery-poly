@@ -58,7 +58,7 @@ export class Run {
     this.lastLayout = li;
     const layout = final ? CFG.finalRoom : CFG.rooms[li];
     this.layout = layout;
-    g.arena = new Arena(g.scene, layout, depth + 1 + Math.floor(Math.random() * 50));
+    g.arena = new Arena(g.scene, layout, depth + 1 + Math.floor(Math.random() * 50), g.settings.reduceFx);
 
     let waves = final ? CFG.finalEncounter : pick(CFG.encounters[Math.min(depth, CFG.encounters.length - 1)]);
     if (info.light) waves = waves.slice(0, 1);

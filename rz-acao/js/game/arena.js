@@ -4,60 +4,43 @@ import * as T from '../lib/three.js';
 import { StaticBatch, hash, mat, geo, buildModel } from '../engine/voxel.js';
 import { PROPS } from '../data/models.js';
 import { mergeModel } from './merge.js';
+import { buildFloor, buildFloorDetail, buildBorders, buildBackdrop, buildForeground, Spores, clump, rock } from './scenery.js';
 
-const EDGE_TALL = ['tree', 'tree', 'deadtree', 'tree'];
-const EDGE_LOW = ['bush', 'bush', 'crystal', 'barrier'];
 
 export class Arena {
-  constructor(scene, layout, seed = 0) {
+  constructor(scene, layout, seed = 0, reduceFx = false) {
     const { w, d } = layout;
     this.scene = scene; this.w = w; this.d = d; this.doors = []; this.colliders = []; this.breakables = [];
     this.group = new T.Group(); scene.add(this.group);
     let n = seed * 1000;
     const rnd = () => hash(n++, seed * 7 + 3);
 
-    // chão: manchas suaves de musgo, grama e terra (ruído de baixa frequência, pouco contraste)
-    const cols = Math.ceil(w) + 2, rows = Math.ceil(d) + 2;
-    const tiles = new T.InstancedMesh(new T.BoxGeometry(1, 0.2, 1), new T.MeshToonMaterial({ color: '#ffffff' }), cols * rows);
-    const m = new T.Matrix4(), c = new T.Color();
-    const moss = new T.Color('#3f553f'), grass = new T.Color('#4a6446'), dirt = new T.Color('#4d4a3c');
-    let i = 0;
-    for (let x = 0; x < cols; x++) for (let z = 0; z < rows; z++) {
-      const px = -w / 2 - 1 + x + 0.5, pz = -d / 2 - 1 + z + 0.5;
-      m.makeTranslation(px, -0.1, pz); tiles.setMatrixAt(i, m);
-      const lf = (Math.sin(px * 0.55 + seed) + Math.cos(pz * 0.7 - seed * 2) + Math.sin((px + pz) * 0.3)) / 3;
-      c.copy(moss).lerp(lf > 0.25 ? dirt : grass, Math.min(1, Math.abs(lf) * 1.4)).lerp(moss, hash(x, z) * 0.35);
-      tiles.setColorAt(i++, c);
-    }
-    this.group.add(tiles);
-
-    // borda irregular: anel externo alto + props que avançam um pouco para dentro (só na faixa da borda)
+    // chão de palco, detalhes baixos e bordas em camadas
+    buildFloor(this.group, w, d, seed);
     const batch = new StaticBatch('iluminura');
     const gap = (x, z) => (Math.abs(x) < 1.6 && (z < -d / 2 + 1.6 || z > d / 2 - 1.6)) || (Math.abs(z) < 1.6 && Math.abs(x) > w / 2 - 1.6);
-    const place = (x, z, kind, scale, collide) => {
-      if (gap(x, z)) return;
-      batch.add({ ...PROPS[kind], scale }, x, z, rnd() * 6);
-      if (collide) this.colliders.push([x, z, collide]);
-    };
-    for (let x = -w / 2 - 0.4; x <= w / 2 + 0.4; x += 1.05) {
-      place(x, -d / 2 - 0.9 + rnd() * 0.4, EDGE_TALL[Math.floor(rnd() * 4)], 1.2 + rnd() * 0.3);
-      place(x, d / 2 + 0.75, 'bush', 1.05);                                       // borda de baixo baixa: não cobre a sala
-    }
-    for (let z = -d / 2; z <= d / 2; z += 1.05) {
-      place(-w / 2 - 0.9 + rnd() * 0.3, z, EDGE_TALL[Math.floor(rnd() * 4)], 1.2 + rnd() * 0.3);
-      place(w / 2 + 0.9 - rnd() * 0.3, z, EDGE_TALL[Math.floor(rnd() * 4)], 1.2 + rnd() * 0.3);
-    }
-    // avanços para dentro da borda: deixam o contorno orgânico, nunca no centro
-    const inner = Math.round(6 + rnd() * 4);
+    buildFloorDetail(batch, w - 1, d - 1, rnd);
+    buildBorders(batch, w, d, rnd, gap);
+    // avanços para dentro da borda (contorno orgânico) com colisão; nunca no centro
+    const inner = Math.round(7 + rnd() * 4);
     for (let k = 0; k < inner; k++) {
-      const p = this.edgePoint(rnd, 0.35, 1.1);
+      const p = this.edgePoint(rnd, 0.3, 0.9);
       if (!p || gap(p.x, p.z)) continue;
-      const kind = EDGE_LOW[Math.floor(rnd() * EDGE_LOW.length)];
-      place(p.x, p.z, kind, kind === 'crystal' ? 0.9 : 1.1 + rnd() * 0.4, kind === 'crystal' ? 0.3 : 0.45);
+      const r = rnd();
+      const def = r < 0.65 ? clump(rnd, 8 + rnd() * 4, 1) : r < 0.85 ? rock(rnd, 5 + rnd() * 3) : { ...PROPS.crystal, scale: 0.85 };
+      batch.add({ ...def, scale: def.scale || 1 }, p.x, p.z, rnd() * 6);
+      this.colliders.push([p.x, p.z, 0.45]);
     }
-    // cantos mais fechados
-    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) place(sx * (w / 2 - 0.5), sz * (d / 2 - 0.5), sz < 0 ? 'tree' : 'bush', 1.3, 0.6);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {   // cantos mais fechados
+      const x = sx * (w / 2 - 0.4), z = sz * (d / 2 - 0.4);
+      batch.add({ ...clump(rnd, 13, sz < 0 ? 2 : 3), scale: 1 }, x, z, rnd() * 6); this.colliders.push([x, z, 0.75]);
+    }
     batch.build(this.group);
+
+    // camadas de parallax: fundo mais lento, primeiro plano mais rápido que a sala
+    this.back = buildBackdrop(w, d, rnd); scene.add(this.back);
+    this.front = buildForeground(w, d, rnd); scene.add(this.front);
+    this.spores = new Spores(this.group, w - 1, d - 1, reduceFx ? 14 : 34);
 
     // quebráveis: caixas de sucata e arbustos perto das bordas; soltam Liga de Fenda
     const nb = layout.breakables ?? Math.round(4 + rnd() * 3);
@@ -69,8 +52,13 @@ export class Arena {
       this.breakables.push({ x: p.x, z: p.z, r: 0.35, body, kind, alive: true });
     }
 
-    const outer = new T.Mesh(new T.PlaneGeometry(w + 40, d + 40), new T.MeshBasicMaterial({ color: '#1a231c' }));
-    outer.rotation.x = -Math.PI / 2; outer.position.y = -0.21; this.group.add(outer);
+  }
+
+  // chamado a cada quadro com o centro da câmera
+  update(dt, t, camAt) {
+    this.back.position.set(camAt.x * 0.35, 0, camAt.z * 0.35);     // fica para trás: parece mais distante
+    this.front.position.set(-camAt.x * 0.5, 0, camAt.z);            // passa na frente: parece mais perto
+    this.spores.update(dt, t);
   }
 
   // ponto aleatório numa faixa a [a, b] unidades da parede
@@ -121,8 +109,8 @@ export class Arena {
   }
 
   dispose() {
-    this.scene.remove(this.group);
-    this.group.traverse(o => { if (o.geometry && o.geometry !== geo) o.geometry.dispose(); if (o.isInstancedMesh) o.dispose(); });
+    this.scene.remove(this.group, this.back, this.front);
+    [this.group, this.back, this.front].forEach(r => r.traverse(o => { if (o.geometry && o.geometry !== geo) o.geometry.dispose(); if (o.isInstancedMesh) o.dispose(); }));
   }
 
   *solids() {
