@@ -148,8 +148,10 @@ export class Kay {
       if (d > e.radius + 0.25 && Math.abs(angDiff(faceOf(dx, dz), this.face)) > half) continue;
       this.hits.add(e); e.takeHit(a, this.pos, g, this.combo === CFG.combo.length - 1); if (ember) e.burn?.(ember.burn);
     }
-    for (const b of g.arena.breakIn(this.pos, this.face, a.range, half)) {   // objetos quebráveis
-      g.fx.burst(b, b.kind === 'crate' ? '#a9b4c4' : '#8fd06a', 8, 3, 0.4); g.run.dropAt(new T.Vector3(b.x, 0, b.z), b.kind === 'chest' ? CFG.chestDrop : 1); if (b.kind === 'chest') g.run.addCube(1); g.hitstop = Math.max(g.hitstop, 0.02);
+    for (const { b, broke } of g.arena.breakIn(this.pos, this.face, a.range, half)) {   // objetos quebráveis, veios e entulho
+      const col = b.vein ? CFG.mats[CFG.veins[b.vein].drop.liga ? 'liga' : b.vein].color : b.kind === 'crate' || b.kind === 'entulho' || b.kind === 'carcaca' ? '#a9b4c4' : '#8fd06a';
+      g.fx.burst(b, col, broke ? 9 : 4, broke ? 3 : 2, 0.4); g.hitstop = Math.max(g.hitstop, broke ? 0.03 : 0.015);
+      if (broke) g.onBreak(b);
     }
   }
 

@@ -108,6 +108,30 @@ export const CFG = {
     descanso: { desc: 'Recupera 2 de vida', label: 'Descanso', glyph: '☾', color: '#9be7f2', materials: 0, peaceful: true, heal: 2, weight: 8 },
   },
   chestDrop: 8,
+  // materiais: Liga (construir), Cristal (melhorias de Kay), Fibra e Sementes (horta)
+  mats: {
+    liga: { name: 'Liga de Fenda', short: 'Liga', color: '#ffc96b', glow: 'glowA' },
+    cristal: { name: 'Cristal bruto', short: 'Cristal', color: '#7fd8ff', glow: 'glowOreQz' },
+    fibra: { name: 'Fibra viva', short: 'Fibra', color: '#9dff4a', glow: 'glowOreAm' },
+    semente: { name: 'Sementes', short: 'Sementes', color: '#e8d27a', glow: 'glowY' },
+  },
+  // veios de minério na Fenda: vários golpes para quebrar
+  veins: {
+    liga: { hp: 3, drop: { liga: 4 }, crystal: 'glowOreCu', label: 'Veio de Liga' },
+    cristal: { hp: 4, drop: { cristal: 3 }, crystal: 'glowOreQz', label: 'Veio de Cristal' },
+    fibra: { hp: 2, drop: { fibra: 3, semente: 1 }, crystal: 'glowOreAm', label: 'Raiz de Fibra' },
+  },
+  veinsPerRoom: { combate: [0, 2], recurso: [4, 6], resgate: [0, 1], bau: [1, 2], evento: [1, 2], descanso: [1, 2], final: [0, 0] },
+  // subúrbio de Kanda-9 (refúgio)
+  hub: {
+    w: 24, d: 15, clearRadius: 3.4, piles: 22,
+    debris: {
+      mato: { hp: 1, drop: { fibra: 1 }, seedChance: 0.4, label: 'Mato' },
+      entulho: { hp: 2, drop: { liga: 2 }, label: 'Entulho' },
+      carcaca: { hp: 3, drop: { liga: 3 }, cristalChance: 0.3, label: 'Carcaça' },
+    },
+  },
+  lossKeep: 0.5,   // fração dos materiais da incursão mantida na derrota
   drops: { perEnemy: [1, 2], magnetDelay: 0.45, magnetSpeed: 14 },
   spawnTime: 0.6,
   waveDelay: 0.8,

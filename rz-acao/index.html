@@ -17,7 +17,10 @@
   <div id="status">
     <div id="hearts" role="img"></div>
     <div class="chips">
-      <div id="mats" class="chip loot" aria-label="Liga de Fenda"><i></i><b>0</b></div>
+      <div id="m-liga" class="chip loot" aria-label="Liga de Fenda"><i></i><b>0</b></div>
+      <div id="m-cristal" class="chip mat" style="--c:#7fd8ff" aria-label="Cristal bruto" hidden><i></i><b>0</b></div>
+      <div id="m-fibra" class="chip mat" style="--c:#9dff4a" aria-label="Fibra viva" hidden><i></i><b>0</b></div>
+      <div id="m-semente" class="chip mat" style="--c:#e8d27a" aria-label="Sementes" hidden><i></i><b>0</b></div>
       <div id="cubes" class="chip cube" aria-label="Cubos Nexus"><i></i><b>0</b></div>
       <div id="boons" aria-label="Bênçãos ativas"></div>
     </div>
@@ -45,8 +48,9 @@
 
 <!-- telas de escolha -->
 <section id="select" class="screen" hidden>
-  <header><small class="eyebrow">Ressonância Zero · Fenda Verde</small><h1>Escolha a companheira</h1><p>Ela segue Kay durante a incursão. O botão Habilidade usa o poder dela.</p></header>
+  <header><small class="eyebrow">Portal da Fenda Verde</small><h1>Escolha a companheira</h1><p>Ela segue Kay durante a incursão. O botão Habilidade usa o poder dela.</p></header>
   <div id="select-cards" class="picks"></div>
+  <button id="select-back" class="back-btn">Voltar ao refúgio</button>
 </section>
 <section id="boon" class="screen" hidden>
   <header><small class="eyebrow">Bênção da Fenda</small><h1>Escolha uma</h1><p>Vale só até o fim desta incursão.</p></header>

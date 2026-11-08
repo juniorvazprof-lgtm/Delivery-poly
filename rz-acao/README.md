@@ -59,3 +59,9 @@ Espécies dos inimigos (Arborion e Fanaluz) são provisórias até a definição
 - Brasque: salta no inimigo (explosão de fogo) e acende a espada de Kay por 5 s: +1 de dano, arco maior e queimadura.
 - Marolho: redemoinho que puxa os inimigos para perto de Kay, encharca (sem atacar) por 1,5 s e apaga projéteis.
 - Guardião sem marcação no chão: avisa só pela pose e pelo brilho branco. Mais vida (85), golpes mais rápidos, pisão causa 2, salto até a posição de Kay, sequências de 2–3 golpes e reforços na fase 2.
+
+## MVP 2 · etapas 1 e 2 (refúgio e mineração)
+- Refúgio (`js/game/hub.js`): subúrbio destruído de Kanda-9. Kay limpa mato, entulho e carcaças com a espada (1 a 3 golpes) e ganha sucata, fibra, sementes ou cristal; o que é limpo não volta. Ressonas resgatadas passeiam na área limpa. O portal ao norte leva à escolha da companheira e à Fenda.
+- Mineração: veios de Liga, Cristal e Fibra nas salas da Fenda (mais nas de Recurso), com vários golpes para quebrar.
+- Materiais separados: Liga de Fenda, Cristal bruto, Fibra viva e Sementes. Ao voltar, tudo vai para o refúgio (na derrota ou abandono, metade se perde) e o dia avança.
+- Save em `rz_refugio_save_v1` (`js/game/save.js`), separado do RPG. "Apagar progresso" fica na pausa do refúgio, com confirmação.

@@ -192,3 +192,14 @@ body.portrait #rotate { display: grid; }
 body.hurt::after { content: ""; position: fixed; inset: 0; z-index: 4; pointer-events: none; box-shadow: inset 0 0 70px 10px rgba(255, 61, 90, .55); animation: hurt .35s ease-out forwards; }
 @keyframes hurt { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .act.down { transform: none; } #stick { transition: none; } .node.choice, .interact { animation: none; } .pick { transition: none; } }
+
+/* refúgio */
+body.in-hub #btn-skill, body.in-hub #cubes, body.in-hub #boons, body.in-hub #bossbar { display: none; }
+.chip[hidden] { display: none; }
+.chip.mat i { background: var(--c); transform: rotate(45deg); border-radius: 2px; }
+.chip.pop { animation: pop .25s ease-out; }
+.door-label.small { font-size: 12px; padding: 2px 8px; border-width: 1px; background: rgba(7, 8, 13, .6); }
+.back-btn { align-self: center; min-height: 44px; padding: 8px 20px; border-radius: 12px; border: 2px solid var(--line); background: transparent; color: var(--muted); font: 700 14px var(--display); }
+.mats-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.mats-row span { background: rgba(7, 8, 13, .45); border: 1px solid var(--line); border-left: 4px solid var(--c, var(--line)); border-radius: 8px; padding: 4px 10px; font-size: 13px; color: var(--muted); }
+.mats-row b { color: var(--text); font: 700 16px var(--display); }

@@ -5,6 +5,7 @@ import { Arena } from './arena.js';
 import { Enemy } from './enemies.js';
 import { mat } from '../engine/voxel.js';
 import { COL } from './fx.js';
+import { spawnDrops } from './drops.js';
 import { Guardian } from './boss.js';
 import { buildModel } from '../engine/voxel.js';
 import { MODELS } from '../data/models.js';
@@ -45,38 +46,11 @@ function buildMap() {
 }
 const infoOf = key => key === 'final' ? FINAL : { ...CFG.roomTypes[key], key };
 
-const dropGeo = new T.BoxGeometry(0.16, 0.16, 0.16);
-class Drop {
-  constructor(pos, g) {
-    this.g = g; this.t = 0; this.alive = true;
-    this.pos = pos.clone(); this.pos.y = 0.4;
-    const a = Math.random() * Math.PI * 2;
-    this.vel = new T.Vector3(Math.cos(a) * 2.2, 3.5, Math.sin(a) * 2.2);
-    this.mesh = new T.Mesh(dropGeo, mat('glowA')); g.scene.add(this.mesh);
-  }
-  update(dt, magnet) {
-    const k = this.g.kay;
-    this.t += dt;
-    if (this.t < CFG.drops.magnetDelay && !magnet) {
-      this.vel.y -= 14 * dt; this.pos.addScaledVector(this.vel, dt);
-      if (this.pos.y < 0.15) { this.pos.y = 0.15; this.vel.set(0, 0, 0); }
-    } else {
-      const to = new T.Vector3(k.pos.x - this.pos.x, 0.5 - this.pos.y, k.pos.z - this.pos.z), d = to.length();
-      const sp = CFG.drops.magnetSpeed * (this.g.mods.extraDrop ? 1.6 : 1) * Math.min(1, 0.3 + this.t);
-      if (d < 0.35) return this.collect();
-      this.pos.addScaledVector(to.normalize(), Math.min(d, sp * dt));
-    }
-    this.mesh.position.copy(this.pos); this.mesh.rotation.y += dt * 6;
-  }
-  collect() { this.alive = false; this.g.scene.remove(this.mesh); this.g.run.addMaterial(); }
-  remove() { this.alive = false; this.g.scene.remove(this.mesh); }
-}
-
 export class Run {
   constructor(g, ui) { this.g = g; this.ui = ui; this.drops = []; this.lastLayout = -1; }
 
   start() {
-    this.materials = 0; this.rescued = []; this.cleared = 0; this.fights = 0; this.t0 = this.g.time;
+    this.mats = { liga: 0, cristal: 0, fibra: 0, semente: 0 }; this.rescued = []; this.cleared = 0; this.fights = 0; this.t0 = this.g.time;
     this.cubes = CFG.rescue.startCubes; this.boons = []; this.ui.cubes(this.cubes);
     this.map = buildMap(); this.visited = ['0-0'];
     this.enterNode(this.map.byId['0-0']);
@@ -113,6 +87,14 @@ export class Run {
     k.pos.set(0, 0, layout.d / 2 - 1.2); k.face = Math.PI; k.state = 'free'; k.combo = -1; k.t = 0;
     // salas sem combate
     if (info.chest) g.arena.addBreakable(0, -0.6, 'chest');
+    // veios de minério perto das bordas (mais nas salas de Recurso)
+    const [vmin, vmax] = CFG.veinsPerRoom[info.key] || [0, 1], nv = vmin + Math.floor(Math.random() * (vmax - vmin + 1));
+    const types = info.key === 'recurso' ? ['liga', 'liga', 'cristal', 'fibra'] : ['liga', 'cristal', 'fibra'];
+    for (let i = 0, tries = 0; i < nv && tries < 30; tries++) {
+      const p = g.arena.edgePoint(Math.random, 1.3, 2.4);
+      if (g.arena.blocked(p, 0.8) || Math.hypot(p.x - k.pos.x, p.z - k.pos.z) < 2) continue;
+      g.arena.addVein(p.x, p.z, pick(types)); i++;
+    }
     if (info.event) { this.altar = { x: 0, z: -0.8, used: false }; g.arena.addProp('glyph', 0, -0.8, 1.2, 0.55); } else this.altar = null;
     if (info.heal) {
       g.arena.addProp('campfire', 0, -0.6, 1.4, 0.5);
@@ -123,7 +105,7 @@ export class Run {
     g.comp?.placeNearKay();
     this.ui.snapCamera(); this.ui.objective();
   }
-  collectOrRemove(d) { if (d.alive) { d.remove(); this.addMaterial(); } }
+  collectOrRemove(d) { if (d.alive) { d.remove(); this.add(d.kind, 1); } }
 
   get total() { return CFG.run.layers + 1; }
   status() {
@@ -171,7 +153,8 @@ export class Run {
     }
   }
 
-  dropAt(pos, n) { for (let i = 0; i < n; i++) this.drops.push(new Drop(pos, this.g)); }
+  dropAt(pos, n, kind = 'liga') { if (n > 0) spawnDrops(this.g, this.drops, pos, { [kind]: n }); }
+  dropBundle(pos, bundle) { spawnDrops(this.g, this.drops, pos, bundle); }
   onEnemyKilled(e) {
     if (e.boss) { this.dropAt(e.pos, 12); return; }
     const [a, b] = CFG.drops.perEnemy; this.dropAt(e.pos, a + Math.floor(Math.random() * (b - a + 1)) + (this.g.mods.extraDrop || 0));
@@ -218,7 +201,14 @@ export class Run {
       }
     }
   }
-  addMaterial() { this.materials++; this.ui.materials(this.materials); }
+  add(kind, n) { this.mats[kind] = (this.mats[kind] || 0) + n; this.ui.materials(this.mats); }
+  // objeto quebrado pela espada nesta sala
+  onBreak(b) {
+    const at = new T.Vector3(b.x, 0, b.z);
+    if (b.kind === 'vein') { const v = CFG.veins[b.vein]; this.dropBundle(at, v.drop); this.ui.toast(`${v.label} minerado`, CFG.mats[Object.keys(v.drop)[0]].color); }
+    else if (b.kind === 'chest') { this.dropBundle(at, { liga: CFG.chestDrop, cristal: 2 }); this.addCube(1); }
+    else this.dropAt(at, 1);
+  }
 
   clearRoom() {
     const r = this.room, g = this.g;
@@ -234,6 +224,6 @@ export class Run {
   }
 
   summary() {
-    return { time: this.g.time - this.t0, materials: this.materials, rescued: this.rescued, rooms: this.cleared, depth: this.room.depth + 1, boons: this.boons };
+    return { time: this.g.time - this.t0, mats: { ...this.mats }, rescued: this.rescued, rooms: this.cleared, depth: this.room.depth + 1, boons: this.boons };
   }
 }

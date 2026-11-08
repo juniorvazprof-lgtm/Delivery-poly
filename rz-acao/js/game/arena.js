@@ -4,6 +4,7 @@ import * as T from '../lib/three.js';
 import { StaticBatch, hash, mat, geo, buildModel } from '../engine/voxel.js';
 import { PROPS } from '../data/models.js';
 import { mergeModel } from './merge.js';
+import { CFG } from './config.js';
 import { buildFloor, buildFloorDetail, buildBorders, buildBackdrop, buildForeground, Spores, clump, rock } from './scenery.js';
 
 
@@ -59,6 +60,7 @@ export class Arena {
     this.back.position.set(camAt.x * 0.35, 0, camAt.z * 0.35);     // fica para trás: parece mais distante
     this.front.position.set(-camAt.x * 0.5, 0, camAt.z);            // passa na frente: parece mais perto
     this.spores.update(dt, t);
+    shakeBreakables(this.breakables, dt);
   }
 
   addBreakable(x, z, kind) {
@@ -104,18 +106,17 @@ export class Arena {
     return door;
   }
 
-  // golpe de Kay: quebra objetos dentro do arco; devolve as posições quebradas
-  breakIn(pos, face, range, half) {
-    const out = [];
-    for (const b of this.breakables) {
-      if (!b.alive) continue;
-      const dx = b.x - pos.x, dz = b.z - pos.z, dd = Math.hypot(dx, dz);
-      if (dd > range + b.r) continue;
-      const da = Math.atan2(Math.sin(Math.atan2(dx, dz) - face), Math.cos(Math.atan2(dx, dz) - face));
-      if (dd > b.r + 0.3 && Math.abs(da) > half) continue;
-      b.alive = false; this.group.remove(b.body); out.push(b);
-    }
-    return out;
+  // golpe de Kay: atinge objetos no arco; os que têm vida levam vários golpes
+  breakIn(pos, face, range, half) { return hitBreakables(this, pos, face, range, half); }
+
+  // veio de minério: rocha com cristais na cor do material
+  addVein(x, z, type) {
+    const v = CFG.veins[type], c = v.crystal;
+    const def = { scale: 1, parts: [[-3.6, 0, -3, 7.2, 2.6, 6, 'concreteD'], [-2.6, 2.6, -2, 5, 1.4, 4, 'concrete'],
+      [-2.2, 2.2, 1.2, 1.4, 3.4, 1.4, c], [0.6, 2.8, -0.6, 1.6, 4.4, 1.6, c], [-0.8, 3.6, -1.8, 1.2, 2.6, 1.2, c], [2.2, 1.6, 1, 1, 2.2, 1, c]] };
+    const body = buildModel(def); mergeModel(body); body.position.set(x, 0, z); body.rotation.y = Math.random() * 6;
+    this.group.add(body);
+    this.breakables.push({ x, z, r: 0.5, body, kind: 'vein', vein: type, hp: v.hp, alive: true });
   }
 
   dispose() {
@@ -147,5 +148,29 @@ export class Arena {
       return p;
     }
     return new T.Vector3(0, 0, -this.d / 2 + 1.5);
+  }
+}
+
+// compartilhado com o subúrbio: devolve [{ b, broke }]
+export function hitBreakables(owner, pos, face, range, half) {
+  const out = [];
+  for (const b of owner.breakables) {
+    if (!b.alive) continue;
+    const dx = b.x - pos.x, dz = b.z - pos.z, dd = Math.hypot(dx, dz);
+    if (dd > range + b.r) continue;
+    const da = Math.atan2(Math.sin(Math.atan2(dx, dz) - face), Math.cos(Math.atan2(dx, dz) - face));
+    if (dd > b.r + 0.3 && Math.abs(da) > half) continue;
+    b.hp = (b.hp ?? 1) - 1;
+    if (b.hp <= 0) { b.alive = false; owner.group.remove(b.body); out.push({ b, broke: true }); }
+    else { b.body.userData.shake = 0.18; out.push({ b, broke: false }); }
+  }
+  return out;
+}
+// tremida de objetos atingidos (chamada no update da cena)
+export function shakeBreakables(list, dt) {
+  for (const b of list) {
+    const s = b.body.userData.shake; if (!s || !b.alive) continue;
+    b.body.userData.shake = Math.max(0, s - dt);
+    b.body.position.x = b.x + Math.sin(s * 90) * 0.06 * (s / 0.18);
   }
 }

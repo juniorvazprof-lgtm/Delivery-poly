@@ -5,7 +5,10 @@ import { createInput } from './input.js';
 import { Run } from './run.js';
 import { Companion } from './companion.js';
 import { Kay } from './kay.js';
-import { Fx } from './fx.js';
+import { Fx, COL } from './fx.js';
+import { Hub } from './hub.js';
+import { spawnDrops } from './drops.js';
+import { loadSave, writeSave, resetSave } from './save.js';
 
 const $ = id => document.getElementById(id);
 const SETTINGS_KEY = 'rz_acao_settings_v1';   // separado do save do RPG (rz_save_v1)
@@ -45,6 +48,9 @@ const game = {
   onKayHurt() { renderHearts(); if (!settings.reduceFx) { document.body.classList.remove('hurt'); void document.body.offsetWidth; document.body.classList.add('hurt'); } vibrate(40); },
   onEnemyHit(fin) { game.hitstop = Math.max(game.hitstop, fin ? CFG.hitstop.heavy : CFG.hitstop.light); if (fin) vibrate(15); },
   onGuardBreak() { vibrate(25); },
+  place: 'hub', save: loadSave(), hubDrops: [],
+  collect(kind, n) { if (game.place === 'run') game.run.add(kind, n); else { game.save.bank[kind] = (game.save.bank[kind] || 0) + n; ui.materials(game.save.bank); persist(); } },
+  onBreak(b) { if (game.place === 'run') game.run.onBreak(b); else hubBreak(b); },
   onEnemyKilled(e) { game.run.onEnemyKilled(e); if (e.boss) $('bossbar').hidden = true; },
   onBoss(b) { $('boss-name').textContent = CFG.guardian.name; $('bossbar').hidden = false; game.onBossHp(b); },
   onBossHp(b) { $('boss-fill').style.width = Math.max(0, b.hp / b.cfg.hp * 100) + '%'; $('bossbar').classList.toggle('p2', b.phase2); },
@@ -86,11 +92,19 @@ function cards(container, items, onPick) {
   }
 }
 
-const doorLabels = [];
+const tags = [];
+// etiqueta presa a um ponto do mundo (portas, portal, nomes das Ressonas)
+function addTag(glyph, label, color, at, cls = '') {
+  const el = document.createElement('div'); el.className = 'door-label ' + cls;
+  el.innerHTML = `${glyph ? `<b>${glyph}</b>` : ''}${esc(label)}`; el.style.setProperty('--c', color);
+  $('labels').appendChild(el); tags.push({ el, at });
+}
 let toastTimer = 0;
 const ui = {
-  objective() { $('objective').textContent = game.run.status(); },
-  materials(n) { const el = $('mats'); el.querySelector('b').textContent = n; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); },
+  objective() { $('objective').textContent = game.place === 'hub' ? `Kanda-9 · Dia ${game.save.day} · terreno limpo ${game.hub.clearedPct}%` : game.run.status(); },
+  materials(m) {
+    for (const k of Object.keys(CFG.mats)) { const el = $('m-' + k); if (!el) continue; const v = m[k] || 0; if (el.querySelector('b').textContent !== String(v)) { el.querySelector('b').textContent = v; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } el.hidden = !v && k !== 'liga'; }
+  },
   cubes(n) { $('cubes').querySelector('b').textContent = n; },
   toast(text, color) {
     const el = $('toast'); el.textContent = text; el.style.setProperty('--c', color || '#ffc96b'); el.hidden = false;
@@ -102,12 +116,8 @@ const ui = {
     if (!opt) { b.hidden = true; return; }
     b.hidden = false; b.disabled = !opt.ok; b.querySelector('span').textContent = opt.label; b.querySelector('small').textContent = opt.sub;
   },
-  addDoor(door) {
-    const el = document.createElement('div'); el.className = 'door-label';
-    el.innerHTML = `<b>${door.info.glyph}</b>${door.info.label}`; el.style.setProperty('--c', door.info.color);
-    $('labels').appendChild(el); doorLabels.push({ el, door });
-  },
-  clearDoors() { doorLabels.forEach(d => d.el.remove()); doorLabels.length = 0; },
+  addDoor(door) { addTag(door.info.glyph, door.info.label, door.info.color, () => [door.x, 2.1, door.z]); },
+  clearDoors() { tags.forEach(d => d.el.remove()); tags.length = 0; },
   snapCamera,
   hearts: renderHearts,
   transition(fn) {
@@ -146,16 +156,17 @@ const ui = {
   },
 };
 function result(title, eyebrow, won) {
-  const s = game.run.summary(), kept = won ? s.materials : Math.floor(s.materials / 2);
-  const names = s.rescued.map(k => CFG.companions[k].name);
+  const s = game.run.summary(), kept = bankRun(won), names = s.rescued.map(k => CFG.companions[k].name);
+  const matRow = Object.entries(CFG.mats).filter(([k]) => s.mats[k]).map(([k, m]) => `<span style="--c:${m.color}"><b>${kept[k]}</b>${won ? '' : `<small>/${s.mats[k]}</small>`} ${m.short}</span>`).join('') || '<span>Nenhum material</span>';
   overlay(title, `<dl class="stats">
     <div><dt>Salas</dt><dd>${s.rooms}<small> / ${game.run.total}</small></dd></div>
     <div><dt>Tempo</dt><dd>${Math.floor(s.time / 60)}:${String(Math.floor(s.time % 60)).padStart(2, '0')}</dd></div>
-    <div><dt>Liga de Fenda</dt><dd>${kept}${won ? '' : `<small> de ${s.materials}</small>`}</dd></div>
     <div><dt>Ressonas</dt><dd>${names.length}</dd></div>
+    <div><dt>Dia</dt><dd>${game.save.day}</dd></div>
   </dl>
-  <p class="note">${names.length ? `Sincronizadas: ${esc(names.join(', '))}. Elas seguem para o refúgio.` : 'Nenhuma Ressona sincronizada nesta incursão.'}${won ? '' : ' Na derrota, metade da Liga se perde.'}</p>`,
-  [['Nova incursão', restart, 'primary']], eyebrow);
+  <p class="note">Levado ao refúgio:</p><div class="mats-row">${matRow}</div>
+  <p class="note">${names.length ? `Sincronizadas: ${esc(names.join(', '))}. Elas vão morar no refúgio.` : 'Nenhuma Ressona sincronizada nesta incursão.'}${won ? '' : ' Na derrota, metade dos materiais se perde.'}</p>`,
+  [['Voltar ao refúgio', () => goHub(true), 'primary']], eyebrow);
 }
 function applyBoon(key) {
   const m = game.mods, k = game.kay; game.run.boons.push(key);
@@ -202,7 +213,7 @@ function renderMap() {
     b.innerHTML = `<b>${info.glyph}</b><span><strong>${esc(info.label)}</strong><small>${esc(info.desc || '')}</small></span>`;
     b.onclick = () => pickNode(n); bar.appendChild(b);
   }
-  $('map-stats').innerHTML = `<span>Sala <b>${run.node.layer + 1}</b>/${run.total}</span><span class="c-life"><b>${game.kay.hp}</b>/${game.maxHp()} vida</span><span class="c-loot"><b>${run.materials}</b> Liga</span><span class="c-cube"><b>${run.cubes}</b> Cubos</span>`;
+  $('map-stats').innerHTML = `<span>Sala <b>${run.node.layer + 1}</b>/${run.total}</span><span class="c-life"><b>${game.kay.hp}</b>/${game.maxHp()} vida</span><span class="c-loot"><b>${run.mats.liga}</b> Liga</span><span class="c-cube"><b>${run.mats.cristal}</b> Cristal</span><span class="c-cube"><b>${run.cubes}</b> Cubos</span>`;
   bar.querySelector('button')?.focus({ preventScroll: true });
 }
 
@@ -216,9 +227,9 @@ function skillHud() {
 
 function placeLabels() {
   const v = new T.Vector3();
-  for (const { el, door } of doorLabels) {
-    v.set(door.x, 2.1, door.z).project(cam);
-    const x = T.MathUtils.clamp((v.x * 0.5 + 0.5) * innerWidth, 80, innerWidth - 80), y = T.MathUtils.clamp((-v.y * 0.5 + 0.5) * innerHeight, 110, innerHeight - 20);
+  for (const { el, at } of tags) {
+    v.set(...at()).project(cam);
+    const x = T.MathUtils.clamp((v.x * 0.5 + 0.5) * innerWidth, 70, innerWidth - 70), y = T.MathUtils.clamp((-v.y * 0.5 + 0.5) * innerHeight, 100, innerHeight - 20);
     el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
   }
 }
@@ -226,36 +237,93 @@ function placeLabels() {
 // ---------- fluxo ----------
 game.run = new Run(game, ui);
 game.ui = ui;
+$('select-back').addEventListener('click', backToHub);
 $('btn-interact').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); game.run.trySync(); });
-// início da incursão: escolher a companheira (uma por incursão)
-function restart() {
-  game.mode = 'select'; input.clear(); hideOverlay(); $('bossbar').hidden = true; ui.interact(null);
+// ---------- refúgio ----------
+let saveWarned = false;
+function persist() { if (!writeSave(game.save) && !saveWarned) { saveWarned = true; ui.toast('Não foi possível salvar neste navegador', COL.threat); } }
+function cleanupScene() {
+  game.enemies.forEach(e => e.destroy()); game.enemies = [];
+  game.projectiles.forEach(p => scene.remove(p.mesh)); game.projectiles = [];
+  game.effects.forEach(e => scene.remove(e.group)); game.effects = [];
+  game.run.drops?.forEach(d => d.remove()); game.run.drops = [];
+  game.hubDrops.forEach(d => d.remove()); game.hubDrops = [];
+  game.comp?.destroy(); game.comp = null;
+  fx.clear(); ui.clearDoors(); ui.interact(null); $('bossbar').hidden = true;
+  game.arena?.dispose(); game.arena = null; game.hub = null;
+}
+function goHub(fromRun = false) {
+  cleanupScene(); hideOverlay(); showScreen(null); input.clear();
+  game.place = 'hub'; document.body.classList.add('in-hub');
+  game.mods = {}; game.kay.reset(); renderHearts();
+  game.hub = game.arena = new Hub(scene, game.save, settings.reduceFx);
+  if (fromRun) { game.kay.pos.set(0, 0, game.hub.portal.z + 2.4); game.kay.face = 0; } else game.kay.pos.set(0, 0, 1.2);
+  addTag('✦', 'Fenda Verde', '#b77bff', () => [game.hub.portal.x, 2.6, game.hub.portal.z]);
+  for (const r of game.hub.ressonas) addTag('', r.label, CFG.companions[r.data.species]?.color || '#9be7f2', () => [r.pos.x, 1.15, r.pos.z], 'small');
+  ui.materials(game.save.bank); ui.objective(); snapCamera();
+  game.mode = 'play';
+}
+// entulho limpo: sucata e, às vezes, fibra, sementes ou cristal
+function hubBreak(b) {
+  const d = CFG.hub.debris[b.kind], bundle = { ...d.drop };
+  if (d.seedChance && Math.random() < d.seedChance) bundle.semente = 1;
+  if (d.cristalChance && Math.random() < d.cristalChance) bundle.cristal = 1;
+  spawnDrops(game, game.hubDrops, new T.Vector3(b.x, 0, b.z), bundle);
+  if (b.id && !game.save.cleared.includes(b.id)) { game.save.cleared.push(b.id); persist(); }
+  const pct = game.hub.clearedPct;
+  if (pct === 100) ui.toast('O terreno está todo limpo', COL.friend);
+  else if (pct % 25 < 5 && pct >= 25 && !game.hub['m' + Math.floor(pct / 25)]) { game.hub['m' + Math.floor(pct / 25)] = 1; ui.toast(`Terreno ${pct}% limpo`, COL.friend); }
+  ui.objective();
+}
+// portal: escolher a companheira e partir
+function enterFenda() {
+  game.mode = 'select'; input.clear();
   const sel = settings.companion || 'brogume';
   cards($('select-cards'), Object.entries(CFG.companions).map(([key, c]) => ({ key, ...c, tag: c.element, foot: `Recarga ${c.cooldown} s`, selected: key === sel })), startRun);
   showScreen('select');
   $('select-cards').querySelector('.selected')?.focus({ preventScroll: true });
 }
+function backToHub() { showScreen(null); game.mode = 'play'; game.hub.portalArmed = false; input.clear(); }
+function restart() { goHub(false); }
 function startRun(kind) {
   settings.companion = kind; saveSettings();
-  showScreen(null); hideOverlay(); input.clear();
+  cleanupScene(); showScreen(null); hideOverlay(); input.clear();
+  game.place = 'run'; document.body.classList.remove('in-hub');
   game.mods = {}; game.kay.reset(); game.time = 0; game.hitstop = 0;
   renderHearts();
-  game.comp?.destroy(); game.comp = new Companion(kind, game);
+  game.comp = new Companion(kind, game);
   const c = CFG.companions[kind], b = $('btn-skill');
   b.style.setProperty('--sc', c.color); $('skill-glyph').textContent = c.glyph; $('skill-name').textContent = c.name;
   b.setAttribute('aria-label', `Habilidade de ${c.name}`);
-  game.run.start(); ui.materials(0); renderBoons(); game.comp.placeNearKay();
+  game.run.start(); ui.materials(game.run.mats); renderBoons(); game.comp.placeNearKay();
   game.mode = 'play';
+}
+// fim da incursão: guarda no refúgio o que foi trazido e avança um dia
+function bankRun(won) {
+  const s = game.run.summary(), sv = game.save, kept = {};
+  for (const [k, v] of Object.entries(s.mats)) { kept[k] = won ? v : Math.floor(v * CFG.lossKeep); sv.bank[k] = (sv.bank[k] || 0) + kept[k]; }
+  for (const sp of s.rescued) sv.ressonas.push({ id: 'r' + Date.now().toString(36) + Math.floor(Math.random() * 99), species: sp, name: CFG.companions[sp].name, day: sv.day });
+  sv.day++; sv.runs++; if (won) sv.wins++;
+  persist();
+  return kept;
 }
 function pause() {
   if (game.mode !== 'play' && game.mode !== 'countdown') return;
   game.mode = 'paused'; input.clear();
   overlay('Pausa', '<p class="keys"><span>Joystick</span> mover · <span>Ataque</span> combo · <span>Esquiva</span> · <span>Habilidade</span> companheira<br>Teclado: WASD · J · K/Espaço · L · Esc</p>', [
     ['Continuar', resume, 'primary'],
-    ['Recomeçar incursão', restart, 'ghost'],
+    game.place === 'run'
+      ? ['Abandonar incursão', () => { hideOverlay(); game.mode = 'lost'; result('Incursão abandonada', 'Retorno', false); }, 'ghost', 'Metade dos materiais se perde']
+      : ['Apagar progresso', confirmReset, 'ghost', 'Recomeça o refúgio do zero'],
     ['Efeitos reduzidos', () => { settings.reduceFx = !settings.reduceFx; saveSettings(); game.mode = 'play'; pause(); }, 'toggle' + (settings.reduceFx ? ' on' : ''), settings.reduceFx ? 'Ligado' : 'Desligado'],
     ['Mostrar FPS', () => { settings.showFps = !settings.showFps; $('fps').hidden = !settings.showFps; saveSettings(); game.mode = 'play'; pause(); }, 'toggle' + (settings.showFps ? ' on' : ''), settings.showFps ? 'Ligado' : 'Desligado'],
-  ], `Sala ${game.run.node ? game.run.node.layer + 1 : 1} de ${game.run.total}`);
+  ], game.place === 'run' ? `Sala ${game.run.node ? game.run.node.layer + 1 : 1} de ${game.run.total}` : `Kanda-9 · Dia ${game.save.day}`);
+}
+function confirmReset() {
+  overlay('Apagar todo o progresso?', 'Materiais, Ressonas resgatadas e o terreno limpo voltam ao início. Não dá para desfazer.', [
+    ['Cancelar', () => { game.mode = 'play'; pause(); }, 'primary'],
+    ['Apagar e recomeçar', () => { game.save = resetSave(); goHub(false); }, 'risk'],
+  ], 'Refúgio');
 }
 function resume() {
   if (game.mode !== 'paused' || document.body.classList.contains('portrait')) return;
@@ -276,6 +344,13 @@ addEventListener('resize', resize);
 function step(dt) {
   game.time += dt;
   const k = game.kay;
+  if (game.place === 'hub') {   // refúgio: sem inimigos
+    k.update(dt, game, input);
+    game.hubDrops.forEach(d => d.update(dt, false)); game.hubDrops = game.hubDrops.filter(d => d.alive);
+    fx.update(dt);
+    if (game.mode === 'play' && game.hub.atPortal(k.pos)) enterFenda();
+    return;
+  }
   k.update(dt, game, input);
   game.comp?.update(dt, input);
   game.effects = game.effects.filter(e => e.update(dt));
@@ -306,6 +381,7 @@ function push(a, b, min, wa) {   // wa = parte do empurrão que vai para "a"
 // câmera acompanha Kay sem mostrar muito além da borda da sala
 function camTarget() {
   const a = game.arena, hx = Math.max(0, a.w / 2 + 1 - cam.right), hz = Math.max(0, a.d / 2 - 1.6);
+  if (game.place === 'hub') return [T.MathUtils.clamp(game.kay.pos.x, -hx, hx), T.MathUtils.clamp(game.kay.pos.z, -hz - 1.2, hz)];
   const r = game.run.room, lookDoors = r.clear && !r.final && a.doors.some(d => d.side === 'top') ? 3 : 0;   // sala limpa: puxa a câmera para as portas
   // luta com o Guardião: enquadra Kay e o chefe juntos
   const boss = game.enemies.find(e => e.boss && e.state !== 'dying');
@@ -353,4 +429,4 @@ resize(); restart();
 requestAnimationFrame(frame);
 
 // gancho para testes automatizados
-window.__rz = { game, CFG, pause, resume, restart };
+window.__rz = { game, CFG, pause, resume, restart, goHub, startRun };
