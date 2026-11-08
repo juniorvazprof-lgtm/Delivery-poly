@@ -63,6 +63,10 @@ export class Enemy {
   update(dt) {
     const g = this.g, c = this.cfg, k = g.kay;
     this.t += dt; this.sinceHit += dt; this.flash = Math.max(0, this.flash - dt);
+    if (this.burnT > 0 && this.targetable) {   // queimadura da espada acesa
+      this.burnT -= dt; this.burnTick = (this.burnTick || 0) - dt;
+      if (this.burnTick <= 0) { this.burnTick = 0.5; this.takeHit({ dmg: 0.5, guard: 0, quiet: true, knock: 0, spark: '#ff9b3d' }, this.pos, g, false); if (this.state === 'dying') return; }
+    }
     if (this.sinceHit > CFG.guardRegen && this.guard < c.guard && this.state !== 'stunned') { this.guard = c.guard; this.drawPips(); }
     const dx = k.pos.x - this.pos.x, dz = k.pos.z - this.pos.z, dist = Math.hypot(dx, dz), toK = faceOf(dx, dz);
     this.pos.addScaledVector(this.knock, dt); this.knock.multiplyScalar(Math.pow(0.002, dt));
@@ -175,6 +179,8 @@ export class Enemy {
     if (!this.targetable || this.state === 'stunned') return;
     this.cancelAttack(); this.rootFor = dur; this.setState('rooted');
   }
+
+  burn(dur) { this.burnT = Math.max(this.burnT || 0, dur); }
 
   rollWindup() { const j = CFG.windupJitter; this.wu = this.cfg.windup * (1 - j + Math.random() * 2 * j); }
 

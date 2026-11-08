@@ -64,8 +64,8 @@ export class Fx {
     };
   }
   // rastro do golpe de Kay: ciano, discreto, some rápido
-  slash(pos, face, range, arc) {
-    const m = new T.Mesh(sectorGeo(range, arc), basic(COL.friend, 0.3));
+  slash(pos, face, range, arc, color = COL.friend) {
+    const m = new T.Mesh(sectorGeo(range, arc), basic(color, 0.3));
     const g = floorGroup(m); g.position.set(pos.x, 0, pos.z); g.rotation.y = face;
     this.add(g, 0.16, p => { m.material.opacity = 0.3 * (1 - p); });
   }

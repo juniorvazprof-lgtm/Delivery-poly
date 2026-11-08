@@ -54,3 +54,8 @@ Espécies dos inimigos (Arborion e Fanaluz) são provisórias até a definição
 - Resgate: na sala de Resgate, após limpar, uma Ressona debilitada aparece; o botão contextual "Sincronizar" consome um Cubo Nexus (começa com 2; baús dão +1).
 - Bênçãos: a cada 2 salas de combate, escolher 1 de 3 (só nesta incursão). Ícones ativos aparecem no HUD.
 - Telas refeitas: escolha da companheira em cartões, mapa com barra de rotas grande e status, painel de pausa/evento e resultado com estatísticas.
+
+## Ajustes: companheiras e Guardião
+- Brasque: salta no inimigo (explosão de fogo) e acende a espada de Kay por 5 s: +1 de dano, arco maior e queimadura.
+- Marolho: redemoinho que puxa os inimigos para perto de Kay, encharca (sem atacar) por 1,5 s e apaga projéteis.
+- Guardião sem marcação no chão: avisa só pela pose e pelo brilho branco. Mais vida (85), golpes mais rápidos, pisão causa 2, salto até a posição de Kay, sequências de 2–3 golpes e reforços na fase 2.

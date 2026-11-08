@@ -86,8 +86,8 @@ export class Companion {
     const g = this.g, k = g.kay, c = this.cfg, e = this.target();
     const aim = e ? faceOf(e.pos.x - k.pos.x, e.pos.z - k.pos.z) : k.face;
     this.cd = this.cdMax; this.cast = 0.35; this.face = aim;
-    if (this.kind === 'brasque') g.effects.push(new FireStrip(g, this.pos.clone(), e ? faceOf(e.pos.x - this.pos.x, e.pos.z - this.pos.z) : aim, c.fire));
-    if (this.kind === 'marolho') g.effects.push(new Wave(g, k.pos.clone(), aim, c.wave));
+    if (this.kind === 'brasque') g.effects.push(new EmberLeap(g, this, e, c.ember));
+    if (this.kind === 'marolho') g.effects.push(new Whirl(g, k.pos.clone().add(new T.Vector3(Math.sin(aim) * c.whirl.front, 0, Math.cos(aim) * c.whirl.front)), c.whirl));
     if (this.kind === 'brogume') {
       const r = c.roots, at = e && Math.hypot(e.pos.x - k.pos.x, e.pos.z - k.pos.z) < r.reach ? e.pos.clone() : k.pos.clone().add(new T.Vector3(Math.sin(aim) * 2.4, 0, Math.cos(aim) * 2.4));
       g.effects.push(new Roots(g, at, r));
@@ -97,7 +97,7 @@ export class Companion {
 
   animate() {
     const b = this.body, s = this.base;
-    this.root.position.copy(this.pos); this.root.rotation.y = this.face;
+    this.root.position.set(this.pos.x, this.leapY || 0, this.pos.z); this.root.rotation.y = this.face;
     b.rotation.set(0, 0, 0); b.scale.setScalar(s);
     animateIdle(b, this.g.time, this.phase);
     if (this.cast > 0) {   // pose da habilidade
@@ -109,70 +109,65 @@ export class Companion {
   }
 }
 
-// Brasque: faixa de fogo no chão que queima quem estiver nela
-class FireStrip {
-  constructor(g, origin, dir, f) {
-    this.g = g; this.f = f; this.t = 0; this.tick = 0; this.origin = origin; this.dir = dir;
-    this.group = new T.Group(); this.group.position.copy(origin); this.group.rotation.y = dir;
-    const floor = new T.Mesh(new T.PlaneGeometry(f.width, f.len), soft('#ff9b3d', 0.22));
-    floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0.03, f.len / 2); this.group.add(floor); this.floor = floor;
-    this.flames = [];
-    for (let i = 0; i < 14; i++) {
-      const fl = new T.Mesh(cube, mat(i % 3 ? 'flame' : 'flame2'));
-      const z = 0.4 + (i / 13) * (f.len - 0.5), x = (Math.random() - 0.5) * f.width * 0.7, s = 0.14 + Math.random() * 0.12;
-      fl.position.set(x, s / 2, z); fl.scale.set(s, s * 2, s); fl.userData.s = s; fl.userData.ph = Math.random() * 6; fl.userData.z = z;
-      this.group.add(fl); this.flames.push(fl);
-    }
-    g.scene.add(this.group);
+// Brasque: salta no inimigo com uma explosão de fogo e acende a espada de Kay
+class EmberLeap {
+  constructor(g, comp, target, f) {
+    this.g = g; this.comp = comp; this.f = f; this.t = 0; this.done = false;
+    this.from = comp.pos.clone(); this.to = target ? target.pos.clone() : g.kay.pos.clone().add(new T.Vector3(Math.sin(g.kay.face) * 1.5, 0, Math.cos(g.kay.face) * 1.5));
+    this.group = new T.Group(); g.scene.add(this.group);
+    g.kay.ignite(f.dur);
   }
   update(dt) {
-    const f = this.f, g = this.g; this.t += dt; this.tick -= dt;
-    const grow = Math.min(1, this.t / 0.2), fade = Math.max(0, 1 - Math.max(0, this.t - f.dur + 0.4) / 0.4);
-    for (const fl of this.flames) {
-      const on = fl.userData.z <= grow * f.len ? 1 : 0, h = fl.userData.s * (1.6 + Math.sin(this.t * 14 + fl.userData.ph) * 0.6) * fade * on;
-      fl.scale.y = Math.max(0.001, h); fl.position.y = h / 2;
-    }
-    this.floor.material.opacity = 0.22 * fade;
-    if (this.tick <= 0 && this.t < f.dur) {
-      this.tick = f.tick;
-      const sx = Math.sin(this.dir), sz = Math.cos(this.dir);
-      for (const e of g.enemies) {
-        if (!e.targetable) continue;
-        const rx = e.pos.x - this.origin.x, rz = e.pos.z - this.origin.z, along = rx * sx + rz * sz, perp = Math.abs(rx * sz - rz * sx);
-        if (along > -e.radius && along < f.len * grow + e.radius && perp < f.width / 2 + e.radius)
-          e.takeHit({ dmg: f.dmg, guard: f.guard, quiet: true, knock: 0.4, spark: '#ff9b3d' }, this.origin, g, false);
+    const g = this.g, f = this.f; this.t += dt;
+    const p = Math.min(1, this.t / 0.3);
+    if (!this.done) {
+      this.comp.pos.lerpVectors(this.from, this.to, p); this.comp.leapY = Math.sin(p * Math.PI) * 0.8; this.comp.cast = 0.2;
+      if (p >= 1) {
+        this.done = true; this.comp.leapY = 0;
+        g.fx.burst(this.to, '#ff9b3d', 14, 4, 0.3); g.fx.burst(this.to, '#ffc04d', 8, 3, 0.5);
+        for (const e of g.enemies) if (e.targetable && Math.hypot(e.pos.x - this.to.x, e.pos.z - this.to.z) < f.leapRadius + e.radius) {
+          e.takeHit({ dmg: f.leapDmg, guard: 1, quiet: true, knock: 2, spark: '#ff9b3d' }, this.to, g, false); e.burn?.(f.burn);
+        }
       }
     }
-    if (this.t >= f.dur) { g.scene.remove(this.group); return false; }
+    if (this.done) { g.scene.remove(this.group); return false; }
     return true;
   }
 }
 
-// Marolho: onda em arco que avança, empurra, interrompe e apaga projéteis
-class Wave {
-  constructor(g, origin, dir, w) {
-    this.g = g; this.w = w; this.t = 0; this.origin = origin; this.dir = dir; this.hit = new Set();
-    const a = T.MathUtils.degToRad(w.arc);
-    this.mesh = new T.Mesh(new T.RingGeometry(0.82, 1, 32, 1, -Math.PI / 2 - a / 2, a), soft('#7fd8ff', 0.55));
-    this.inner = new T.Mesh(new T.RingGeometry(0.6, 0.82, 32, 1, -Math.PI / 2 - a / 2, a), soft('#36B6D5', 0.3));
-    this.group = new T.Group(); const rot = new T.Group(); rot.rotation.x = -Math.PI / 2; rot.position.y = 0.05; rot.add(this.mesh, this.inner);
-    this.group.add(rot); this.group.position.copy(origin); this.group.rotation.y = dir;
+// Marolho: redemoinho que puxa os inimigos para perto de Kay, encharca (sem atacar) e apaga projéteis
+class Whirl {
+  constructor(g, at, w) {
+    this.g = g; this.w = w; this.t = 0; this.at = at; this.soaked = false;
+    this.group = new T.Group(); this.group.position.set(at.x, 0.05, at.z);
+    this.rings = [0, 1, 2].map(i => {
+      const m = new T.Mesh(new T.RingGeometry(0.88, 1, 40, 1, i * 2, 4.2), soft(i ? '#36B6D5' : '#9be7f2', 0.6 - i * 0.12));
+      m.rotation.x = -Math.PI / 2; this.group.add(m); return m;
+    });
     g.scene.add(this.group);
+    for (const pr of g.projectiles) if (pr.alive && Math.hypot(pr.pos.x - at.x, pr.pos.z - at.z) < w.radius) pr.kill();
   }
   update(dt) {
     const w = this.w, g = this.g; this.t += dt;
-    const p = Math.min(1, this.t / w.time), r = 0.5 + p * w.range, half = T.MathUtils.degToRad(w.arc) / 2;
-    this.mesh.scale.set(r, r, 1); this.inner.scale.set(r, r, 1);
-    this.mesh.material.opacity = 0.55 * (1 - p * 0.6); this.inner.material.opacity = 0.3 * (1 - p);
-    const inside = pos => { const dx = pos.x - this.origin.x, dz = pos.z - this.origin.z, d = Math.hypot(dx, dz); return d <= r + 0.4 && (d < 0.6 || Math.abs(angDiff(faceOf(dx, dz), this.dir)) <= half); };
-    for (const e of g.enemies) {
-      if (!e.targetable || this.hit.has(e) || !inside(e.pos)) continue;
-      this.hit.add(e);
-      e.takeHit({ dmg: w.dmg, guard: w.guard, quiet: true, knock: w.knock, spark: '#9be7f2' }, this.origin, g, false);
-      if (e.state === 'windup' || e.state === 'move') { e.cancelAttack(); e.setState('flinch'); }
+    const p = Math.min(1, this.t / w.pull);
+    this.rings.forEach((m, i) => { const r = w.radius * (1 - p * 0.75) * (1 - i * 0.18); m.scale.set(r, r, 1); m.rotation.z = this.t * (6 + i * 2); m.material.opacity = (0.6 - i * 0.12) * (1 - Math.max(0, this.t - w.pull - 0.2) / 0.4); });
+    if (p < 1) {   // puxa para o centro
+      for (const e of g.enemies) {
+        if (!e.targetable || e.boss) continue;
+        const dx = this.at.x - e.pos.x, dz = this.at.z - e.pos.z, d = Math.hypot(dx, dz);
+        if (d > w.radius || d < 0.7) continue;
+        e.pos.x += dx / d * Math.min(d - 0.6, 9 * dt); e.pos.z += dz / d * Math.min(d - 0.6, 9 * dt);
+      }
+    } else if (!this.soaked) {
+      this.soaked = true;
+      for (const e of g.enemies) {
+        if (!e.targetable || Math.hypot(e.pos.x - this.at.x, e.pos.z - this.at.z) > 2.2 + e.radius) continue;
+        e.takeHit({ dmg: w.dmg, guard: w.guard, quiet: true, knock: 0, spark: '#9be7f2' }, this.at, g, false);
+        e.entangle(w.soak);
+      }
+      g.fx.burst(this.at, '#7fd8ff', 14, 3, 0.3);
     }
-    for (const pr of g.projectiles) if (pr.alive && inside(pr.pos)) pr.kill();
-    if (this.t >= w.time + 0.15) { g.scene.remove(this.group); return false; }
+    if (this.t >= w.pull + 0.6) { g.scene.remove(this.group); return false; }
     return true;
   }
 }

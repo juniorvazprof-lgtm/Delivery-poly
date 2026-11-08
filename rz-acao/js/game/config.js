@@ -57,20 +57,21 @@ export const CFG = {
   windupJitter: 0.15,    // variação aleatória da preparação (±15%) para não ficar previsível
   // companheiras: uma por incursão, sem vida própria; habilidade com recarga
   companions: {
-    brasque: { name: 'Brasque', element: 'Ember', glyph: '✹', color: '#F07944', scale: 0.55, cooldown: 7,
-      desc: 'Faixa de fogo à frente que queima por 2,5 s', fire: { len: 5.5, width: 1.2, dur: 2.5, tick: 0.45, dmg: 1, guard: 1 } },
-    marolho: { name: 'Marolho', element: 'Tide', glyph: '≈', color: '#36B6D5', scale: 0.55, cooldown: 6,
-      desc: 'Onda que empurra, interrompe ataques e apaga projéteis', wave: { range: 4.8, arc: 110, time: 0.35, dmg: 1, guard: 2, knock: 10 } },
+    brasque: { name: 'Brasque', element: 'Ember', glyph: '✹', color: '#F07944', scale: 0.55, cooldown: 8,
+      desc: 'Salta no inimigo e acende a espada de Kay por 5 s: +1 de dano e queimadura', ember: { dur: 5, dmg: 1, arc: 25, burn: 2, leapDmg: 1, leapRadius: 1.5 } },
+    marolho: { name: 'Marolho', element: 'Tide', glyph: '≈', color: '#36B6D5', scale: 0.55, cooldown: 7,
+      desc: 'Redemoinho que puxa os inimigos para perto de Kay e os deixa encharcados, sem atacar, por 1,5 s', whirl: { radius: 4.6, pull: 0.45, soak: 1.5, dmg: 1, guard: 2, front: 1.3 } },
     brogume: { name: 'Brogume', element: 'Flora', glyph: '✿', color: '#76B868', scale: 0.55, cooldown: 8,
       desc: 'Raízes prendem inimigos numa área por 2 s', roots: { radius: 1.9, delay: 0.3, hold: 2.2, dmg: 1, guard: 1, reach: 6 } },
   },
   companionPoke: { every: 3.5, range: 2.4, dmg: 0.5 },   // apoio automático discreto
   // Guardião da Fenda Verde (câmara final). Só ele marca o chão nos golpes grandes.
   guardian: {
-    name: 'Arborion Ancião', model: 'arborion', scale: 1.7, radius: 1.0, hp: 46, guard: 12, stun: 2.2, speed: 1.6, dmg: 1,
-    slamRadius: 2.6, dashSpeed: 11, dashDist: 8, wallStun: 1.6, tripleRadius: 1.4, ringShots: 8, ringSpeed: 3.6,
-    p1: { slamWind: 0.95, chargeWind: 0.85, recover: 0.9, between: 1.2, chain: 0.6, tripleEach: 0.8 },
-    p2: { slamWind: 0.75, chargeWind: 0.7, recover: 0.65, between: 0.8, chain: 0.4, tripleEach: 0.65 },
+    name: 'Arborion Ancião', model: 'arborion', scale: 1.7, radius: 1.0, hp: 85, guard: 16, stun: 1.8, speed: 2.4,
+    dmg: 1, slamDmg: 2, slamRadius: 2.8, dashSpeed: 14, dashDist: 9, wallStun: 1.3, leapTime: 0.55, leapRadius: 1.9,
+    ringShots: 10, ringSpeed: 4.2, minions: 2, summonEvery: 12,
+    p1: { slamWind: 0.7, chargeWind: 0.62, leapWind: 0.5, recover: 0.65, between: 0.7, chain: 0.35 },
+    p2: { slamWind: 0.55, chargeWind: 0.5, leapWind: 0.4, recover: 0.5, between: 0.45, chain: 0.22 },
   },
   // resgate: Ressona debilitada após limpar a sala; sincronizar consome um Cubo Nexus
   rescue: { startCubes: 2, species: ['brasque', 'marolho', 'brogume'], range: 1.5, syncTime: 1.1 },

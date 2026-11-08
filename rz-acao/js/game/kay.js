@@ -33,10 +33,13 @@ export class Kay {
       box(0.3, 0.1, 0.07, 'steelD', 0.23),                  // guarda
       box(0.07, 0.07, 0.06, 'glowC', 0.23, 0.07),           // núcleo Nexo na guarda
       box(0.13, 0.035, 0.82, 'steelL', 0.67),               // lâmina
-      box(0.03, 0.045, 0.78, 'glowC', 0.67, 0, 0.075),      // fio emissivo
+      this.edge = box(0.03, 0.045, 0.78, 'glowC', 0.67, 0, 0.075),      // fio emissivo
       box(0.09, 0.035, 0.12, 'steelL', 1.11),               // ponta
     );
     this.root.add(this.staffPivot);
+    // brasa de Brasque: lâmina incandescente (aparece só com a espada acesa)
+    this.emberBlade = new T.Mesh(new T.BoxGeometry(0.16, 0.06, 0.86), mat('flame2')); this.emberBlade.position.z = 0.67; this.emberBlade.visible = false;
+    this.staffPivot.add(this.emberBlade);
     scene.add(this.root);
     this.reset();
   }
@@ -44,6 +47,7 @@ export class Kay {
     this.pos = new T.Vector3(0, 0, 2); this.face = Math.PI;
     this.hp = K.hp; this.state = 'free'; this.t = 0; this.combo = -1;
     this.invuln = 0; this.dodgeCd = 0; this.flash = 0; this.walk = 0;
+    this.ember = 0;
     this.vel = new T.Vector3(); this.dodgeDir = new T.Vector3(); this.hits = new Set();
     this.stats = { hitsTaken: 0 };
   }
@@ -53,6 +57,7 @@ export class Kay {
   update(dt, g, input) {
     this.g = g;
     this.invuln = Math.max(0, this.invuln - dt);
+    this.ember = Math.max(0, this.ember - dt);
     this.dodgeCd = Math.max(0, this.dodgeCd - dt);
     this.flash = Math.max(0, this.flash - dt);
     const mv = input.move(), mlen = Math.hypot(mv.x, mv.z);
@@ -132,20 +137,23 @@ export class Kay {
   hitTest(a0, g) {
     // bênçãos da incursão alteram o golpe
     const m = g.mods, fin = this.combo === CFG.combo.length - 1;
-    const a = { ...a0, dmg: a0.dmg + (m.dmg || 0), arc: a0.arc + (fin ? m.finArc || 0 : 0), range: a0.range + (fin ? m.finRange || 0 : 0) };
-    if (!this.slashed) { g.fx.slash(this.pos, this.face, a.range + 0.2, a.arc); this.slashed = true; }
+    const ember = this.ember > 0 ? CFG.companions.brasque.ember : null;   // espada acesa por Brasque
+    const a = { ...a0, dmg: a0.dmg + (m.dmg || 0) + (ember ? ember.dmg : 0), arc: a0.arc + (fin ? m.finArc || 0 : 0) + (ember ? ember.arc : 0), range: a0.range + (fin ? m.finRange || 0 : 0), spark: ember ? '#ffb15a' : undefined };
+    if (!this.slashed) { g.fx.slash(this.pos, this.face, a.range + 0.2, a.arc, ember ? '#ff9b3d' : undefined); this.slashed = true; }
     const half = T.MathUtils.degToRad(a.arc) / 2;
     for (const e of g.enemies) {
       if (!e.targetable || this.hits.has(e)) continue;
       const dx = e.pos.x - this.pos.x, dz = e.pos.z - this.pos.z, d = Math.hypot(dx, dz);
       if (d > a.range + e.radius) continue;
       if (d > e.radius + 0.25 && Math.abs(angDiff(faceOf(dx, dz), this.face)) > half) continue;
-      this.hits.add(e); e.takeHit(a, this.pos, g, this.combo === CFG.combo.length - 1);
+      this.hits.add(e); e.takeHit(a, this.pos, g, this.combo === CFG.combo.length - 1); if (ember) e.burn?.(ember.burn);
     }
     for (const b of g.arena.breakIn(this.pos, this.face, a.range, half)) {   // objetos quebráveis
       g.fx.burst(b, b.kind === 'crate' ? '#a9b4c4' : '#8fd06a', 8, 3, 0.4); g.run.dropAt(new T.Vector3(b.x, 0, b.z), b.kind === 'chest' ? CFG.chestDrop : 1); if (b.kind === 'chest') g.run.addCube(1); g.hitstop = Math.max(g.hitstop, 0.02);
     }
   }
+
+  ignite(dur) { this.ember = dur; }
 
   hurt(dmg, from, g) {
     if (this.invulnerable) return false;
@@ -161,6 +169,7 @@ export class Kay {
     this.root.position.copy(this.pos);
     this.root.rotation.y = this.face;
     const b = this.body, sp = this.staffPivot;
+    this.emberBlade.visible = this.ember > 0; if (this.ember > 0) this.emberBlade.scale.y = 1 + Math.sin(performance.now() / 40) * 0.4;
     b.rotation.set(0, 0, 0); b.scale.setScalar(this.base); b.position.y = 0;
     setFlash(this.flashMeshes, this.flash > 0);
     this.marker.visible = false;   // sem círculo sob os pés (pedido do autor)
