@@ -5,6 +5,7 @@ import { MODELS } from '../data/models.js';
 import { CFG } from './config.js';
 import { mergeModel, setFlash } from './merge.js';
 import { footMarker, COL } from './fx.js';
+import { SlashWave, DodgeEcho } from './boonfx.js';
 
 const K = CFG.kay, D = CFG.dodge;
 const angDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
@@ -47,7 +48,7 @@ export class Kay {
     this.pos = new T.Vector3(0, 0, 2); this.face = Math.PI;
     this.hp = K.hp; this.state = 'free'; this.t = 0; this.combo = -1;
     this.invuln = 0; this.dodgeCd = 0; this.flash = 0; this.walk = 0;
-    this.ember = 0;
+    this.ember = 0; this.counter = 0; this.counterSwing = false; this.perfectDone = false;
     this.vel = new T.Vector3(); this.dodgeDir = new T.Vector3(); this.hits = new Set();
     this.stats = { hitsTaken: 0 };
   }
@@ -58,6 +59,7 @@ export class Kay {
     this.g = g;
     this.invuln = Math.max(0, this.invuln - dt);
     this.ember = Math.max(0, this.ember - dt);
+    this.counter = Math.max(0, this.counter - dt);
     this.dodgeCd = Math.max(0, this.dodgeCd - dt);
     this.flash = Math.max(0, this.flash - dt);
     const mv = input.move(), mlen = Math.hypot(mv.x, mv.z);
@@ -107,8 +109,9 @@ export class Kay {
     const l = Math.hypot(mv.x, mv.z);
     if (l > 0.1) { this.dodgeDir.set(mv.x / l, 0, mv.z / l); this.face = faceOf(mv.x, mv.z); }
     else this.dodgeDir.set(Math.sin(this.face), 0, Math.cos(this.face));   // sem direção: última orientação
-    this.state = 'dodge'; this.t = 0; this.combo = -1;
+    this.state = 'dodge'; this.t = 0; this.combo = -1; this.perfectDone = false;
     const g = this.g;
+    if (g?.mods.eco) g.effects.push(new DodgeEcho(g, this.pos));   // bênção: eco da esquiva
     if (g?.mods.dodgePush) {   // bênção: esquiva de choque
       for (const e of g.enemies) if (e.targetable && !e.boss && Math.hypot(e.pos.x - this.pos.x, e.pos.z - this.pos.z) < 1.9) {
         e.takeHit({ dmg: 0, guard: 1, quiet: true, knock: 7, spark: '#ffe066' }, this.pos, g, false);
@@ -131,7 +134,8 @@ export class Kay {
       best = e; bd = d;
     }
     if (best) this.face = faceOf(best.pos.x - this.pos.x, best.pos.z - this.pos.z);
-    this.state = 'attack'; this.combo = i; this.t = 0; this.hits.clear(); this.slashed = false;
+    this.state = 'attack'; this.combo = i; this.t = 0; this.hits.clear(); this.slashed = false; this.waved = false;
+    this.counterSwing = this.counter > 0; if (this.counterSwing) this.counter = 0;   // contra-ataque após esquiva perfeita
   }
 
   hitTest(a0, g) {
@@ -139,7 +143,11 @@ export class Kay {
     const m = g.mods, fin = this.combo === CFG.combo.length - 1;
     const ember = this.ember > 0 ? CFG.companions.brasque.ember : null;   // espada acesa por Brasque
     const a = { ...a0, dmg: a0.dmg + (m.dmg || 0) + (ember ? ember.dmg : 0), arc: a0.arc + (fin ? m.finArc || 0 : 0) + (ember ? ember.arc : 0), range: a0.range + (fin ? m.finRange || 0 : 0), spark: ember ? '#ffb15a' : undefined };
-    if (!this.slashed) { g.fx.slash(this.pos, this.face, a.range + 0.2, a.arc, ember ? '#ff9b3d' : undefined); this.slashed = true; }
+    if (this.counterSwing) { const P = CFG.perfectDodge; a.dmg *= m.contra ? 3 : P.counterMul; a.guard += P.counterGuard; a.arc += 30; a.spark = '#5ff2ff'; }
+    if (!this.slashed) {
+      g.fx.slash(this.pos, this.face, a.range + 0.2, a.arc, this.counterSwing ? '#e8fbff' : ember ? '#ff9b3d' : undefined); this.slashed = true;
+      if (fin && m.wave && !this.waved) { this.waved = true; g.effects.push(new SlashWave(g, this.pos, this.face, 1 + (m.dmg || 0))); }   // bênção: corte em onda
+    }
     const half = T.MathUtils.degToRad(a.arc) / 2;
     for (const e of g.enemies) {
       if (!e.targetable || this.hits.has(e)) continue;
@@ -158,6 +166,11 @@ export class Kay {
   ignite(dur) { this.ember = dur; }
 
   hurt(dmg, from, g) {
+    // esquiva perfeita: o golpe chegou logo depois de começar a esquiva
+    const P = CFG.perfectDodge;
+    if (this.state === 'dodge' && !this.perfectDone && this.t < P.window + (g.mods?.contra ? 0.05 : 0)) {
+      this.perfectDone = true; this.counter = P.counter; g.onPerfectDodge?.(this); return false;
+    }
     if (this.invulnerable) return false;
     this.hp = Math.max(0, this.hp - dmg); this.stats.hitsTaken++;
     this.invuln = K.hurtIframes; this.flash = 0.08;
@@ -171,6 +184,7 @@ export class Kay {
     this.root.position.copy(this.pos);
     this.root.rotation.y = this.face;
     const b = this.body, sp = this.staffPivot;
+    this.edge.material = mat(this.counter > 0 ? 'glowW' : 'glowC');
     this.emberBlade.visible = this.ember > 0; if (this.ember > 0) this.emberBlade.scale.y = 1 + Math.sin(performance.now() / 40) * 0.4;
     b.rotation.set(0, 0, 0); b.scale.setScalar(this.base); b.position.y = 0;
     setFlash(this.flashMeshes, this.flash > 0);

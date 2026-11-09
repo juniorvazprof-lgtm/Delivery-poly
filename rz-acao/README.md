@@ -65,3 +65,9 @@ Espécies dos inimigos (Arborion e Fanaluz) são provisórias até a definição
 - Mineração: veios de Liga, Cristal e Fibra nas salas da Fenda (mais nas de Recurso), com vários golpes para quebrar.
 - Materiais separados: Liga de Fenda, Cristal bruto, Fibra viva e Sementes. Ao voltar, tudo vai para o refúgio (na derrota ou abandono, metade se perde) e o dia avança.
 - Save em `rz_refugio_save_v1` (`js/game/save.js`), separado do RPG. "Apagar progresso" fica na pausa do refúgio, com confirmação.
+
+## Jogabilidade: variedade e profundidade
+- Novos inimigos: Escudeiro (casco frontal bloqueia o dano; contorne ou quebre a guarda), Explosivo (corre, incha e explode; morto, explode do mesmo jeito e fere outros inimigos), Saltador (salta onde Kay estava; a sombra mostra o pouso) e Curandeiro (cura o aliado mais ferido; prioridade de abate).
+- Elites: maiores, com mais vida e mais rápidos, coroa de cristais; soltam Cristal. Chance cresce com a profundidade (`CFG.elite`).
+- Esquiva perfeita: esquivar logo antes do golpe desacelera o tempo e carrega um contra-ataque (dano dobrado, quebra guarda); a lâmina fica branca enquanto ele está pronto (`CFG.perfectDodge`).
+- Bênçãos que mudam o estilo: Corte em onda, Eco da esquiva, Ressonância, Contra-golpe; e de sinergia com a companheira: Raiz funda (Brogume), Brasa viva (Brasque), Maré baixa (Marolho).

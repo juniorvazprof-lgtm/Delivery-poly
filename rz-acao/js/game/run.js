@@ -81,7 +81,7 @@ export class Run {
     const tier = Math.min(CFG.encounters.length - 1, Math.floor(depth * CFG.encounters.length / CFG.run.layers));
     let waves = final ? CFG.finalEncounter : info.peaceful ? [] : pick(CFG.encounters[tier]);
     if (info.light) waves = waves.slice(0, 1);
-    this.room = { info, depth, final, waves, wave: -1, waveT: CFG.waveDelay - 0.3, clear: false };
+    this.room = { info, depth, final, tier, waves, wave: -1, waveT: CFG.waveDelay - 0.3, clear: false };
 
     const k = g.kay;
     k.pos.set(0, 0, layout.d / 2 - 1.2); k.face = Math.PI; k.state = 'free'; k.combo = -1; k.t = 0;
@@ -124,7 +124,8 @@ export class Run {
     for (const kind of r.waves[i]) {
       if (kind === 'guardian') { g.enemies.push(new Guardian(new T.Vector3(0, 0, -g.arena.d / 2 + 2.6), g)); continue; }
       const p = g.arena.spawnPoint(g.kay.pos, taken); taken.push(p);
-      g.enemies.push(new Enemy(kind, p, g));
+      const elite = !r.final && Math.random() < (CFG.elite.chance[r.tier] || 0);
+      g.enemies.push(new Enemy(kind, p, g, { elite }));
     }
     this.ui.objective();
   }
@@ -157,6 +158,7 @@ export class Run {
   dropBundle(pos, bundle) { spawnDrops(this.g, this.drops, pos, bundle); }
   onEnemyKilled(e) {
     if (e.boss) { this.dropAt(e.pos, 12); return; }
+    if (e.elite) this.dropBundle(e.pos, CFG.elite.drop);
     const [a, b] = CFG.drops.perEnemy; this.dropAt(e.pos, a + Math.floor(Math.random() * (b - a + 1)) + (this.g.mods.extraDrop || 0));
   }
   addCube(n = 1) { this.cubes += n; this.ui.cubes(this.cubes); this.ui.toast(`+${n} Cubo Nexus`, COL.friend); }

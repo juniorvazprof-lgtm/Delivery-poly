@@ -51,7 +51,12 @@ const game = {
   place: 'hub', save: loadSave(), hubDrops: [],
   collect(kind, n) { if (game.place === 'run') game.run.add(kind, n); else { game.save.bank[kind] = (game.save.bank[kind] || 0) + n; ui.materials(game.save.bank); persist(); } },
   onBreak(b) { if (game.place === 'run') game.run.onBreak(b); else hubBreak(b); },
-  onEnemyKilled(e) { game.run.onEnemyKilled(e); if (e.boss) $('bossbar').hidden = true; },
+  onPerfectDodge(k) {   // tempo desacelera, anel ciano e contra-ataque carregado
+    game.slow = CFG.perfectDodge.slow + (game.mods.contra ? 0.25 : 0);
+    fx.ring(k.pos, '#5ff2ff', 0.4, 0.3, 1.8, 0.9); fx.burst(k.pos, '#9be7f2', 10, 3, 0.6); vibrate(30);
+    if (!settings.reduceFx) { document.body.classList.remove('perfect'); void document.body.offsetWidth; document.body.classList.add('perfect'); }
+  },
+  onEnemyKilled(e) { if (game.mods.ressoar && game.comp) game.comp.cd = Math.max(0, game.comp.cd - 1.5); game.run.onEnemyKilled(e); if (e.boss) $('bossbar').hidden = true; },
   onBoss(b) { $('boss-name').textContent = CFG.guardian.name; $('bossbar').hidden = false; game.onBossHp(b); },
   onBossHp(b) { $('boss-fill').style.width = Math.max(0, b.hp / b.cfg.hp * 100) + '%'; $('bossbar').classList.toggle('p2', b.phase2); },
 };
@@ -132,7 +137,10 @@ const ui = {
   },
   boon() {
     if (game.mode !== 'play') return setTimeout(() => ui.boon(), 400);
-    const left = Object.keys(CFG.boons).filter(k => !game.run.boons.includes(k)).sort(() => Math.random() - 0.5).slice(0, 3);
+    // bênçãos de sinergia só aparecem com a companheira certa, e com prioridade
+    const pool = Object.keys(CFG.boons).filter(k => !game.run.boons.includes(k) && (!CFG.boons[k].only || CFG.boons[k].only === game.comp?.kind));
+    const syn = pool.filter(k => CFG.boons[k].only), rest = pool.filter(k => !CFG.boons[k].only).sort(() => Math.random() - 0.5);
+    const left = [...(syn.length && Math.random() < 0.6 ? syn : []), ...rest].slice(0, 3).sort(() => Math.random() - 0.5);
     if (!left.length) return;
     game.mode = 'boon'; input.clear();
     cards($('boon-cards'), left.map(k => ({ key: k, ...CFG.boons[k], tag: 'Só nesta incursão' })), key => {
@@ -176,6 +184,13 @@ function applyBoon(key) {
   if (key === 'pulso') m.dodgePush = true;
   if (key === 'vigor') { m.maxHp = 2; k.hp = Math.min(game.maxHp(), k.hp + 2); renderHearts(); }
   if (key === 'ima') m.extraDrop = 1;
+  if (key === 'onda') m.wave = true;
+  if (key === 'eco') m.eco = true;
+  if (key === 'ressoar') m.ressoar = true;
+  if (key === 'contra') m.contra = true;
+  if (key === 'raiz') m.rootBonus = true;
+  if (key === 'brasa') m.burnSpread = true;
+  if (key === 'mare') m.soakFin = true;
   renderBoons();
 }
 function renderBoons() {
@@ -407,7 +422,8 @@ function frame(now) {
     if (game.countT <= 0) { game.mode = 'play'; $('count').hidden = true; input.clear(); }
   }
   if (game.mode === 'play' || game.mode === 'lost' || game.mode === 'won') {
-    if (game.hitstop > 0) { game.hitstop -= dt; acc = 0; } else acc += dt;
+    const scale = game.slow > 0 ? CFG.perfectDodge.slowScale : 1; game.slow = Math.max(0, (game.slow || 0) - dt);
+    if (game.hitstop > 0) { game.hitstop -= dt; acc = 0; } else acc += dt * scale;
     let n = 0;
     while (acc >= CFG.sim.dt && n++ < CFG.sim.maxSteps) { step(CFG.sim.dt); acc -= CFG.sim.dt; }
     if (n >= CFG.sim.maxSteps) acc = 0;
