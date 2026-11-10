@@ -34,12 +34,37 @@
 
 <div id="touch"><div id="stick"><div id="knob"></div></div></div>
 
-<section id="startscreen" class="screen">
+<section id="startscreen" class="screen menu">
   <div class="panel">
-    <small class="eyebrow">PROTÓTIPO · FENDA 1</small>
+    <div class="goldbar"><i></i><b id="menu-gold">0</b></div>
     <h1><span>FEN</span><span>DAS</span></h1>
-    <p>Arraste o dedo em qualquer lugar para mover o Mago. Os feitiços saem sozinhos. Sobreviva 8 minutos e derrote o Guardião.</p>
-    <button id="btn-start" class="btn primary">COMEÇAR</button>
+    <p>Arraste o dedo para mover o Mago. Os feitiços saem sozinhos. Sobreviva 8 minutos e derrote o Guardião.</p>
+    <button id="btn-start" class="btn primary">JOGAR</button>
+    <button id="btn-arsenal" class="btn">ARSENAL</button>
+    <button id="btn-missions" class="btn">MISSÕES <em hidden></em></button>
+    <button id="btn-stats" class="btn">ESTATÍSTICAS</button>
+  </div>
+</section>
+
+<section id="arsenal" class="screen menu" hidden>
+  <div class="panel wide">
+    <div class="mhead"><button class="btn-back">‹</button><h2>ARSENAL</h2><div class="goldbar"><i></i><b class="gold-now">0</b></div></div>
+    <div class="tabs"><button data-tab="feiticos">FEITIÇOS</button><button data-tab="melhorias">MELHORIAS</button><button data-tab="herois">HERÓIS</button></div>
+    <div id="ars-list" class="mlist"></div>
+  </div>
+</section>
+
+<section id="missions" class="screen menu" hidden>
+  <div class="panel wide">
+    <div class="mhead"><button class="btn-back">‹</button><h2>MISSÕES</h2><div class="goldbar"><i></i><b class="gold-now">0</b></div></div>
+    <div id="mis-list" class="mlist"></div>
+  </div>
+</section>
+
+<section id="stats" class="screen menu" hidden>
+  <div class="panel wide">
+    <div class="mhead"><button class="btn-back">‹</button><h2>ESTATÍSTICAS</h2><span></span></div>
+    <dl id="st-list"></dl>
   </div>
 </section>
 
@@ -78,7 +103,9 @@
     <dl id="res-stats"></dl>
     <p class="sub">Feitiços desta partida</p>
     <div id="res-build" class="build"></div>
+    <div id="res-gold" class="goldbar big"><i></i><b>+0</b></div>
     <button id="btn-again" class="btn primary">JOGAR DE NOVO</button>
+    <button id="btn-menu" class="btn">MENU</button>
   </div>
 </section>
 

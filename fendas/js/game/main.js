@@ -7,6 +7,7 @@ import { CFG } from './config.js';
 import { ModelBatch, CubePool, GlowPool } from './instanced.js';
 import { World, MAGE } from './world.js';
 import { Spell, nextDesc } from './spells.js';
+import { M, metaMods, endRun, initMenu, showMenu } from './meta.js';
 
 const $ = id => document.getElementById(id);
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -56,11 +57,11 @@ const G = {
 const mage = G.mage = { x: 0, z: 0, face: Math.PI, hp: 100, maxHp: 100, inv: 0, mx: 0, mz: 0 };
 
 function recalc() {
-  const p = k => G.passives[k] || 0, P = CFG.passives;
-  G.mods = { dmg: 1 + P.poder.per * p('poder'), cd: Math.max(0.5, 1 - P.pressa.per * p('pressa')), area: 1 + P.alcance.per * p('alcance'),
-    magnet: CFG.mage.magnet * (1 + P.ima.per * p('ima')), regen: P.vigor.regen * p('vigor'), speed: CFG.mage.speed * (1 + P.passo.per * p('passo')),
+  const p = k => G.passives[k] || 0, P = CFG.passives, mm = G.meta || metaMods();
+  G.mods = { dmg: (1 + P.poder.per * p('poder')) * mm.dmg, cd: Math.max(0.45, (1 - P.pressa.per * p('pressa')) * mm.cd), area: 1 + P.alcance.per * p('alcance'),
+    magnet: CFG.mage.magnet * (1 + P.ima.per * p('ima')) * mm.magnet, regen: P.vigor.regen * p('vigor'), speed: CFG.mage.speed * (1 + P.passo.per * p('passo')) * mm.speed,
     count: Math.floor((p('quantidade') + 1) / 2), dur: 1 + P.duracao.per * p('duracao'), crit: CFG.drops.critBase + P.sorte.crit * p('sorte'), luck: 1 + P.sorte.drop * p('sorte') };
-  const old = mage.maxHp; mage.maxHp = CFG.mage.hp + P.vigor.hp * p('vigor'); mage.hp += Math.max(0, mage.maxHp - old);
+  const old = mage.maxHp; mage.maxHp = CFG.mage.hp + mm.hp + P.vigor.hp * p('vigor'); mage.hp += Math.max(0, mage.maxHp - old);
 }
 
 // ---------- grade espacial (vizinhos, alvos) ----------
@@ -247,6 +248,10 @@ function hurtMage(dmg) {
   mage.hp -= dmg; mage.inv = CFG.mage.iframes;
   document.body.classList.remove('hurt'); void document.body.offsetWidth; document.body.classList.add('hurt');
   try { navigator.vibrate?.(30); } catch { /* ignorar */ }
+  if (mage.hp <= 0 && G.revives > 0) {
+    G.revives--; mage.hp = mage.maxHp * 0.5; mage.inv = 2; banner('SEGUNDA CHANCE', 'De volta à luta', '#5dff9a'); G.shake(0.4);
+    for (const e of G.query(mage.x, mage.z, 6)) G.damage(e, 0, { push: 10, from: mage, noProc: true }); return;
+  }
   if (mage.hp <= 0) { mage.hp = 0; finish(false); }
 }
 function addXp(v) {
@@ -260,7 +265,7 @@ function options() {
   for (const [fk, f] of Object.entries(CFG.fusions)) if (f.from.every(k => owned[k]?.level >= 5) && !owned[fk]) opts.push({ kind: 'fusion', key: fk, w: 100 });
   for (const s of G.spells) { const ev = CFG.evolutions[s.key]; if (ev && !s.evo && !s.fusion && s.level >= 5 && G.passives[ev.need]) opts.push({ kind: 'evo', key: s.key, w: 100 }); }
   for (const s of G.spells) if (!s.fusion && s.level < 5) opts.push({ kind: 'up', key: s.key, w: 3 });
-  if (G.spells.length < CFG.mage.slots) for (const k of Object.keys(CFG.spells)) if (!owned[k] && !G.spells.some(s => s.fusion && CFG.fusions[s.key].from.includes(k))) opts.push({ kind: 'new', key: k, w: 2 });
+  if (G.spells.length < CFG.mage.slots) for (const k of Object.keys(CFG.spells)) if (M.spells.includes(k) && !owned[k] && !G.spells.some(s => s.fusion && CFG.fusions[s.key].from.includes(k))) opts.push({ kind: 'new', key: k, w: 2 });
   const pc = Object.keys(G.passives).length;
   for (const k of Object.keys(CFG.passives)) { const l = G.passives[k] || 0; if (l && l < 5) opts.push({ kind: 'pup', key: k, w: 2 }); else if (!l && pc < CFG.mage.passiveSlots) opts.push({ kind: 'pnew', key: k, w: 1.4 }); }
   for (let i = opts.length - 1; i >= 0; i--) if (G.banned.has(opts[i].key)) opts.splice(i, 1);
@@ -302,7 +307,7 @@ function choose(o) {
 function apply(o) {
   if (o.kind === 'new') G.spells.push(new Spell(o.key, G));
   if (o.kind === 'up') G.spells.find(s => s.key === o.key).level++;
-  if (o.kind === 'evo') { G.spells.find(s => s.key === o.key).evo = true; banner('EVOLUÇÃO', CFG.evolutions[o.key].name, CFG.evolutions[o.key].color); G.shake(0.25); }
+  if (o.kind === 'evo') { G.evolutions++; G.spells.find(s => s.key === o.key).evo = true; banner('EVOLUÇÃO', CFG.evolutions[o.key].name, CFG.evolutions[o.key].color); G.shake(0.25); }
   if (o.kind === 'fusion') { G.spells = G.spells.filter(s => !CFG.fusions[o.key].from.includes(s.key)); G.spells.push(new Spell(o.key, G)); banner('FUSÃO', CFG.fusions[o.key].name, CFG.fusions[o.key].color); }
   if (o.kind === 'pnew' || o.kind === 'pup') { G.passives[o.key] = (G.passives[o.key] || 0) + 1; recalc(); }
   if (o.kind === 'heal') mage.hp = Math.min(mage.maxHp, mage.hp + 30);
@@ -315,6 +320,7 @@ function cardInfo(o) {
 }
 // ---------- baú: caça-níquel ----------
 function openSlot(n) {
+  G.opened++;
   G.mode = 'slot'; input.clear();
   const champ = n > 1, reels = $('reels'), res = $('slot-res'), btn = $('btn-slot');
   $('slot-title').textContent = champ ? 'BAÚ DO CAMPEÃO' : 'BAÚ DA FENDA';
@@ -547,8 +553,9 @@ function showBoss(name) { $('bossname').textContent = name; $('bossbar').hidden 
 const settings = { fps: false };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('fendas_settings_v1')) || {}); } catch { /* sem storage */ }
 function start() {
+  G.meta = metaMods();
   Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], splats: [], numbers: [],
-    spells: [], passives: {}, blasts: [], found: new Set(), slots: [], nextChamp: 0, banned: new Set(), rerolls: CFG.mage.rerolls, bans: CFG.mage.bans, chests: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
+    spells: [], passives: {}, blasts: [], found: new Set(), slots: [], nextChamp: 0, banned: new Set(), rerolls: CFG.mage.rerolls + G.meta.rerolls, bans: CFG.mage.bans + G.meta.bans, chests: 0, revives: G.meta.revive, evolutions: 0, opened: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
     miniDone: false, bossDone: false, bossSpawned: false, queue: 0 });
   Object.assign(mage, { x: 0, z: 0, face: Math.PI, inv: 0 });
   recalc(); mage.hp = mage.maxHp;
@@ -565,6 +572,8 @@ function finish(won) {
   $('res-stats').innerHTML = [['TEMPO', fmtTime(G.t)], ['NÍVEL', G.level], ['ABATES', G.kills.toLocaleString('pt-BR')], ['MAIOR COMBO', 'x' + G.bestCombo]]
     .map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   $('res-build').innerHTML = $('loadout').innerHTML;
+  const gold = endRun({ won, time: G.t, level: G.level, kills: G.kills, coins: G.coins, evolutions: G.evolutions, chests: G.opened, combos: [...G.found], spells: G.spells.map(s => s.key) });
+  $('res-gold').querySelector('b').textContent = '+' + gold.toLocaleString('pt-BR') + ' de ouro';
   setTimeout(() => { $('result').hidden = false; }, won ? 400 : 700);
 }
 function togglePause() {
@@ -573,7 +582,7 @@ function togglePause() {
 }
 $('btn-reroll').onclick = () => { if (G.rerolls > 0 && G.mode === 'levelup') { G.rerolls--; openLevelUp(); } };
 $('btn-ban').onclick = () => { if (G.bans <= 0) return; G.banning = !G.banning; $('choices').classList.toggle('banning', G.banning); $('ban-hint').hidden = !G.banning; $('btn-ban').classList.toggle('on', G.banning); };
-$('btn-start').onclick = start; $('btn-again').onclick = start; $('btn-pause').onclick = togglePause; $('btn-resume').onclick = togglePause;
+initMenu(start); $('btn-again').onclick = start; $('btn-menu').onclick = showMenu; $('btn-pause').onclick = togglePause; $('btn-resume').onclick = togglePause;
 $('btn-quit').onclick = () => { $('pause').hidden = true; finish(false); };
 $('fps-toggle').onclick = () => { settings.fps = !settings.fps; $('fps').hidden = !settings.fps; try { localStorage.setItem('fendas_settings_v1', JSON.stringify(settings)); } catch { /* ignorar */ } $('fps-toggle').textContent = 'MOSTRAR FPS: ' + (settings.fps ? 'SIM' : 'NÃO'); };
 addEventListener('blur', () => { if (G.mode === 'play') togglePause(); });
