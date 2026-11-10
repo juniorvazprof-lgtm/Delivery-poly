@@ -350,7 +350,7 @@ const input = (() => {
   addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (M[k]) { s.keys.add(k); e.preventDefault(); } if ((k === 'escape' || k === 'p') && !e.repeat) togglePause(); });
   addEventListener('keyup', e => s.keys.delete(e.key.toLowerCase()));
   return {
-    move() { if (s.id !== null) return [s.x, s.z]; let x = 0, z = 0; for (const k of s.keys) { x += M[k][0]; z += M[k][1]; } const l = Math.hypot(x, z); return l ? [x / l, z / l] : [0, 0]; },
+    move() { if (window.__bh?.botMove) return window.__bh.botMove; if (s.id !== null) return [s.x, s.z]; let x = 0, z = 0; for (const k of s.keys) { x += M[k][0]; z += M[k][1]; } const l = Math.hypot(x, z); return l ? [x / l, z / l] : [0, 0]; },
     clear() { s.id = null; s.x = s.z = 0; s.keys.clear(); stick.classList.remove('on'); knob.style.transform = ''; },
   };
 })();
@@ -580,4 +580,4 @@ function frame(now) {
 $('fps').hidden = !settings.fps;
 resize(); recalc();
 requestAnimationFrame(frame);
-window.__bh = { G, CFG, start, spawn, Spell, speed: 1 };
+window.__bh = { G, CFG, start, spawn, Spell, speed: 1, choose, options };

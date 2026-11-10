@@ -3,34 +3,34 @@
 export const CFG = {
   sim: { dt: 1 / 60, maxSteps: 4 },
   pixel: { targetH: 400 },                     // altura interna da imagem (pixels); o resto é ampliado sem suavizar
-  cam: { viewH: 23, offset: [0, 10, 9], follow: 8 },
+  cam: { viewH: 27, offset: [0, 10, 9], follow: 8 },
   runTime: 480,                                // 8 minutos até o Guardião
 
-  mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.0, slots: 4, passiveSlots: 4, rerolls: 2, bans: 2 },
+  mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.6, slots: 4, passiveSlots: 4, rerolls: 2, bans: 2 },
 
   // XP para o próximo nível
-  xpFor: lvl => Math.floor(3 + lvl * 4.5 + Math.pow(lvl, 1.85)),   // cada nível pede mais cristais
+  xpFor: lvl => Math.floor(6 + lvl * 3 + Math.pow(lvl, 1.68)),   // cada nível pede mais cristais
 
   // ---- feitiços (nível 1 a 5); cada linha lista os valores por nível ----
   spells: {
     fogo: { name: 'Bola de fogo', glyph: '✹', color: '#ff8a3d', el: 'fogo',
       desc: ['Lança uma bola de fogo no inimigo mais próximo; explode em área.', '+1 bola de fogo', '+dano e explosão maior', '+1 bola de fogo', 'Recarga muito menor'],
-      cd: [1.0, 0.95, 0.9, 0.85, 0.65], count: [1, 2, 2, 3, 3], dmg: [14, 15, 19, 22, 26], radius: [0.9, 0.95, 1.2, 1.25, 1.35], speed: 9, burn: 2 },
+      cd: [1.0, 0.95, 0.9, 0.85, 0.65], count: [1, 2, 2, 3, 3], dmg: [20, 21, 27, 31, 36], radius: [0.9, 0.95, 1.2, 1.25, 1.35], speed: 9, burn: 2 },
     agua: { name: 'Onda de água', glyph: '≈', color: '#3fb8ff', el: 'agua',
       desc: ['Pulso de água em volta do Mago: empurra e deixa os inimigos encharcados (lentos).', '+alcance', '+dano', '+alcance e mais frequente', 'Empurrão enorme'],
-      cd: [3.0, 2.8, 2.6, 2.2, 2.0], radius: [2.1, 2.5, 2.6, 3.0, 3.3], dmg: [8, 9, 14, 15, 18], push: [5, 5.5, 6, 6.5, 9], soak: 2.2 },
+      cd: [3.0, 2.8, 2.6, 2.2, 2.0], radius: [2.1, 2.5, 2.6, 3.0, 3.3], dmg: [11, 13, 20, 21, 25], push: [5, 5.5, 6, 6.5, 9], soak: 2.2 },
     vento: { name: 'Lâmina de vento', glyph: '❯', color: '#c8f5ff', el: 'vento',
       desc: ['Lâminas de ar que atravessam vários inimigos.', '+1 lâmina', '+atravessa mais', '+1 lâmina e +dano', '+2 lâminas'],
-      cd: [1.0, 0.95, 0.9, 0.85, 0.75], count: [2, 3, 3, 4, 6], pierce: [3, 3, 6, 6, 8], dmg: [9, 9, 11, 14, 15], speed: 12, life: 0.85 },
+      cd: [1.0, 0.95, 0.9, 0.85, 0.75], count: [2, 3, 3, 4, 6], pierce: [3, 3, 6, 6, 8], dmg: [13, 13, 15, 20, 21], speed: 12, life: 0.85 },
     arcano: { name: 'Orbe arcano', glyph: '◉', color: '#c58bff', el: 'arcano',
       desc: ['Orbes que giram em volta do Mago e ferem quem encostar.', '+1 orbe', '+dano e giro mais rápido', '+1 orbe', '+1 orbe e raio maior'],
-      count: [1, 2, 2, 3, 4], dmg: [7, 8, 11, 12, 14], radius: [1.5, 1.55, 1.6, 1.7, 2.0], spin: [2.4, 2.4, 3.2, 3.3, 3.5], hitEvery: 0.45 },
+      count: [1, 2, 2, 3, 4], dmg: [10, 11, 15, 17, 20], radius: [1.5, 1.55, 1.6, 1.7, 2.0], spin: [2.4, 2.4, 3.2, 3.3, 3.5], hitEvery: 0.45 },
     raio: { name: 'Raio', glyph: 'ϟ', color: '#fff27a', el: 'raio',
       desc: ['Raios atingem inimigos aleatórios e saltam para os vizinhos. Encharcados tomam muito mais dano.', '+1 salto', '+1 raio', '+dano e +1 salto', '+1 raio e recarga menor'],
-      cd: [1.7, 1.6, 1.5, 1.4, 1.0], strikes: [1, 1, 2, 2, 3], chains: [1, 2, 2, 3, 3], dmg: [16, 17, 19, 25, 28], range: 6.5, soakMul: 1.8 },
+      cd: [1.7, 1.6, 1.5, 1.4, 1.0], strikes: [1, 1, 2, 2, 3], chains: [1, 2, 2, 3, 3], dmg: [22, 24, 27, 35, 39], range: 6.5, soakMul: 1.8 },
     terra: { name: 'Espinhos de terra', glyph: '▲', color: '#c9a36b', el: 'terra',
       desc: ['Espinhos brotam do chão perto do Mago, ferem e prendem por um instante.', '+1 espinho', '+dano', '+2 espinhos', 'Espinhos maiores e mais frequentes'],
-      cd: [2.2, 2.1, 2.0, 1.9, 1.5], count: [2, 3, 3, 5, 5], dmg: [12, 13, 18, 19, 24], radius: [0.8, 0.8, 0.85, 0.9, 1.15], root: 0.6 },
+      cd: [2.2, 2.1, 2.0, 1.9, 1.5], count: [2, 3, 3, 5, 5], dmg: [17, 18, 25, 27, 34], radius: [0.8, 0.8, 0.85, 0.9, 1.15], root: 0.6 },
     // ---- poderes "absurdos": grandes, raros e com recarga longa ----
     anel: { name: 'Anel de fogo', glyph: '◯', color: '#ff5a1f', el: 'fogo', big: true,
       desc: ['Um pequeno anel de fogo gira em volta do Mago e queima quem toca nele.', 'Anel maior', '+dano', 'Anel maior e queima mais rápido', 'Anel enorme: a cada 5 s solta uma onda de fogo'],
@@ -47,16 +47,16 @@ export const CFG = {
     // ---- novos feitiços ----
     luz: { name: 'Feixe da Aurora', glyph: '✧', color: '#fff3b0', el: 'luz',
       desc: ['Um feixe de luz sagrada gira em volta do Mago e expõe os inimigos (+25% de dano recebido).', 'Feixe mais longo', '+1 feixe', '+dano e giro mais rápido', '+1 feixe e feixes longos'],
-      count: [1, 1, 2, 2, 3], length: [3.4, 4.2, 4.3, 4.6, 5.4], width: 0.32, dmg: [6, 7, 8, 11, 13], tick: 0.2, spin: [1.5, 1.5, 1.6, 2.0, 2.1] },
+      count: [1, 1, 2, 2, 3], length: [3.4, 4.2, 4.3, 4.6, 5.4], width: 0.32, dmg: [8, 10, 11, 15, 18], tick: 0.2, spin: [1.5, 1.5, 1.6, 2.0, 2.1] },
     orbes: { name: 'Fagulhas caçadoras', glyph: '∴', color: '#d78bff', el: 'arcano',
       desc: ['Pequenos orbes perseguem os inimigos e os corrompem: corrompidos explodem ao morrer.', '+1 orbe', '+dano', '+1 orbe e recarga menor', '+1 orbe e +dano'],
-      cd: [1.5, 1.4, 1.35, 1.15, 1.0], count: [2, 3, 3, 4, 5], dmg: [8, 9, 12, 13, 17], speed: 6.5, life: 3 },
+      cd: [1.5, 1.4, 1.35, 1.15, 1.0], count: [2, 3, 3, 4, 5], dmg: [11, 13, 17, 18, 24], speed: 6.5, life: 3 },
     runa: { name: 'Lâmina rúnica', glyph: '◈', color: '#7ff0ff', el: 'arcano',
       desc: ['Uma lâmina de runas ricocheteia nas bordas da tela cortando tudo no caminho.', '+dura mais', '+1 lâmina', '+dano', '+1 lâmina e mais rápida'],
-      cd: [3.4, 3.2, 3.0, 2.9, 2.6], count: [1, 1, 2, 2, 3], dmg: [10, 12, 13, 17, 19], life: [3.0, 3.8, 3.8, 4.2, 4.5], speed: [7, 7, 7.2, 7.5, 8.5], rehit: 0.35 },
+      cd: [3.4, 3.2, 3.0, 2.9, 2.6], count: [1, 1, 2, 2, 3], dmg: [14, 17, 18, 24, 27], life: [3.0, 3.8, 3.8, 4.2, 4.5], speed: [7, 7, 7.2, 7.5, 8.5], rehit: 0.35 },
     gelo: { name: 'Pulso glacial', glyph: '✻', color: '#bfe9ff', el: 'gelo',
       desc: ['Um pulso de gelo em volta do Mago esfria os inimigos e às vezes congela. Encharcados congelam o dobro.', '+alcance', '+chance de congelar', '+dano e mais frequente', 'Pulso enorme'],
-      cd: [3.6, 3.4, 3.2, 2.8, 2.6], radius: [2.3, 2.7, 2.8, 3.0, 3.6], dmg: [9, 10, 12, 16, 19], freeze: [0.25, 0.3, 0.42, 0.45, 0.55], freezeDur: 1.3, chill: 2 },
+      cd: [3.6, 3.4, 3.2, 2.8, 2.6], radius: [2.3, 2.7, 2.8, 3.0, 3.6], dmg: [13, 14, 17, 22, 27], freeze: [0.25, 0.3, 0.42, 0.45, 0.55], freezeDur: 1.3, chill: 2 },
   },
 
   // ---- evoluções: feitiço no nível 5 + passiva certa = versão evoluída (no mesmo espaço) ----
@@ -120,7 +120,7 @@ export const CFG = {
     brutamonte: { model: 'cascalco', scale: 0.5, hp: 60, speed: 1.15, radius: 0.42, dmg: 14, xp: 8, tint: 0.5, heavy: true },
     cuspidor: { model: 'fanaluz', scale: 0.42, hp: 20, speed: 1.4, radius: 0.3, dmg: 8, xp: 5, tint: 0.5, ranged: { keep: 4.5, every: 2.6, speed: 3.6, dmg: 9 } },
     minichefe: { model: 'ferfogo', scale: 1.0, hp: 900, speed: 1.35, radius: 0.75, dmg: 20, xp: 60, tint: 0.6, heavy: true, boss: 'mini' },
-    guardiao: { model: 'arborion', scale: 1.5, hp: 5200, speed: 1.25, radius: 1.0, dmg: 28, xp: 0, tint: 0.55, heavy: true, boss: 'final' },
+    guardiao: { model: 'arborion', scale: 1.5, hp: 4200, speed: 1.15, radius: 1.0, dmg: 22, xp: 0, tint: 0.55, heavy: true, boss: 'final' },
   },
   elite: { chanceFrom: 150, chance: 0.04, hp: 7, scale: 1.45, r: 1.3, xp: 30, speed: 1.1, dmg: 1.5, reels: 1 },
   // campeão: elite gigante e resistente; o baú dele rola 3 melhorias
@@ -135,10 +135,10 @@ export const CFG = {
     { from: 250, mix: { rastejante: 2, espectro: 2, investida: 2, brutamonte: 1, cuspidor: 1 } },
     { from: 360, mix: { espectro: 3, investida: 2, brutamonte: 2, cuspidor: 2 } },
   ],
-  spawnRate: t => Math.min(26, 0.9 + t / 18 + Math.pow(t / 120, 2)),   // inimigos por segundo
-  hpScale: t => 1 + t / 70 + Math.pow(t / 220, 2),
+  spawnRate: t => Math.min(11, 0.7 + t / 40 + Math.pow(t / 200, 2)),   // inimigos por segundo
+  hpScale: t => 1 + t / 120 + Math.pow(t / 250, 2),
   drops: { heart: 0.012, heartElite: 0.4, heal: 20, critBase: 0.03 },
-  maxAlive: 380,
+  maxAlive: 220,
   miniboss: 240,
   // eventos da Fenda (segundo em que começam)
   events: [
