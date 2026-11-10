@@ -476,6 +476,10 @@ function draw(now) {
     if (fx.k === 'cloud') for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + fx.seed, rr = fx.r * p * (0.5 + 0.5 * hash(i, fx.seed)); glow.add(fx.x + Math.sin(a) * rr, 0.3 + hash(i + 3, fx.seed) * 0.6, fx.z + Math.cos(a) * rr, 1.2 * k + 0.3, '#ffe6cc', 0.7 * k); }
   }
   let sg = 0;
+  if (G.boss) { const e = G.boss, R = e.r + 0.9, n = 40, col = e.cfg.boss === 'final' ? '#c58bff' : '#ff8a3d';
+    glow.add(e.x, 0.1, e.z, R * 2.6, col, 0.25 + 0.08 * Math.sin(t * 4));
+    for (let i = 0; i < n; i++) { const a = i / n * 6.283 + t * 0.8; glow.add(e.x + Math.sin(a) * R, 0.15, e.z + Math.cos(a) * R, 0.5, col, 0.75); }
+    for (let i = 0; i < 6; i++) { const a = -t * 1.6 + i * 1.047; glow.add(e.x + Math.sin(a) * R * 0.7, 0.2, e.z + Math.cos(a) * R * 0.7, 0.4, '#ffffff', 0.6); } }
   for (const e of G.enemies) if (e.reels) { glow.add(e.x, 0.2, e.z, 3.2, '#ffb020', 0.35 + 0.1 * Math.sin(t * 5)); glow.add(e.x, 1.6, e.z, 0.6, '#fff2a8', 0.8); }
   for (const e of G.enemies) { if (sg > 160) break;
     if (e.burnT > 0) { sg++; glow.add(e.x, 0.75 + Math.sin(t * 20 + e.ph) * 0.06, e.z, 0.45, '#ff6a1a', 0.7); }
