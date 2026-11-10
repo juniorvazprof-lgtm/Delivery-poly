@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#07060c">
+<title>Fendas — protótipo bullet heaven</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="view"></canvas>
+<canvas id="over"></canvas>
+
+<div id="hud">
+  <div id="xpbar"><div id="xpfill"></div></div>
+  <div id="top">
+    <div class="l"><span id="lvl">NV 1</span><span class="coin"><i></i><span id="coins">0</span></span></div>
+    <div id="time">00:00</div>
+    <div class="r"><span class="skull">☠</span><span id="kills">0</span></div>
+  </div>
+  <div id="row2">
+    <div id="loadout"></div>
+    <div id="combo" hidden><b>x0</b><small>COMBO</small></div>
+  </div>
+  <div id="hpbar"><div id="hpfill"></div></div>
+  <div id="bossbar" hidden><span id="bossname"></span><div class="track"><div id="bossfill"></div></div></div>
+  <div id="banner" hidden><b></b><small></small></div>
+  <button id="btn-pause" aria-label="Pausa">II</button>
+  <div id="fps" hidden></div>
+</div>
+
+<div id="touch"><div id="stick"><div id="knob"></div></div></div>
+
+<section id="startscreen" class="screen">
+  <div class="panel">
+    <small class="eyebrow">PROTÓTIPO · FENDA 1</small>
+    <h1><span>FEN</span><span>DAS</span></h1>
+    <p>Arraste o dedo em qualquer lugar para mover o Mago. Os feitiços saem sozinhos. Sobreviva 8 minutos e derrote o Guardião.</p>
+    <button id="btn-start" class="btn primary">COMEÇAR</button>
+  </div>
+</section>
+
+<section id="levelup" class="screen" hidden>
+  <div class="panel wide">
+    <h2 id="lv-title">SUBIU DE NÍVEL!</h2>
+    <p class="sub">Escolha uma melhoria</p>
+    <div id="choices"></div>
+  </div>
+</section>
+
+<section id="pause" class="screen" hidden>
+  <div class="panel">
+    <h2>PAUSA</h2>
+    <button id="btn-resume" class="btn primary">CONTINUAR</button>
+    <button id="fps-toggle" class="btn">MOSTRAR FPS: NÃO</button>
+    <button id="btn-quit" class="btn ghost">DESISTIR</button>
+  </div>
+</section>
+
+<section id="result" class="screen" hidden>
+  <div class="panel wide">
+    <h2 id="res-title">DERROTADO</h2>
+    <dl id="res-stats"></dl>
+    <p class="sub">Feitiços desta partida</p>
+    <div id="res-build" class="build"></div>
+    <button id="btn-again" class="btn primary">JOGAR DE NOVO</button>
+  </div>
+</section>
+
+<script type="module" src="js/game/main.js"></script>
+</body>
+</html>
