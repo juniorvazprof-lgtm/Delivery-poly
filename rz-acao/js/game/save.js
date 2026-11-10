@@ -9,13 +9,20 @@ function fresh() {
     ressonas: [],        // { id, species, name, day }
     cleared: [],         // ids de entulho já limpos no subúrbio
     runs: 0, wins: 0,
+    bench: {},           // nível de cada melhoria da Bancada (só uma versão por linha fica ativa)
+    benchSide: {},       // versão escolhida em cada linha: 'a' ou 'b'
+    unlocked: ['brogume'],
+    maxInstab: 0,        // maior nível de Instabilidade liberado
+    bestInstab: -1,      // maior nível vencido
   };
 }
 
 export function loadSave() {
   try {
     const d = JSON.parse(localStorage.getItem(KEY));
-    if (d && d.v === VERSION) return { ...fresh(), ...d, bank: { ...fresh().bank, ...d.bank } };
+    if (d && d.v === VERSION) { const f = fresh(), out = { ...f, ...d, bank: { ...f.bank, ...d.bank } };
+      for (const r of out.ressonas) if (!out.unlocked.includes(r.species)) out.unlocked.push(r.species);   // saves antigos: resgatadas liberam a espécie
+      return out; }
   } catch { /* sem storage ou save inválido */ }
   return fresh();
 }

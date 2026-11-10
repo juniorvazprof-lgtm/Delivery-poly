@@ -32,6 +32,12 @@ export class Enemy {
   constructor(kind, pos, g, opts = {}) {
     this.kind = kind; this.g = g;
     const c = this.cfg = { ...CFG.enemies[kind] };
+    // dificuldade por camada do mapa e por Instabilidade
+    const S = CFG.scaling, tier = opts.tier ?? 0, inst = g.instab || 0;
+    c.hp = Math.round(c.hp * S.hp[tier] * 2) / 2; c.speed *= S.speed[tier];
+    c.cooldown = (c.cooldown ?? 1) * S.cooldown[tier] * (inst >= 4 ? 0.8 : 1);
+    if (c.dmg && kind !== 'shooter' && kind !== 'healer') c.dmg += S.dmg[tier];
+    if (c.dmg && inst >= 2) c.dmg += 1;
     if (opts.elite) {   // elite: maior, mais vida e mais rápido
       const E = CFG.elite; this.elite = true;
       c.hp = Math.round(c.hp * E.hp); c.guard += E.guard; c.speed *= E.speed; c.windup *= E.windup; c.scale *= E.scale; c.radius *= 1.15;

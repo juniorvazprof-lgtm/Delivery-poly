@@ -70,6 +70,11 @@ export class Hub {
     this.group.add(portal); this.colliders.push([this.portal.x - 0.9, this.portal.z, 0.3], [this.portal.x + 0.9, this.portal.z, 0.3]);
     this.portalArmed = false;
 
+    // Bancada do Nexo: melhorias permanentes de Kay (na área já limpa)
+    this.bench = { x: 2.8, z: 0.4 };
+    const bench = buildModel({ ...PROPS.nexusConsole, scale: 1.1 }); mergeModel(bench); bench.position.set(this.bench.x, 0, this.bench.z); bench.rotation.y = -0.6;
+    this.group.add(bench); this.colliders.push([this.bench.x, this.bench.z, 0.55]);
+
     // entulho, carcaças e mato: o que já foi limpo não volta
     const kinds = ['mato', 'mato', 'entulho', 'entulho', 'entulho', 'carcaca'];
     const cleared = new Set(save.cleared), cx = 0, cz = 1.2;
@@ -77,7 +82,7 @@ export class Hub {
     for (let k = 0, tries = 0; k < H.piles && tries < 400; tries++) {
       const x = (rnd() - 0.5) * (w - 2.5), z = (rnd() - 0.5) * (d - 4.5) - 0.6;
       if (Math.hypot(x - cx, z - cz) < H.clearRadius || (Math.abs(x) < 1.5 && z < -1) || z > d / 2 - 4.4) continue;
-      if (this.breakables.some(b => Math.hypot(b.x - x, b.z - z) < 1.5) || this.colliders.some(([a, b, r]) => Math.hypot(a - x, b - z) < r + 1)) continue;
+      if (Math.hypot(x - 2.8, z - 0.4) < 1.8 || this.breakables.some(b => Math.hypot(b.x - x, b.z - z) < 1.5) || this.colliders.some(([a, b, r]) => Math.hypot(a - x, b - z) < r + 1)) continue;
       const id = 'd' + k++, kind = kinds[Math.floor(rnd() * kinds.length)], def = DEBRIS[kind](rnd), ry = rnd();   // consome o sorteio sempre: posições estáveis entre sessões
       this.total++;
       if (cleared.has(id)) continue;

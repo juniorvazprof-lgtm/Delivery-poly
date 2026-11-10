@@ -206,3 +206,37 @@ body.in-hub #btn-skill, body.in-hub #cubes, body.in-hub #boons, body.in-hub #bos
 
 /* esquiva perfeita: borda ciana curta */
 body.perfect::before { content: ""; position: fixed; inset: 0; z-index: 4; pointer-events: none; box-shadow: inset 0 0 90px 12px rgba(95, 242, 255, .45); animation: hurt .5s ease-out forwards; }
+
+/* companheira bloqueada */
+.pick.locked { opacity: .5; filter: grayscale(.7); cursor: not-allowed; }
+.pick.locked em { color: var(--dim); }
+/* Instabilidade */
+#instab { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+#instab[hidden] { display: none; }
+.ins-label { font: 700 11px var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--rift); }
+.ins-row { display: flex; gap: 6px; }
+.ins { width: 44px; height: 44px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel); font: 700 16px var(--display); }
+.ins.on { border-color: var(--rift); background: color-mix(in srgb, var(--rift) 25%, var(--panel)); }
+.ins:disabled { opacity: .3; }
+.ins-desc { font-size: 13px; color: var(--muted); max-width: 640px; }
+.ins-desc b { color: var(--text); }
+/* Bancada do Nexo */
+.screen.bench { justify-content: flex-start; }
+.bench-hint { margin: 0 auto; width: min(980px, 100%); color: var(--muted); font-size: 13px; }
+#bench-rows { display: flex; flex-direction: column; gap: 8px; width: min(980px, 100%); margin: 0 auto; }
+.bench-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: stretch; }
+.bench-or { align-self: center; font: 700 11px var(--display); color: var(--dim); text-transform: uppercase; letter-spacing: .1em; }
+.upg { border: 2px solid var(--line); border-radius: 12px; background: var(--panel); padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+.upg.active { border-color: var(--friendL); background: linear-gradient(160deg, color-mix(in srgb, var(--friend) 14%, var(--panel)), var(--panel)); }
+.upg-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.upg strong { font: 700 15px var(--display); }
+.upg p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.pips { display: flex; gap: 3px; } .pips i { width: 10px; height: 10px; border-radius: 2px; border: 1px solid var(--line); }
+.pips i.on { background: var(--friendL); border-color: var(--friendL); }
+.upg-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: auto; }
+.upg-btn { min-height: 40px; padding: 4px 12px; border-radius: 10px; border: 2px solid var(--friendL); background: color-mix(in srgb, var(--friend) 22%, var(--panel)); font: 700 13px var(--display); display: flex; flex-direction: column; align-items: center; }
+.upg-btn small { font: 600 11px var(--body); color: var(--muted); }
+.upg-btn:disabled { border-color: var(--line); background: transparent; opacity: .55; }
+.upg-btn.ghost { border-color: var(--line); background: transparent; }
+.upg-on { font: 700 11px var(--display); color: var(--friendL); text-transform: uppercase; letter-spacing: .1em; margin-right: auto; }
+@media (max-width: 620px) { .bench-row { grid-template-columns: 1fr; } .bench-or { justify-self: center; } }

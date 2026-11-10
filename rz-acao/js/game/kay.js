@@ -92,7 +92,7 @@ export class Kay {
       case 'dodge': {
         const p = this.t / D.dur, sp = D.speed * (1 - p * p);
         this.pos.addScaledVector(this.dodgeDir, sp * dt);
-        if (this.t >= D.dur) { this.state = 'free'; this.dodgeCd = D.cooldown; }
+        if (this.t >= D.dur) { this.state = 'free'; this.dodgeCd = D.cooldown * (this.g?.mods.dodgeCdMul || 1); }
         break;
       }
       case 'hurt':
@@ -143,6 +143,7 @@ export class Kay {
     const m = g.mods, fin = this.combo === CFG.combo.length - 1;
     const ember = this.ember > 0 ? CFG.companions.brasque.ember : null;   // espada acesa por Brasque
     const a = { ...a0, dmg: a0.dmg + (m.dmg || 0) + (ember ? ember.dmg : 0), arc: a0.arc + (fin ? m.finArc || 0 : 0) + (ember ? ember.arc : 0), range: a0.range + (fin ? m.finRange || 0 : 0), spark: ember ? '#ffb15a' : undefined };
+    if (fin && m.finMul) a.dmg *= m.finMul;   // Bancada: golpe de encerramento
     if (this.counterSwing) { const P = CFG.perfectDodge; a.dmg *= m.contra ? 3 : P.counterMul; a.guard += P.counterGuard; a.arc += 30; a.spark = '#5ff2ff'; }
     if (!this.slashed) {
       g.fx.slash(this.pos, this.face, a.range + 0.2, a.arc, this.counterSwing ? '#e8fbff' : ember ? '#ff9b3d' : undefined); this.slashed = true;
@@ -168,7 +169,7 @@ export class Kay {
   hurt(dmg, from, g) {
     // esquiva perfeita: o golpe chegou logo depois de começar a esquiva
     const P = CFG.perfectDodge;
-    if (this.state === 'dodge' && !this.perfectDone && this.t < P.window + (g.mods?.contra ? 0.05 : 0)) {
+    if (this.state === 'dodge' && !this.perfectDone && this.t < P.window + (g.mods?.contra ? 0.05 : 0) + (g.mods?.perfectBonus || 0)) {
       this.perfectDone = true; this.counter = P.counter; g.onPerfectDodge?.(this); return false;
     }
     if (this.invulnerable) return false;

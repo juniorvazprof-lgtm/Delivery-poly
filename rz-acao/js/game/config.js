@@ -158,10 +158,47 @@ export const CFG = {
     w: 24, d: 15, clearRadius: 3.4, piles: 22,
     debris: {
       mato: { hp: 1, drop: { fibra: 1 }, seedChance: 0.4, label: 'Mato' },
-      entulho: { hp: 2, drop: { liga: 2 }, label: 'Entulho' },
-      carcaca: { hp: 3, drop: { liga: 3 }, cristalChance: 0.3, label: 'Carcaça' },
+      entulho: { hp: 2, drop: { liga: 1 }, label: 'Entulho' },
+      carcaca: { hp: 3, drop: { liga: 2 }, cristalChance: 0.25, label: 'Carcaça' },
     },
   },
+  // dificuldade que cresce dentro da incursão: por camada do mapa (tier 0–4)
+  scaling: {
+    hp: [1, 1.2, 1.45, 1.75, 2.1],            // vida dos inimigos
+    dmg: [0, 0, 0, 1, 1],                      // dano extra dos inimigos corpo a corpo, investidores e saltadores
+    speed: [1, 1.05, 1.1, 1.15, 1.2],
+    cooldown: [1, 0.9, 0.8, 0.72, 0.65],       // atacam com mais frequência
+    extraEnemy: [0, 0, 0, 1, 1],               // um inimigo a mais por onda
+  },
+  // Bancada do Nexo (refúgio): melhorias permanentes de Kay. Cada linha tem duas versões que se excluem.
+  bench: [
+    { a: { key: 'couraca', name: 'Couraça', desc: '+1 de vida máxima por nível.', max: 3 },
+      b: { key: 'recompor', name: 'Recomposição', desc: 'Recupera 1 de vida a cada sala de combate limpa (nível 2: também em salas pacíficas).', max: 2 } },
+    { a: { key: 'fio', name: 'Fio afiado', desc: '+0,25 de dano em todos os golpes por nível.', max: 3 },
+      b: { key: 'final', name: 'Golpe de encerramento', desc: '+40% de dano no 3º golpe do combo por nível.', max: 3 } },
+    { a: { key: 'janela', name: 'Leitura', desc: 'A esquiva perfeita fica 0,04 s mais fácil por nível.', max: 3 },
+      b: { key: 'agil', name: 'Passo leve', desc: 'A esquiva recarrega 25% mais rápido por nível.', max: 2 } },
+    { a: { key: 'vinculo', name: 'Vínculo', desc: 'A habilidade da companheira recarrega 12% mais rápido por nível.', max: 3 },
+      b: { key: 'cubos', name: 'Reserva de cubos', desc: '+1 Cubo Nexus no início de cada incursão por nível.', max: 2 } },
+    { a: { key: 'prospec', name: 'Prospecção', desc: 'Veios de minério soltam +1 material por nível.', max: 3 },
+      b: { key: 'fortuna', name: 'Mãos firmes', desc: 'Na derrota, mantém +15% dos materiais por nível.', max: 3 } },
+    { a: { key: 'segunda', name: 'Segunda chance', desc: 'Uma vez por incursão, Kay volta com metade da vida ao cair.', max: 1 },
+      b: { key: 'instinto', name: 'Instinto', desc: 'Começa cada incursão com uma bênção à escolha.', max: 1 } },
+  ],
+  // custo por nível (Liga e Cristal); o nível 1 é barato, os seguintes exigem várias incursões
+  benchCost: [{ liga: 15, cristal: 2 }, { liga: 35, cristal: 6 }, { liga: 70, cristal: 12 }],
+  // Instabilidade: depois de vencer o Guardião, níveis opcionais mais difíceis com recompensa maior
+  instability: [
+    { name: 'Estável', desc: 'A Fenda como você conhece.' },
+    { name: 'Inquieta', desc: 'Mais elites.' },
+    { name: 'Agitada', desc: 'Inimigos causam +1 de dano desde o início.' },
+    { name: 'Faminta', desc: 'Descanso cura só 1 e baús dão metade.' },
+    { name: 'Furiosa', desc: 'Inimigos atacam 20% mais vezes.' },
+    { name: 'Colapso', desc: 'O Guardião tem 40% a mais de vida e já começa na fase 2.' },
+  ],
+  instabilityReward: 0.3,   // +30% de materiais por nível
+  // companheiras: só Brogume no início; as outras são liberadas ao sincronizar a espécie na Fenda
+  starterCompanion: 'brogume',
   lossKeep: 0.5,   // fração dos materiais da incursão mantida na derrota
   drops: { perEnemy: [1, 2], magnetDelay: 0.45, magnetSpeed: 14 },
   spawnTime: 0.6,

@@ -51,7 +51,7 @@ export class Run {
 
   start() {
     this.mats = { liga: 0, cristal: 0, fibra: 0, semente: 0 }; this.rescued = []; this.cleared = 0; this.fights = 0; this.t0 = this.g.time;
-    this.cubes = CFG.rescue.startCubes; this.boons = []; this.ui.cubes(this.cubes);
+    this.cubes = CFG.rescue.startCubes + (this.g.mods.extraCubes || 0); this.boons = []; this.ui.cubes(this.cubes);
     this.map = buildMap(); this.visited = ['0-0'];
     this.enterNode(this.map.byId['0-0']);
   }
@@ -98,7 +98,7 @@ export class Run {
     if (info.event) { this.altar = { x: 0, z: -0.8, used: false }; g.arena.addProp('glyph', 0, -0.8, 1.2, 0.55); } else this.altar = null;
     if (info.heal) {
       g.arena.addProp('campfire', 0, -0.6, 1.4, 0.5);
-      const before = k.hp; k.hp = Math.min(g.maxHp(), k.hp + info.heal); this.ui.hearts();
+      const before = k.hp; k.hp = Math.min(g.maxHp(), k.hp + (g.instab >= 3 ? 1 : info.heal)); this.ui.hearts();
       this.ui.toast(k.hp > before ? `Descanso · +${k.hp - before} de vida` : 'Descanso · vida já está cheia', COL.friend);
     }
     this.rescue = null; this.ui.interact(null);
@@ -122,12 +122,22 @@ export class Run {
     const r = this.room, g = this.g, taken = [];
     r.wave = i; r.waveT = 0;
     for (const kind of r.waves[i]) {
-      if (kind === 'guardian') { g.enemies.push(new Guardian(new T.Vector3(0, 0, -g.arena.d / 2 + 2.6), g)); continue; }
-      const p = g.arena.spawnPoint(g.kay.pos, taken); taken.push(p);
-      const elite = !r.final && Math.random() < (CFG.elite.chance[r.tier] || 0);
-      g.enemies.push(new Enemy(kind, p, g, { elite }));
+      if (kind === 'guardian') {
+        const boss = new Guardian(new T.Vector3(0, 0, -g.arena.d / 2 + 2.6), g);
+        if (g.instab >= 5) { boss.hp = boss.cfg.hp = Math.round(boss.cfg.hp * 1.4); boss.phase2 = true; }   // Colapso
+        g.enemies.push(boss); continue;
+      }
+      this.spawnOne(kind, taken);
     }
+    // camadas profundas: um inimigo a mais por onda
+    if (!r.final && CFG.scaling.extraEnemy[r.tier]) this.spawnOne(pick(r.waves[i]), taken);
     this.ui.objective();
+  }
+
+  spawnOne(kind, taken) {
+    const g = this.g, r = this.room, p = g.arena.spawnPoint(g.kay.pos, taken); taken.push(p);
+    const chance = (CFG.elite.chance[r.tier] || 0) + (g.instab >= 1 ? 0.15 : 0);
+    g.enemies.push(new Enemy(kind, p, g, { elite: Math.random() < chance, tier: r.tier }));
   }
 
   update(dt) {
@@ -165,7 +175,8 @@ export class Run {
 
   // ---- resgate seguro: só depois da sala limpa ----
   spawnRescue() {
-    const g = this.g, species = pick(CFG.rescue.species), body = buildModel(MODELS[species]);
+    const g = this.g, locked = CFG.rescue.species.filter(sp => !g.save.unlocked.includes(sp) && !this.rescued.includes(sp));
+    const species = locked.length ? pick(locked) : pick(CFG.rescue.species), body = buildModel(MODELS[species]);
     body.scale.multiplyScalar(0.5); mergeModel(body); body.rotation.z = 1.25; body.position.set(0, 0.12, -0.6);
     const ring = new T.Mesh(new T.RingGeometry(0.55, 0.62, 32), new T.MeshBasicMaterial({ color: COL.friend, transparent: true, opacity: 0.6, depthWrite: false }));
     ring.rotation.x = -Math.PI / 2; ring.position.set(0, 0.04, -0.6);
@@ -187,7 +198,7 @@ export class Run {
     if (r.state === 'waiting') {
       r.body.position.y = 0.12 + Math.abs(Math.sin(g.time * 1.5)) * 0.02;
       const near = Math.hypot(k.pos.x - r.x, k.pos.z - r.z) < CFG.rescue.range && g.mode === 'play';
-      this.ui.interact(near ? { label: 'Sincronizar', sub: `Cubo Nexus: ${this.cubes}`, ok: this.cubes > 0 } : null);
+      this.ui.interact(near ? { label: 'Sincronizar', sub: `Cubo Nexus: ${this.cubes}`, ok: this.cubes > 0, action: () => this.trySync() } : null);
     } else if (r.state === 'sync') {   // conexão do Nexo → transferência → confirmação
       const p = Math.min(1, r.t / CFG.rescue.syncTime);
       const mx = (k.pos.x + r.x) / 2, mz = (k.pos.z + r.z) / 2, len = Math.hypot(k.pos.x - r.x, k.pos.z - r.z);
@@ -198,7 +209,8 @@ export class Run {
         g.arena.group.remove(r.body, r.ring, r.beam); r.state = 'done';
         this.cubes--; this.ui.cubes(this.cubes); this.rescued.push(r.species);
         g.fx.ring(k.pos, COL.friend, 0.6, 0.3, 1.6); g.fx.burst(k.pos, COL.friend, 12, 3, 0.8);
-        this.ui.toast(`${CFG.companions[r.species].name} sincronizada · vai para o refúgio`, COL.friend);
+        const isNew = !g.save.unlocked.includes(r.species) && this.rescued.filter(x => x === r.species).length === 1;
+        this.ui.toast(isNew ? `${CFG.companions[r.species].name} sincronizada · nova companheira liberada!` : `${CFG.companions[r.species].name} sincronizada · vai para o refúgio`, COL.friend);
         this.ui.objective();
       }
     }
@@ -207,8 +219,8 @@ export class Run {
   // objeto quebrado pela espada nesta sala
   onBreak(b) {
     const at = new T.Vector3(b.x, 0, b.z);
-    if (b.kind === 'vein') { const v = CFG.veins[b.vein]; this.dropBundle(at, v.drop); this.ui.toast(`${v.label} minerado`, CFG.mats[Object.keys(v.drop)[0]].color); }
-    else if (b.kind === 'chest') { this.dropBundle(at, { liga: CFG.chestDrop, cristal: 2 }); this.addCube(1); }
+    if (b.kind === 'vein') { const v = CFG.veins[b.vein]; const bonus = this.g.mods.veinBonus || 0, drop = { ...v.drop }; for (const k of Object.keys(drop)) drop[k] += bonus; this.dropBundle(at, drop); this.ui.toast(`${v.label} minerado`, CFG.mats[Object.keys(v.drop)[0]].color); }
+    else if (b.kind === 'chest') { const h = this.g.instab >= 3 ? 0.5 : 1; this.dropBundle(at, { liga: Math.round(CFG.chestDrop * h), cristal: Math.max(1, Math.round(2 * h)) }); this.addCube(1); }
     else this.dropAt(at, 1);
   }
 
@@ -216,6 +228,8 @@ export class Run {
     const r = this.room, g = this.g;
     r.clear = true; this.cleared++;
     this.dropAt(g.kay.pos.clone().setZ(g.kay.pos.z - 0.6), r.info.materials);
+    const heal = g.mods.healOnClear || 0;
+    if (heal && (!r.info.peaceful || heal >= 2) && g.kay.hp < g.maxHp()) { g.kay.hp++; this.ui.hearts(); g.fx.burst(g.kay.pos, '#f2f4f8', 6, 2, 0.8); }
     if (r.info.rescue) this.spawnRescue();
     if (r.final) { this.ui.finish(); return; }
     if (!r.info.peaceful) { this.fights++; if (this.fights % CFG.boonEvery === 0) setTimeout(() => this.ui.boon(), 900); }

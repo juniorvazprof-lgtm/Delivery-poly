@@ -85,15 +85,16 @@ function overlay(title, html, buttons, eyebrow = '') {
   box.querySelector('button')?.focus({ preventScroll: true });
 }
 const hideOverlay = () => { $('overlay').hidden = true; };
-const showScreen = id => { for (const s of ['select', 'boon', 'map']) $(s).hidden = s !== id; };
+const showScreen = id => { for (const s of ['select', 'boon', 'map', 'bench']) $(s).hidden = s !== id; };
 
 // cartões de escolha (companheira e bênçãos): mesmo componente
 function cards(container, items, onPick) {
   container.innerHTML = '';
   for (const it of items) {
-    const b = document.createElement('button'); b.className = 'pick' + (it.selected ? ' selected' : ''); b.style.setProperty('--c', it.color);
+    const b = document.createElement('button'); b.className = 'pick' + (it.selected ? ' selected' : '') + (it.locked ? ' locked' : ''); b.style.setProperty('--c', it.color);
     b.innerHTML = `<span class="pick-glyph">${it.glyph}</span><span class="pick-body"><strong>${esc(it.name)}</strong>${it.tag ? `<em>${esc(it.tag)}</em>` : ''}<span class="pick-desc">${esc(it.desc)}</span>${it.foot ? `<small>${esc(it.foot)}</small>` : ''}</span>`;
-    b.onclick = () => onPick(it.key); container.appendChild(b);
+    if (it.locked) b.disabled = true; else b.onclick = () => onPick(it.key);
+    container.appendChild(b);
   }
 }
 
@@ -104,7 +105,7 @@ function addTag(glyph, label, color, at, cls = '') {
   el.innerHTML = `${glyph ? `<b>${glyph}</b>` : ''}${esc(label)}`; el.style.setProperty('--c', color);
   $('labels').appendChild(el); tags.push({ el, at });
 }
-let toastTimer = 0;
+let toastTimer = 0, interactAction = null;
 const ui = {
   objective() { $('objective').textContent = game.place === 'hub' ? `Kanda-9 · Dia ${game.save.day} · terreno limpo ${game.hub.clearedPct}%` : game.run.status(); },
   materials(m) {
@@ -119,7 +120,7 @@ const ui = {
   interact(opt) {
     const b = $('btn-interact');
     if (!opt) { b.hidden = true; return; }
-    b.hidden = false; b.disabled = !opt.ok; b.querySelector('span').textContent = opt.label; b.querySelector('small').textContent = opt.sub;
+    interactAction = opt.action; b.hidden = false; b.disabled = !opt.ok; b.querySelector('span').textContent = opt.label; b.querySelector('small').textContent = opt.sub;
   },
   addDoor(door) { addTag(door.info.glyph, door.info.label, door.info.color, () => [door.x, 2.1, door.z]); },
   clearDoors() { tags.forEach(d => d.el.remove()); tags.length = 0; },
@@ -179,10 +180,10 @@ function result(title, eyebrow, won) {
 function applyBoon(key) {
   const m = game.mods, k = game.kay; game.run.boons.push(key);
   if (key === 'lamina') { m.finArc = 50; m.finRange = 0.35; }
-  if (key === 'corte') m.dmg = 0.5;
-  if (key === 'recarga') m.skillCd = 0.7;
+  if (key === 'corte') m.dmg = (m.dmg || 0) + 0.5;
+  if (key === 'recarga') m.skillCd = (m.skillCd || 1) * 0.7;
   if (key === 'pulso') m.dodgePush = true;
-  if (key === 'vigor') { m.maxHp = 2; k.hp = Math.min(game.maxHp(), k.hp + 2); renderHearts(); }
+  if (key === 'vigor') { m.maxHp = (m.maxHp || 0) + 2; k.hp = Math.min(game.maxHp(), k.hp + 2); renderHearts(); }
   if (key === 'ima') m.extraDrop = 1;
   if (key === 'onda') m.wave = true;
   if (key === 'eco') m.eco = true;
@@ -253,7 +254,9 @@ function placeLabels() {
 game.run = new Run(game, ui);
 game.ui = ui;
 $('select-back').addEventListener('click', backToHub);
-$('btn-interact').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); game.run.trySync(); });
+$('bench-close').addEventListener('click', closeBench);
+$('btn-interact').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); interactAction?.(); });
+addEventListener('keydown', e => { if ((e.key === 'e' || e.key === 'E') && !$('btn-interact').hidden && !$('btn-interact').disabled) interactAction?.(); });
 // ---------- refúgio ----------
 let saveWarned = false;
 function persist() { if (!writeSave(game.save) && !saveWarned) { saveWarned = true; ui.toast('Não foi possível salvar neste navegador', COL.threat); } }
@@ -269,11 +272,12 @@ function cleanupScene() {
 }
 function goHub(fromRun = false) {
   cleanupScene(); hideOverlay(); showScreen(null); input.clear();
-  game.place = 'hub'; document.body.classList.add('in-hub');
+  game.place = 'hub'; game.instab = 0; document.body.classList.add('in-hub');
   game.mods = {}; game.kay.reset(); renderHearts();
   game.hub = game.arena = new Hub(scene, game.save, settings.reduceFx);
   if (fromRun) { game.kay.pos.set(0, 0, game.hub.portal.z + 2.4); game.kay.face = 0; } else game.kay.pos.set(0, 0, 1.2);
   addTag('✦', 'Fenda Verde', '#b77bff', () => [game.hub.portal.x, 2.6, game.hub.portal.z]);
+  addTag('⚙', 'Bancada do Nexo', '#5ff2ff', () => [game.hub.bench.x, 1.6, game.hub.bench.z]);
   for (const r of game.hub.ressonas) addTag('', r.label, CFG.companions[r.data.species]?.color || '#9be7f2', () => [r.pos.x, 1.15, r.pos.z], 'small');
   ui.materials(game.save.bank); ui.objective(); snapCamera();
   game.mode = 'play';
@@ -292,31 +296,101 @@ function hubBreak(b) {
 }
 // portal: escolher a companheira e partir
 function enterFenda() {
-  game.mode = 'select'; input.clear();
-  const sel = settings.companion || 'brogume';
-  cards($('select-cards'), Object.entries(CFG.companions).map(([key, c]) => ({ key, ...c, tag: c.element, foot: `Recarga ${c.cooldown} s`, selected: key === sel })), startRun);
+  game.mode = 'select'; input.clear(); ui.interact(null);
+  const sv = game.save, sel = sv.unlocked.includes(settings.companion) ? settings.companion : CFG.starterCompanion;
+  cards($('select-cards'), Object.entries(CFG.companions).map(([key, c]) => {
+    const locked = !sv.unlocked.includes(key);
+    return { key, ...c, tag: c.element, locked, desc: locked ? 'Sincronize esta espécie numa sala de Resgate para liberar.' : c.desc, foot: locked ? 'Bloqueada' : `Recarga ${c.cooldown} s`, selected: key === sel };
+  }), startRun);
+  renderInstab();
   showScreen('select');
   $('select-cards').querySelector('.selected')?.focus({ preventScroll: true });
 }
+// Instabilidade: liberada nível a nível vencendo o Guardião
+function renderInstab() {
+  const sv = game.save, box = $('instab');
+  if (!sv.maxInstab) { box.hidden = true; settings.instab = 0; return; }
+  settings.instab = Math.min(settings.instab || 0, sv.maxInstab);
+  box.hidden = false;
+  const cur = CFG.instability[settings.instab];
+  box.innerHTML = `<span class="ins-label">Instabilidade</span><div class="ins-row">${CFG.instability.map((l, i) => `<button class="ins${i === settings.instab ? ' on' : ''}" ${i > sv.maxInstab ? 'disabled' : ''} data-i="${i}" aria-label="${esc(l.name)}">${i}</button>`).join('')}</div>
+    <span class="ins-desc"><b>${esc(cur.name)}</b> · ${settings.instab ? `${esc(CFG.instability.slice(1, settings.instab + 1).map(l => l.desc).join(' '))} Materiais +${Math.round(settings.instab * CFG.instabilityReward * 100)}%.` : esc(cur.desc)}${sv.bestInstab >= 0 ? ` · recorde: ${sv.bestInstab}` : ''}</span>`;
+  box.querySelectorAll('.ins').forEach(btn => btn.onclick = () => { settings.instab = +btn.dataset.i; saveSettings(); renderInstab(); });
+}
+// melhorias permanentes que valem em toda incursão
+function permaMods() {
+  const L = k => game.save.benchSide[rowOf(k)] === sideOf(k) ? (game.save.bench[k] || 0) : 0, m = {};
+  m.maxHp = L('couraca'); m.healOnClear = L('recompor'); m.dmg = 0.25 * L('fio'); if (L('final')) m.finMul = 1 + 0.4 * L('final');
+  m.perfectBonus = 0.04 * L('janela'); if (L('agil')) m.dodgeCdMul = 1 - 0.25 * L('agil');
+  if (L('vinculo')) m.skillCd = 1 - 0.12 * L('vinculo'); m.extraCubes = L('cubos'); m.veinBonus = L('prospec'); m.lossKeepBonus = 0.15 * L('fortuna');
+  m.revive = L('segunda'); m.startBoon = L('instinto');
+  return m;
+}
+const rowOf = key => CFG.bench.findIndex(r => r.a.key === key || r.b.key === key);
+const sideOf = key => CFG.bench[rowOf(key)].a.key === key ? 'a' : 'b';
+const costOf = lvl => CFG.benchCost[Math.min(lvl, CFG.benchCost.length - 1)];
+const canPay = c => Object.entries(c).every(([k, v]) => (game.save.bank[k] || 0) >= v);
+
+// Bancada do Nexo: comprar nível escolhe a versão; trocar de versão é grátis e mantém os níveis
+function openBench() {
+  game.mode = 'bench'; input.clear(); ui.interact(null); renderBench(); showScreen('bench');
+}
+function renderBench() {
+  const sv = game.save, rows = $('bench-rows');
+  $('bench-bank').innerHTML = ['liga', 'cristal'].map(k => `<span style="--c:${CFG.mats[k].color}"><b>${sv.bank[k] || 0}</b> ${CFG.mats[k].short}</span>`).join('');
+  rows.innerHTML = '';
+  CFG.bench.forEach((row, ri) => {
+    const el = document.createElement('div'); el.className = 'bench-row';
+    for (const side of ['a', 'b']) {
+      const u = row[side], lvl = sv.bench[u.key] || 0, active = sv.benchSide[ri] === side && lvl > 0, max = lvl >= u.max, cost = costOf(lvl);
+      const card = document.createElement('div'); card.className = 'upg' + (active ? ' active' : '');
+      card.innerHTML = `<div class="upg-head"><strong>${esc(u.name)}</strong><span class="pips">${Array.from({ length: u.max }, (_, i) => `<i class="${i < lvl ? 'on' : ''}"></i>`).join('')}</span></div>
+        <p>${esc(u.desc)}</p><div class="upg-actions"></div>`;
+      const act = card.querySelector('.upg-actions');
+      if (lvl > 0 && !active) { const sw = document.createElement('button'); sw.className = 'upg-btn ghost'; sw.textContent = 'Usar esta'; sw.onclick = () => { sv.benchSide[ri] = side; persist(); renderBench(); }; act.appendChild(sw); }
+      if (active) { const tag = document.createElement('span'); tag.className = 'upg-on'; tag.textContent = 'Ativa'; act.appendChild(tag); }
+      const buy = document.createElement('button'); buy.className = 'upg-btn';
+      if (max) { buy.textContent = 'Máximo'; buy.disabled = true; }
+      else {
+        buy.innerHTML = `Melhorar <small>${cost.liga} Liga · ${cost.cristal} Cristal</small>`; buy.disabled = !canPay(cost);
+        buy.onclick = () => {
+          for (const [k, v] of Object.entries(cost)) sv.bank[k] -= v;
+          sv.bench[u.key] = lvl + 1; sv.benchSide[ri] = side; persist(); ui.materials(sv.bank); renderBench();
+          ui.toast(`${u.name} nível ${lvl + 1}`, COL.friend);
+        };
+      }
+      act.appendChild(buy); el.appendChild(card);
+      if (side === 'a') { const or = document.createElement('span'); or.className = 'bench-or'; or.textContent = 'ou'; el.appendChild(or); }
+    }
+    rows.appendChild(el);
+  });
+}
+function closeBench() { showScreen(null); game.mode = 'play'; input.clear(); }
+
 function backToHub() { showScreen(null); game.mode = 'play'; game.hub.portalArmed = false; input.clear(); }
 function restart() { goHub(false); }
 function startRun(kind) {
   settings.companion = kind; saveSettings();
   cleanupScene(); showScreen(null); hideOverlay(); input.clear();
   game.place = 'run'; document.body.classList.remove('in-hub');
-  game.mods = {}; game.kay.reset(); game.time = 0; game.hitstop = 0;
+  game.mods = permaMods(); game.instab = Math.min(settings.instab || 0, game.save.maxInstab);
+  game.kay.reset(); game.kay.hp = game.maxHp(); game.time = 0; game.hitstop = 0;
   renderHearts();
   game.comp = new Companion(kind, game);
   const c = CFG.companions[kind], b = $('btn-skill');
   b.style.setProperty('--sc', c.color); $('skill-glyph').textContent = c.glyph; $('skill-name').textContent = c.name;
   b.setAttribute('aria-label', `Habilidade de ${c.name}`);
   game.run.start(); ui.materials(game.run.mats); renderBoons(); game.comp.placeNearKay();
+  if (game.mods.startBoon) setTimeout(() => ui.boon(), 700);   // Bancada: instinto
   game.mode = 'play';
 }
 // fim da incursão: guarda no refúgio o que foi trazido e avança um dia
 function bankRun(won) {
   const s = game.run.summary(), sv = game.save, kept = {};
-  for (const [k, v] of Object.entries(s.mats)) { kept[k] = won ? v : Math.floor(v * CFG.lossKeep); sv.bank[k] = (sv.bank[k] || 0) + kept[k]; }
+  const keep = won ? 1 + game.instab * CFG.instabilityReward : CFG.lossKeep + (game.mods.lossKeepBonus || 0);
+  for (const [k, v] of Object.entries(s.mats)) { kept[k] = Math.floor(v * keep); sv.bank[k] = (sv.bank[k] || 0) + kept[k]; }
+  if (won) { sv.bestInstab = Math.max(sv.bestInstab, game.instab); sv.maxInstab = Math.min(CFG.instability.length - 1, Math.max(sv.maxInstab, game.instab + 1)); }
+  for (const sp of s.rescued) if (!sv.unlocked.includes(sp)) sv.unlocked.push(sp);
   for (const sp of s.rescued) sv.ressonas.push({ id: 'r' + Date.now().toString(36) + Math.floor(Math.random() * 99), species: sp, name: CFG.companions[sp].name, day: sv.day });
   sv.day++; sv.runs++; if (won) sv.wins++;
   persist();
@@ -364,6 +438,8 @@ function step(dt) {
     game.hubDrops.forEach(d => d.update(dt, false)); game.hubDrops = game.hubDrops.filter(d => d.alive);
     fx.update(dt);
     if (game.mode === 'play' && game.hub.atPortal(k.pos)) enterFenda();
+    const bn = game.hub.bench, near = bn && Math.hypot(k.pos.x - bn.x, k.pos.z - bn.z) < 1.6;
+    ui.interact(near && game.mode === 'play' ? { label: 'Bancada do Nexo', sub: 'Melhorias permanentes', ok: true, action: openBench } : null);
     return;
   }
   k.update(dt, game, input);
@@ -383,7 +459,12 @@ function step(dt) {
   game.enemies = game.enemies.filter(e => e.alive);
   if (game.enemies.length !== before) ui.objective();
   fx.update(dt);
-  if (k.state === 'dead' && game.mode === 'play') return lose();
+  if (k.state === 'dead' && game.mode === 'play') {
+    if (game.mods.revive > 0) {   // Bancada: segunda chance
+      game.mods.revive--; k.hp = Math.ceil(game.maxHp() / 2); k.state = 'free'; k.invuln = 2; renderHearts();
+      fx.ring(k.pos, '#f2f4f8', 0.6, 0.3, 2.4); fx.burst(k.pos, '#9be7f2', 18, 4, 0.8); ui.toast('Segunda chance', COL.friend); vibrate(60);
+    } else return lose();
+  }
   game.run.update(dt);
 }
 function push(a, b, min, wa) {   // wa = parte do empurrão que vai para "a"

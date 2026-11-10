@@ -71,3 +71,10 @@ Espécies dos inimigos (Arborion e Fanaluz) são provisórias até a definição
 - Elites: maiores, com mais vida e mais rápidos, coroa de cristais; soltam Cristal. Chance cresce com a profundidade (`CFG.elite`).
 - Esquiva perfeita: esquivar logo antes do golpe desacelera o tempo e carrega um contra-ataque (dano dobrado, quebra guarda); a lâmina fica branca enquanto ele está pronto (`CFG.perfectDodge`).
 - Bênçãos que mudam o estilo: Corte em onda, Eco da esquiva, Ressonância, Contra-golpe; e de sinergia com a companheira: Raiz funda (Brogume), Brasa viva (Brasque), Maré baixa (Marolho).
+
+## Repetição e progressão
+- Dificuldade que cresce na incursão (`CFG.scaling`): vida, dano, velocidade e frequência de ataque dos inimigos sobem por camada do mapa; nas camadas finais, um inimigo a mais por onda.
+- Bancada do Nexo (no refúgio): 6 linhas de melhorias permanentes, cada uma com duas versões que se excluem (estilo Espelho de Hades). Custa Liga e Cristal; trocar de versão é grátis (`CFG.bench`).
+- Companheiras desbloqueáveis: começa só com Brogume; Brasque e Marolho são liberadas ao sincronizar a espécie numa sala de Resgate (o resgate prioriza espécies ainda bloqueadas).
+- Instabilidade 0–5: liberada nível a nível vencendo o Guardião; cada nível soma um modificador de dificuldade e +30% de materiais (`CFG.instability`).
+- Economia: entulho do refúgio rende menos Liga, já que agora ela tem uso.
