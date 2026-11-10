@@ -4,7 +4,7 @@ import * as T from '../lib/three.js';
 import { buildModel, blobShadow, hash } from '../engine/voxel.js';
 import { MODELS } from '../data/models.js';
 import { CFG } from './config.js';
-import { ModelBatch, CubePool } from './instanced.js';
+import { ModelBatch, CubePool, GlowPool } from './instanced.js';
 import { World, MAGE } from './world.js';
 import { Spell, nextDesc } from './spells.js';
 
@@ -20,12 +20,16 @@ renderer.setPixelRatio(1);
 const scene = new T.Scene(); scene.background = new T.Color('#07060c');
 scene.add(new T.HemisphereLight('#c9b8ff', '#1a1028', 1.5));
 const sun = new T.DirectionalLight('#ffe8d0', 2.0); sun.position.set(-5, 10, 4); scene.add(sun);
+// efeitos dos poderes: segunda camada em resolução normal (sem pixelar), com brilho aditivo
+const fxCanvas = $('fx'), fxRenderer = new T.WebGLRenderer({ canvas: fxCanvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
+fxRenderer.setPixelRatio(Math.min(devicePixelRatio, 2)); fxRenderer.setClearColor(0x000000, 0);
+const fxScene = new T.Scene();
 const cam = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 100), camOff = new T.Vector3(...CFG.cam.offset), camAt = new T.Vector3();
 let viewW = 8, viewH = CFG.cam.viewH, pxW = 1, pxH = 1;
 function resize() {
   const w = innerWidth, h = innerHeight, k = Math.max(1, Math.round(h / CFG.pixel.targetH));
   pxW = Math.ceil(w / k); pxH = Math.ceil(h / k);
-  renderer.setSize(pxW, pxH, false); over.width = pxW; over.height = pxH;
+  renderer.setSize(pxW, pxH, false); over.width = pxW; over.height = pxH; fxRenderer.setSize(w, h, false);
   viewW = viewH * w / h;
   Object.assign(cam, { left: -viewW / 2, right: viewW / 2, top: viewH / 2, bottom: -viewH / 2 }); cam.updateProjectionMatrix();
   document.body.classList.toggle('landscape', w > h * 1.1);
@@ -36,7 +40,8 @@ addEventListener('resize', resize);
 const world = new World(scene);
 const batches = {};
 for (const [k, e] of Object.entries(CFG.enemies)) batches[k] = new ModelBatch(scene, MODELS[e.model], e.scale, e.boss ? 2 : 420, e.tint);
-const gemsPool = new CubePool(scene, 520), projPool = new CubePool(scene, 420), partPool = new CubePool(scene, 900), glowPool = new CubePool(scene, 260);
+const gemsPool = new CubePool(scene, 520), fxCubes = new CubePool(fxScene, 400), glow = new GlowPool(fxScene, 2600);
+const fxApi2 = { glow: (...a) => glow.add(...a), cube: (...a) => fxCubes.add(...a) };
 const splatPool = new CubePool(scene, 320, { opacity: 0.32, depthWrite: false, size: [1, 0.02, 1] });
 const mageRoot = new T.Group(), mageBody = buildModel({ ...MAGE, scale: 1.05 });
 mageRoot.add(mageBody, blobShadow(0.32)); scene.add(mageRoot);
@@ -78,9 +83,12 @@ const fxApi = {
   bolt: (x1, z1, x2, z2, color) => G.fx.push({ k: 'bolt', x1, z1, x2, z2, color, dur: 0.14, t: 0, seed: Math.random() * 99 }),
   spikes: (x, z, r) => G.fx.push({ k: 'spikes', x, z, r, dur: 0.5, t: 0, seed: Math.random() * 99 }),
   cloud: (x, z, r) => G.fx.push({ k: 'cloud', x, z, r, dur: 0.45, t: 0, seed: Math.random() * 99 }),
+  sky: (x, z) => G.fx.push({ k: 'sky', x, z, dur: 0.22, t: 0, seed: Math.random() * 99 }),
   burst: (x, z, color, n = 8, sp = 3) => { for (let i = 0; i < n && G.particles.length < 800; i++) { const a = Math.random() * 6.3, s = sp * rand(0.4, 1); G.particles.push({ x, y: 0.4, z, vx: Math.cos(a) * s, vy: rand(1.5, 4), vz: Math.sin(a) * s, t: 0, dur: rand(0.3, 0.55), color, size: rand(0.07, 0.13) }); } },
 };
-G.fx.ring = fxApi.ring; G.fx.bolt = fxApi.bolt; G.fx.spikes = fxApi.spikes; G.fx.cloud = fxApi.cloud; G.fx.burst = fxApi.burst;
+G.shake = k => { G.shakeT = Math.max(G.shakeT || 0, k); };
+G.scorch = (x, z, r) => { G.splats.push({ x, z, s: r * 1.6, ry: Math.random() * 6, t: 0, c: '#120a08' }); };
+Object.assign(G.fx, fxApi); G.fx.ring = fxApi.ring; G.fx.bolt = fxApi.bolt; G.fx.spikes = fxApi.spikes; G.fx.cloud = fxApi.cloud; G.fx.burst = fxApi.burst;
 
 // ---------- dano ----------
 G.damage = (e, dmg, o = {}) => {
@@ -103,7 +111,7 @@ function kill(e) {
   const v = (e.elite ? CFG.elite.xp : e.cfg.xp) * (G.event?.kind === 'surto' ? 2 : 1);
   if (v) dropGem(e.x, e.z, v);
   if (Math.random() < 0.025 || e.elite) G.gems.push({ x: e.x + 0.2, z: e.z, v: 0, coin: true, t: 0 });
-  fxApi.burst(e.x, e.z, '#7a3a8a', e.cfg.boss ? 30 : 6, 2.4);
+  fxApi.burst(e.x, e.z, e.elite ? '#ffd34d' : '#b24dff', e.cfg.boss ? 30 : 5, 2.4);
   if (G.splats.length > 300) G.splats.shift();
   G.splats.push({ x: e.x, z: e.z, s: e.r * rand(1.2, 1.8) * (e.elite ? 1.4 : 1), ry: Math.random() * 6, t: 0, c: Math.random() < 0.5 ? '#3a1630' : '#24163a' });
   if (e.cfg.boss === 'mini') { G.queue += 2; banner('BAÚ DA FENDA', 'Duas melhorias grátis', '#ffc96b'); }
@@ -335,6 +343,7 @@ function draw(now) {
   const f = 1 - Math.exp(-CFG.cam.follow * 0.016);
   camAt.x += (mage.x - camAt.x) * f; camAt.z += (mage.z - camAt.z) * f;
   cam.position.copy(camAt).add(camOff); cam.lookAt(camAt);
+  if (G.shakeT > 0) { G.shakeT = Math.max(0, G.shakeT - 0.016); const k = G.shakeT * 0.6; cam.position.x += (Math.random() - 0.5) * k; cam.position.z += (Math.random() - 0.5) * k; }
   world.update(camAt.x, camAt.z, viewW, viewH);
   // Mago
   mageRoot.position.set(mage.x, 0, mage.z); mageRoot.rotation.y = mage.face;
@@ -352,31 +361,30 @@ function draw(now) {
   gemsPool.begin();
   for (const g of G.gems) { const c = g.coin ? '#ffd34d' : g.v >= 20 ? '#c58bff' : g.v >= 4 ? '#5fb8ff' : '#5dff9a', s = g.coin ? 0.16 : g.v >= 4 ? 0.17 : 0.12; gemsPool.add(g.x, 0.22 + Math.sin(t * 4 + g.x) * 0.04, g.z, s, s * 1.3, s, c, 0, t * 2, 0.6); }
   gemsPool.end();
-  // projéteis
-  projPool.begin();
+  // projéteis e efeitos (camada em resolução normal)
+  glow.begin(cam); fxCubes.begin();
   for (const p of G.projectiles) {
-    if (p.kind === 'fogo') { projPool.add(p.x, 0.45, p.z, 0.26, 0.26, 0.26, '#ff8a3d', t * 7, t * 5, 0); projPool.add(p.x, 0.45, p.z, 0.14, 0.14, 0.14, '#fff2a8'); }
-    else if (p.kind === 'vento') projPool.add(p.x, 0.4, p.z, 0.52, 0.05, 0.12, '#e8fbff', 0, Math.atan2(p.vx, p.vz) + Math.PI / 2, 0);
-    else projPool.add(p.x, 0.45, p.z, 0.2, 0.2, 0.2, '#ff4fd8', t * 6, t * 6, 0);
+    if (p.kind === 'fogo') { glow.add(p.x, 0.45, p.z, 1.2, '#ff5a10', 0.9); glow.add(p.x, 0.45, p.z, 0.5, '#fff2a8', 1); glow.add(p.x - p.vx * 0.03, 0.45, p.z - p.vz * 0.03, 0.7, '#ff8a3d', 0.5); }
+    else if (p.kind === 'vento') { const a = Math.atan2(p.vx, p.vz) + Math.PI / 2; fxCubes.add(p.x, 0.4, p.z, 0.6, 0.04, 0.1, '#ffffff', 0, a, 0); glow.add(p.x, 0.4, p.z, 0.8, '#7fe8ff', 0.6); glow.add(p.x - p.vx * 0.03, 0.4, p.z - p.vz * 0.03, 0.5, '#bff4ff', 0.4); }
+    else { glow.add(p.x, 0.45, p.z, 0.75, '#ff2fb0', 0.9); glow.add(p.x, 0.45, p.z, 0.3, '#ffd6f2', 1); }
   }
-  projPool.end();
-  // efeitos
-  glowPool.begin(); partPool.begin();
-  for (const s of G.spells) s.render(glowPool, t);
+  for (const sp of G.spells) sp.render(fxApi2, t);
   for (const fx of G.fx) {
-    const p = fx.t / fx.dur;
-    if (fx.k === 'ring') { const n = 26, r = fx.r * (fx.fill ? 0.3 + 0.7 * p : 1); for (let i = 0; i < n; i++) { const a = i / n * 6.283; partPool.add(fx.x + Math.sin(a) * r, 0.15, fx.z + Math.cos(a) * r, 0.14 * (1 - p) + 0.04, 0.06, 0.14 * (1 - p) + 0.04, fx.color); } }
-    if (fx.k === 'bolt') { const n = 10; for (let i = 0; i <= n; i++) { const q = i / n, j = i && i < n ? (hash(i, fx.seed) - 0.5) * 0.4 : 0; partPool.add(fx.x1 + (fx.x2 - fx.x1) * q + j, 0.5 + j * 0.5, fx.z1 + (fx.z2 - fx.z1) * q + j, 0.1, 0.1, 0.1, fx.color); } }
-    if (fx.k === 'spikes') for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + fx.seed, rr = fx.r * 0.55 * hash(i, fx.seed), h = Math.sin(Math.min(1, p * 2.5) * Math.PI) * 0.8; partPool.add(fx.x + Math.sin(a) * rr, h / 2, fx.z + Math.cos(a) * rr, 0.16, h + 0.01, 0.16, i % 2 ? '#c9a36b' : '#8a6a44', 0, a, 0); }
-    if (fx.k === 'cloud') for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283 + fx.seed, rr = fx.r * p * (0.5 + 0.5 * hash(i, fx.seed)), s = 0.35 * (1 - p) + 0.1; partPool.add(fx.x + Math.sin(a) * rr, 0.3 + hash(i + 3, fx.seed) * 0.5, fx.z + Math.cos(a) * rr, s, s, s, '#ffe6cc'); }
+    const p = fx.t / fx.dur, k = 1 - p;
+    if (fx.k === 'ring') { const n = Math.round(24 + fx.r * 10), r = fx.r * (fx.fill ? 0.25 + 0.75 * p : 1); if (fx.fill) glow.add(fx.x, 0.1, fx.z, r * 2.2, fx.color, 0.35 * k); for (let i = 0; i < n; i++) { const a = i / n * 6.283; glow.add(fx.x + Math.sin(a) * r, 0.2, fx.z + Math.cos(a) * r, 0.55 * k + 0.15, fx.color, 0.9 * k); } }
+    if (fx.k === 'bolt') { const n = 14; let px = fx.x1, pz = fx.z1; for (let i = 0; i <= n; i++) { const q = i / n, j = i && i < n ? (hash(i, fx.seed) - 0.5) * 0.5 : 0, x = fx.x1 + (fx.x2 - fx.x1) * q + j, z = fx.z1 + (fx.z2 - fx.z1) * q + j; glow.add(x, 0.55, z, 0.55, fx.color, k); glow.add(x, 0.55, z, 0.2, '#ffffff', k); px = x; pz = z; } }
+    if (fx.k === 'sky') { for (let i = 0; i < 16; i++) { const y = i * 0.6, j = (hash(i, fx.seed) - 0.5) * 0.35; glow.add(fx.x + j, y, fx.z + j * 0.5, 0.6, '#fff27a', k); glow.add(fx.x + j, y, fx.z + j * 0.5, 0.22, '#ffffff', k); } glow.add(fx.x, 0.1, fx.z, 2.2, '#fff27a', 0.7 * k); }
+    if (fx.k === 'spikes') for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + fx.seed, rr = fx.r * 0.55 * hash(i, fx.seed), h = Math.sin(Math.min(1, p * 2.5) * Math.PI) * 0.8; fxCubes.add(fx.x + Math.sin(a) * rr, h / 2, fx.z + Math.cos(a) * rr, 0.16, h + 0.01, 0.16, i % 2 ? '#c9a36b' : '#8a6a44', 0, a, 0); glow.add(fx.x + Math.sin(a) * rr, 0.1, fx.z + Math.cos(a) * rr, 0.5, '#ffcf8a', 0.4 * k); }
+    if (fx.k === 'cloud') for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + fx.seed, rr = fx.r * p * (0.5 + 0.5 * hash(i, fx.seed)); glow.add(fx.x + Math.sin(a) * rr, 0.3 + hash(i + 3, fx.seed) * 0.6, fx.z + Math.cos(a) * rr, 1.2 * k + 0.3, '#ffe6cc', 0.7 * k); }
   }
-  for (const q of G.particles) partPool.add(q.x, q.y, q.z, q.size, q.size, q.size, q.color);
-  glowPool.end(); partPool.end();
+  for (const q of G.particles) { const k = 1 - q.t / q.dur; glow.add(q.x, q.y, q.z, q.size * 3.2, q.color, k); }
+  glow.end(); fxCubes.end();
   // manchas no chão
   splatPool.begin();
   for (const s of G.splats) splatPool.add(s.x, 0.012, s.z, s.s, 1, s.s * 0.8, s.c, 0, s.ry, 0);
   splatPool.end();
   renderer.render(scene, cam);
+  fxRenderer.render(fxScene, cam);
   drawNumbers();
   hud();
 }
@@ -468,4 +476,4 @@ function frame(now) {
 $('fps').hidden = !settings.fps;
 resize(); recalc();
 requestAnimationFrame(frame);
-window.__bh = { G, CFG, start, spawn, speed: 1 };
+window.__bh = { G, CFG, start, spawn, Spell, speed: 1 };

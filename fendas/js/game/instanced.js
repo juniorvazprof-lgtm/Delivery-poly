@@ -89,3 +89,32 @@ export class CubePool {
   }
   end() { this.im.count = this.n; this.im.instanceMatrix.needsUpdate = true; this.im.instanceColor.needsUpdate = true; }
 }
+
+// Brilhos (sprites suaves com mistura aditiva) desenhados em resolução normal, sempre virados para a câmera.
+function glowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,255,255,0.75)'); gr.addColorStop(0.6, 'rgba(255,255,255,0.18)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; return t;
+}
+export class GlowPool {
+  constructor(scene, max) {
+    const material = new T.MeshBasicMaterial({ map: glowTexture(), transparent: true, blending: T.AdditiveBlending, depthWrite: false, depthTest: false });
+    this.im = new T.InstancedMesh(new T.PlaneGeometry(1, 1), material, max); this.im.frustumCulled = false; this.im.count = 0; this.im.renderOrder = 10;
+    this.im.instanceColor = new T.InstancedBufferAttribute(new Float32Array(max * 3), 3);
+    scene.add(this.im);
+    this.max = max; this.n = 0; this.m = new T.Matrix4(); this.p = new T.Vector3(); this.s = new T.Vector3(); this.c = new T.Color(); this.q = new T.Quaternion();
+  }
+  begin(cam) { this.n = 0; this.q.copy(cam.quaternion); }
+  // intensidade 0..n escurece a cor (na mistura aditiva, mais escuro = mais transparente)
+  add(x, y, z, size, color, k = 1) {
+    if (this.n >= this.max || k <= 0.01) return;
+    this.p.set(x, y, z); this.s.set(size, size, size); this.m.compose(this.p, this.q, this.s);
+    this.im.setMatrixAt(this.n, this.m);
+    if (typeof color === 'string') this.c.set(color); else this.c.copy(color);
+    this.im.instanceColor.setXYZ(this.n, this.c.r * k, this.c.g * k, this.c.b * k);
+    this.n++;
+  }
+  end() { this.im.count = this.n; this.im.instanceMatrix.needsUpdate = true; this.im.instanceColor.needsUpdate = true; }
+}

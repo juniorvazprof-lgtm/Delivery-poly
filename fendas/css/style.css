@@ -10,6 +10,7 @@
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font: 16px/1.25 var(--body);
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; overscroll-behavior: none; touch-action: none; }
 #view, #over { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+#fx { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; z-index: 1; }
 #over { pointer-events: none; z-index: 1; }
 button { font: inherit; color: inherit; cursor: pointer; }
 

@@ -6,7 +6,7 @@ export const CFG = {
   cam: { viewH: 17, offset: [0, 10, 9], follow: 8 },
   runTime: 480,                                // 8 minutos até o Guardião
 
-  mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.0, slots: 4, passiveSlots: 4 },
+  mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.0, slots: 5, passiveSlots: 4 },
 
   // XP para o próximo nível
   xpFor: lvl => Math.floor(5 + lvl * 4.5 + Math.pow(lvl, 1.6)),
@@ -31,6 +31,19 @@ export const CFG = {
     terra: { name: 'Espinhos de terra', glyph: '▲', color: '#c9a36b', el: 'terra',
       desc: ['Espinhos brotam do chão perto do Mago, ferem e prendem por um instante.', '+1 espinho', '+dano', '+2 espinhos', 'Espinhos maiores e mais frequentes'],
       cd: [2.2, 2.1, 2.0, 1.9, 1.5], count: [2, 3, 3, 5, 5], dmg: [12, 13, 18, 19, 24], radius: [0.8, 0.8, 0.85, 0.9, 1.15], root: 0.6 },
+    // ---- poderes "absurdos": grandes, raros e com recarga longa ----
+    anel: { name: 'Anel de fogo', glyph: '◯', color: '#ff5a1f', el: 'fogo', big: true,
+      desc: ['Um círculo de fogo nasce em volta do Mago e cresce sem parar, queimando quem estiver dentro. No tamanho máximo, explode e recomeça.', 'Cresce mais rápido', 'Raio máximo maior', '+dano e explosão mais forte', 'Explosão devastadora'],
+      minR: 0.9, maxR: [3.0, 3.3, 3.9, 4.3, 5.0], grow: [0.16, 0.22, 0.24, 0.27, 0.32], dmg: [5, 6, 7, 9, 11], tick: 0.3, blast: [60, 75, 95, 130, 200] },
+    meteoro: { name: 'Chuva de meteoros', glyph: '☄', color: '#ffb15a', el: 'fogo', big: true,
+      desc: ['Um meteoro cai sobre o maior grupo de inimigos. A sombra mostra onde.', '+dano', '+1 meteoro', 'Cratera maior e recarga menor', '+1 meteoro e dano enorme'],
+      cd: [6.5, 6.0, 5.6, 4.8, 4.2], count: [1, 1, 2, 2, 3], dmg: [80, 105, 115, 140, 210], radius: [2.0, 2.1, 2.2, 2.7, 3.0], fall: 0.85 },
+    buraco: { name: 'Buraco negro', glyph: '●', color: '#b77bff', el: 'arcano', big: true,
+      desc: ['Abre um buraco negro que suga os inimigos e explode ao fechar.', 'Dura mais', 'Puxa mais forte e de mais longe', '+dano da explosão', 'Recarga menor e explosão enorme'],
+      cd: [10, 9.5, 9, 8.5, 7], dur: [2.6, 3.4, 3.5, 3.6, 4.0], radius: [3.4, 3.6, 4.4, 4.5, 5.0], pull: [4.5, 5, 6.5, 7, 8], dmg: [4, 4, 5, 6, 8], tick: 0.35, collapse: [70, 85, 100, 140, 200] },
+    trovoada: { name: 'Trovoada', glyph: '☇', color: '#fff27a', el: 'raio', big: true,
+      desc: ['Por alguns segundos, raios caem do céu sem parar sobre os inimigos na tela.', 'Mais raios por segundo', 'Dura mais', '+dano', 'Tempestade quase contínua'],
+      cd: [11, 10.5, 10, 9.5, 7.5], dur: [2.5, 2.5, 3.5, 3.5, 4.5], rate: [6, 9, 9, 11, 15], dmg: [20, 21, 23, 30, 34], radius: 0.9 },
   },
 
   // ---- fusões: dois feitiços no nível 5 viram um feitiço evoluído (libera um espaço) ----
