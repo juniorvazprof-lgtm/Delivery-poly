@@ -100,3 +100,12 @@ body.landscape #hud, body.landscape .screen { max-width: 520px; margin: 0 auto; 
 #lv-tools .tool:disabled { opacity: 0.35; }
 #lv-tools .tool.on { border-color: #ff4f8b; color: #ff4f8b; }
 #choices.banning .card { border-color: #ff4f8b; }
+
+#reels { display: flex; justify-content: center; gap: 10px; margin: 14px 0; padding: 12px; background: #07060c; border: 3px solid var(--gold); box-shadow: 0 0 18px #ffc96b55 inset; }
+.reel { width: 76px; height: 92px; display: grid; place-items: center; font-size: 40px; color: var(--c, #fff); background: linear-gradient(#000, #1a1428 30%, #1a1428 70%, #000); border: 2px solid var(--line); overflow: hidden; }
+.reel.spin span { animation: reelspin 0.09s linear infinite; }
+.reel.stop { border-color: var(--c); box-shadow: 0 0 14px var(--c); animation: pop 0.25s ease-out; }
+@keyframes reelspin { from { transform: translateY(-30px); filter: blur(1px); } to { transform: translateY(30px); filter: blur(1px); } }
+@keyframes pop { 50% { transform: scale(1.15); } }
+#slot-res { display: flex; flex-direction: column; gap: 8px; min-height: 10px; margin-bottom: 12px; }
+#slot-res .card { min-height: 0; pointer-events: none; }

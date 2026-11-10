@@ -131,15 +131,15 @@ function kill(e) {
   e.dead = true; G.kills++;
   if (e.corruptT > 0 && G.blasts.length < 60) G.blasts.push({ x: e.x, z: e.z, dmg: Math.min(50, ST.corruptDmg * G.mods.dmg + e.maxHp * ST.corruptHp) });
   if (Math.random() < (e.elite ? CFG.drops.heartElite : CFG.drops.heart) * G.mods.luck) G.gems.push({ x: e.x - 0.2, z: e.z, v: 0, heart: true, t: 0 });
-  if (e.elite) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, chest: true, t: 0 });
+  if (e.elite) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, chest: e.elite.reels, t: 0 });
   G.combo = G.comboT > 0 ? G.combo + 1 : 1; G.comboT = CFG.combo.window; G.bestCombo = Math.max(G.bestCombo, G.combo);
-  const v = (e.elite ? CFG.elite.xp : e.cfg.xp) * (G.event?.kind === 'surto' ? 2 : 1);
+  const v = (e.elite ? e.elite.xp : e.cfg.xp) * (G.event?.kind === 'surto' ? 2 : 1);
   if (v) dropGem(e.x, e.z, v);
   if (Math.random() < 0.025 * G.mods.luck || e.elite) G.gems.push({ x: e.x + 0.2, z: e.z, v: 0, coin: true, t: 0 });
   fxApi.burst(e.x, e.z, e.elite ? '#ffd34d' : '#b24dff', e.cfg.boss ? 30 : 5, 2.4);
   if (G.splats.length > 300) G.splats.shift();
   G.splats.push({ x: e.x, z: e.z, s: e.r * rand(1.2, 1.8) * (e.elite ? 1.4 : 1), ry: Math.random() * 6, t: 0, c: Math.random() < 0.5 ? '#3a1630' : '#24163a' });
-  if (e.cfg.boss === 'mini') { G.queue += 2; G.chests += 2; banner('BAÚ DA FENDA', 'Duas melhorias grátis', '#ffc96b'); }
+  if (e.cfg.boss === 'mini') G.gems.push({ x: e.x, z: e.z, v: 0, chest: 3, t: 0, pull: true });
   if (e.cfg.boss === 'final') { G.bossDone = true; setTimeout(() => finish(true), 1200); }
   if (e === G.boss) { G.boss = null; $('bossbar').hidden = true; }
 }
@@ -150,8 +150,8 @@ function dropGem(x, z, v) {
 
 // ---------- inimigos e diretor ----------
 function spawn(type, x, z, opts = {}) {
-  const c = CFG.enemies[type], el = opts.elite, hp = c.hp * (c.boss ? 1 : CFG.hpScale(G.t)) * (el ? CFG.elite.hp : 1);
-  const e = { type, cfg: c, x, z, hp, maxHp: hp, r: c.radius * (el ? 1.3 : 1), speed: c.speed * rand(0.9, 1.1) * (el ? CFG.elite.speed : 1), elite: el,
+  const c = CFG.enemies[type], el = opts.elite, hp = c.hp * (c.boss ? 1 : CFG.hpScale(G.t)) * (el ? (el.hpFlat ? el.hpFlat / c.hp : el.hp) : 1);
+  const e = { type, cfg: c, x, z, hp, maxHp: hp, r: c.radius * (el ? el.r : 1), speed: c.speed * rand(0.9, 1.1) * (el ? el.speed : 1), elite: el,
     kx: 0, kz: 0, flash: 0, freezeT: 0, shockT: 0, corruptT: 0, exposeT: 0, soakT: 0, burnT: 0, burnTick: 0, stunT: 0, slowT: 0, face: 0, ph: Math.random() * 6, act: rand(0, 2), state: 'move', st: 0, dead: false };
   G.enemies.push(e); return e;
 }
@@ -176,9 +176,10 @@ function director(dt) {
   G.spawnAcc += rate * dt;
   while (G.spawnAcc >= 1) {
     G.spawnAcc -= 1; if (alive >= CFG.maxAlive) continue;
-    const [x, z] = spawnPoint(), elite = G.t > CFG.elite.chanceFrom && Math.random() < CFG.elite.chance;
+    const [x, z] = spawnPoint(), elite = G.t > CFG.elite.chanceFrom && Math.random() < CFG.elite.chance ? CFG.elite : null;
     spawn(pickType(), x, z, { elite });
   }
+  if (G.t >= G.nextChamp) { G.nextChamp += CFG.champion.every; const [x, z] = spawnPoint(); spawn(Math.random() < 0.5 ? 'brutamonte' : pickType(), x, z, { elite: CFG.champion }); banner('CAMPEÃO DA FENDA', 'Derrote-o para rolar 3 melhorias', '#ffc96b'); }
   // eventos
   const ev = CFG.events[G.nextEvent];
   if (ev && G.t >= ev.at) {
@@ -211,7 +212,7 @@ function updateEnemy(e, dt) {
   const kd = Math.pow(0.003, dt); e.kx *= kd; e.kz *= kd;
   if (sp > 0.1) e.face = Math.atan2(vx, vz);
   // contato com o Mago
-  if (d < e.r + CFG.mage.radius && e.stunT <= 0) hurtMage(c.dmg * (e.elite ? 1.5 : 1));
+  if (d < e.r + CFG.mage.radius && e.stunT <= 0) hurtMage(c.dmg * (e.elite ? e.elite.dmg : 1));
   // longe demais: reaparece do outro lado (o enxame nunca some)
   if (d > Math.hypot(viewW, viewH) * 0.95 && !c.boss) { const [x, z] = spawnPoint(); e.x = x; e.z = z; }
 }
@@ -291,14 +292,50 @@ function openLevelUp(keep) {
   $('levelup').hidden = false;
 }
 function choose(o) {
+  apply(o);
+  G.queue--; if (G.chests > 0) G.chests--; $('levelup').hidden = true; renderLoadout();
+  if (G.queue > 0) openLevelUp(); else { G.mode = 'play'; input.clear(); }
+}
+function apply(o) {
   if (o.kind === 'new') G.spells.push(new Spell(o.key, G));
   if (o.kind === 'up') G.spells.find(s => s.key === o.key).level++;
   if (o.kind === 'evo') { G.spells.find(s => s.key === o.key).evo = true; banner('EVOLUÇÃO', CFG.evolutions[o.key].name, CFG.evolutions[o.key].color); G.shake(0.25); }
   if (o.kind === 'fusion') { G.spells = G.spells.filter(s => !CFG.fusions[o.key].from.includes(s.key)); G.spells.push(new Spell(o.key, G)); banner('FUSÃO', CFG.fusions[o.key].name, CFG.fusions[o.key].color); }
   if (o.kind === 'pnew' || o.kind === 'pup') { G.passives[o.key] = (G.passives[o.key] || 0) + 1; recalc(); }
   if (o.kind === 'heal') mage.hp = Math.min(mage.maxHp, mage.hp + 30);
-  G.queue--; if (G.chests > 0) G.chests--; $('levelup').hidden = true; renderLoadout();
-  if (G.queue > 0) openLevelUp(); else { G.mode = 'play'; input.clear(); }
+}
+function cardInfo(o) {
+  const s = o.kind === 'evo' ? CFG.evolutions[o.key] : o.kind === 'pnew' || o.kind === 'pup' ? CFG.passives[o.key] : o.kind === 'heal' ? { name: 'Poção de mana', color: '#ff5a6a', glyph: '♥' } : CFG.spells[o.key] || CFG.fusions[o.key];
+  const cur = o.kind === 'up' ? G.spells.find(x => x.key === o.key).level : o.kind === 'pup' ? G.passives[o.key] : 0;
+  const tag = o.kind === 'evo' ? 'EVOLUÇÃO' : o.kind === 'fusion' ? 'FUSÃO' : o.kind === 'new' || o.kind === 'pnew' ? 'NOVO' : o.kind === 'heal' ? '+30 VIDA' : `NV ${cur + 1}`;
+  return { s, tag };
+}
+// ---------- baú: caça-níquel ----------
+function openSlot(n) {
+  G.mode = 'slot'; input.clear();
+  const champ = n > 1, reels = $('reels'), res = $('slot-res'), btn = $('btn-slot');
+  $('slot-title').textContent = champ ? 'BAÚ DO CAMPEÃO' : 'BAÚ DA FENDA';
+  $('slot-sub').textContent = champ ? 'Três rolos, três melhorias' : 'Role o caça-níquel';
+  res.innerHTML = ''; reels.innerHTML = '';
+  const pool = [...Object.values(CFG.spells), ...Object.values(CFG.passives)];
+  const els = Array.from({ length: n }, () => { const d = document.createElement('div'); d.className = 'reel'; d.innerHTML = '<span>?</span>'; reels.appendChild(d); return d; });
+  btn.textContent = 'ROLAR'; btn.disabled = false;
+  btn.onclick = () => {
+    btn.disabled = true;
+    // sorteia em sequência, aplicando cada uma (a próxima já considera a anterior)
+    const got = []; for (let i = 0; i < n; i++) { const o = options()[0]; got.push(o); apply(o); }
+    renderLoadout();
+    const timers = els.map((d, i) => { d.classList.add('spin'); return setInterval(() => { const r = pool[Math.floor(Math.random() * pool.length)]; d.style.setProperty('--c', r.color); d.firstChild.textContent = r.glyph; }, 70); });
+    els.forEach((d, i) => setTimeout(() => {
+      clearInterval(timers[i]); const { s, tag } = cardInfo(got[i]);
+      d.classList.remove('spin'); d.classList.add('stop'); d.style.setProperty('--c', s.color); d.firstChild.textContent = s.glyph;
+      const c = document.createElement('div'); c.className = 'card' + (tag === 'EVOLUÇÃO' || tag === 'FUSÃO' ? ' fusion' : ''); c.style.setProperty('--c', s.color);
+      c.innerHTML = `<span class="ico">${s.glyph}</span><span class="txt"><span class="row"><b>${esc(s.name)}</b><em>${esc(tag)}</em></span></span>`; res.appendChild(c);
+      try { navigator.vibrate?.(20); } catch { /* ignorar */ }
+      if (i === n - 1) { btn.textContent = 'CONTINUAR'; btn.disabled = false; btn.onclick = () => { $('slot').hidden = true; G.mode = 'play'; input.clear(); }; }
+    }, 900 + i * 550));
+  };
+  $('slot').hidden = false;
 }
 
 // ---------- entrada: joystick flutuante com um dedo ----------
@@ -360,7 +397,7 @@ function step(dt) {
     if (d < 0.35) { g.done = true;
       if (g.coin) G.coins++;
       else if (g.heart) { mage.hp = Math.min(mage.maxHp, mage.hp + CFG.drops.heal); fxApi.burst(mage.x, mage.z, '#ff5a6a', 10, 2.5); G.numbers.push({ x: mage.x, z: mage.z, v: '+' + CFG.drops.heal, t: 0, label: '#ff7a8a' }); }
-      else if (g.chest) { G.queue++; G.chests++; banner('BAÚ DA FENDA', 'Uma melhoria grátis', '#ffc96b'); }
+      else if (g.chest) G.slots.push(g.chest);
       else addXp(g.v); }
   }
   G.gems = G.gems.filter(g => !g.done);
@@ -378,7 +415,8 @@ function step(dt) {
   for (const n of G.numbers) n.t += dt;
   G.numbers = G.numbers.filter(n => n.t < 0.7);
   if (G.numbers.length > 30) G.numbers.splice(0, G.numbers.length - 30);
-  if (G.queue > 0 && G.mode === 'play') openLevelUp();
+  if (G.slots.length && G.mode === 'play') openSlot(G.slots.shift());
+  else if (G.queue > 0 && G.mode === 'play') openLevelUp();
 }
 
 // ---------- desenho ----------
@@ -405,7 +443,7 @@ function draw(now) {
   for (const e of G.enemies) {
     const b = batches[e.type], y = e.cfg.float ? 0.15 + Math.sin(t * 3 + e.ph) * 0.06 : Math.abs(Math.sin(t * 9 + e.ph)) * 0.04;
     const sq = e.state === 'wind' ? 0.75 : 1, c = e.freezeT > 0 ? SC.gelo : e.burnT > 0 ? SC.fogo : e.shockT > 0 ? SC.raio : e.corruptT > 0 ? SC.arcano : e.exposeT > 0 ? SC.luz : e.soakT > 0 ? SC.agua : SC.none;
-    b.add(e.x, y, e.z, e.face, e.elite ? CFG.elite.scale : 1, e.flash > 0 || e.state === 'wind' && Math.floor(t * 16) % 2 ? 1 : 0, sq, 1, c);
+    b.add(e.x, y, e.z, e.face, e.elite ? e.elite.scale : 1, e.flash > 0 || e.state === 'wind' && Math.floor(t * 16) % 2 ? 1 : 0, sq, 1, c);
   }
   for (const b of Object.values(batches)) b.end();
   // cristais e moedas
@@ -435,6 +473,7 @@ function draw(now) {
     if (fx.k === 'cloud') for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + fx.seed, rr = fx.r * p * (0.5 + 0.5 * hash(i, fx.seed)); glow.add(fx.x + Math.sin(a) * rr, 0.3 + hash(i + 3, fx.seed) * 0.6, fx.z + Math.cos(a) * rr, 1.2 * k + 0.3, '#ffe6cc', 0.7 * k); }
   }
   let sg = 0;
+  for (const e of G.enemies) if (e.elite?.reels > 1) { glow.add(e.x, 0.2, e.z, 3.2, '#ffb020', 0.35 + 0.1 * Math.sin(t * 5)); glow.add(e.x, 1.6, e.z, 0.6, '#fff2a8', 0.8); }
   for (const e of G.enemies) { if (sg > 160) break;
     if (e.burnT > 0) { sg++; glow.add(e.x, 0.75 + Math.sin(t * 20 + e.ph) * 0.06, e.z, 0.45, '#ff6a1a', 0.7); }
     else if (e.freezeT > 0) { sg++; glow.add(e.x, 0.4, e.z, 0.9, '#9fdcff', 0.45); }
@@ -494,13 +533,13 @@ const settings = { fps: false };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('fendas_settings_v1')) || {}); } catch { /* sem storage */ }
 function start() {
   Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], splats: [], numbers: [],
-    spells: [], passives: {}, blasts: [], found: new Set(), banned: new Set(), rerolls: CFG.mage.rerolls, bans: CFG.mage.bans, chests: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
+    spells: [], passives: {}, blasts: [], found: new Set(), slots: [], nextChamp: CFG.champion.first, banned: new Set(), rerolls: CFG.mage.rerolls, bans: CFG.mage.bans, chests: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
     miniDone: false, bossDone: false, bossSpawned: false, queue: 0 });
   Object.assign(mage, { x: 0, z: 0, face: Math.PI, inv: 0 });
   recalc(); mage.hp = mage.maxHp;
   G.spells.push(new Spell('fogo', G));   // o Mago começa com Bola de fogo
   renderLoadout();
-  for (const id of ['startscreen', 'result', 'levelup', 'pause']) $(id).hidden = true;
+  for (const id of ['startscreen', 'result', 'levelup', 'pause', 'slot']) $(id).hidden = true;
   $('bossbar').hidden = true; input.clear();
 }
 function finish(won) {

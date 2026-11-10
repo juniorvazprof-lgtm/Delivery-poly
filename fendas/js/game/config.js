@@ -2,8 +2,8 @@
 // Unidades do mundo: 1 = altura aproximada do Mago. Tempos em segundos.
 export const CFG = {
   sim: { dt: 1 / 60, maxSteps: 4 },
-  pixel: { targetH: 340 },                     // altura interna da imagem (pixels); o resto é ampliado sem suavizar
-  cam: { viewH: 17, offset: [0, 10, 9], follow: 8 },
+  pixel: { targetH: 400 },                     // altura interna da imagem (pixels); o resto é ampliado sem suavizar
+  cam: { viewH: 23, offset: [0, 10, 9], follow: 8 },
   runTime: 480,                                // 8 minutos até o Guardião
 
   mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.0, slots: 4, passiveSlots: 4, rerolls: 2, bans: 2 },
@@ -122,7 +122,9 @@ export const CFG = {
     minichefe: { model: 'ferfogo', scale: 1.0, hp: 900, speed: 1.35, radius: 0.75, dmg: 20, xp: 60, tint: 0.6, heavy: true, boss: 'mini' },
     guardiao: { model: 'arborion', scale: 1.5, hp: 5200, speed: 1.25, radius: 1.0, dmg: 28, xp: 0, tint: 0.55, heavy: true, boss: 'final' },
   },
-  elite: { chanceFrom: 150, chance: 0.04, hp: 7, scale: 1.45, xp: 30, speed: 1.1 },
+  elite: { chanceFrom: 150, chance: 0.04, hp: 7, scale: 1.45, r: 1.3, xp: 30, speed: 1.1, dmg: 1.5, reels: 1 },
+  // campeão: elite gigante e resistente; o baú dele rola 3 melhorias
+  champion: { first: 150, every: 75, hpFlat: 360, scale: 2.3, r: 2.0, xp: 120, speed: 0.85, dmg: 2, reels: 3 },
 
   // ---- diretor: o que nasce em cada minuto (pesos) e quantos por segundo ----
   waves: [
