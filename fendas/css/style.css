@@ -93,3 +93,10 @@ h2 { margin: 0; font: 700 26px var(--pix); color: var(--pink); }
 .build { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; min-height: 26px; }
 body.landscape #hud, body.landscape .screen { max-width: 520px; margin: 0 auto; }
 @media (prefers-reduced-motion: reduce) { #banner.show { animation: none; } .card.fusion { animation: none; } }
+
+#lv-tools { display: flex; gap: 10px; margin-top: 12px; }
+#lv-tools .tool { flex: 1; padding: 10px; font: 12px var(--pix); color: var(--ink); background: #07060c; border: 2px solid var(--line); }
+#lv-tools .tool b { color: var(--gold); }
+#lv-tools .tool:disabled { opacity: 0.35; }
+#lv-tools .tool.on { border-color: #ff4f8b; color: #ff4f8b; }
+#choices.banning .card { border-color: #ff4f8b; }

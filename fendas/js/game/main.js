@@ -139,7 +139,7 @@ function kill(e) {
   fxApi.burst(e.x, e.z, e.elite ? '#ffd34d' : '#b24dff', e.cfg.boss ? 30 : 5, 2.4);
   if (G.splats.length > 300) G.splats.shift();
   G.splats.push({ x: e.x, z: e.z, s: e.r * rand(1.2, 1.8) * (e.elite ? 1.4 : 1), ry: Math.random() * 6, t: 0, c: Math.random() < 0.5 ? '#3a1630' : '#24163a' });
-  if (e.cfg.boss === 'mini') { G.queue += 2; banner('BAÚ DA FENDA', 'Duas melhorias grátis', '#ffc96b'); }
+  if (e.cfg.boss === 'mini') { G.queue += 2; G.chests += 2; banner('BAÚ DA FENDA', 'Duas melhorias grátis', '#ffc96b'); }
   if (e.cfg.boss === 'final') { G.bossDone = true; setTimeout(() => finish(true), 1200); }
   if (e === G.boss) { G.boss = null; $('bossbar').hidden = true; }
 }
@@ -259,6 +259,7 @@ function options() {
   if (G.spells.length < CFG.mage.slots) for (const k of Object.keys(CFG.spells)) if (!owned[k] && !G.spells.some(s => s.fusion && CFG.fusions[s.key].from.includes(k))) opts.push({ kind: 'new', key: k, w: 2 });
   const pc = Object.keys(G.passives).length;
   for (const k of Object.keys(CFG.passives)) { const l = G.passives[k] || 0; if (l && l < 5) opts.push({ kind: 'pup', key: k, w: 2 }); else if (!l && pc < CFG.mage.passiveSlots) opts.push({ kind: 'pnew', key: k, w: 1.4 }); }
+  for (let i = opts.length - 1; i >= 0; i--) if (G.banned.has(opts[i].key)) opts.splice(i, 1);
   const out = [];
   while (out.length < 3 && opts.length) {
     const tot = opts.reduce((s, o) => s + o.w, 0); let r = Math.random() * tot, i = 0;
@@ -268,11 +269,16 @@ function options() {
   if (!out.length) out.push({ kind: 'heal', key: 'heal' });
   return out;
 }
-function openLevelUp() {
-  G.mode = 'levelup'; input.clear();
-  const box = $('choices'); box.innerHTML = '';
-  $('lv-title').textContent = G.queue > 1 ? `SUBIU DE NÍVEL! (+${G.queue - 1})` : 'SUBIU DE NÍVEL!';
-  for (const o of options()) {
+function openLevelUp(keep) {
+  G.mode = 'levelup'; input.clear(); G.banning = false;
+  const box = $('choices'); box.innerHTML = ''; box.classList.remove('banning'); $('ban-hint').hidden = true; $('btn-ban').classList.remove('on');
+  const chest = G.chests > 0, extra = G.queue - 1;
+  $('lv-title').textContent = (chest ? 'BAÚ DA FENDA' : 'SUBIU DE NÍVEL!') + (extra > 0 ? ` (+${extra})` : '');
+  $('lv-sub').textContent = `Ataques ${G.spells.length}/${CFG.mage.slots} · Passivas ${Object.keys(G.passives).length}/${CFG.mage.passiveSlots}`;
+  $('n-reroll').textContent = G.rerolls; $('n-ban').textContent = G.bans;
+  $('btn-reroll').disabled = G.rerolls <= 0; $('btn-ban').disabled = G.bans <= 0;
+  G.offer = keep || options();
+  for (const o of G.offer) {
     const s = o.kind === 'evo' ? CFG.evolutions[o.key] : o.kind === 'pnew' || o.kind === 'pup' ? CFG.passives[o.key] : CFG.spells[o.key] || CFG.fusions[o.key];
     const cur = o.kind === 'up' ? G.spells.find(x => x.key === o.key).level : o.kind === 'pup' ? G.passives[o.key] : 0;
     const tag = o.kind === 'evo' ? 'EVOLUÇÃO' : o.kind === 'fusion' ? 'FUSÃO' : o.kind === 'new' || o.kind === 'pnew' ? 'NOVO' : o.kind === 'heal' ? '' : `NV ${cur} → ${cur + 1}`;
@@ -280,7 +286,7 @@ function openLevelUp() {
     const desc = o.kind === 'heal' ? 'Recupera 30 de vida.' : o.kind === 'pnew' || o.kind === 'pup' ? s.desc : o.kind === 'evo' ? `${CFG.spells[o.key].name} + ${CFG.passives[s.need].name}: ${s.desc}` : o.kind === 'fusion' ? `${CFG.spells[s.from[0]].name} + ${CFG.spells[s.from[1]].name}: ${s.desc}` : nextDesc(o.key, cur);
     const b = document.createElement('button'); b.className = 'card' + (o.kind === 'fusion' || o.kind === 'evo' ? ' fusion' : ''); b.style.setProperty('--c', color);
     b.innerHTML = `<span class="ico">${glyph}</span><span class="txt"><span class="row"><b>${esc(name)}</b><em>${esc(tag)}</em></span><span class="d">${esc(desc)}</span></span>`;
-    b.onclick = () => choose(o); box.appendChild(b);
+    b.onclick = () => { if (G.banning && o.kind !== 'heal') { G.bans--; G.banned.add(o.key); openLevelUp(G.offer.filter(x => x !== o).concat(options().filter(x => !G.offer.some(y => y.key === x.key)).slice(0, 1))); } else choose(o); }; box.appendChild(b);
   }
   $('levelup').hidden = false;
 }
@@ -291,7 +297,7 @@ function choose(o) {
   if (o.kind === 'fusion') { G.spells = G.spells.filter(s => !CFG.fusions[o.key].from.includes(s.key)); G.spells.push(new Spell(o.key, G)); banner('FUSÃO', CFG.fusions[o.key].name, CFG.fusions[o.key].color); }
   if (o.kind === 'pnew' || o.kind === 'pup') { G.passives[o.key] = (G.passives[o.key] || 0) + 1; recalc(); }
   if (o.kind === 'heal') mage.hp = Math.min(mage.maxHp, mage.hp + 30);
-  G.queue--; $('levelup').hidden = true; renderLoadout();
+  G.queue--; if (G.chests > 0) G.chests--; $('levelup').hidden = true; renderLoadout();
   if (G.queue > 0) openLevelUp(); else { G.mode = 'play'; input.clear(); }
 }
 
@@ -354,7 +360,7 @@ function step(dt) {
     if (d < 0.35) { g.done = true;
       if (g.coin) G.coins++;
       else if (g.heart) { mage.hp = Math.min(mage.maxHp, mage.hp + CFG.drops.heal); fxApi.burst(mage.x, mage.z, '#ff5a6a', 10, 2.5); G.numbers.push({ x: mage.x, z: mage.z, v: '+' + CFG.drops.heal, t: 0, label: '#ff7a8a' }); }
-      else if (g.chest) { G.queue++; banner('BAÚ DA FENDA', 'Uma melhoria grátis', '#ffc96b'); }
+      else if (g.chest) { G.queue++; G.chests++; banner('BAÚ DA FENDA', 'Uma melhoria grátis', '#ffc96b'); }
       else addXp(g.v); }
   }
   G.gems = G.gems.filter(g => !g.done);
@@ -488,7 +494,7 @@ const settings = { fps: false };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('fendas_settings_v1')) || {}); } catch { /* sem storage */ }
 function start() {
   Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], splats: [], numbers: [],
-    spells: [], passives: {}, blasts: [], found: new Set(), xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
+    spells: [], passives: {}, blasts: [], found: new Set(), banned: new Set(), rerolls: CFG.mage.rerolls, bans: CFG.mage.bans, chests: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
     miniDone: false, bossDone: false, bossSpawned: false, queue: 0 });
   Object.assign(mage, { x: 0, z: 0, face: Math.PI, inv: 0 });
   recalc(); mage.hp = mage.maxHp;
@@ -511,6 +517,8 @@ function togglePause() {
   if (G.mode === 'play') { G.mode = 'paused'; input.clear(); $('pause').hidden = false; $('fps-toggle').textContent = 'MOSTRAR FPS: ' + (settings.fps ? 'SIM' : 'NÃO'); }
   else if (G.mode === 'paused') { G.mode = 'play'; $('pause').hidden = true; }
 }
+$('btn-reroll').onclick = () => { if (G.rerolls > 0 && G.mode === 'levelup') { G.rerolls--; openLevelUp(); } };
+$('btn-ban').onclick = () => { if (G.bans <= 0) return; G.banning = !G.banning; $('choices').classList.toggle('banning', G.banning); $('ban-hint').hidden = !G.banning; $('btn-ban').classList.toggle('on', G.banning); };
 $('btn-start').onclick = start; $('btn-again').onclick = start; $('btn-pause').onclick = togglePause; $('btn-resume').onclick = togglePause;
 $('btn-quit').onclick = () => { $('pause').hidden = true; finish(false); };
 $('fps-toggle').onclick = () => { settings.fps = !settings.fps; $('fps').hidden = !settings.fps; try { localStorage.setItem('fendas_settings_v1', JSON.stringify(settings)); } catch { /* ignorar */ } $('fps-toggle').textContent = 'MOSTRAR FPS: ' + (settings.fps ? 'SIM' : 'NÃO'); };

@@ -6,7 +6,7 @@ export const CFG = {
   cam: { viewH: 17, offset: [0, 10, 9], follow: 8 },
   runTime: 480,                                // 8 minutos até o Guardião
 
-  mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.0, slots: 5, passiveSlots: 4 },
+  mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.0, slots: 4, passiveSlots: 4, rerolls: 2, bans: 2 },
 
   // XP para o próximo nível
   xpFor: lvl => Math.floor(3 + lvl * 4.5 + Math.pow(lvl, 1.85)),   // cada nível pede mais cristais
