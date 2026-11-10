@@ -27,9 +27,10 @@ const fxScene = new T.Scene();
 const cam = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 100), camOff = new T.Vector3(...CFG.cam.offset), camAt = new T.Vector3();
 let viewW = 8, viewH = CFG.cam.viewH, pxW = 1, pxH = 1;
 function resize() {
-  const w = innerWidth, h = innerHeight, k = Math.max(1, Math.round(h / CFG.pixel.targetH));
+  const w = innerWidth, h = innerHeight, k = CFG.pixel.on ? Math.max(1, Math.round(h / CFG.pixel.targetH)) : 2;
   pxW = Math.ceil(w / k); pxH = Math.ceil(h / k);
-  renderer.setSize(pxW, pxH, false); over.width = pxW; over.height = pxH; fxRenderer.setSize(w, h, false);
+  if (CFG.pixel.on) renderer.setSize(pxW, pxH, false); else { renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(w, h, false); }
+  over.width = pxW; over.height = pxH; fxRenderer.setSize(w, h, false);
   viewW = viewH * w / h;
   Object.assign(cam, { left: -viewW / 2, right: viewW / 2, top: viewH / 2, bottom: -viewH / 2 }); cam.updateProjectionMatrix();
   document.body.classList.toggle('landscape', w > h * 1.1);
@@ -43,7 +44,7 @@ for (const [k, e] of Object.entries(CFG.enemies)) batches[k] = new ModelBatch(sc
 const gemsPool = new CubePool(scene, 520), fxCubes = new CubePool(fxScene, 400), glow = new GlowPool(fxScene, 2600);
 const fxApi2 = { glow: (...a) => glow.add(...a), cube: (...a) => fxCubes.add(...a) };
 const splatPool = new CubePool(scene, 320, { opacity: 0.32, depthWrite: false, size: [1, 0.02, 1] });
-const mageRoot = new T.Group(), mageBody = buildModel({ ...MAGE, scale: 1.05 });
+const mageRoot = new T.Group(), mageBody = buildModel({ ...MAGE, scale: 1.4 });
 mageRoot.add(mageBody, blobShadow(0.32)); scene.add(mageRoot);
 
 // ---------- estado ----------
@@ -69,6 +70,7 @@ function rebuildGrid() {
   grid.clear();
   for (const e of G.enemies) { if (e.dead) continue; const k = key(Math.floor(e.x / CELL), Math.floor(e.z / CELL)); let a = grid.get(k); if (!a) grid.set(k, a = []); a.push(e); }
 }
+G.reach = (k = 1) => CFG.reach * G.mods.area * k;
 G.query = (x, z, r) => {
   const out = [], i0 = Math.floor((x - r) / CELL), i1 = Math.floor((x + r) / CELL), j0 = Math.floor((z - r) / CELL), j1 = Math.floor((z + r) / CELL);
   for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) { const a = grid.get(key(i, j)); if (!a) continue;
@@ -131,7 +133,7 @@ function kill(e) {
   e.dead = true; G.kills++;
   if (e.corruptT > 0 && G.blasts.length < 60) G.blasts.push({ x: e.x, z: e.z, dmg: Math.min(50, ST.corruptDmg * G.mods.dmg + e.maxHp * ST.corruptHp) });
   if (Math.random() < (e.elite ? CFG.drops.heartElite : CFG.drops.heart) * G.mods.luck) G.gems.push({ x: e.x - 0.2, z: e.z, v: 0, heart: true, t: 0 });
-  if (e.elite) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, chest: e.elite.reels, t: 0 });
+  if (e.reels) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, chest: e.reels, t: 0 });
   G.combo = G.comboT > 0 ? G.combo + 1 : 1; G.comboT = CFG.combo.window; G.bestCombo = Math.max(G.bestCombo, G.combo);
   const v = (e.elite ? e.elite.xp : e.cfg.xp) * (G.event?.kind === 'surto' ? 2 : 1);
   if (v) dropGem(e.x, e.z, v);
@@ -179,7 +181,8 @@ function director(dt) {
     const [x, z] = spawnPoint(), elite = G.t > CFG.elite.chanceFrom && Math.random() < CFG.elite.chance ? CFG.elite : null;
     spawn(pickType(), x, z, { elite });
   }
-  if (G.t >= G.nextChamp) { G.nextChamp += CFG.champion.every; const [x, z] = spawnPoint(); spawn(Math.random() < 0.5 ? 'brutamonte' : pickType(), x, z, { elite: CFG.champion }); banner('CAMPEÃO DA FENDA', 'Derrote-o para rolar 3 melhorias', '#ffc96b'); }
+  const ce = CFG.chestElites[G.nextChamp];
+  if (ce && G.t >= ce.at) { G.nextChamp++; const [x, z] = spawnPoint(); const e = spawn(Math.random() < 0.5 ? 'brutamonte' : pickType(), x, z, { elite: CFG.champion }); e.reels = ce.reels; banner('CAMPEÃO DA FENDA', `Carrega um baú de ${ce.reels} ${ce.reels > 1 ? 'rolos' : 'rolo'}`, '#ffc96b'); }
   // eventos
   const ev = CFG.events[G.nextEvent];
   if (ev && G.t >= ev.at) {
@@ -473,7 +476,7 @@ function draw(now) {
     if (fx.k === 'cloud') for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + fx.seed, rr = fx.r * p * (0.5 + 0.5 * hash(i, fx.seed)); glow.add(fx.x + Math.sin(a) * rr, 0.3 + hash(i + 3, fx.seed) * 0.6, fx.z + Math.cos(a) * rr, 1.2 * k + 0.3, '#ffe6cc', 0.7 * k); }
   }
   let sg = 0;
-  for (const e of G.enemies) if (e.elite?.reels > 1) { glow.add(e.x, 0.2, e.z, 3.2, '#ffb020', 0.35 + 0.1 * Math.sin(t * 5)); glow.add(e.x, 1.6, e.z, 0.6, '#fff2a8', 0.8); }
+  for (const e of G.enemies) if (e.reels) { glow.add(e.x, 0.2, e.z, 3.2, '#ffb020', 0.35 + 0.1 * Math.sin(t * 5)); glow.add(e.x, 1.6, e.z, 0.6, '#fff2a8', 0.8); }
   for (const e of G.enemies) { if (sg > 160) break;
     if (e.burnT > 0) { sg++; glow.add(e.x, 0.75 + Math.sin(t * 20 + e.ph) * 0.06, e.z, 0.45, '#ff6a1a', 0.7); }
     else if (e.freezeT > 0) { sg++; glow.add(e.x, 0.4, e.z, 0.9, '#9fdcff', 0.45); }
@@ -503,6 +506,14 @@ function drawNumbers() {
     ctx.fillStyle = n.label || (n.crit ? '#ff7a3d' : n.big ? '#ffe066' : '#f2f4f8'); ctx.fillText(n.v, x, y);
   }
   ctx.globalAlpha = 1;
+  // vida do Mago numa barrinha acima da cabeça
+  if (G.mode !== 'start') {
+    tmpV.set(mage.x, 0, mage.z).project(cam);
+    const x = Math.round((tmpV.x * 0.5 + 0.5) * pxW) - 11, y = Math.round((-tmpV.y * 0.5 + 0.5) * pxH) + 4, f = Math.max(0, mage.hp / mage.maxHp);
+    ctx.fillStyle = '#07060c'; ctx.fillRect(x - 1, y - 1, 24, 5);
+    ctx.fillStyle = '#3a1020'; ctx.fillRect(x, y, 22, 3);
+    ctx.fillStyle = f > 0.5 ? '#5dff9a' : f > 0.25 ? '#ffc94d' : '#ff4a5a'; ctx.fillRect(x, y, Math.round(22 * f), 3);
+  }
 }
 
 // ---------- HUD ----------
@@ -533,7 +544,7 @@ const settings = { fps: false };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('fendas_settings_v1')) || {}); } catch { /* sem storage */ }
 function start() {
   Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], splats: [], numbers: [],
-    spells: [], passives: {}, blasts: [], found: new Set(), slots: [], nextChamp: CFG.champion.first, banned: new Set(), rerolls: CFG.mage.rerolls, bans: CFG.mage.bans, chests: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
+    spells: [], passives: {}, blasts: [], found: new Set(), slots: [], nextChamp: 0, banned: new Set(), rerolls: CFG.mage.rerolls, bans: CFG.mage.bans, chests: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
     miniDone: false, bossDone: false, bossSpawned: false, queue: 0 });
   Object.assign(mage, { x: 0, z: 0, face: Math.PI, inv: 0 });
   recalc(); mage.hp = mage.maxHp;

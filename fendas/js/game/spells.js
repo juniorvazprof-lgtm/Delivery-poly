@@ -27,11 +27,11 @@ export class Spell {
   // ---------- básicos ----------
   u_fogo(dt) {
     if ((this.t -= dt) > 0) return; this.t = this.cd();
-    const g = this.g, m = g.mage, targets = g.nearest(m.x, m.z, this.v('count'), 9);
+    const g = this.g, m = g.mage, targets = g.nearest(m.x, m.z, this.v('count'), g.reach());
     if (!targets.length) { this.t = 0.2; return; }
     targets.forEach(e => {
       const dx = e.x - m.x, dz = e.z - m.z, l = Math.hypot(dx, dz) || 1, sp = this.cfg.speed;
-      g.projectiles.push({ kind: 'fogo', x: m.x, z: m.z, vx: dx / l * sp, vz: dz / l * sp, life: 1.4, r: 0.22, pierce: 0, hit: new Set(),
+      g.projectiles.push({ kind: 'fogo', x: m.x, z: m.z, vx: dx / l * sp, vz: dz / l * sp, life: g.reach(1.15) / sp, r: 0.22, pierce: 0, hit: new Set(),
         onHit: (p) => { const R = this.area(this.v('radius')); g.fx.ring(p.x, p.z, R, '#ff8a3d', 0.25); g.fx.burst(p.x, p.z, '#ffb15a', 8);
           for (const o of g.query(p.x, p.z, R)) g.damage(o, this.dmg(), { burn: this.v('burn'), from: p, color: '#ffb15a' }); } });
       if (this.evo) g.projectiles[g.projectiles.length - 1].big = true;
@@ -50,7 +50,7 @@ export class Spell {
     this.state.spin = (this.state.spin || 0) + 0.7;
     for (let i = 0; i < n; i++) {
       const a = m.face + (i - (n - 1) / 2) * (Math.PI * 2 / Math.max(n, 3)) * 0.55 + Math.sin(this.state.spin) * 0.3, sp = this.cfg.speed;
-      g.projectiles.push({ kind: 'vento', x: m.x, z: m.z, vx: Math.sin(a) * sp, vz: Math.cos(a) * sp, life: this.cfg.life, r: 0.3, pierce: this.v('pierce'), hit: new Set(),
+      g.projectiles.push({ kind: 'vento', x: m.x, z: m.z, vx: Math.sin(a) * sp, vz: Math.cos(a) * sp, life: g.reach(1.1) / this.cfg.speed, r: 0.3, pierce: this.v('pierce'), hit: new Set(),
         onHit: (p, e) => g.damage(e, this.dmg(), { from: p, push: 1.5, color: '#e8fbff' }) });
     }
   }
@@ -72,7 +72,7 @@ export class Spell {
   r_arcano(fx, t) { for (const [x, z] of this.orbs || []) { fx.glow(x, 0.55, z, 1.1, '#9a4dff', 0.9); fx.glow(x, 0.55, z, 0.45, '#f4e8ff', 1); fx.cube(x, 0.55, z, 0.16, 0.16, 0.16, '#ffffff', t * 3, t * 4, 0); } }
   u_raio(dt) {
     if ((this.t -= dt) > 0) return; this.t = this.cd();
-    const g = this.g, m = g.mage, pool = g.query(m.x, m.z, this.cfg.range);
+    const g = this.g, m = g.mage, pool = g.query(m.x, m.z, g.reach());
     if (!pool.length) { this.t = 0.2; return; }
     for (let s = 0; s < this.v('strikes'); s++) {
       let cur = pool[Math.floor(Math.random() * pool.length)], hit = new Set(), fromX = m.x, fromZ = m.z;
@@ -87,7 +87,7 @@ export class Spell {
   u_terra(dt) {
     if ((this.t -= dt) > 0) return; this.t = this.cd();
     const g = this.g, m = g.mage, R = this.area(this.v('radius'));
-    const near = g.nearest(m.x, m.z, this.v('count'), 5);
+    const near = g.nearest(m.x, m.z, this.v('count'), g.reach(0.9));
     for (let i = 0; i < this.v('count'); i++) {
       const e = near[i], x = e ? e.x : m.x + (Math.random() - 0.5) * 5, z = e ? e.z : m.z + (Math.random() - 0.5) * 5;
       g.fx.spikes(x, z, R);
@@ -99,7 +99,7 @@ export class Spell {
   u_vapor(dt) {
     if ((this.t -= dt) > 0) return; this.t = this.cfg.cd * this.g.mods.cd;
     const g = this.g, m = g.mage, R = this.area(this.cfg.radius);
-    for (const e of g.nearest(m.x, m.z, this.cfg.count, 8)) {
+    for (const e of g.nearest(m.x, m.z, this.cfg.count, g.reach(1.3))) {
       g.fx.cloud(e.x, e.z, R);
       for (const o of g.query(e.x, e.z, R)) g.damage(o, this.dmg(this.cfg.dmg), { stun: this.cfg.stun, soak: 1.5, color: '#ffe6cc' });
     }
@@ -174,7 +174,7 @@ export class Spell {
     }
   }
   // grupo mais denso de inimigos (amostra), para meteoros e buraco negro
-  densest(n, maxR = 9) {
+  densest(n, maxR = this.g.reach(1.4)) {
     const g = this.g, m = g.mage, pool = g.query(m.x, m.z, maxR);
     const cand = pool.sort(() => Math.random() - 0.5).slice(0, 14).map(e => ({ e, k: g.query(e.x, e.z, 2).length })).sort((a, b) => b.k - a.k);
     const out = [];
@@ -243,7 +243,7 @@ export class Spell {
     if (!st.on && (this.t -= dt) <= 0) { st.on = this.v('dur'); st.acc = 0; g.shake(0.15); }
     if (!st.on) return;
     st.on = Math.max(0, st.on - dt); st.acc += this.v('rate') * dt;
-    const pool = g.query(m.x, m.z, 8.5);
+    const pool = g.query(m.x, m.z, g.reach(1.4));
     while (st.acc >= 1) {
       st.acc -= 1;
       const e = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null, x = e ? e.x : m.x + (Math.random() - 0.5) * 8, z = e ? e.z : m.z + (Math.random() - 0.5) * 12;
@@ -279,12 +279,12 @@ export class Spell {
   u_orbes(dt) {
     if ((this.t -= dt) > 0) return; this.t = this.cd();
     const g = this.g, m = g.mage, n = this.v('count');
-    if (!g.query(m.x, m.z, 9).length) { this.t = 0.3; return; }
+    if (!g.query(m.x, m.z, g.reach()).length) { this.t = 0.3; return; }
     for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + Math.random(); this.orb(m.x, m.z, Math.sin(a), Math.cos(a), false); }
   }
   orb(x, z, dx, dz, child) {
     const g = this.g, sp = this.cfg.speed;
-    g.projectiles.push({ kind: 'orbe', home: true, x, z, vx: dx * sp, vz: dz * sp, sp, life: child ? 1.6 : this.v('life'), r: child ? 0.16 : 0.2, pierce: 0, hit: new Set(), child, retarget: 0,
+    g.projectiles.push({ kind: 'orbe', home: true, x, z, vx: dx * sp, vz: dz * sp, sp, life: child ? 1.2 : this.v('life') * g.mods.area, r: child ? 0.16 : 0.2, pierce: 0, hit: new Set(), child, retarget: 0,
       onHit: (p, e) => {
         g.damage(e, this.dmg() * (child ? 0.5 : 1), { corrupt: 3, color: '#e8b8ff', quiet: child });
         if (this.evo && !child) for (let k = 0; k < this.v('split'); k++) { const a = Math.random() * 6.28; this.orb(p.x, p.z, Math.sin(a), Math.cos(a), true); }

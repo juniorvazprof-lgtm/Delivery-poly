@@ -2,10 +2,11 @@
 // Unidades do mundo: 1 = altura aproximada do Mago. Tempos em segundos.
 export const CFG = {
   sim: { dt: 1 / 60, maxSteps: 4 },
-  pixel: { targetH: 400 },                     // altura interna da imagem (pixels); o resto é ampliado sem suavizar
+  pixel: { on: false, targetH: 400 },                     // altura interna da imagem (pixels); o resto é ampliado sem suavizar
   cam: { viewH: 27, offset: [0, 10, 9], follow: 8 },
   runTime: 480,                                // 8 minutos até o Guardião
 
+  reach: 4.2,                                  // alcance base de mira dos feitiços (cresce com Alcance)
   mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.6, slots: 4, passiveSlots: 4, rerolls: 2, bans: 2 },
 
   // XP para o próximo nível
@@ -50,7 +51,7 @@ export const CFG = {
       count: [1, 1, 2, 2, 3], length: [3.4, 4.2, 4.3, 4.6, 5.4], width: 0.32, dmg: [8, 10, 11, 15, 18], tick: 0.2, spin: [1.5, 1.5, 1.6, 2.0, 2.1] },
     orbes: { name: 'Fagulhas caçadoras', glyph: '∴', color: '#d78bff', el: 'arcano',
       desc: ['Pequenos orbes perseguem os inimigos e os corrompem: corrompidos explodem ao morrer.', '+1 orbe', '+dano', '+1 orbe e recarga menor', '+1 orbe e +dano'],
-      cd: [1.5, 1.4, 1.35, 1.15, 1.0], count: [2, 3, 3, 4, 5], dmg: [11, 13, 17, 18, 24], speed: 6.5, life: 3 },
+      cd: [1.5, 1.4, 1.35, 1.15, 1.0], count: [2, 3, 3, 4, 5], dmg: [11, 13, 17, 18, 24], speed: 6.5, life: 1.3 },
     runa: { name: 'Lâmina rúnica', glyph: '◈', color: '#7ff0ff', el: 'arcano',
       desc: ['Uma lâmina de runas ricocheteia nas bordas da tela cortando tudo no caminho.', '+dura mais', '+1 lâmina', '+dano', '+1 lâmina e mais rápida'],
       cd: [3.4, 3.2, 3.0, 2.9, 2.6], count: [1, 1, 2, 2, 3], dmg: [14, 17, 18, 24, 27], life: [3.0, 3.8, 3.8, 4.2, 4.5], speed: [7, 7, 7.2, 7.5, 8.5], rehit: 0.35 },
@@ -124,7 +125,9 @@ export const CFG = {
   },
   elite: { chanceFrom: 150, chance: 0.04, hp: 7, scale: 1.45, r: 1.3, xp: 30, speed: 1.1, dmg: 1.5, reels: 1 },
   // campeão: elite gigante e resistente; o baú dele rola 3 melhorias
-  champion: { first: 150, every: 75, hpFlat: 360, scale: 2.3, r: 2.0, xp: 120, speed: 0.85, dmg: 2, reels: 3 },
+  // elites do baú: poucas, em momentos fixos, bem resistentes e lentas. As elites comuns não soltam baú.
+  chestElites: [{ at: 120, reels: 1 }, { at: 180, reels: 1 }, { at: 300, reels: 3 }, { at: 400, reels: 3 }],
+  champion: { hpFlat: 320, scale: 2.2, r: 1.9, xp: 120, speed: 0.6, dmg: 2 },
 
   // ---- diretor: o que nasce em cada minuto (pesos) e quantos por segundo ----
   waves: [
