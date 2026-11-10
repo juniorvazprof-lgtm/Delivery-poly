@@ -29,7 +29,7 @@ export class World {
     this.scene = scene;
     this.tiles = new CubePool(scene, 900, { basic: false, size: [1, 0.2, 1] });
     this.chunks = new Map();
-    this.c1 = new T.Color('#17141f'); this.c2 = new T.Color('#1c1826'); this.crack = new T.Color('#2a1d3d'); this.c = new T.Color();
+    this.c1 = new T.Color('#2a2638'); this.c2 = new T.Color('#322d44'); this.crack = new T.Color('#3d2c55'); this.c = new T.Color();
   }
   update(cx, cz, viewW, viewH) {
     // chão: ladrilhos em volta da câmera, cor estável pela posição

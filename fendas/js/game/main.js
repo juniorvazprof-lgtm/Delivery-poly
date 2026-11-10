@@ -44,9 +44,13 @@ const batches = {};
 for (const [k, e] of Object.entries(CFG.enemies)) batches[k] = new ModelBatch(scene, MODELS[e.model], e.scale, e.boss ? 2 : 420, e.tint);
 const gemsPool = new CubePool(scene, 520), fxCubes = new CubePool(fxScene, 400), glow = new GlowPool(fxScene, 2600);
 const fxApi2 = { glow: (...a) => glow.add(...a), cube: (...a) => fxCubes.add(...a) };
+// sombras redondas sob inimigos (ajudam a ler a posição de cada um)
+const shadowMesh = new T.InstancedMesh(new T.CircleGeometry(0.5, 14).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.55, depthWrite: false }), 450);
+shadowMesh.frustumCulled = false; shadowMesh.count = 0; shadowMesh.renderOrder = 1; scene.add(shadowMesh);
+const _sm = new T.Matrix4();
 const splatPool = new CubePool(scene, 320, { opacity: 0.32, depthWrite: false, size: [1, 0.02, 1] });
 const mageRoot = new T.Group(), mageBody = buildModel({ ...MAGE, scale: 1.4 });
-mageRoot.add(mageBody, blobShadow(0.32)); scene.add(mageRoot);
+mageRoot.add(mageBody, blobShadow(0.5)); scene.add(mageRoot);
 
 // ---------- estado ----------
 const G = {
@@ -117,7 +121,7 @@ G.damage = (e, dmg, o = {}) => {
     if (!o.shock && !o.noProc && e.shockT > 0) { e.shockT = 0; discharge(e); }
     // números de dano: só alguns, para não virar uma nuvem ilegível (golpes fortes sempre aparecem)
     const big = dmg >= 30 || crit, crowd = G.numbers.length;
-    if (!o.silent && (big || (!o.quiet && crowd < 18 && Math.random() < 0.6) || (crowd < 8 && Math.random() < 0.25))) G.numbers.push({ x: e.x + rand(-0.15, 0.15), z: e.z, v: Math.round(dmg), t: 0, big, crit });
+    if (!o.silent && (big || (!o.quiet && crowd < 12 && Math.random() < 0.45) || (crowd < 5 && Math.random() < 0.2))) G.numbers.push({ x: e.x + rand(-0.15, 0.15), z: e.z, v: Math.round(dmg), t: 0, big, crit });
   }
   if (o.chill) e.slowT = Math.max(e.slowT, o.chill);
   if (o.freeze) { let d = o.freeze; if (e.soakT > 0) { d *= 2; combo('congela', e); } if (e.cfg.boss) e.slowT = Math.max(e.slowT, d); else { e.freezeT = Math.max(e.freezeT, d); e.stunT = Math.max(e.stunT, d); } }
@@ -423,7 +427,7 @@ function step(dt) {
   G.particles = G.particles.filter(p => p.t < p.dur);
   for (const n of G.numbers) n.t += dt;
   G.numbers = G.numbers.filter(n => n.t < 0.7);
-  if (G.numbers.length > 30) G.numbers.splice(0, G.numbers.length - 30);
+  if (G.numbers.length > 18) G.numbers.splice(0, G.numbers.length - 18);
   if (G.slots.length && G.mode === 'play') openSlot(G.slots.shift());
   else if (G.queue > 0 && G.mode === 'play') openLevelUp();
 }
@@ -455,6 +459,9 @@ function draw(now) {
     b.add(e.x, y, e.z, e.face, e.elite ? e.elite.scale : 1, e.flash > 0 || e.state === 'wind' && Math.floor(t * 16) % 2 ? 1 : 0, sq, 1, c);
   }
   for (const b of Object.values(batches)) b.end();
+  let ns = 0;
+  for (const e of G.enemies) { if (ns >= 450) break; const s = e.r * 2.6 * (e.elite ? e.elite.scale * 0.8 : 1); _sm.makeScale(s, 1, s * 0.8).setPosition(e.x, 0.02, e.z); shadowMesh.setMatrixAt(ns++, _sm); }
+  shadowMesh.count = ns; shadowMesh.instanceMatrix.needsUpdate = true;
   // cristais e moedas
   gemsPool.begin();
   for (const g of G.gems) {
@@ -506,12 +513,12 @@ function draw(now) {
 // números de dano no mesmo tamanho de pixel do jogo
 function drawNumbers() {
   ctx.clearRect(0, 0, pxW, pxH);
-  ctx.font = '8px Silkscreen, monospace'; ctx.textAlign = 'center';
+  ctx.font = '6px Silkscreen, monospace'; ctx.textAlign = 'center';
   for (const n of G.numbers) {
     tmpV.set(n.x, 0.9 + n.t * 1.2, n.z).project(cam);
     const x = Math.round((tmpV.x * 0.5 + 0.5) * pxW), y = Math.round((-tmpV.y * 0.5 + 0.5) * pxH);
     ctx.globalAlpha = 1 - Math.max(0, n.t - 0.45) / 0.25;
-    ctx.font = n.big && !n.label ? '16px Silkscreen, monospace' : '8px Silkscreen, monospace';
+    ctx.font = n.big && !n.label ? '9px Silkscreen, monospace' : '6px Silkscreen, monospace';
     ctx.fillStyle = '#07060c'; ctx.fillText(n.v, x + 1, y + 1);
     ctx.fillStyle = n.label || (n.crit ? '#ff7a3d' : n.big ? '#ffe066' : '#f2f4f8'); ctx.fillText(n.v, x, y);
   }
