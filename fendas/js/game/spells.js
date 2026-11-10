@@ -145,24 +145,23 @@ export class Spell {
   r_tormenta(fx, t) { for (const [x, z] of this.orbs || []) { fx.glow(x, 0.55, z, 1.3, '#c58bff', 0.8); fx.glow(x, 0.55, z, 0.6, '#fff27a', 1); fx.cube(x, 0.55, z, 0.18, 0.18, 0.18, '#ffffff', t * 5, t * 3, 0); } }
 
   // ---------- poderes absurdos ----------
-  // Anel de fogo: cresce sem parar; no máximo, explode e recomeça pequeno
+  // Anel de fogo: cresce com o nível do feitiço; queima quem estiver na faixa do anel (o Mago fica visível no meio)
   u_anel(dt) {
-    const g = this.g, m = g.mage, c = this.cfg, st = this.state, maxR = this.area(this.v('maxR'));
-    st.r = (st.r ?? c.minR) + this.v('grow') * dt * (1 / g.mods.cd); st.tick = (st.tick || 0) - dt;
-    if (st.tick <= 0) { st.tick = c.tick; for (const e of g.query(m.x, m.z, st.r)) g.damage(e, this.dmg(), { burn: 1.5, quiet: true, color: '#ff8a3d' }); }
-    if (st.r >= maxR) {
-      for (const e of g.query(m.x, m.z, maxR + 0.5)) g.damage(e, this.dmg(this.v('blast')), { push: 7, from: m, color: '#ffe066' });
-      g.fx.ring(m.x, m.z, maxR + 1, '#ff8a3d', 0.5, true); g.fx.burst(m.x, m.z, '#ffb15a', 40, 7); g.shake(0.35);
-      st.r = c.minR;
+    const g = this.g, m = g.mage, c = this.cfg, st = this.state, R = this.area(this.v('radius'));
+    st.tick = (st.tick || 0) - dt;
+    if (st.tick <= 0) { st.tick = this.v('tick'); for (const e of g.query(m.x, m.z, R + c.band)) if (Math.hypot(e.x - m.x, e.z - m.z) > R - c.band - e.r) g.damage(e, this.dmg(), { burn: 1.5, quiet: true, color: '#ff8a3d' }); }
+    if (this.level >= 5 && (st.wave = (st.wave ?? c.waveEvery) - dt) <= 0) {
+      st.wave = c.waveEvery;
+      for (const e of g.query(m.x, m.z, R + 2.5)) g.damage(e, this.dmg(c.wave), { push: 6, from: m, color: '#ffe066' });
+      g.fx.ring(m.x, m.z, R + 2.5, '#ff8a3d', 0.5, true); g.shake(0.2);
     }
   }
   r_anel(fx, t) {
-    const m = this.g.mage, r = this.state.r ?? this.cfg.minR, n = Math.round(18 + r * 9), max = this.area(this.v('maxR')), heat = r / max;
-    fx.glow(m.x, 0.05, m.z, r * 2.3, '#ff3a00', 0.12 + heat * 0.18);
+    const m = this.g.mage, r = this.area(this.v('radius')), n = Math.round(14 + r * 10);
     for (let i = 0; i < n; i++) {
       const a = i / n * Math.PI * 2 + t * 1.6, fl = 0.75 + 0.25 * Math.sin(t * 17 + i * 2.3);
-      fx.glow(m.x + Math.sin(a) * r, 0.25, m.z + Math.cos(a) * r, 0.75 * fl, '#ff6a1a', 0.9);
-      if (i % 2 === 0) fx.glow(m.x + Math.sin(a) * r, 0.5 + 0.25 * fl, m.z + Math.cos(a) * r, 0.35 * fl, '#ffe066', 0.9);
+      fx.glow(m.x + Math.sin(a) * r, 0.25, m.z + Math.cos(a) * r, 0.6 * fl, '#ff6a1a', 0.85);
+      if (i % 2 === 0) fx.glow(m.x + Math.sin(a) * r, 0.45 + 0.2 * fl, m.z + Math.cos(a) * r, 0.28 * fl, '#ffe066', 0.85);
     }
   }
   // grupo mais denso de inimigos (amostra), para meteoros e buraco negro

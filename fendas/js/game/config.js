@@ -33,8 +33,8 @@ export const CFG = {
       cd: [2.2, 2.1, 2.0, 1.9, 1.5], count: [2, 3, 3, 5, 5], dmg: [12, 13, 18, 19, 24], radius: [0.8, 0.8, 0.85, 0.9, 1.15], root: 0.6 },
     // ---- poderes "absurdos": grandes, raros e com recarga longa ----
     anel: { name: 'Anel de fogo', glyph: '◯', color: '#ff5a1f', el: 'fogo', big: true,
-      desc: ['Um círculo de fogo nasce em volta do Mago e cresce sem parar, queimando quem estiver dentro. No tamanho máximo, explode e recomeça.', 'Cresce mais rápido', 'Raio máximo maior', '+dano e explosão mais forte', 'Explosão devastadora'],
-      minR: 0.9, maxR: [3.0, 3.3, 3.9, 4.3, 5.0], grow: [0.16, 0.22, 0.24, 0.27, 0.32], dmg: [5, 6, 7, 9, 11], tick: 0.3, blast: [60, 75, 95, 130, 200] },
+      desc: ['Um pequeno anel de fogo gira em volta do Mago e queima quem toca nele.', 'Anel maior', '+dano', 'Anel maior e queima mais rápido', 'Anel enorme: a cada 5 s solta uma onda de fogo'],
+      radius: [1.1, 1.5, 1.6, 2.1, 2.6], band: 0.45, dmg: [6, 7, 10, 11, 14], tick: [0.35, 0.35, 0.33, 0.25, 0.22], waveEvery: 5, wave: 60 },
     meteoro: { name: 'Chuva de meteoros', glyph: '☄', color: '#ffb15a', el: 'fogo', big: true,
       desc: ['Um meteoro cai sobre o maior grupo de inimigos. A sombra mostra onde.', '+dano', '+1 meteoro', 'Cratera maior e recarga menor', '+1 meteoro e dano enorme'],
       cd: [6.5, 6.0, 5.6, 4.8, 4.2], count: [1, 1, 2, 2, 3], dmg: [80, 105, 115, 140, 210], radius: [2.0, 2.1, 2.2, 2.7, 3.0], fall: 0.85 },
