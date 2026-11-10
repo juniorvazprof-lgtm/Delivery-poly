@@ -51,14 +51,14 @@ export class ModelBatch {
   }
   begin() { this.n = 0; }
   // flash > 0 deixa o inimigo branco por um instante; lift sobe o modelo (flutuar, saltar)
-  add(x, y, z, ry, sc = 1, flash = 0, squash = 1, tintMul = 1) {
+  add(x, y, z, ry, sc = 1, flash = 0, squash = 1, tintMul = 1, col = null) {
     if (this.n >= this.max) return;
     this.e.set(0, ry, 0); this.q.setFromEuler(this.e); this.p.set(x, y, z); this.s.set(sc, sc * squash, sc);
     this.m.compose(this.p, this.q, this.s);
     const i = this.n++;
     for (const im of this.meshes) {
       im.setMatrixAt(i, this.m);
-      if (im.instanceColor) { const v = flash > 0 ? 3 : im.userData.base * tintMul; im.instanceColor.setXYZ(i, v, v, v); }
+      if (im.instanceColor) { const v = flash > 0 ? 3 : im.userData.base * tintMul; if (col && flash <= 0) im.instanceColor.setXYZ(i, v * col[0], v * col[1], v * col[2]); else im.instanceColor.setXYZ(i, v, v, v); }
     }
   }
   end() {

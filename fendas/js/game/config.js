@@ -9,7 +9,7 @@ export const CFG = {
   mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.0, slots: 5, passiveSlots: 4 },
 
   // XP para o próximo nível
-  xpFor: lvl => Math.floor(5 + lvl * 4.5 + Math.pow(lvl, 1.6)),
+  xpFor: lvl => Math.floor(3 + lvl * 4.5 + Math.pow(lvl, 1.85)),   // cada nível pede mais cristais
 
   // ---- feitiços (nível 1 a 5); cada linha lista os valores por nível ----
   spells: {
@@ -44,6 +44,47 @@ export const CFG = {
     trovoada: { name: 'Trovoada', glyph: '☇', color: '#fff27a', el: 'raio', big: true,
       desc: ['Por alguns segundos, raios caem do céu sem parar sobre os inimigos na tela.', 'Mais raios por segundo', 'Dura mais', '+dano', 'Tempestade quase contínua'],
       cd: [11, 10.5, 10, 9.5, 7.5], dur: [2.5, 2.5, 3.5, 3.5, 4.5], rate: [6, 9, 9, 11, 15], dmg: [20, 21, 23, 30, 34], radius: 0.9 },
+    // ---- novos feitiços ----
+    luz: { name: 'Feixe da Aurora', glyph: '✧', color: '#fff3b0', el: 'luz',
+      desc: ['Um feixe de luz sagrada gira em volta do Mago e expõe os inimigos (+25% de dano recebido).', 'Feixe mais longo', '+1 feixe', '+dano e giro mais rápido', '+1 feixe e feixes longos'],
+      count: [1, 1, 2, 2, 3], length: [3.4, 4.2, 4.3, 4.6, 5.4], width: 0.32, dmg: [6, 7, 8, 11, 13], tick: 0.2, spin: [1.5, 1.5, 1.6, 2.0, 2.1] },
+    orbes: { name: 'Fagulhas caçadoras', glyph: '∴', color: '#d78bff', el: 'arcano',
+      desc: ['Pequenos orbes perseguem os inimigos e os corrompem: corrompidos explodem ao morrer.', '+1 orbe', '+dano', '+1 orbe e recarga menor', '+1 orbe e +dano'],
+      cd: [1.5, 1.4, 1.35, 1.15, 1.0], count: [2, 3, 3, 4, 5], dmg: [8, 9, 12, 13, 17], speed: 6.5, life: 3 },
+    runa: { name: 'Lâmina rúnica', glyph: '◈', color: '#7ff0ff', el: 'arcano',
+      desc: ['Uma lâmina de runas ricocheteia nas bordas da tela cortando tudo no caminho.', '+dura mais', '+1 lâmina', '+dano', '+1 lâmina e mais rápida'],
+      cd: [3.4, 3.2, 3.0, 2.9, 2.6], count: [1, 1, 2, 2, 3], dmg: [10, 12, 13, 17, 19], life: [3.0, 3.8, 3.8, 4.2, 4.5], speed: [7, 7, 7.2, 7.5, 8.5], rehit: 0.35 },
+    gelo: { name: 'Pulso glacial', glyph: '✻', color: '#bfe9ff', el: 'gelo',
+      desc: ['Um pulso de gelo em volta do Mago esfria os inimigos e às vezes congela. Encharcados congelam o dobro.', '+alcance', '+chance de congelar', '+dano e mais frequente', 'Pulso enorme'],
+      cd: [3.6, 3.4, 3.2, 2.8, 2.6], radius: [2.3, 2.7, 2.8, 3.0, 3.6], dmg: [9, 10, 12, 16, 19], freeze: [0.25, 0.3, 0.42, 0.45, 0.55], freezeDur: 1.3, chill: 2 },
+  },
+
+  // ---- evoluções: feitiço no nível 5 + passiva certa = versão evoluída (no mesmo espaço) ----
+  // os valores daqui substituem os do nível 5
+  evolutions: {
+    fogo: { name: 'Inferno carmesim', glyph: '✹', color: '#ff3d2a', need: 'poder', desc: 'Cinco bolas de fogo gigantes que deixam tudo em chamas.', count: 5, dmg: 34, radius: 1.75, cd: 0.55, burn: 4 },
+    luz: { name: 'Aurora suprema', glyph: '✧', color: '#fffbe0', need: 'alcance', desc: 'Quatro feixes enormes varrem a tela inteira.', count: 4, length: 7.5, width: 0.45, dmg: 17, spin: 1.3 },
+    orbes: { name: 'Enxame de almas', glyph: '∴', color: '#f0a8ff', need: 'sorte', desc: 'Sete orbes; cada acerto se divide em dois orbes menores.', count: 7, dmg: 20, cd: 0.9, split: 2 },
+    runa: { name: 'Runa eterna', glyph: '◈', color: '#b8fbff', need: 'quantidade', desc: 'Quatro lâminas que quase nunca somem.', count: 4, dmg: 24, life: 9, speed: 9, cd: 4 },
+    gelo: { name: 'Inverno zero', glyph: '✻', color: '#e8f8ff', need: 'duracao', desc: 'Dois pulsos seguidos que congelam quase tudo na tela.', radius: 4.6, dmg: 28, freeze: 0.9, cd: 2.4, second: true },
+    anel: { name: 'Coroa solar', glyph: '◯', color: '#ffd24a', need: 'vigor', desc: 'Um anel solar enorme que cura o Mago a cada inimigo queimado.', radius: 3.0, dmg: 18, tick: 0.2, waveEvery: 3.5, wave: 90, heal: 0.25 },
+  },
+
+  // ---- status elementais ----
+  status: {
+    burnDps: t => 3 + t / 60,          // dano a cada meio segundo, cresce com o tempo
+    exposeMul: 1.25,
+    shockDmg: 14, shockRange: 2.8,     // Sobrecarga: o próximo golpe num eletrizado descarrega um raio
+    soakShockMul: 1.8,                 // Condutor: raio em encharcado
+    thermal: 2, thermalBonus: 20,      // Choque térmico: fogo em congelado
+    corruptR: 1.5, corruptDmg: 14, corruptHp: 0.15,
+  },
+  combos: {
+    termico: { name: 'CHOQUE TÉRMICO', sub: 'Fogo em congelado: dano dobrado', color: '#ff9a6a' },
+    condutor: { name: 'CONDUTOR', sub: 'Raio em encharcado: +80% de dano', color: '#9be7ff' },
+    congela: { name: 'CONGELAMENTO', sub: 'Gelo em encharcado: congela o dobro', color: '#bfe9ff' },
+    sobrecarga: { name: 'SOBRECARGA', sub: 'Golpe em eletrizado solta um raio', color: '#fff27a' },
+    corrupcao: { name: 'CORRUPÇÃO', sub: 'Corrompidos explodem ao morrer', color: '#d78bff' },
   },
 
   // ---- fusões: dois feitiços no nível 5 viram um feitiço evoluído (libera um espaço) ----
@@ -66,19 +107,22 @@ export const CFG = {
     ima: { name: 'Ímã', glyph: '⊂', color: '#ffc96b', desc: '+40% de alcance para atrair cristais.', per: 0.4 },
     vigor: { name: 'Vigor', glyph: '♥', color: '#ff5a6a', desc: '+20 de vida máxima e regenera 0,4 por segundo.', hp: 20, regen: 0.4 },
     passo: { name: 'Passo leve', glyph: '»', color: '#c9a6ff', desc: '+8% de velocidade.', per: 0.08 },
+    quantidade: { name: 'Eco', glyph: '⁂', color: '#ffe066', desc: '+1 projétil, orbe ou feixe nos níveis 1, 3 e 5.' },
+    duracao: { name: 'Ampulheta', glyph: '⌛', color: '#8fe3c8', desc: '+12% de duração dos feitiços.', per: 0.12 },
+    sorte: { name: 'Sorte', glyph: '♣', color: '#7dffa0', desc: '+5% de chance de crítico (dano dobrado) e mais corações e moedas.', crit: 0.05, drop: 0.3 },
   },
 
   // ---- inimigos (Ressonas sombrias); tint escurece as cores, os olhos brilhantes ficam ----
   enemies: {
     rastejante: { model: 'brogume', scale: 0.38, hp: 7, speed: 1.9, radius: 0.24, dmg: 6, xp: 1, tint: 0.55 },
-    espectro: { model: 'velamen', scale: 0.4, hp: 13, speed: 2.25, radius: 0.27, dmg: 8, xp: 1, tint: 0.45, float: true },
-    investida: { model: 'volteiro', scale: 0.33, hp: 16, speed: 1.6, radius: 0.27, dmg: 10, xp: 2, tint: 0.5, dash: { every: 3.2, speed: 8, time: 0.45, windup: 0.5 } },
-    brutamonte: { model: 'cascalco', scale: 0.5, hp: 60, speed: 1.15, radius: 0.42, dmg: 14, xp: 4, tint: 0.5, heavy: true },
-    cuspidor: { model: 'fanaluz', scale: 0.42, hp: 20, speed: 1.4, radius: 0.3, dmg: 8, xp: 3, tint: 0.5, ranged: { keep: 4.5, every: 2.6, speed: 3.6, dmg: 9 } },
+    espectro: { model: 'velamen', scale: 0.4, hp: 13, speed: 2.25, radius: 0.27, dmg: 8, xp: 2, tint: 0.45, float: true },
+    investida: { model: 'volteiro', scale: 0.33, hp: 16, speed: 1.6, radius: 0.27, dmg: 10, xp: 3, tint: 0.5, dash: { every: 3.2, speed: 8, time: 0.45, windup: 0.5 } },
+    brutamonte: { model: 'cascalco', scale: 0.5, hp: 60, speed: 1.15, radius: 0.42, dmg: 14, xp: 8, tint: 0.5, heavy: true },
+    cuspidor: { model: 'fanaluz', scale: 0.42, hp: 20, speed: 1.4, radius: 0.3, dmg: 8, xp: 5, tint: 0.5, ranged: { keep: 4.5, every: 2.6, speed: 3.6, dmg: 9 } },
     minichefe: { model: 'ferfogo', scale: 1.0, hp: 900, speed: 1.35, radius: 0.75, dmg: 20, xp: 60, tint: 0.6, heavy: true, boss: 'mini' },
     guardiao: { model: 'arborion', scale: 1.5, hp: 5200, speed: 1.25, radius: 1.0, dmg: 28, xp: 0, tint: 0.55, heavy: true, boss: 'final' },
   },
-  elite: { chanceFrom: 150, chance: 0.04, hp: 7, scale: 1.45, xp: 12, speed: 1.1 },
+  elite: { chanceFrom: 150, chance: 0.04, hp: 7, scale: 1.45, xp: 30, speed: 1.1 },
 
   // ---- diretor: o que nasce em cada minuto (pesos) e quantos por segundo ----
   waves: [
@@ -90,7 +134,8 @@ export const CFG = {
     { from: 360, mix: { espectro: 3, investida: 2, brutamonte: 2, cuspidor: 2 } },
   ],
   spawnRate: t => Math.min(26, 0.9 + t / 18 + Math.pow(t / 120, 2)),   // inimigos por segundo
-  hpScale: t => 1 + t / 80 + Math.pow(t / 240, 2),
+  hpScale: t => 1 + t / 70 + Math.pow(t / 220, 2),
+  drops: { heart: 0.012, heartElite: 0.4, heal: 20, critBase: 0.03 },
   maxAlive: 380,
   miniboss: 240,
   // eventos da Fenda (segundo em que começam)

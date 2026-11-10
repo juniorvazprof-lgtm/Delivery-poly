@@ -2,12 +2,19 @@
 // g.mods: dmg (multiplicador), cd (multiplicador da recarga), area (multiplicador de raio).
 import { CFG } from './config.js';
 
-const S = CFG.spells, F = CFG.fusions;
+const S = CFG.spells, F = CFG.fusions, E = CFG.evolutions;
 const lv = (arr, l) => Array.isArray(arr) ? arr[Math.min(l, arr.length) - 1] : arr;
 
 export class Spell {
   constructor(key, g) { this.key = key; this.g = g; this.level = 1; this.t = 0.3; this.fusion = !!F[key]; this.cfg = F[key] || S[key]; this.state = {}; }
-  v(name) { return this.fusion ? this.cfg[name] : lv(this.cfg[name], this.level); }
+  v(name) {
+    const ev = this.evo && E[this.key];
+    let x = this.fusion ? this.cfg[name] : ev && ev[name] !== undefined ? ev[name] : lv(this.cfg[name], this.level);
+    if (name === 'count' && typeof x === 'number') x += this.g.mods.count || 0;
+    if ((name === 'dur' || name === 'life') && typeof x === 'number') x *= this.g.mods.dur || 1;
+    return x;
+  }
+  get meta() { return this.evo ? E[this.key] : this.cfg; }
   cd() { return this.v('cd') * this.g.mods.cd; }
   dmg(base = this.v('dmg')) { return base * this.g.mods.dmg; }
   area(r) { return r * this.g.mods.area; }
@@ -26,7 +33,8 @@ export class Spell {
       const dx = e.x - m.x, dz = e.z - m.z, l = Math.hypot(dx, dz) || 1, sp = this.cfg.speed;
       g.projectiles.push({ kind: 'fogo', x: m.x, z: m.z, vx: dx / l * sp, vz: dz / l * sp, life: 1.4, r: 0.22, pierce: 0, hit: new Set(),
         onHit: (p) => { const R = this.area(this.v('radius')); g.fx.ring(p.x, p.z, R, '#ff8a3d', 0.25); g.fx.burst(p.x, p.z, '#ffb15a', 8);
-          for (const o of g.query(p.x, p.z, R)) g.damage(o, this.dmg(), { burn: this.cfg.burn, from: p, color: '#ffb15a' }); } });
+          for (const o of g.query(p.x, p.z, R)) g.damage(o, this.dmg(), { burn: this.v('burn'), from: p, color: '#ffb15a' }); } });
+      if (this.evo) g.projectiles[g.projectiles.length - 1].big = true;
     });
   }
   u_agua(dt) {
@@ -57,7 +65,7 @@ export class Spell {
       this.orbs.push([x, z]);
       for (const e of g.query(x, z, 0.35 * g.mods.area)) {
         if (this.state.hits.has(e)) continue;
-        this.state.hits.set(e, this.cfg.hitEvery); g.damage(e, this.dmg(), { from: { x: m.x, z: m.z }, push: 2.5, color: '#e0b8ff' });
+        this.state.hits.set(e, this.cfg.hitEvery); g.damage(e, this.dmg(), { from: { x: m.x, z: m.z }, push: 2.5, color: '#e0b8ff', corrupt: 3 });
       }
     }
   }
@@ -70,7 +78,7 @@ export class Spell {
       let cur = pool[Math.floor(Math.random() * pool.length)], hit = new Set(), fromX = m.x, fromZ = m.z;
       for (let c = 0; c <= this.v('chains') && cur; c++) {
         hit.add(cur); g.fx.bolt(fromX, fromZ, cur.x, cur.z, '#fff27a');
-        g.damage(cur, this.dmg() * (cur.soakT > 0 ? this.cfg.soakMul : 1), { from: { x: fromX, z: fromZ }, color: '#fff27a', stun: 0.15 });
+        g.damage(cur, this.dmg(), { from: { x: fromX, z: fromZ }, color: '#fff27a', stun: 0.15, shock: 3 });
         fromX = cur.x; fromZ = cur.z;
         cur = g.query(cur.x, cur.z, 2.6).find(o => !hit.has(o));
       }
@@ -119,8 +127,8 @@ export class Spell {
     const g = this.g, m = g.mage, c = this.cfg, R = this.area(c.radius);
     this.state.tick = (this.state.tick || 0) - dt; this.state.fz = (this.state.fz ?? c.freezeEvery) - dt;
     for (const e of g.query(m.x, m.z, R)) e.slowT = Math.max(e.slowT, 0.3);
-    if (this.state.tick <= 0) { this.state.tick = c.tick; for (const e of g.query(m.x, m.z, R)) g.damage(e, this.dmg(c.dmg), { color: '#dff4ff', quiet: true }); }
-    if (this.state.fz <= 0) { this.state.fz = c.freezeEvery; g.fx.ring(m.x, m.z, R, '#bfe9ff', 0.5, true); for (const e of g.query(m.x, m.z, R)) g.damage(e, 0, { stun: c.freeze, quiet: true }); }
+    if (this.state.tick <= 0) { this.state.tick = c.tick; for (const e of g.query(m.x, m.z, R)) g.damage(e, this.dmg(c.dmg), { color: '#dff4ff', quiet: true, chill: 1 }); }
+    if (this.state.fz <= 0) { this.state.fz = c.freezeEvery; g.fx.ring(m.x, m.z, R, '#bfe9ff', 0.5, true); for (const e of g.query(m.x, m.z, R)) g.damage(e, 0, { freeze: c.freeze, quiet: true }); }
   }
   r_nevasca(fx, t) {
     const m = this.g.mage, R = this.area(this.cfg.radius);
@@ -139,7 +147,7 @@ export class Spell {
     }
     if (this.state.z <= 0) {
       this.state.z = c.zapEvery;
-      for (const [x, z] of this.orbs) { const e = g.nearest(x, z, 1, 4)[0]; if (e) { g.fx.bolt(x, z, e.x, e.z, '#e0b8ff'); g.damage(e, this.dmg(c.zapDmg) * (e.soakT > 0 ? 1.8 : 1), { color: '#fff27a', stun: 0.15 }); } }
+      for (const [x, z] of this.orbs) { const e = g.nearest(x, z, 1, 4)[0]; if (e) { g.fx.bolt(x, z, e.x, e.z, '#e0b8ff'); g.damage(e, this.dmg(c.zapDmg), { color: '#fff27a', stun: 0.15, shock: 3 }); } }
     }
   }
   r_tormenta(fx, t) { for (const [x, z] of this.orbs || []) { fx.glow(x, 0.55, z, 1.3, '#c58bff', 0.8); fx.glow(x, 0.55, z, 0.6, '#fff27a', 1); fx.cube(x, 0.55, z, 0.18, 0.18, 0.18, '#ffffff', t * 5, t * 3, 0); } }
@@ -149,10 +157,11 @@ export class Spell {
   u_anel(dt) {
     const g = this.g, m = g.mage, c = this.cfg, st = this.state, R = this.area(this.v('radius'));
     st.tick = (st.tick || 0) - dt;
-    if (st.tick <= 0) { st.tick = this.v('tick'); for (const e of g.query(m.x, m.z, R + c.band)) if (Math.hypot(e.x - m.x, e.z - m.z) > R - c.band - e.r) g.damage(e, this.dmg(), { burn: 1.5, quiet: true, color: '#ff8a3d' }); }
-    if (this.level >= 5 && (st.wave = (st.wave ?? c.waveEvery) - dt) <= 0) {
-      st.wave = c.waveEvery;
-      for (const e of g.query(m.x, m.z, R + 2.5)) g.damage(e, this.dmg(c.wave), { push: 6, from: m, color: '#ffe066' });
+    if (st.tick <= 0) { st.tick = this.v('tick'); let n = 0; for (const e of g.query(m.x, m.z, R + c.band)) if (Math.hypot(e.x - m.x, e.z - m.z) > R - c.band - e.r) { n++; g.damage(e, this.dmg(), { burn: 1.5, quiet: true, color: '#ff8a3d' }); }
+      if (this.evo && n) m.hp = Math.min(m.maxHp, m.hp + Math.min(n, 8) * this.v('heal')); }
+    if (this.level >= 5 && (st.wave = (st.wave ?? this.v('waveEvery')) - dt) <= 0) {
+      st.wave = this.v('waveEvery');
+      for (const e of g.query(m.x, m.z, R + 2.5)) g.damage(e, this.dmg(this.v('wave')), { push: 6, from: m, color: '#ffe066', burn: 2 });
       g.fx.ring(m.x, m.z, R + 2.5, '#ff8a3d', 0.5, true); g.shake(0.2);
     }
   }
@@ -160,7 +169,7 @@ export class Spell {
     const m = this.g.mage, r = this.area(this.v('radius')), n = Math.round(14 + r * 10);
     for (let i = 0; i < n; i++) {
       const a = i / n * Math.PI * 2 + t * 1.6, fl = 0.75 + 0.25 * Math.sin(t * 17 + i * 2.3);
-      fx.glow(m.x + Math.sin(a) * r, 0.25, m.z + Math.cos(a) * r, 0.6 * fl, '#ff6a1a', 0.85);
+      fx.glow(m.x + Math.sin(a) * r, 0.25, m.z + Math.cos(a) * r, 0.6 * fl, this.evo ? '#ffb020' : '#ff6a1a', 0.85);
       if (i % 2 === 0) fx.glow(m.x + Math.sin(a) * r, 0.45 + 0.2 * fl, m.z + Math.cos(a) * r, 0.28 * fl, '#ffe066', 0.85);
     }
   }
@@ -210,7 +219,7 @@ export class Spell {
       const dx = h.x - e.x, dz = h.z - e.z, d = Math.hypot(dx, dz) || 1, f = pull * (0.4 + 0.6 * (1 - d / R)) * (e.cfg.heavy ? 0.4 : 1);
       e.x += dx / d * Math.min(d - 0.1, f * dt); e.z += dz / d * Math.min(d - 0.1, f * dt);
     }
-    if ((st.tick -= dt) <= 0) { st.tick = c.tick; for (const e of g.query(h.x, h.z, 1.4)) g.damage(e, this.dmg(), { quiet: true, color: '#e0b8ff' }); }
+    if ((st.tick -= dt) <= 0) { st.tick = c.tick; for (const e of g.query(h.x, h.z, 1.4)) g.damage(e, this.dmg(), { quiet: true, color: '#e0b8ff', corrupt: 3 }); }
     if (h.t >= this.v('dur')) {
       for (const e of g.query(h.x, h.z, R * 0.7)) g.damage(e, this.dmg(this.v('collapse')), { push: 8, from: h, color: '#ffffff' });
       g.fx.ring(h.x, h.z, R * 0.8, '#c58bff', 0.5, true); g.fx.burst(h.x, h.z, '#c58bff', 40, 7); g.shake(0.3);
@@ -239,9 +248,69 @@ export class Spell {
       st.acc -= 1;
       const e = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null, x = e ? e.x : m.x + (Math.random() - 0.5) * 8, z = e ? e.z : m.z + (Math.random() - 0.5) * 12;
       g.fx.sky(x, z);
-      for (const o of g.query(x, z, this.cfg.radius)) g.damage(o, this.dmg() * (o.soakT > 0 ? 1.8 : 1), { stun: 0.2, color: '#fff27a' });
+      for (const o of g.query(x, z, this.cfg.radius)) g.damage(o, this.dmg(), { stun: 0.2, color: '#fff27a', shock: 3 });
     }
     if (!st.on) { st.on = 0; this.t = this.cd(); }
+  }
+  // ---------- novos feitiços ----------
+  // Feixe da Aurora: feixes de luz giram em volta do Mago e expõem os inimigos
+  u_luz(dt) {
+    const g = this.g, m = g.mage, st = this.state, n = this.v('count'), L = this.area(this.v('length')), w = this.v('width');
+    st.a = (st.a || 0) + this.v('spin') * dt; st.tick = (st.tick || 0) - dt;
+    this.beams = [];
+    for (let i = 0; i < n; i++) { const a = st.a + i / n * Math.PI * 2; this.beams.push([Math.sin(a), Math.cos(a), L]); }
+    if (st.tick > 0) return; st.tick = this.cfg.tick;
+    for (const [dx, dz] of this.beams) for (const e of g.query(m.x + dx * L / 2, m.z + dz * L / 2, L / 2 + 0.6)) {
+      const ex = e.x - m.x, ez = e.z - m.z, along = ex * dx + ez * dz, perp = Math.abs(ex * dz - ez * dx);
+      if (along > 0 && along < L + e.r && perp < w + e.r) g.damage(e, this.dmg(), { expose: 2.5, quiet: true, color: '#fff3b0' });
+    }
+  }
+  r_luz(fx, t) {
+    const m = this.g.mage, big = this.evo;
+    fx.glow(m.x, 0.6, m.z, big ? 2.2 : 1.4, '#fff3b0', 0.5);
+    for (const [dx, dz, L] of this.beams || []) {
+      const k = Math.ceil(L / 0.3);
+      for (let i = 1; i <= k; i++) { const q = i / k, x = m.x + dx * L * q, z = m.z + dz * L * q, fl = 0.85 + 0.15 * Math.sin(t * 30 + i);
+        fx.glow(x, 0.55, z, (big ? 1.0 : 0.75) * fl, '#ffd84a', 0.55); fx.glow(x, 0.55, z, (big ? 0.42 : 0.3) * fl, '#ffffff', 0.9); }
+      fx.glow(m.x + dx * L, 0.55, m.z + dz * L, big ? 1.6 : 1.1, '#fff3b0', 0.8);
+    }
+  }
+  // Fagulhas caçadoras: orbes pequenos que perseguem e corrompem
+  u_orbes(dt) {
+    if ((this.t -= dt) > 0) return; this.t = this.cd();
+    const g = this.g, m = g.mage, n = this.v('count');
+    if (!g.query(m.x, m.z, 9).length) { this.t = 0.3; return; }
+    for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + Math.random(); this.orb(m.x, m.z, Math.sin(a), Math.cos(a), false); }
+  }
+  orb(x, z, dx, dz, child) {
+    const g = this.g, sp = this.cfg.speed;
+    g.projectiles.push({ kind: 'orbe', home: true, x, z, vx: dx * sp, vz: dz * sp, sp, life: child ? 1.6 : this.v('life'), r: child ? 0.16 : 0.2, pierce: 0, hit: new Set(), child, retarget: 0,
+      onHit: (p, e) => {
+        g.damage(e, this.dmg() * (child ? 0.5 : 1), { corrupt: 3, color: '#e8b8ff', quiet: child });
+        if (this.evo && !child) for (let k = 0; k < this.v('split'); k++) { const a = Math.random() * 6.28; this.orb(p.x, p.z, Math.sin(a), Math.cos(a), true); }
+      } });
+  }
+  // Lâmina rúnica: ricocheteia nas bordas da tela
+  u_runa(dt) {
+    if ((this.t -= dt) > 0) return; this.t = this.cd();
+    const g = this.g, m = g.mage, n = this.v('count'), sp = this.v('speed');
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      g.projectiles.push({ kind: 'runa', bounce: true, x: m.x, z: m.z, vx: Math.sin(a) * sp, vz: Math.cos(a) * sp, life: this.v('life'), r: 0.42, rehit: this.cfg.rehit, hit: new Map(), big: this.evo,
+        onHit: (p, e) => g.damage(e, this.dmg(), { corrupt: 2, push: 1.2, from: p, color: '#bff8ff' }) });
+    }
+  }
+  // Pulso glacial: esfria e congela
+  u_gelo(dt) {
+    const st = this.state;
+    if (st.second != null && (st.second -= dt) <= 0) { st.second = null; this.pulse(1.25); }
+    if ((this.t -= dt) > 0) return; this.t = this.cd();
+    this.pulse(1); if (this.v('second')) st.second = 0.4;
+  }
+  pulse(k) {
+    const g = this.g, m = g.mage, R = this.area(this.v('radius')) * k, ch = this.v('freeze');
+    g.fx.ring(m.x, m.z, R, '#bfe9ff', 0.45, true); g.fx.burst(m.x, m.z, '#e8f8ff', 10, 4);
+    for (const e of g.query(m.x, m.z, R)) g.damage(e, this.dmg(), { chill: this.cfg.chill, freeze: Math.random() < ch ? this.v('freezeDur') : 0, color: '#dff4ff' });
   }
 }
 

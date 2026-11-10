@@ -57,7 +57,8 @@ const mage = G.mage = { x: 0, z: 0, face: Math.PI, hp: 100, maxHp: 100, inv: 0, 
 function recalc() {
   const p = k => G.passives[k] || 0, P = CFG.passives;
   G.mods = { dmg: 1 + P.poder.per * p('poder'), cd: Math.max(0.5, 1 - P.pressa.per * p('pressa')), area: 1 + P.alcance.per * p('alcance'),
-    magnet: CFG.mage.magnet * (1 + P.ima.per * p('ima')), regen: P.vigor.regen * p('vigor'), speed: CFG.mage.speed * (1 + P.passo.per * p('passo')) };
+    magnet: CFG.mage.magnet * (1 + P.ima.per * p('ima')), regen: P.vigor.regen * p('vigor'), speed: CFG.mage.speed * (1 + P.passo.per * p('passo')),
+    count: Math.floor((p('quantidade') + 1) / 2), dur: 1 + P.duracao.per * p('duracao'), crit: CFG.drops.critBase + P.sorte.crit * p('sorte'), luck: 1 + P.sorte.drop * p('sorte') };
   const old = mage.maxHp; mage.maxHp = CFG.mage.hp + P.vigor.hp * p('vigor'); mage.hp += Math.max(0, mage.maxHp - old);
 }
 
@@ -91,14 +92,35 @@ G.scorch = (x, z, r) => { G.splats.push({ x, z, s: r * 1.6, ry: Math.random() * 
 Object.assign(G.fx, fxApi); G.fx.ring = fxApi.ring; G.fx.bolt = fxApi.bolt; G.fx.spikes = fxApi.spikes; G.fx.cloud = fxApi.cloud; G.fx.burst = fxApi.burst;
 
 // ---------- dano ----------
+const ST = CFG.status;
+function combo(k, e) {
+  const c = CFG.combos[k];
+  if (e && G.numbers.length < 34 && Math.random() < 0.5) G.numbers.push({ x: e.x, z: e.z, v: c.name, t: 0, label: c.color });
+  if (!G.found.has(k)) { G.found.add(k); banner(c.name, c.sub, c.color); }
+}
+function discharge(e) {
+  const o = G.query(e.x, e.z, ST.shockRange).find(q => q !== e && !q.dead); if (!o) return;
+  fxApi.bolt(e.x, e.z, o.x, o.z, '#fff27a'); combo('sobrecarga', e);
+  G.damage(o, ST.shockDmg * G.mods.dmg, { noProc: true, quiet: true, color: '#fff27a', stun: 0.1 });
+}
 G.damage = (e, dmg, o = {}) => {
   if (e.dead) return;
   if (dmg > 0) {
+    if (e.exposeT > 0) dmg *= ST.exposeMul;
+    if (o.burn && e.freezeT > 0) { dmg = dmg * ST.thermal + ST.thermalBonus * G.mods.dmg; e.freezeT = 0; e.stunT = 0; combo('termico', e); }
+    if (o.shock && e.soakT > 0) { dmg *= ST.soakShockMul; if (Math.random() < 0.3) combo('condutor', e); }
+    let crit = false; if (!o.noProc && Math.random() < G.mods.crit) { dmg *= 2; crit = true; }
     e.hp -= dmg; e.flash = 0.07;
+    if (!o.shock && !o.noProc && e.shockT > 0) { e.shockT = 0; discharge(e); }
     // números de dano: só alguns, para não virar uma nuvem ilegível (golpes fortes sempre aparecem)
-    const big = dmg >= 30, crowd = G.numbers.length;
-    if (big || (!o.quiet && crowd < 18 && Math.random() < 0.6) || (crowd < 8 && Math.random() < 0.25)) G.numbers.push({ x: e.x + rand(-0.15, 0.15), z: e.z, v: Math.round(dmg), t: 0, big });
+    const big = dmg >= 30 || crit, crowd = G.numbers.length;
+    if (!o.silent && (big || (!o.quiet && crowd < 18 && Math.random() < 0.6) || (crowd < 8 && Math.random() < 0.25))) G.numbers.push({ x: e.x + rand(-0.15, 0.15), z: e.z, v: Math.round(dmg), t: 0, big, crit });
   }
+  if (o.chill) e.slowT = Math.max(e.slowT, o.chill);
+  if (o.freeze) { let d = o.freeze; if (e.soakT > 0) { d *= 2; combo('congela', e); } if (e.cfg.boss) e.slowT = Math.max(e.slowT, d); else { e.freezeT = Math.max(e.freezeT, d); e.stunT = Math.max(e.stunT, d); } }
+  if (o.shock) e.shockT = Math.max(e.shockT, o.shock);
+  if (o.corrupt) e.corruptT = Math.max(e.corruptT, o.corrupt);
+  if (o.expose) e.exposeT = Math.max(e.exposeT, o.expose);
   if (o.push && !e.cfg.boss) { const f = o.from || mage, dx = e.x - f.x, dz = e.z - f.z, l = Math.hypot(dx, dz) || 1, p = o.push * (e.cfg.heavy ? 0.35 : 1); e.kx += dx / l * p; e.kz += dz / l * p; }
   if (o.soak) e.soakT = Math.max(e.soakT, o.soak);
   if (o.burn) e.burnT = Math.max(e.burnT, o.burn);
@@ -107,10 +129,13 @@ G.damage = (e, dmg, o = {}) => {
 };
 function kill(e) {
   e.dead = true; G.kills++;
+  if (e.corruptT > 0 && G.blasts.length < 60) G.blasts.push({ x: e.x, z: e.z, dmg: Math.min(50, ST.corruptDmg * G.mods.dmg + e.maxHp * ST.corruptHp) });
+  if (Math.random() < (e.elite ? CFG.drops.heartElite : CFG.drops.heart) * G.mods.luck) G.gems.push({ x: e.x - 0.2, z: e.z, v: 0, heart: true, t: 0 });
+  if (e.elite) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, chest: true, t: 0 });
   G.combo = G.comboT > 0 ? G.combo + 1 : 1; G.comboT = CFG.combo.window; G.bestCombo = Math.max(G.bestCombo, G.combo);
   const v = (e.elite ? CFG.elite.xp : e.cfg.xp) * (G.event?.kind === 'surto' ? 2 : 1);
   if (v) dropGem(e.x, e.z, v);
-  if (Math.random() < 0.025 || e.elite) G.gems.push({ x: e.x + 0.2, z: e.z, v: 0, coin: true, t: 0 });
+  if (Math.random() < 0.025 * G.mods.luck || e.elite) G.gems.push({ x: e.x + 0.2, z: e.z, v: 0, coin: true, t: 0 });
   fxApi.burst(e.x, e.z, e.elite ? '#ffd34d' : '#b24dff', e.cfg.boss ? 30 : 5, 2.4);
   if (G.splats.length > 300) G.splats.shift();
   G.splats.push({ x: e.x, z: e.z, s: e.r * rand(1.2, 1.8) * (e.elite ? 1.4 : 1), ry: Math.random() * 6, t: 0, c: Math.random() < 0.5 ? '#3a1630' : '#24163a' });
@@ -127,7 +152,7 @@ function dropGem(x, z, v) {
 function spawn(type, x, z, opts = {}) {
   const c = CFG.enemies[type], el = opts.elite, hp = c.hp * (c.boss ? 1 : CFG.hpScale(G.t)) * (el ? CFG.elite.hp : 1);
   const e = { type, cfg: c, x, z, hp, maxHp: hp, r: c.radius * (el ? 1.3 : 1), speed: c.speed * rand(0.9, 1.1) * (el ? CFG.elite.speed : 1), elite: el,
-    kx: 0, kz: 0, flash: 0, soakT: 0, burnT: 0, burnTick: 0, stunT: 0, slowT: 0, face: 0, ph: Math.random() * 6, act: rand(0, 2), state: 'move', st: 0, dead: false };
+    kx: 0, kz: 0, flash: 0, freezeT: 0, shockT: 0, corruptT: 0, exposeT: 0, soakT: 0, burnT: 0, burnTick: 0, stunT: 0, slowT: 0, face: 0, ph: Math.random() * 6, act: rand(0, 2), state: 'move', st: 0, dead: false };
   G.enemies.push(e); return e;
 }
 function spawnRing(type, n, dist) {
@@ -168,8 +193,8 @@ function director(dt) {
 }
 function updateEnemy(e, dt) {
   const c = e.cfg, dx = mage.x - e.x, dz = mage.z - e.z, d = Math.hypot(dx, dz) || 1;
-  e.flash -= dt; e.soakT -= dt; e.stunT -= dt; e.slowT -= dt;
-  if (e.burnT > 0) { e.burnT -= dt; if ((e.burnTick -= dt) <= 0) { e.burnTick = 0.5; G.damage(e, 3 * G.mods.dmg, { quiet: true }); if (e.dead) return; } }
+  e.flash -= dt; e.soakT -= dt; e.stunT -= dt; e.slowT -= dt; e.freezeT -= dt; e.shockT -= dt; e.corruptT -= dt; e.exposeT -= dt;
+  if (e.burnT > 0) { e.burnT -= dt; if ((e.burnTick -= dt) <= 0) { e.burnTick = 0.5; G.damage(e, ST.burnDps(G.t) * G.mods.dmg, { quiet: true, noProc: true }); if (e.dead) return; } }
   let sp = e.speed * (e.soakT > 0 || e.slowT > 0 ? 0.5 : 1) * (e.stunT > 0 ? 0 : 1), vx = dx / d, vz = dz / d;
   e.act -= dt;
   if (c.ranged) {   // mantém distância e cospe
@@ -229,6 +254,7 @@ function addXp(v) {
 function options() {
   const owned = Object.fromEntries(G.spells.map(s => [s.key, s])), opts = [];
   for (const [fk, f] of Object.entries(CFG.fusions)) if (f.from.every(k => owned[k]?.level >= 5) && !owned[fk]) opts.push({ kind: 'fusion', key: fk, w: 100 });
+  for (const s of G.spells) { const ev = CFG.evolutions[s.key]; if (ev && !s.evo && !s.fusion && s.level >= 5 && G.passives[ev.need]) opts.push({ kind: 'evo', key: s.key, w: 100 }); }
   for (const s of G.spells) if (!s.fusion && s.level < 5) opts.push({ kind: 'up', key: s.key, w: 3 });
   if (G.spells.length < CFG.mage.slots) for (const k of Object.keys(CFG.spells)) if (!owned[k] && !G.spells.some(s => s.fusion && CFG.fusions[s.key].from.includes(k))) opts.push({ kind: 'new', key: k, w: 2 });
   const pc = Object.keys(G.passives).length;
@@ -247,12 +273,12 @@ function openLevelUp() {
   const box = $('choices'); box.innerHTML = '';
   $('lv-title').textContent = G.queue > 1 ? `SUBIU DE NÍVEL! (+${G.queue - 1})` : 'SUBIU DE NÍVEL!';
   for (const o of options()) {
-    const s = CFG.spells[o.key] || CFG.fusions[o.key] || CFG.passives[o.key];
+    const s = o.kind === 'evo' ? CFG.evolutions[o.key] : o.kind === 'pnew' || o.kind === 'pup' ? CFG.passives[o.key] : CFG.spells[o.key] || CFG.fusions[o.key];
     const cur = o.kind === 'up' ? G.spells.find(x => x.key === o.key).level : o.kind === 'pup' ? G.passives[o.key] : 0;
-    const tag = o.kind === 'fusion' ? 'FUSÃO' : o.kind === 'new' || o.kind === 'pnew' ? 'NOVO' : o.kind === 'heal' ? '' : `NV ${cur} → ${cur + 1}`;
+    const tag = o.kind === 'evo' ? 'EVOLUÇÃO' : o.kind === 'fusion' ? 'FUSÃO' : o.kind === 'new' || o.kind === 'pnew' ? 'NOVO' : o.kind === 'heal' ? '' : `NV ${cur} → ${cur + 1}`;
     const name = o.kind === 'heal' ? 'Poção de mana' : s.name, color = o.kind === 'heal' ? '#ff5a6a' : s.color, glyph = o.kind === 'heal' ? '♥' : s.glyph;
-    const desc = o.kind === 'heal' ? 'Recupera 30 de vida.' : o.kind === 'pnew' || o.kind === 'pup' ? s.desc : o.kind === 'fusion' ? `${CFG.spells[s.from[0]].name} + ${CFG.spells[s.from[1]].name}: ${s.desc}` : nextDesc(o.key, cur);
-    const b = document.createElement('button'); b.className = 'card' + (o.kind === 'fusion' ? ' fusion' : ''); b.style.setProperty('--c', color);
+    const desc = o.kind === 'heal' ? 'Recupera 30 de vida.' : o.kind === 'pnew' || o.kind === 'pup' ? s.desc : o.kind === 'evo' ? `${CFG.spells[o.key].name} + ${CFG.passives[s.need].name}: ${s.desc}` : o.kind === 'fusion' ? `${CFG.spells[s.from[0]].name} + ${CFG.spells[s.from[1]].name}: ${s.desc}` : nextDesc(o.key, cur);
+    const b = document.createElement('button'); b.className = 'card' + (o.kind === 'fusion' || o.kind === 'evo' ? ' fusion' : ''); b.style.setProperty('--c', color);
     b.innerHTML = `<span class="ico">${glyph}</span><span class="txt"><span class="row"><b>${esc(name)}</b><em>${esc(tag)}</em></span><span class="d">${esc(desc)}</span></span>`;
     b.onclick = () => choose(o); box.appendChild(b);
   }
@@ -261,6 +287,7 @@ function openLevelUp() {
 function choose(o) {
   if (o.kind === 'new') G.spells.push(new Spell(o.key, G));
   if (o.kind === 'up') G.spells.find(s => s.key === o.key).level++;
+  if (o.kind === 'evo') { G.spells.find(s => s.key === o.key).evo = true; banner('EVOLUÇÃO', CFG.evolutions[o.key].name, CFG.evolutions[o.key].color); G.shake(0.25); }
   if (o.kind === 'fusion') { G.spells = G.spells.filter(s => !CFG.fusions[o.key].from.includes(s.key)); G.spells.push(new Spell(o.key, G)); banner('FUSÃO', CFG.fusions[o.key].name, CFG.fusions[o.key].color); }
   if (o.kind === 'pnew' || o.kind === 'pup') { G.passives[o.key] = (G.passives[o.key] || 0) + 1; recalc(); }
   if (o.kind === 'heal') mage.hp = Math.min(mage.maxHp, mage.hp + 30);
@@ -304,7 +331,12 @@ function step(dt) {
   for (const s of G.spells) s.update(dt);
   // projéteis
   for (const p of G.projectiles) {
+    if (p.home && (p.retarget -= dt) <= 0) { p.retarget = 0.15; p.tg = G.nearest(p.x, p.z, 1, 7)[0]; }
+    if (p.home && p.tg && !p.tg.dead) { const dx = p.tg.x - p.x, dz = p.tg.z - p.z, l = Math.hypot(dx, dz) || 1, k = Math.min(1, 7 * dt);
+      p.vx += (dx / l * p.sp - p.vx) * k; p.vz += (dz / l * p.sp - p.vz) * k; }
     p.x += p.vx * dt; p.z += p.vz * dt; p.life -= dt;
+    if (p.bounce && G.view) { const v = G.view; if ((p.x < v.x0 && p.vx < 0) || (p.x > v.x1 && p.vx > 0)) p.vx = -p.vx; if ((p.z < v.z0 && p.vz < 0) || (p.z > v.z1 && p.vz > 0)) p.vz = -p.vz; }
+    if (p.rehit) { for (const e of G.query(p.x, p.z, p.r)) { if ((p.hit.get(e) || 0) > G.t) continue; p.hit.set(e, G.t + p.rehit); p.onHit(p, e); } continue; }
     if (p.enemy) { if (Math.hypot(p.x - mage.x, p.z - mage.z) < p.r + CFG.mage.radius) { hurtMage(p.dmg); p.life = 0; } continue; }
     for (const e of G.query(p.x, p.z, p.r)) {
       if (p.hit.has(e) || p.life <= 0) continue;
@@ -319,9 +351,17 @@ function step(dt) {
   for (const g of G.gems) {
     g.t += dt; const dx = mage.x - g.x, dz = mage.z - g.z, d = Math.hypot(dx, dz);
     if (d < mag || g.pull) { g.pull = true; const sp = 4 + g.t * 10; g.x += dx / d * Math.min(d, sp * dt); g.z += dz / d * Math.min(d, sp * dt); }
-    if (d < 0.35) { g.done = true; if (g.coin) G.coins++; else addXp(g.v); }
+    if (d < 0.35) { g.done = true;
+      if (g.coin) G.coins++;
+      else if (g.heart) { mage.hp = Math.min(mage.maxHp, mage.hp + CFG.drops.heal); fxApi.burst(mage.x, mage.z, '#ff5a6a', 10, 2.5); G.numbers.push({ x: mage.x, z: mage.z, v: '+' + CFG.drops.heal, t: 0, label: '#ff7a8a' }); }
+      else if (g.chest) { G.queue++; banner('BAÚ DA FENDA', 'Uma melhoria grátis', '#ffc96b'); }
+      else addXp(g.v); }
   }
   G.gems = G.gems.filter(g => !g.done);
+  // explosões de corrompidos (fora da recursão do dano)
+  const bl = G.blasts.splice(0, 20);
+  for (const b of bl) { fxApi.ring(b.x, b.z, ST.corruptR, '#c58bff', 0.3, true); fxApi.burst(b.x, b.z, '#d78bff', 6, 3); for (const e of G.query(b.x, b.z, ST.corruptR)) G.damage(e, b.dmg, { noProc: true, silent: true, color: '#e0b8ff' }); }
+  if (bl.length) combo('corrupcao');
   // combo
   if ((G.comboT -= dt) <= 0) G.combo = 0;
   // efeitos
@@ -337,6 +377,9 @@ function step(dt) {
 
 // ---------- desenho ----------
 const tmpV = new T.Vector3();
+const SC = { none: [1, 1, 1], gelo: [1.1, 1.9, 3.2], fogo: [2.4, 1.0, 0.5], raio: [2.2, 2.2, 0.7], arcano: [1.7, 0.7, 2.3], luz: [2.0, 1.9, 1.4], agua: [0.8, 1.2, 1.9] };
+// coração em pixel art (5×5), virado para a câmera
+const HEART = ['.X.X.', 'XXXXX', 'XXXXX', '.XXX.', '..X..'];
 function draw(now) {
   const t = now / 1000;
   // câmera segue o Mago
@@ -345,6 +388,8 @@ function draw(now) {
   cam.position.copy(camAt).add(camOff); cam.lookAt(camAt);
   if (G.shakeT > 0) { G.shakeT = Math.max(0, G.shakeT - 0.016); const k = G.shakeT * 0.6; cam.position.x += (Math.random() - 0.5) * k; cam.position.z += (Math.random() - 0.5) * k; }
   world.update(camAt.x, camAt.z, viewW, viewH);
+  const hz = viewH / 2 / Math.sin(Math.atan2(camOff.y, camOff.z)) - 0.6;
+  G.view = { x0: camAt.x - viewW / 2 + 0.4, x1: camAt.x + viewW / 2 - 0.4, z0: camAt.z - hz, z1: camAt.z + hz - 0.6 };
   // Mago
   mageRoot.position.set(mage.x, 0, mage.z); mageRoot.rotation.y = mage.face;
   mageBody.position.y = mage.moving ? Math.abs(Math.sin(t * 11)) * 0.06 : Math.sin(t * 2) * 0.02;
@@ -353,19 +398,25 @@ function draw(now) {
   for (const b of Object.values(batches)) b.begin();
   for (const e of G.enemies) {
     const b = batches[e.type], y = e.cfg.float ? 0.15 + Math.sin(t * 3 + e.ph) * 0.06 : Math.abs(Math.sin(t * 9 + e.ph)) * 0.04;
-    const sq = e.state === 'wind' ? 0.75 : 1, tm = e.soakT > 0 ? 1.3 : 1;
-    b.add(e.x, y, e.z, e.face, e.elite ? CFG.elite.scale : 1, e.flash > 0 || e.state === 'wind' && Math.floor(t * 16) % 2 ? 1 : 0, sq, tm);
+    const sq = e.state === 'wind' ? 0.75 : 1, c = e.freezeT > 0 ? SC.gelo : e.burnT > 0 ? SC.fogo : e.shockT > 0 ? SC.raio : e.corruptT > 0 ? SC.arcano : e.exposeT > 0 ? SC.luz : e.soakT > 0 ? SC.agua : SC.none;
+    b.add(e.x, y, e.z, e.face, e.elite ? CFG.elite.scale : 1, e.flash > 0 || e.state === 'wind' && Math.floor(t * 16) % 2 ? 1 : 0, sq, 1, c);
   }
   for (const b of Object.values(batches)) b.end();
   // cristais e moedas
   gemsPool.begin();
-  for (const g of G.gems) { const c = g.coin ? '#ffd34d' : g.v >= 20 ? '#c58bff' : g.v >= 4 ? '#5fb8ff' : '#5dff9a', s = g.coin ? 0.16 : g.v >= 4 ? 0.17 : 0.12; gemsPool.add(g.x, 0.22 + Math.sin(t * 4 + g.x) * 0.04, g.z, s, s * 1.3, s, c, 0, t * 2, 0.6); }
+  for (const g of G.gems) {
+    const bob = 0.3 + Math.sin(t * 4 + g.x) * 0.05;
+    if (g.heart) { const s = 0.075; HEART.forEach((row, r) => [...row].forEach((ch, i) => { if (ch !== 'X') return; const yy = bob + (2 - r) * s * 0.67, zz = g.z - (2 - r) * s * 0.74; gemsPool.add(g.x + (i - 2) * s, yy, zz, s, s, s, r === 1 && i === 1 ? '#ffd0d6' : '#ff2a4a', -0.84, 0, 0); })); continue; }
+    if (g.chest) { gemsPool.add(g.x, 0.2, g.z, 0.42, 0.3, 0.3, '#8a5a2a'); gemsPool.add(g.x, 0.37, g.z, 0.44, 0.06, 0.32, '#ffc96b'); gemsPool.add(g.x, 0.3, g.z + 0.16, 0.08, 0.1, 0.02, '#fff2a8'); continue; }
+    const c = g.coin ? '#ffd34d' : g.v >= 30 ? '#ffb84d' : g.v >= 10 ? '#c58bff' : g.v >= 4 ? '#ff5fd2' : g.v >= 2 ? '#5fb8ff' : '#5dff9a', s = g.coin ? 0.16 : g.v >= 30 ? 0.24 : g.v >= 10 ? 0.2 : g.v >= 4 ? 0.17 : g.v >= 2 ? 0.14 : 0.12; gemsPool.add(g.x, 0.22 + Math.sin(t * 4 + g.x) * 0.04, g.z, s, s * 1.3, s, c, 0, t * 2, 0.6); }
   gemsPool.end();
   // projéteis e efeitos (camada em resolução normal)
   glow.begin(cam); fxCubes.begin();
   for (const p of G.projectiles) {
-    if (p.kind === 'fogo') { glow.add(p.x, 0.45, p.z, 1.2, '#ff5a10', 0.9); glow.add(p.x, 0.45, p.z, 0.5, '#fff2a8', 1); glow.add(p.x - p.vx * 0.03, 0.45, p.z - p.vz * 0.03, 0.7, '#ff8a3d', 0.5); }
+    if (p.kind === 'fogo') { if (p.big) glow.add(p.x, 0.45, p.z, 2.0, '#ff2a10', 0.7); glow.add(p.x, 0.45, p.z, 1.2, '#ff5a10', 0.9); glow.add(p.x, 0.45, p.z, 0.5, '#fff2a8', 1); glow.add(p.x - p.vx * 0.03, 0.45, p.z - p.vz * 0.03, 0.7, '#ff8a3d', 0.5); }
     else if (p.kind === 'vento') { const a = Math.atan2(p.vx, p.vz) + Math.PI / 2; fxCubes.add(p.x, 0.4, p.z, 0.6, 0.04, 0.1, '#ffffff', 0, a, 0); glow.add(p.x, 0.4, p.z, 0.8, '#7fe8ff', 0.6); glow.add(p.x - p.vx * 0.03, 0.4, p.z - p.vz * 0.03, 0.5, '#bff4ff', 0.4); }
+    else if (p.kind === 'orbe') { const s = p.child ? 0.6 : 1; glow.add(p.x, 0.5, p.z, 0.8 * s, '#b04dff', 0.85); glow.add(p.x, 0.5, p.z, 0.28 * s, '#ffffff', 1); glow.add(p.x - p.vx * 0.04, 0.5, p.z - p.vz * 0.04, 0.5 * s, '#e0a8ff', 0.45); }
+    else if (p.kind === 'runa') { const s = p.big ? 1.3 : 1; fxCubes.add(p.x, 0.5, p.z, 0.5 * s, 0.08, 0.5 * s, '#e8feff', 0, t * 14, 0); glow.add(p.x, 0.5, p.z, 1.2 * s, '#2fd8ff', 0.75); glow.add(p.x - p.vx * 0.05, 0.5, p.z - p.vz * 0.05, 0.8 * s, '#7ff0ff', 0.4); }
     else { glow.add(p.x, 0.45, p.z, 0.75, '#ff2fb0', 0.9); glow.add(p.x, 0.45, p.z, 0.3, '#ffd6f2', 1); }
   }
   for (const sp of G.spells) sp.render(fxApi2, t);
@@ -377,6 +428,12 @@ function draw(now) {
     if (fx.k === 'spikes') for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + fx.seed, rr = fx.r * 0.55 * hash(i, fx.seed), h = Math.sin(Math.min(1, p * 2.5) * Math.PI) * 0.8; fxCubes.add(fx.x + Math.sin(a) * rr, h / 2, fx.z + Math.cos(a) * rr, 0.16, h + 0.01, 0.16, i % 2 ? '#c9a36b' : '#8a6a44', 0, a, 0); glow.add(fx.x + Math.sin(a) * rr, 0.1, fx.z + Math.cos(a) * rr, 0.5, '#ffcf8a', 0.4 * k); }
     if (fx.k === 'cloud') for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + fx.seed, rr = fx.r * p * (0.5 + 0.5 * hash(i, fx.seed)); glow.add(fx.x + Math.sin(a) * rr, 0.3 + hash(i + 3, fx.seed) * 0.6, fx.z + Math.cos(a) * rr, 1.2 * k + 0.3, '#ffe6cc', 0.7 * k); }
   }
+  let sg = 0;
+  for (const e of G.enemies) { if (sg > 160) break;
+    if (e.burnT > 0) { sg++; glow.add(e.x, 0.75 + Math.sin(t * 20 + e.ph) * 0.06, e.z, 0.45, '#ff6a1a', 0.7); }
+    else if (e.freezeT > 0) { sg++; glow.add(e.x, 0.4, e.z, 0.9, '#9fdcff', 0.45); }
+    else if (e.shockT > 0 && Math.floor(t * 12 + e.ph) % 3 === 0) { sg++; glow.add(e.x + Math.sin(t * 40) * 0.15, 0.6, e.z, 0.35, '#fff27a', 0.9); }
+    else if (e.corruptT > 0) { sg++; glow.add(e.x, 0.15, e.z, 0.7, '#8a2aff', 0.4); } }
   for (const q of G.particles) { const k = 1 - q.t / q.dur; glow.add(q.x, q.y, q.z, q.size * 3.2, q.color, k); }
   glow.end(); fxCubes.end();
   // manchas no chão
@@ -396,9 +453,9 @@ function drawNumbers() {
     tmpV.set(n.x, 0.9 + n.t * 1.2, n.z).project(cam);
     const x = Math.round((tmpV.x * 0.5 + 0.5) * pxW), y = Math.round((-tmpV.y * 0.5 + 0.5) * pxH);
     ctx.globalAlpha = 1 - Math.max(0, n.t - 0.45) / 0.25;
-    ctx.font = n.big ? '16px Silkscreen, monospace' : '8px Silkscreen, monospace';
+    ctx.font = n.big && !n.label ? '16px Silkscreen, monospace' : '8px Silkscreen, monospace';
     ctx.fillStyle = '#07060c'; ctx.fillText(n.v, x + 1, y + 1);
-    ctx.fillStyle = n.big ? '#ffe066' : '#f2f4f8'; ctx.fillText(n.v, x, y);
+    ctx.fillStyle = n.label || (n.crit ? '#ff7a3d' : n.big ? '#ffe066' : '#f2f4f8'); ctx.fillText(n.v, x, y);
   }
   ctx.globalAlpha = 1;
 }
@@ -415,7 +472,7 @@ function hud() {
   if (settings.fps) $('fps').textContent = `${fps} fps · ${G.enemies.length} inimigos · ${renderer.info.render.calls} draws`;
 }
 function renderLoadout() {
-  $('loadout').innerHTML = G.spells.map(s => `<i style="--c:${s.cfg.color}">${s.cfg.glyph}<sub>${s.fusion ? '★' : s.level}</sub></i>`).join('')
+  $('loadout').innerHTML = G.spells.map(s => `<i style="--c:${s.meta.color}">${s.meta.glyph}<sub>${s.fusion || s.evo ? '★' : s.level}</sub></i>`).join('')
     + Object.entries(G.passives).map(([k, l]) => `<i class="p" style="--c:${CFG.passives[k].color}">${CFG.passives[k].glyph}<sub>${l}</sub></i>`).join('');
 }
 let bannerTimer = 0;
@@ -431,7 +488,7 @@ const settings = { fps: false };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('fendas_settings_v1')) || {}); } catch { /* sem storage */ }
 function start() {
   Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], splats: [], numbers: [],
-    spells: [], passives: {}, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
+    spells: [], passives: {}, blasts: [], found: new Set(), xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
     miniDone: false, bossDone: false, bossSpawned: false, queue: 0 });
   Object.assign(mage, { x: 0, z: 0, face: Math.PI, inv: 0 });
   recalc(); mage.hp = mage.maxHp;
