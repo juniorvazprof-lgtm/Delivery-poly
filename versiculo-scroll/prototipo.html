@@ -3,109 +3,141 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Manrope:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: um versículo por tela, rolagem com snap; uma "luz" de vela atrás do texto muda de cor a cada versículo; trilho de ações vertical à direita */
+/* Layout: um versículo por tela com snap; luz de vela difusa atrás do texto muda de cor por versículo; trilho de ações em cápsula de vidro à direita */
 :root{
-  --bg:#ECE9E4; --ink:#1D1B22; --muted:#6E6A73; --gold:#A87B2C; --glass:rgba(255,255,255,.55); --line:rgba(29,27,34,.10);
+  --bg:#ECE9E4; --ink:#1D1B22; --muted:#625E68; --gold:#A0742A; --heart:#D93A56; --glass:rgba(255,255,255,.58); --line:rgba(29,27,34,.11);
   --glow-a:#F2C879; --glow-b:#C9B6E8; --glow-op:.55;
   --serif:"Fraunces",Georgia,"Times New Roman",serif; --sans:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   --spring:cubic-bezier(.2,.9,.25,1.15); --ease:cubic-bezier(.22,.8,.24,1);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0E0D14; --ink:#F1ECE2; --muted:#8F8A99; --gold:#E2BE74; --glass:rgba(255,255,255,.07); --line:rgba(255,255,255,.10); --glow-op:.42; color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0E0D14; --ink:#F1ECE2; --muted:#8F8A99; --gold:#E2BE74; --glass:rgba(255,255,255,.07); --line:rgba(255,255,255,.10); --glow-op:.42; color-scheme:dark}
+  --bg:#0E0D14; --ink:#F1ECE2; --muted:#9A95A3; --gold:#E2BE74; --heart:#FF5C78; --glass:rgba(255,255,255,.07); --line:rgba(255,255,255,.11); --glow-op:.42; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E0D14; --ink:#F1ECE2; --muted:#9A95A3; --gold:#E2BE74; --heart:#FF5C78; --glass:rgba(255,255,255,.07); --line:rgba(255,255,255,.11); --glow-op:.42; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
-body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-tap-highlight-color:transparent;user-select:none}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+button{font-family:inherit}
 
 /* Luz ambiente */
 #light{position:fixed;inset:0;pointer-events:none;overflow:hidden}
-#light i{position:absolute;width:85vmax;height:85vmax;border-radius:50%;filter:blur(70px);opacity:var(--glow-op);transition:background 1.6s var(--ease)}
+#light i{position:absolute;width:85vmax;height:85vmax;border-radius:50%;filter:blur(70px);opacity:var(--glow-op)}
 #light i:nth-child(1){background:radial-gradient(circle,var(--glow-a),transparent 62%);left:-30vmax;top:-20vmax;animation:drift1 22s ease-in-out infinite alternate}
 #light i:nth-child(2){background:radial-gradient(circle,var(--glow-b),transparent 62%);right:-35vmax;bottom:-30vmax;animation:drift2 26s ease-in-out infinite alternate}
+@property --glow-a{syntax:"<color>";inherits:true;initial-value:#F2C879}
+@property --glow-b{syntax:"<color>";inherits:true;initial-value:#C9B6E8}
+:root{transition:--glow-a 1.6s var(--ease),--glow-b 1.6s var(--ease)}
 @keyframes drift1{to{transform:translate(18vmax,22vmax) scale(1.15)}}
 @keyframes drift2{to{transform:translate(-20vmax,-14vmax) scale(.9)}}
 #grain{position:fixed;inset:0;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
 /* Topo */
-header{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;
-  padding:calc(env(safe-area-inset-top,0px) + 14px) max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px));transition:opacity .5s var(--ease)}
-.brand{font-family:var(--serif);font-style:italic;font-size:1.25rem;letter-spacing:.01em}
+header{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px));transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.brand{font-family:var(--serif);font-style:italic;font-size:1.25rem}
 .brand b{color:var(--gold);font-weight:500}
 .tabs{display:flex;gap:4px;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:99px;padding:3px}
-.tabs button{border:0;background:none;color:var(--muted);font:600 .78rem var(--sans);padding:7px 13px;border-radius:99px;cursor:pointer;transition:.3s var(--ease)}
+.tabs button{border:0;background:none;color:var(--muted);font:600 .8rem var(--sans);padding:8px 14px;border-radius:99px;cursor:pointer;transition:.3s var(--ease)}
 .tabs button.on{background:var(--ink);color:var(--bg)}
-body.immersed header{opacity:.25}
+body.focus header,body.focus .rail,body.focus #filter{opacity:0!important;pointer-events:none}
+#filter{position:fixed;z-index:5;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translate(-50%,-10px);opacity:0;pointer-events:none;
+  display:flex;align-items:center;gap:8px;background:var(--ink);color:var(--bg);border:0;border-radius:99px;padding:8px 10px 8px 14px;font:600 .78rem var(--sans);cursor:pointer;transition:.45s var(--spring)}
+#filter.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#filter i{font-style:normal;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:rgba(128,128,128,.35);font-size:.7rem}
 
 /* Feed */
 #feed{position:relative;height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}
 #feed::-webkit-scrollbar{display:none}
 .card{height:100%;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;align-items:center;
-  padding:0 calc(max(20px,env(safe-area-inset-right,0px)) + 72px) 0 max(28px,env(safe-area-inset-left,0px))}
-.inner{max-width:30rem;transform:scale(.94) translateY(14px);opacity:.25;transition:transform .9s var(--spring),opacity .7s var(--ease)}
+  padding:72px calc(max(16px,env(safe-area-inset-right,0px)) + 78px) 72px max(28px,env(safe-area-inset-left,0px))}
+.inner{max-width:30rem;transform:scale(.95) translateY(16px);opacity:.25;transition:transform .9s var(--spring),opacity .7s var(--ease)}
 .card.active .inner{transform:none;opacity:1}
-.theme{font:700 .66rem var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.theme{display:inline-flex;align-items:center;gap:10px;margin:0 0 22px;padding:6px 0;border:0;background:none;cursor:pointer;
+  font:700 .68rem var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
 .theme::before{content:"";width:18px;height:1px;background:currentColor}
-blockquote{margin:0;font-family:var(--serif);font-weight:350;line-height:1.32;letter-spacing:-.01em;font-variation-settings:"opsz" 96;text-wrap:pretty}
-blockquote .w{display:inline-block;opacity:.12;filter:blur(6px);transform:translateY(6px);transition:opacity .7s var(--ease),filter .8s var(--ease),transform .8s var(--ease)}
-.card.active blockquote .w{opacity:1;filter:none;transform:none;transition-delay:calc(var(--i) * 38ms + 120ms)}
-cite{display:flex;align-items:center;gap:10px;margin-top:26px;font:500 .9rem var(--sans);font-style:normal;color:var(--muted);opacity:0;transform:translateX(-8px);transition:.8s var(--ease)}
-.card.active cite{opacity:1;transform:none;transition-delay:calc(var(--n) * 38ms + 350ms)}
-cite b{color:var(--ink);font-weight:600}
+.theme::after{content:"→";letter-spacing:0;opacity:0;transform:translateX(-4px);transition:.4s var(--ease)}
+.card.active .theme::after{opacity:.7;transform:none;transition-delay:1.4s}
+blockquote{margin:0;font-family:var(--serif);font-weight:350;line-height:1.3;letter-spacing:-.012em;font-variation-settings:"opsz" 96;text-wrap:pretty}
+blockquote .w{display:inline-block;opacity:.14;filter:blur(5px);transform:translateY(6px);transition:opacity .7s var(--ease),filter .8s var(--ease),transform .8s var(--ease)}
+.card.active blockquote .w{opacity:1;filter:none;transform:none;transition-delay:calc(var(--i) * 34ms + 100ms)}
+cite{display:flex;align-items:center;gap:8px;margin-top:26px;font:500 .9rem var(--sans);font-style:normal;color:var(--muted);opacity:0;transform:translateX(-8px);transition:.8s var(--ease)}
+.card.active cite{opacity:1;transform:none;transition-delay:calc(var(--n) * 34ms + 320ms)}
+cite b{color:var(--ink);font-weight:700}
 
 /* Trilho de ações */
-.rail{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 14%);display:flex;flex-direction:column;align-items:center;gap:6px;
-  padding:8px 6px;border-radius:30px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  opacity:0;transform:translateX(16px);transition:.7s var(--ease)}
-.card.active .rail{opacity:1;transform:none;transition-delay:.25s}
-.act{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--ink);cursor:pointer;padding:6px 4px;font:600 .6rem var(--sans);letter-spacing:.04em}
-.act svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;transition:transform .5s var(--spring)}
-.act:active svg{transform:scale(.82)}
-.act:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:12px}
-.act span{color:var(--muted)}
-.act .core{transition:fill .4s var(--ease),transform .6s var(--spring);transform-origin:center;transform-box:fill-box}
-.act .ray{transition:opacity .4s, transform .6s var(--spring);transform-origin:13px 13px;opacity:.0;transform:scale(.6)}
-.amen.on{color:var(--gold)} .amen.on .core{fill:var(--gold)} .amen.on .ray{opacity:1;transform:none}
-.amen.on span,.save.on span{color:var(--gold)} .save.on{color:var(--gold)} .save.on path{fill:var(--gold)}
-.sep{width:20px;height:1px;background:var(--line);margin:2px 0}
+.rail{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 13%);display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 4px;border-radius:32px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  opacity:0;transform:translateX(16px);transition:opacity .6s var(--ease),transform .7s var(--spring)}
+.card.active .rail{opacity:1;transform:none;transition-delay:.2s}
+.act{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--ink);cursor:pointer;
+  width:56px;padding:8px 0;font:700 .64rem var(--sans);letter-spacing:.03em}
+.act svg{width:27px;height:27px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .5s var(--spring)}
+.act:active svg{transform:scale(.8)}
+.act:focus-visible{outline:2px solid var(--gold);outline-offset:-2px;border-radius:16px}
+.act span{color:var(--muted);transition:color .3s}
+.heart path{transition:fill .25s var(--ease),stroke .25s}
+.heart.on{color:var(--heart)} .heart.on path{fill:var(--heart)} .heart.on span{color:var(--heart)}
+.heart.pop svg{animation:pop .55s var(--spring)}
+@keyframes pop{0%{transform:scale(.6)}45%{transform:scale(1.28)}100%{transform:scale(1)}}
+.spark{position:absolute;left:50%;top:21px;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:var(--heart);pointer-events:none;animation:spark .6s var(--ease) forwards}
+@keyframes spark{to{transform:rotate(var(--a)) translateY(-22px) scale(.2);opacity:0}}
+.save.on{color:var(--gold)} .save.on path{fill:var(--gold)} .save.on span{color:var(--gold)}
+.sep{width:22px;height:1px;background:var(--line);margin:4px 0}
 
-/* Toque duplo: luz que acende */
-.burst{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;pointer-events:none;z-index:8;
-  background:radial-gradient(circle,var(--gold) 0%,transparent 70%);animation:burst .9s var(--ease) forwards}
-.burst.r{background:none;border:1.5px solid var(--gold);animation:ring .9s var(--ease) forwards}
-@keyframes burst{0%{transform:scale(.4);opacity:.9}100%{transform:scale(16);opacity:0}}
-@keyframes ring{0%{transform:scale(.5);opacity:1}100%{transform:scale(7);opacity:0}}
+/* Toque duplo: coração que sobe com halo */
+.big{position:fixed;z-index:8;pointer-events:none;width:96px;height:96px;margin:-48px 0 0 -48px;animation:big 1s var(--ease) forwards}
+.big svg{width:100%;height:100%;fill:var(--heart);filter:drop-shadow(0 8px 24px rgba(217,58,86,.4))}
+@keyframes big{0%{transform:scale(.2) rotate(var(--r));opacity:0}18%{transform:scale(1.15) rotate(var(--r));opacity:1}32%{transform:scale(.95) rotate(var(--r))}
+  70%{transform:scale(1) rotate(var(--r)) translateY(-10px);opacity:1}100%{transform:scale(.8) rotate(var(--r)) translateY(-90px);opacity:0}}
+.halo{position:fixed;z-index:7;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,var(--heart) 0%,transparent 70%);animation:halo .9s var(--ease) forwards}
+@keyframes halo{0%{transform:scale(.4);opacity:.45}100%{transform:scale(14);opacity:0}}
 
 /* Avisos e folhas */
-#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);transform:translate(-50%,20px);opacity:0;z-index:9;
-  background:var(--ink);color:var(--bg);font:600 .82rem var(--sans);padding:11px 18px;border-radius:99px;white-space:nowrap;transition:.5s var(--spring);pointer-events:none}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);transform:translate(-50%,20px);opacity:0;z-index:12;
+  background:var(--ink);color:var(--bg);font:600 .84rem var(--sans);padding:12px 18px;border-radius:99px;max-width:calc(100% - 32px);text-align:center;transition:.5s var(--spring);pointer-events:none}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #toast em{font-style:normal;color:var(--gold)}
-.veil{position:fixed;inset:0;z-index:7;background:rgba(10,8,16,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:.4s var(--ease)}
+.veil{position:fixed;inset:0;z-index:9;background:rgba(10,8,16,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:.4s var(--ease)}
 .veil.open{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--bg);border-radius:26px 26px 0 0;border-top:1px solid var(--line);
-  padding:10px max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px) max(20px,env(safe-area-inset-left,0px));
-  transform:translateY(105%);transition:transform .55s var(--spring);max-height:78%;overflow:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--bg);border-radius:28px 28px 0 0;border-top:1px solid var(--line);
+  padding:0 max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px) max(20px,env(safe-area-inset-left,0px));
+  transform:translateY(105%);transition:transform .55s var(--spring);max-height:82%;overflow:auto;max-width:560px;margin:0 auto}
 .sheet.open{transform:none}
-.sheet .grab{width:38px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 16px}
-.sheet h2{font:500 1.35rem var(--serif);margin:0 0 4px}
-.sheet p.sub{margin:0 0 16px;color:var(--muted);font-size:.85rem}
-.opt{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--ink);font:600 .95rem var(--sans);padding:14px 4px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left}
-.opt svg{width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:1.6}
-.saved-item{padding:14px 2px;border-bottom:1px solid var(--line)}
-.saved-item q{font-family:var(--serif);font-size:1.02rem;line-height:1.4;quotes:"“" "”"}
-.saved-item div{margin-top:6px;font-size:.78rem;color:var(--muted)}
-.empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:.9rem}
-.taste{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-.taste span{font:600 .72rem var(--sans);padding:6px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
-.taste span b{color:var(--gold)}
+.sheet.drag{transition:none}
+.grab{position:sticky;top:0;background:var(--bg);padding:10px 0 14px;cursor:grab;touch-action:none}
+.grab::before{content:"";display:block;width:40px;height:4px;border-radius:4px;background:var(--muted);opacity:.4;margin:0 auto}
+.sheet h2{font:450 1.45rem/1.2 var(--serif);margin:0 0 4px;text-wrap:balance}
+.sheet p.sub{margin:0 0 18px;color:var(--muted);font-size:.86rem;line-height:1.5}
+.opt{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--ink);font:600 .95rem var(--sans);padding:15px 4px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left}
+.opt svg{width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.opt small{display:block;font-weight:500;color:var(--muted);font-size:.78rem;margin-top:2px}
+.saved-item{display:flex;gap:12px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--line)}
+.saved-item>div{flex:1;min-width:0}
+.saved-item q{font-family:var(--serif);font-size:1.04rem;line-height:1.42;quotes:"“" "”"}
+.saved-item small{display:block;margin-top:6px;font-size:.78rem;color:var(--muted);font-weight:600}
+.rm{border:0;background:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:50%;font-size:1rem;line-height:1}
+.empty{color:var(--muted);text-align:center;padding:28px 10px 10px;font-size:.92rem;line-height:1.5}
+.label{font:700 .66rem var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:6px 0 10px}
+.taste{display:grid;gap:8px;margin-bottom:22px}
+.taste div{display:grid;grid-template-columns:6.5rem 1fr;align-items:center;gap:10px;font-size:.82rem;font-weight:600;text-transform:capitalize}
+.taste span{height:6px;border-radius:6px;background:var(--line);overflow:hidden}
+.taste span i{display:block;height:100%;border-radius:6px;background:var(--gold);transform-origin:left;animation:grow .9s var(--ease) both}
+@keyframes grow{from{transform:scaleX(0)}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 22px}
+.chip{border:1px solid var(--line);background:var(--glass);color:var(--ink);font:600 .9rem var(--sans);padding:11px 15px;border-radius:99px;cursor:pointer;transition:.35s var(--spring)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink);transform:scale(1.04)}
+.primary{width:100%;border:0;background:var(--ink);color:var(--bg);font:700 .95rem var(--sans);padding:16px;border-radius:99px;cursor:pointer;transition:opacity .3s}
+.primary:disabled{opacity:.35;cursor:default}
+.ghost{width:100%;border:0;background:none;color:var(--muted);font:600 .86rem var(--sans);padding:14px;cursor:pointer}
+.link{border:0;background:none;color:var(--gold);font:700 .82rem var(--sans);padding:14px 0;cursor:pointer}
 
 /* Dica inicial */
-.hint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 26px);text-align:center;font:600 .72rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);animation:hint 2.2s var(--ease) infinite}
-@keyframes hint{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-8px);opacity:1}}
+.hint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);display:flex;flex-direction:column;align-items:center;gap:4px;
+  font:600 .7rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);animation:hint 2.2s var(--ease) infinite;transition:opacity .4s}
+.hint small{letter-spacing:.04em;text-transform:none;font-weight:500;opacity:.8}
+@keyframes hint{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}
-}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}}
 </style>
 
 <div id="light"><i></i><i></i></div>
@@ -114,10 +146,11 @@ cite b{color:var(--ink);font-weight:600}
   <div class="brand">lu<b>m</b>en</div>
   <nav class="tabs"><button id="tFeed" class="on">Para você</button><button id="tSaved">Salvos</button></nav>
 </header>
+<button id="filter" aria-label="Remover filtro de tema"><span></span><i>✕</i></button>
 <main id="feed" aria-label="Versículos"></main>
-<div id="toast" role="status"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <div class="veil" id="veil"></div>
-<section class="sheet" id="sheet" aria-modal="true" role="dialog"></section>
+<section class="sheet" id="sheet" role="dialog" aria-modal="true"></section>
 
 <script>
 const V=[
@@ -161,113 +194,181 @@ const V=[
 const NEAR={ansiedade:["paz","descanso","oração"],paz:["descanso","ansiedade","confiança"],descanso:["paz","cuidado"],cuidado:["amor","descanso"],
  coragem:["força","fé"],força:["coragem","esperança"],esperança:["fé","propósito"],propósito:["confiança","esperança"],amor:["graça","cuidado"],
  graça:["amor","fé"],fé:["confiança","esperança"],confiança:["fé","paz"],gratidão:["alegria","amor"],alegria:["gratidão","esperança"],oração:["fé","paz"]};
+const MOODS=[["Ansioso(a)","ansiedade"],["Cansado(a)","descanso"],["Com medo","coragem"],["Sem forças","força"],["Grato(a)","gratidão"],
+ ["Precisando de esperança","esperança"],["Buscando direção","propósito"],["Em paz","paz"],["Sentindo-me sozinho(a)","cuidado"],["Feliz","alegria"]];
 
 const S={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
-let taste=S.get("lumen.taste",{}), amen=new Set(S.get("lumen.amen",[])), saved=new Set(S.get("lumen.saved",[])), announced=new Set(S.get("lumen.ann",[]));
-const recent=[]; const feed=document.getElementById("feed");
-const save=()=>{S.set("lumen.taste",taste);S.set("lumen.amen",[...amen]);S.set("lumen.saved",[...saved]);S.set("lumen.ann",[...announced])};
+let taste=S.get("lumen.taste",{}),liked=new Set(S.get("lumen.liked",[])),saved=S.get("lumen.saved2",[]),announced=new Set(S.get("lumen.ann",[]));
+let filterTag=null; const recent=[]; const feed=document.getElementById("feed");
+const persist=()=>{S.set("lumen.taste",taste);S.set("lumen.liked",[...liked]);S.set("lumen.saved2",saved);S.set("lumen.ann",[...announced])};
+const byRef=r=>V.find(v=>v.r===r);
 
 /* ---------- Personalização ---------- */
-function bump(v,w){v.t.forEach((t,i)=>{taste[t]=Math.max(-5,(taste[t]||0)+w*(i?0.6:1))});
-  if(w>0){const top=v.t[0];if((taste[top]||0)>=6&&!announced.has(top)){announced.add(top);toast(`Mais versículos sobre <em>${top}</em> para você`)}}save()}
-function score(v){return v.t.reduce((s,t,i)=>s+Math.max(0,taste[t]||0)*(i?0.6:1),0)}
+function bump(v,w){v.t.forEach((t,i)=>{taste[t]=Math.min(40,Math.max(-5,(taste[t]||0)+w*(i?.6:1)))});
+  if(w>0){const t=v.t[0];if(taste[t]>=6&&!announced.has(t)){announced.add(t);toast(`Mais versículos sobre <em>${t}</em> para você`)}}persist()}
+const score=v=>v.t.reduce((s,t,i)=>s+Math.max(0,taste[t]||0)*(i?.6:1),0);
 function pick(){
-  const pool=V.filter(v=>!recent.includes(v.r)); const r=Math.random(); let list=pool;
-  const top=Object.entries(taste).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
-  if(top.length&&r<.7){list=pool.filter(v=>score(v)>0)}
-  else if(top.length&&r<.9){const near=new Set(top.slice(0,3).flatMap(t=>NEAR[t]||[]));list=pool.filter(v=>v.t.some(t=>near.has(t)))}
-  if(!list.length)list=pool;
-  const w=list.map(v=>1+score(v)); let n=Math.random()*w.reduce((a,b)=>a+b,0);
+  let base=filterTag?V.filter(v=>v.t.includes(filterTag)):V;
+  let pool=base.filter(v=>!recent.includes(v.r)); if(!pool.length){pool=base;recent.length=0}
+  let list=pool;
+  if(!filterTag){const r=Math.random(),top=Object.entries(taste).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
+    if(top.length&&r<.7)list=pool.filter(v=>score(v)>0);
+    else if(top.length&&r<.9){const near=new Set(top.slice(0,3).flatMap(t=>NEAR[t]||[]));list=pool.filter(v=>v.t.some(t=>near.has(t)))}
+    if(!list.length)list=pool}
+  const w=list.map(v=>1+score(v));let n=Math.random()*w.reduce((a,b)=>a+b,0);
   const v=list.find((_,i)=>(n-=w[i])<=0)||list[0];
-  recent.push(v.r); if(recent.length>14)recent.shift(); return v;
+  recent.push(v.r);if(recent.length>Math.min(14,base.length-1))recent.shift();return v;
 }
 
 /* ---------- Ícones ---------- */
+const HEART="M13 21.5s-8.5-5.1-8.5-11.1A4.6 4.6 0 0 1 13 7.7a4.6 4.6 0 0 1 8.5 2.7c0 6-8.5 11.1-8.5 11.1z";
 const ICON={
- amen:`<svg viewBox="0 0 26 26"><g class="ray">${[0,45,90,135,180,225,270,315].map(a=>`<line x1="13" y1="2" x2="13" y2="4.6" transform="rotate(${a} 13 13)"/>`).join("")}</g><path class="core" d="M13 7.5c1.9 2.3 3.6 4.1 3.6 6.4a3.6 3.6 0 0 1-7.2 0c0-1.3.6-2.4 1.5-3.4.3 1 .9 1.6 1.6 1.8-.4-1.6-.2-3.2.5-4.8z"/></svg>`,
+ heart:`<svg viewBox="0 0 26 26"><path d="${HEART}"/></svg>`,
  save:`<svg viewBox="0 0 26 26"><path d="M8 4.5h10a1 1 0 0 1 1 1v16l-6-4-6 4v-16a1 1 0 0 1 1-1z"/></svg>`,
  send:`<svg viewBox="0 0 26 26"><path d="M21.5 4.5 11 15M21.5 4.5l-6.5 17-4-6.5-6.5-4z"/></svg>`,
- more:`<svg viewBox="0 0 26 26"><circle cx="7" cy="13" r=".9"/><circle cx="13" cy="13" r=".9"/><circle cx="19" cy="13" r=".9"/></svg>`,
- book:`<svg viewBox="0 0 24 24"><path d="M4 5.5C7 4 10 4 12 6c2-2 5-2 8-.5V19c-3-1.5-6-1.5-8 .5-2-2-5-2-8-.5z M12 6v13.5"/></svg>`,
+ more:`<svg viewBox="0 0 26 26"><circle cx="7" cy="13" r="1"/><circle cx="13" cy="13" r="1"/><circle cx="19" cy="13" r="1"/></svg>`,
+ book:`<svg viewBox="0 0 24 24"><path d="M4 5.5C7 4 10 4 12 6c2-2 5-2 8-.5V19c-3-1.5-6-1.5-8 .5-2-2-5-2-8-.5zM12 6v13.5"/></svg>`,
  copy:`<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>`,
- ear:`<svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 4-4 4.5-4 8a3 3 0 0 1-6 0M10 9a2 2 0 0 1 4 0"/></svg>`
+ ear:`<svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 4-4 4.5-4 8a3 3 0 0 1-6 0M10 9a2 2 0 0 1 4 0"/></svg>`,
+ tag:`<svg viewBox="0 0 24 24"><path d="M4 12V5a1 1 0 0 1 1-1h7l8 8-8 8z"/><circle cx="8.5" cy="8.5" r="1.2"/></svg>`,
+ less:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg>`
 };
 
 /* ---------- Card ---------- */
 function makeCard(v,first){
-  const c=document.createElement("section"); c.className="card"; c._v=v;
-  const words=v.x.split(" "); const len=v.x.length;
+  const c=document.createElement("section");c.className="card";c._v=v;
+  const words=v.x.split(" "),len=v.x.length;
   const size=len<60?"clamp(2rem,8.4vw,3.2rem)":len<110?"clamp(1.6rem,6.6vw,2.6rem)":"clamp(1.35rem,5.4vw,2.1rem)";
+  const isL=liked.has(v.r),isS=saved.includes(v.r);
   c.innerHTML=`<div class="inner" style="--n:${words.length}">
-    <div class="theme">${v.t[0]}</div>
+    <button class="theme" aria-label="Ver só versículos sobre ${v.t[0]}">${v.t[0]}</button>
     <blockquote style="font-size:${size}">${words.map((w,i)=>`<span class="w" style="--i:${i}">${w}</span>`).join(" ")}</blockquote>
     <cite><b>${v.r}</b> · Almeida</cite></div>
    <div class="rail">
-    <button class="act amen ${amen.has(v.r)?"on":""}" aria-label="Amém">${ICON.amen}<span>Amém</span></button>
-    <button class="act save ${saved.has(v.r)?"on":""}" aria-label="Salvar">${ICON.save}<span>Salvar</span></button>
+    <button class="act heart ${isL?"on":""}" aria-pressed="${isL}" aria-label="Curtir">${ICON.heart}<span>Amém</span></button>
+    <button class="act save ${isS?"on":""}" aria-pressed="${isS}" aria-label="Salvar">${ICON.save}<span>Salvar</span></button>
     <div class="sep"></div>
     <button class="act send" aria-label="Enviar">${ICON.send}<span>Enviar</span></button>
-    <button class="act more" aria-label="Mais opções">${ICON.more}</button>
-   </div>${first?'<div class="hint">deslize ↑</div>':""}`;
-  c.querySelector(".amen").onclick=e=>{e.stopPropagation();toggleAmen(c)};
-  c.querySelector(".save").onclick=e=>{e.stopPropagation();toggleSave(c)};
-  c.querySelector(".send").onclick=e=>{e.stopPropagation();copy(v,"Copiado. Cole no WhatsApp ou nos Stories");bump(v,5)};
-  c.querySelector(".more").onclick=e=>{e.stopPropagation();openMenu(v)};
-  // toque duplo e pressionar
-  let last=0,timer=null,moved=false;
-  c.addEventListener("pointerdown",e=>{if(e.target.closest(".rail"))return;moved=false;timer=setTimeout(()=>{if(!moved){vibrate(12);openMenu(v)}},520)});
-  c.addEventListener("pointermove",()=>{moved=true;clearTimeout(timer)});
-  c.addEventListener("pointerup",e=>{clearTimeout(timer);if(e.target.closest(".rail")||moved)return;
-    const n=Date.now(); if(n-last<320){burst(e.clientX,e.clientY);if(!amen.has(v.r))toggleAmen(c);last=0}else last=n});
+    <button class="act more" aria-label="Mais opções">${ICON.more}<span>Mais</span></button>
+   </div>${first?'<div class="hint">deslize ↑<small>toque duas vezes para curtir</small></div>':""}`;
+  c.querySelector(".heart").onclick=()=>toggleLike(c);
+  c.querySelector(".save").onclick=()=>toggleSave(c);
+  c.querySelector(".send").onclick=()=>{copy(v,"Versículo copiado. Cole no WhatsApp ou nos Stories");bump(v,5)};
+  c.querySelector(".more").onclick=()=>openMenu(v);
+  c.querySelector(".theme").onclick=()=>setFilter(v.t[0]);
+  // gestos: toque simples = modo foco, toque duplo = curtir, segurar = menu
+  let last=0,timer=null,single=null,sx=0,sy=0,moved=false,held=false;
+  c.addEventListener("contextmenu",e=>e.preventDefault());
+  c.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;sx=e.clientX;sy=e.clientY;moved=false;held=false;
+    timer=setTimeout(()=>{held=true;vibrate(12);openMenu(v)},550)});
+  c.addEventListener("pointermove",e=>{if(Math.hypot(e.clientX-sx,e.clientY-sy)>10){moved=true;clearTimeout(timer)}});
+  c.addEventListener("pointercancel",()=>{moved=true;clearTimeout(timer)});
+  c.addEventListener("pointerup",e=>{clearTimeout(timer);if(e.target.closest("button")||moved||held)return;
+    const n=Date.now();
+    if(n-last<300){clearTimeout(single);last=0;heartAt(e.clientX,e.clientY);if(!liked.has(v.r))toggleLike(c)}
+    else{last=n;single=setTimeout(()=>document.body.classList.toggle("focus"),300)}});
   return c;
 }
-function toggleAmen(c){const v=c._v,b=c.querySelector(".amen");
-  if(amen.has(v.r)){amen.delete(v.r);b.classList.remove("on");bump(v,-2)}else{amen.add(v.r);b.classList.add("on");vibrate(8);bump(v,3)} save()}
-function toggleSave(c){const v=c._v,b=c.querySelector(".save");
-  if(saved.has(v.r)){saved.delete(v.r);b.classList.remove("on")}else{saved.add(v.r);b.classList.add("on");bump(v,4);toast("Guardado em Salvos")} save()}
+function sparks(btn){for(let i=0;i<8;i++){const s=document.createElement("i");s.className="spark";s.style.setProperty("--a",i*45+"deg");btn.appendChild(s);setTimeout(()=>s.remove(),650)}}
+function toggleLike(c){const v=c._v,b=c.querySelector(".heart");
+  if(liked.has(v.r)){liked.delete(v.r);b.classList.remove("on","pop");bump(v,-3)}
+  else{liked.add(v.r);b.classList.remove("pop");void b.offsetWidth;b.classList.add("on","pop");sparks(b);vibrate(10);bump(v,3)}
+  b.setAttribute("aria-pressed",liked.has(v.r));persist()}
+function toggleSave(c,silent){const v=c._v,b=c.querySelector(".save");
+  if(saved.includes(v.r)){saved=saved.filter(r=>r!==v.r);b.classList.remove("on");if(!silent)toast("Removido dos Salvos")}
+  else{saved.unshift(v.r);b.classList.add("on");bump(v,4);vibrate(8);toast("Guardado em Salvos")}
+  b.setAttribute("aria-pressed",saved.includes(v.r));persist()}
+function syncCards(){feed.querySelectorAll(".card").forEach(c=>{const r=c._v.r;
+  c.querySelector(".heart").classList.toggle("on",liked.has(r));c.querySelector(".save").classList.toggle("on",saved.includes(r))})}
 
 /* ---------- Efeitos ---------- */
-function burst(x,y){["","r"].forEach(k=>{const d=document.createElement("div");d.className="burst "+k;d.style.left=x+"px";d.style.top=y+"px";document.body.appendChild(d);setTimeout(()=>d.remove(),950)})}
+function heartAt(x,y){const h=document.createElement("div");h.className="halo";h.style.left=x+"px";h.style.top=y+"px";
+  const b=document.createElement("div");b.className="big";b.style.left=x+"px";b.style.top=y+"px";b.style.setProperty("--r",(Math.random()*24-12)+"deg");
+  b.innerHTML=`<svg viewBox="0 0 26 26"><path d="${HEART}"/></svg>`;document.body.append(h,b);setTimeout(()=>{h.remove();b.remove()},1000)}
 function vibrate(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch{}}
-let tt;function toast(h){const t=document.getElementById("toast");t.innerHTML=h;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2200)}
+let tt;function toast(h){const t=document.getElementById("toast");t.innerHTML=h;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2300)}
 function copy(v,msg){const s=`“${v.x}” — ${v.r}`;
-  const ok=()=>toast(msg||"Copiado"); try{navigator.clipboard.writeText(s).then(ok,()=>toast("Não foi possível copiar aqui"))}catch{toast("Não foi possível copiar aqui")}}
+  try{navigator.clipboard.writeText(s).then(()=>toast(msg||"Versículo copiado"),()=>toast("Não deu para copiar neste navegador"))}catch{toast("Não deu para copiar neste navegador")}}
 function setLight(v){const r=document.documentElement.style;r.setProperty("--glow-a",v.h[0]);r.setProperty("--glow-b",v.h[1])}
+
+/* ---------- Filtro por tema ---------- */
+const fBtn=document.getElementById("filter");
+function setFilter(t){filterTag=t;recent.length=0;
+  fBtn.querySelector("span").textContent=t?"Só "+t:"";fBtn.classList.toggle("on",!!t);
+  const i=[...feed.children].indexOf(active);[...feed.children].slice(i+1).forEach(c=>{io.unobserve(c);c.remove()});more(4);
+  if(t){toast(`Mostrando versículos sobre <em>${t}</em>`);setTimeout(()=>feed.children[i+1]?.scrollIntoView({behavior:"smooth"}),250)}}
+fBtn.onclick=()=>{setFilter(null);toast("Voltando ao seu feed")};
 
 /* ---------- Folhas ---------- */
 const veil=document.getElementById("veil"),sheet=document.getElementById("sheet");
-function openSheet(html){sheet.innerHTML='<div class="grab"></div>'+html;veil.classList.add("open");sheet.classList.add("open")}
-function closeSheet(){veil.classList.remove("open");sheet.classList.remove("open");tFeed.classList.add("on");tSaved.classList.remove("on")}
+let onClose=null;
+function openSheet(html,label,cb){sheet.innerHTML='<div class="grab" aria-hidden="true"></div>'+html;sheet.setAttribute("aria-label",label);sheet.scrollTop=0;
+  onClose=cb||null;veil.classList.add("open");sheet.classList.add("open");document.body.classList.remove("focus");
+  setTimeout(()=>sheet.querySelector("button")?.focus({preventScroll:true}),300);bindDrag()}
+function closeSheet(){if(!sheet.classList.contains("open"))return;veil.classList.remove("open");sheet.classList.remove("open");sheet.style.transform="";
+  tFeed.classList.add("on");tSaved.classList.remove("on");const cb=onClose;onClose=null;cb&&cb()}
 veil.onclick=closeSheet;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+function bindDrag(){const g=sheet.querySelector(".grab");let y0=null,dy=0;
+  g.onpointerdown=e=>{y0=e.clientY;dy=0;sheet.classList.add("drag");g.setPointerCapture(e.pointerId)};
+  g.onpointermove=e=>{if(y0===null)return;dy=Math.max(0,e.clientY-y0);sheet.style.transform=`translateY(${dy}px)`};
+  g.onpointerup=()=>{sheet.classList.remove("drag");sheet.style.transform="";if(dy>90)closeSheet();y0=null}}
+
 function openMenu(v){
   openSheet(`<h2>${v.r}</h2><p class="sub">${v.t.join(" · ")}</p>
-   <button class="opt" data-a="ler">${ICON.book}Ler o capítulo inteiro</button>
-   <button class="opt" data-a="ouvir">${ICON.ear}Ouvir este versículo</button>
-   <button class="opt" data-a="copiar">${ICON.copy}Copiar texto</button>`);
+   <button class="opt" data-a="ler">${ICON.book}<div>Ler o capítulo inteiro<small>Veja o versículo no contexto</small></div></button>
+   <button class="opt" data-a="tema">${ICON.tag}<div>Ver mais sobre ${v.t[0]}<small>Filtra o feed por este tema</small></div></button>
+   <button class="opt" data-a="ouvir">${ICON.ear}<div>Ouvir em voz alta</div></button>
+   <button class="opt" data-a="copiar">${ICON.copy}<div>Copiar texto</div></button>
+   <button class="opt" data-a="menos">${ICON.less}<div>Mostrar menos assim<small>Diminui este tema no seu feed</small></div></button>`,"Opções do versículo");
   sheet.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const a=b.dataset.a;closeSheet();
-    if(a==="copiar")copy(v);else toast(a==="ler"?"Leitura do capítulo chega na próxima versão":"Áudio chega na próxima versão")});
+    if(a==="copiar")copy(v);else if(a==="tema")setFilter(v.t[0]);
+    else if(a==="menos"){v.t.forEach(t=>taste[t]=Math.min(taste[t]||0,0)-3);persist();toast(`Vamos mostrar menos sobre <em>${v.t[0]}</em>`)}
+    else toast(a==="ler"?"A leitura do capítulo chega na próxima versão":"O áudio chega na próxima versão")});
 }
 function openSaved(){
-  const list=V.filter(v=>saved.has(v.r));
-  const top=Object.entries(taste).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  openSheet(`<h2>Salvos</h2><p class="sub">${list.length?list.length+" versículo"+(list.length>1?"s":""):"Nada salvo ainda"}</p>
-   ${top.length?`<div class="taste">${top.map(([t,s])=>`<span>${t} <b>${Math.round(s)}</b></span>`).join("")}</div>`:""}
-   ${list.length?list.map(v=>`<div class="saved-item"><q>${v.x}</q><div>${v.r}</div></div>`).join(""):'<div class="empty">Toque em Salvar num versículo para guardá-lo aqui.</div>'}`);
+  const list=saved.map(byRef).filter(Boolean);
+  const top=Object.entries(taste).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,4),max=top[0]?.[1]||1;
+  openSheet(`<h2>Salvos</h2><p class="sub">${list.length?list.length+" versículo"+(list.length>1?"s":"")+" guardado"+(list.length>1?"s":""):"Nenhum versículo guardado ainda"}</p>
+   ${top.length?`<div class="label">O que tem tocado você</div><div class="taste">${top.map(([t,s])=>`<div>${t}<span><i style="width:${Math.max(8,s/max*100)}%"></i></span></div>`).join("")}</div>`:""}
+   ${list.length?`<div class="label">Seus versículos</div>`+list.map(v=>`<div class="saved-item"><div><q>${v.x}</q><small>${v.r}</small></div><button class="rm" data-r="${v.r}" aria-label="Remover ${v.r}">✕</button></div>`).join("")
+     :'<div class="empty">Toque em <b>Salvar</b> num versículo para guardá-lo aqui e reler quando precisar.</div>'}
+   <button class="link" id="redo">Mudar como estou me sentindo</button>`,"Salvos");
+  sheet.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{saved=saved.filter(r=>r!==b.dataset.r);persist();syncCards();
+    const it=b.closest(".saved-item");it.style.transition=".35s";it.style.opacity="0";it.style.transform="translateX(30px)";setTimeout(openSaved,300)});
+  document.getElementById("redo").onclick=()=>{closeSheet();setTimeout(onboarding,350)};
 }
 tSaved.onclick=()=>{tSaved.classList.add("on");tFeed.classList.remove("on");openSaved()};
 tFeed.onclick=closeSheet;
 
+/* ---------- Primeiro acesso: humor ---------- */
+function onboarding(){
+  const sel=new Set();
+  openSheet(`<h2>Como está seu coração hoje?</h2><p class="sub">Escolha até três. Vamos começar o seu feed por aí.</p>
+   <div class="chips">${MOODS.map(([l,t])=>`<button class="chip" data-t="${t}" aria-pressed="false">${l}</button>`).join("")}</div>
+   <button class="primary" id="go" disabled>Começar</button><button class="ghost" id="skip">Pular</button>`,"Como você está",()=>S.set("lumen.onb",1));
+  const go=document.getElementById("go");
+  sheet.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const t=b.dataset.t;
+    if(sel.has(t))sel.delete(t);else if(sel.size<3)sel.add(t);else{toast("Escolha até três");return}
+    b.classList.toggle("on",sel.has(t));b.setAttribute("aria-pressed",sel.has(t));vibrate(5);go.disabled=!sel.size});
+  go.onclick=()=>{sel.forEach(t=>taste[t]=Math.max(taste[t]||0,8));sel.forEach(t=>announced.add(t));persist();closeSheet();
+    const i=[...feed.children].indexOf(active);[...feed.children].slice(i+1).forEach(c=>{io.unobserve(c);c.remove()});more(4);
+    toast("Pronto. Seu feed começa agora")};
+  document.getElementById("skip").onclick=closeSheet;
+}
+
 /* ---------- Feed e tempo de leitura ---------- */
 let active=null,since=0;
 const io=new IntersectionObserver(es=>es.forEach(e=>{
-  if(e.isIntersecting&&e.intersectionRatio>.6&&e.target!==active){
-    if(active){const dt=Date.now()-since; if(dt>5000)bump(active._v,1); else if(dt<900)bump(active._v,-1); active.classList.remove("active")}
-    active=e.target; since=Date.now(); active.classList.add("active"); setLight(active._v);
-    document.body.classList.toggle("immersed",[...feed.children].indexOf(active)>0);
-    const h=active.querySelector(".hint"); if([...feed.children].indexOf(active)>0)document.querySelectorAll(".hint").forEach(x=>x.remove());
-    if(feed.lastElementChild===active||feed.children[feed.children.length-2]===active)more(4);
-  }}),{root:feed,threshold:[.6]});
+  if(!e.isIntersecting||e.intersectionRatio<.6||e.target===active)return;
+  if(active){const dt=Date.now()-since;if(dt>5000)bump(active._v,1);else if(dt<900)bump(active._v,-1);active.classList.remove("active")}
+  active=e.target;since=Date.now();active.classList.add("active");setLight(active._v);
+  const idx=[...feed.children].indexOf(active);
+  if(idx>0)feed.querySelectorAll(".hint").forEach(h=>{h.style.opacity=0;setTimeout(()=>h.remove(),400)});
+  if(idx>=feed.children.length-2)more(4);
+}),{root:feed,threshold:[.6]});
 function more(n){for(let i=0;i<n;i++){const c=makeCard(pick(),!feed.children.length);feed.appendChild(c);io.observe(c)}}
 more(5);
 requestAnimationFrame(()=>{const f=feed.firstElementChild;f.classList.add("active");active=f;since=Date.now();setLight(f._v)});
+if(!S.get("lumen.onb",0))setTimeout(onboarding,900);
 </script>
