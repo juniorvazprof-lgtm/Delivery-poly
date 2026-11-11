@@ -336,6 +336,52 @@ body.playing .cover.lg.cur{animation:breathe 5s ease-in-out infinite}
 .unlock p{margin:0;color:var(--muted);font-size:.9rem;max-width:22rem}
 .disclaim{font-size:.78rem;color:var(--muted);line-height:1.5;border:1px dashed var(--line);border-radius:14px;padding:12px;margin-top:10px}
 
+/* Aba Premium */
+.tabs .tprem{color:var(--gold)}
+.tabs .tprem.on{background:linear-gradient(135deg,#E2BE74,#B98A3A);color:#1D1B22}
+@media (max-width:440px){.brand{display:none}header{justify-content:center}}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tool{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border:1px solid var(--line);background:var(--glass);color:var(--ink);border-radius:18px;padding:14px;cursor:pointer;min-width:0;transition:transform .4s var(--spring)}
+.tool:active{transform:scale(.96)}
+.tool .ti{font-size:1.4rem;margin-bottom:4px}
+.tool b{font-size:.92rem}.tool small{color:var(--muted);font-size:.76rem;line-height:1.4}
+.soon{margin-top:6px;font:700 .6rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 8px}
+.soon.open{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 50%,transparent)}
+
+/* Púlpito v2 */
+.field{width:100%;border:1px solid var(--line);background:var(--glass);color:var(--ink);font:500 .95rem var(--sans);padding:13px 16px;border-radius:14px;margin:0 0 18px;user-select:text;-webkit-user-select:text}
+.field:focus{outline:2px solid var(--gold);outline-offset:1px}
+.gen{display:grid;justify-items:center;gap:8px;text-align:center;margin-top:30px}
+.gen small{color:var(--muted)}
+.ex-tag{display:inline-block;font:700 .6rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border:1px dashed var(--line);padding:4px 8px;border-radius:99px;margin-bottom:10px}
+.big-idea{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:16px;font:450 1.15rem/1.45 var(--serif)}
+.big-idea small{display:block;font:700 .62rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.pcards{display:grid;gap:10px}
+.pcard{position:relative;display:grid;grid-template-columns:auto 1fr;column-gap:12px;row-gap:4px;text-align:left;border:1px solid var(--line);color:var(--ink);cursor:pointer;border-radius:20px;padding:16px;overflow:hidden;
+  background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--c1) 45%,transparent),transparent 60%),var(--glass);transition:transform .4s var(--spring)}
+.pcard:active{transform:scale(.97)}
+.pcard .pn{grid-row:span 3;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--bg);font:700 .8rem var(--sans)}
+.pcard b{font:500 1.1rem var(--serif)}
+.pcard .pt{color:var(--muted);font:400 .9rem/1.45 var(--serif)}
+.pcard .go{font:700 .74rem var(--sans);color:var(--gold)}
+.tl{list-style:none;padding:0;margin:0 0 6px;display:grid;gap:0}
+.tl li{display:grid;grid-template-columns:58px 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.tl .tm{font:800 .78rem var(--sans);color:var(--gold);padding-top:2px;font-variant-numeric:tabular-nums}
+.tl b{font-size:.95rem}.tl p{margin:4px 0 0;line-height:1.55;font-size:.92rem}
+.tl .link{padding:6px 0 0}
+.pass .k{font:700 .64rem var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.pass h2{margin:6px 0 12px}
+.read-me{font:400 1.3rem/1.55 var(--serif);margin:0 0 20px;padding:16px 18px;border-radius:18px;background:color-mix(in srgb,var(--gold) 12%,transparent);user-select:text;-webkit-user-select:text}
+.ctx{display:grid;gap:12px;margin-bottom:20px}
+.ctx>div{display:flex;gap:12px;align-items:flex-start}
+.ctx span{font-size:1.2rem;line-height:1.3}
+.ctx b{font-size:.86rem}.ctx p{margin:2px 0 0;font-size:.92rem;line-height:1.5;color:var(--ink)}
+.simple{font-size:1rem;line-height:1.65;margin:0 0 18px}
+.gloss{margin:0 0 18px;display:grid;gap:8px}
+.gloss dt{font-weight:700;font-size:.9rem}.gloss dd{margin:0 0 4px;color:var(--muted);font-size:.88rem;line-height:1.45}
+.keep{border-radius:16px;padding:14px 16px;background:var(--ink);color:var(--bg);font:450 1.05rem/1.4 var(--serif)}
+.keep small{display:block;font:700 .6rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}}
 </style>
 
@@ -344,7 +390,7 @@ body.playing .cover.lg.cur{animation:breathe 5s ease-in-out infinite}
 <header>
   <div class="brand">lu<b>m</b>en</div>
   <div class="hr"><button id="snd" aria-label="Ligar trilha sonora"></button>
-  <nav class="tabs"><button id="tFeed" class="on">Para você</button><button id="tListen">Ouvir</button><button id="tSaved">Salvos</button></nav></div>
+  <nav class="tabs"><button id="tFeed" class="on">Início</button><button id="tListen">Ouvir</button><button id="tSaved">Salvos</button><button id="tPrem" class="tprem">✦ Premium</button></nav></div>
 </header>
 <button id="filter" aria-label="Remover filtro de tema"><span></span><i>✕</i></button>
 <main id="feed" aria-label="Versículos"></main>
@@ -636,17 +682,18 @@ function openSaved(){
    ${top.length?`<div class="label">O que tem tocado você</div><div class="taste">${top.map(([t,s])=>`<div>${t}<span><i style="width:${Math.max(8,s/max*100)}%"></i></span></div>`).join("")}</div>`:""}
    ${list.length?`<div class="label">Seus versículos</div>`+list.map(v=>`<div class="saved-item"><div><q>${v.x}</q><small>${v.r}</small></div><button class="rm" data-r="${v.r}" aria-label="Remover ${v.r}">✕</button></div>`).join("")
      :'<div class="empty">Toque em <b>Salvar</b> num versículo para guardá-lo aqui e reler quando precisar.</div>'}
-   <button class="link" id="redo">Mudar como estou me sentindo</button><br><button class="link" id="toPray">🙏 Oração do dia</button><br><button class="link" id="toSerm">✦ Púlpito: esboços de pregação</button><br><button class="link" id="toPrem">✦ ${premium?"Você é Premium":"Conhecer o Premium"}</button>`,"Salvos");
+   <button class="link" id="redo">Mudar como estou me sentindo</button><br><button class="link" id="toPray">🙏 Oração do dia</button><br><button class="link" id="toPrem">✦ ${premium?"Você é Premium":"Conhecer o Premium"}</button>`,"Salvos");
   document.getElementById("toPrem").onclick=()=>{closeSheet();openPremium()};
-  document.getElementById("toPray").onclick=()=>{closeSheet();openPray()};document.getElementById("toSerm").onclick=()=>{closeSheet();openSerm()};
+  document.getElementById("toPray").onclick=()=>{closeSheet();openPray()};
   sheet.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{saved=saved.filter(r=>r!==b.dataset.r);persist();syncCards();
     const it=b.closest(".saved-item");it.style.transition=".35s";it.style.opacity="0";it.style.transform="translateX(30px)";setTimeout(openSaved,300)});
   document.getElementById("redo").onclick=()=>{closeSheet();setTimeout(onboarding,350)};
 }
 tSaved.onclick=()=>{setTab("saved");openSaved()};
 tFeed.onclick=()=>{closeSheet();closePlayer();closePremium()};
-tListen.onclick=()=>{closeSheet();openPlayer()};
-function setTab(n){tFeed.classList.toggle("on",n==="feed");tListen.classList.toggle("on",n==="listen");tSaved.classList.toggle("on",n==="saved")}
+tListen.onclick=()=>{closeSheet();closePremium();openPlayer()};
+tPrem.onclick=()=>{closeSheet();openPremium()};
+function setTab(n){tPrem.classList.toggle("on",n==="premium");tFeed.classList.toggle("on",n==="feed");tListen.classList.toggle("on",n==="listen");tSaved.classList.toggle("on",n==="saved")}
 
 /* ---------- Primeiro acesso: humor ---------- */
 function onboarding(){
@@ -840,23 +887,32 @@ const PLANS=[{id:"anual",n:"Anual",d:"R$ 7,49 por mês · economize 50%",p:"R$ 8
  {id:"mensal",n:"Mensal",d:"Cancele quando quiser",p:"R$ 14,90",u:"por mês"},{id:"familia",n:"Família",d:"Até 5 pessoas",p:"R$ 129,90",u:"por ano"}];
 const PERKS=[["Louvores completos, sem limite","Todos os álbuns, offline e com a tela desligada"],["Sem anúncios","O feed fica só com a Palavra"],
  ["Bíblia narrada e modo dormir","Versículos em voz calma com trilha suave"],["Planos de leitura e explicações","Contexto e aplicação de cada versículo"],
- ["Temas visuais exclusivos","Para o feed e para as imagens que você compartilha"],["Imagens sem marca d’água","E mais modelos para Stories"],["Púlpito: esboços de pregação","Sermões prontos e ajustados à sua igreja"]];
+ ["Temas visuais exclusivos","Para o feed e para as imagens que você compartilha"],["Imagens sem marca d’água","E mais modelos para Stories"],["Púlpito com IA","Pregações com passagens, contexto e roteiro"]];
 let plan="anual";
-function openPremium(){closeSheet();renderPremium();premEl.classList.add("open")}
-function closePremium(){premEl.classList.remove("open")}
+function openPremium(){closeSheet();renderPremium();premEl.classList.add("open");setTab("premium")}
+function closePremium(){if(!premEl.classList.contains("open"))return;premEl.classList.remove("open");setTab(playerOpen?"listen":"feed")}
 document.getElementById("prClose").onclick=closePremium;
+const TOOLS=[{id:"pulpito",i:"📖",n:"Púlpito",d:"Pregação pronta com passagens, contexto e roteiro, gerada com IA.",go:()=>{closePremium();openSerm()}},
+ {id:"louvor",i:"🎵",n:"Louvores completos",d:"Todos os álbuns, sem limite e sem anúncio.",go:()=>{closePremium();openPlayer()}},
+ {id:"semads",i:"🚫",n:"Sem anúncios",d:"O feed fica só com a Palavra.",go:null},
+ {id:"narrada",i:"🎧",n:"Bíblia narrada",d:"Versículos em voz calma, com trilha.",soon:1},
+ {id:"planos",i:"🗓️",n:"Planos de leitura",d:"“7 dias contra a ansiedade” e outros.",soon:1},
+ {id:"temas",i:"🎨",n:"Temas visuais",d:"Novos fundos para o feed e para as imagens.",soon:1}];
 function renderPremium(){const sel=PLANS.find(p=>p.id===plan);
   prPage.innerHTML=`<div class="pw"><div class="crown">✦</div>
-   <h3>${premium?"Você é Premium":"Lumen Premium"}</h3><p class="lead">${premium?"Obrigado por apoiar o Lumen. Aproveite tudo sem limites.":"A Palavra continua grátis. O Premium é para quem quer ir mais fundo, com louvor e sem interrupções."}</p>
-   <ul class="perks">${PERKS.map(([a,b])=>`<li><div>${a}<small>${b}</small></div></li>`).join("")}</ul>
-   ${premium?`<button class="sec" id="prOff" style="width:100%">Voltar ao plano grátis (demonstração)</button>`:`
+   <h3>${premium?"Você é Premium":"Lumen Premium"}</h3><p class="lead">${premium?"Tudo liberado. Escolha por onde começar.":"A Palavra continua grátis. O Premium é para quem quer ir mais fundo."}</p>
+   <div class="label">${premium?"Suas ferramentas":"O que você ganha"}</div>
+   <div class="tools">${TOOLS.map(t=>`<button class="tool" data-t="${t.id}"><span class="ti">${t.i}</span><b>${t.n}</b><small>${t.d}</small>${t.soon?'<span class="soon">Em breve</span>':t.go?'<span class="soon open">Abrir ›</span>':premium?'<span class="soon open">Ativo</span>':""}</button>`).join("")}</div>
+   ${premium?`<button class="sec" id="prOff" style="width:100%;margin-top:22px">Voltar ao plano grátis (demonstração)</button>`:`
+   <div class="label" style="margin-top:26px">Escolha seu plano</div>
    <div class="plans">${PLANS.map(p=>`<button class="plan ${p.id===plan?"on":""}" data-p="${p.id}" aria-pressed="${p.id===plan}">${p.badge?`<span class="badge">${p.badge}</span>`:""}<div><b>${p.n}</b><small>${p.d}</small></div><div class="pr">${p.p}<small>${p.u}</small></div></button>`).join("")}</div>
    <button class="primary" id="prGo">Testar 7 dias grátis</button>
    <p class="fine">Depois, ${sel.p} ${sel.u}. Cancele quando quiser.<br>Demonstração: nada é cobrado.</p>`}</div>`;
+  prPage.querySelectorAll(".tool").forEach(b=>b.onclick=()=>{const t=TOOLS.find(x=>x.id===b.dataset.t);if(t.soon)toast(`${t.n} chega em breve`);else if(t.go)t.go()});
   prPage.querySelectorAll(".plan").forEach(b=>b.onclick=()=>{plan=b.dataset.p;vibrate(5);renderPremium()});
   const go=document.getElementById("prGo");if(go)go.onclick=()=>setPremium(true);
   const off=document.getElementById("prOff");if(off)off.onclick=()=>setPremium(false)}
-function setPremium(on){premium=on;S.set("lumen.prem",on);closePremium();
+function setPremium(on){premium=on;S.set("lumen.prem",on);renderPremium();if(smEl.classList.contains("open"))renderSerm();
   if(on){feed.querySelectorAll(".card.ad").forEach(c=>{if(c!==active){io.unobserve(c);c.remove()}});P.gated=false;toast("✦ Premium ativado <em>(demonstração)</em>")}
   else toast("Você voltou ao plano grátis");
   if(playerOpen)renderPlayer();updateMini()}
@@ -915,44 +971,119 @@ function openPrayTime(){const T=["06:00","07:00","12:00","18:00","21:00","22:00"
     prayAt=pick;S.set("lumen.prayAt",pick);closeSheet();toast(`Oração diária às <em>${pick}</em>`);if(prayEl.classList.contains("open"))renderPray()};
   const off=document.getElementById("offP");if(off)off.onclick=()=>{prayAt=null;S.set("lumen.prayAt",null);closeSheet();toast("Oração diária desativada")}}
 
-/* ---------- Púlpito: esboços de pregação ---------- */
+/* ---------- Púlpito: pregação com contexto, gerada por IA ---------- */
 const smEl=document.getElementById("serm"),smPage=document.getElementById("smPage");
-const SM={tema:"esperança",ocasiao:"Culto de domingo",dur:30,tom:"Pastoral"};
-const TOMS={Pastoral:["Deus vê você","Deus fala com você","Deus caminha com você"],Evangelístico:["A nossa necessidade","A resposta de Deus","O convite de hoje"],Didático:["O contexto do texto","O princípio que ele ensina","Como aplicar hoje"]};
-const DESAFIO={"Culto de domingo":"Escolha um dos versículos de hoje, escreva num papel e leia todas as manhãs desta semana.","Jovens":"Mande um dos versículos de hoje para um amigo que precisa ouvir isso.",
- "Célula":"Em duplas, compartilhem onde esse tema aparece na vida de vocês e orem um pelo outro.","Culto de oração":"Separe 10 minutos por dia nesta semana para orar sobre esse tema."};
+const SM={tema:"esperança",ocasiao:"Culto de domingo",dur:15,ref:""};
+const OCAS=["Culto de domingo","Jovens","Célula","Crianças","Culto de oração"];
 const cap=t=>t[0].toUpperCase()+t.slice(1);
-function openSerm(){renderSermForm();smEl.classList.add("open");document.body.classList.remove("focus")}
-document.getElementById("smClose").onclick=()=>smEl.classList.remove("open");
-function chipRow(key,opts,fmt){return `<div class="label">${{tema:"Tema",ocasiao:"Ocasião",dur:"Duração",tom:"Tom"}[key]}</div><div class="chips">${opts.map(o=>`<button class="chip ${SM[key]===o?"on":""}" data-k="${key}" data-v="${o}">${fmt?fmt(o):o}</button>`).join("")}</div>`}
-function renderSermForm(out){
-  smPage.innerHTML=`<div class="sw"><p class="lead">Escolha o tema e a ocasião. O Púlpito monta um esboço de pregação com textos bíblicos, tempo de cada parte e um desafio para a igreja.</p>
-   ${chipRow("tema",Object.keys(NEAR),cap)}${chipRow("ocasiao",Object.keys(DESAFIO))}${chipRow("dur",[15,30,45],d=>d+" min")}${chipRow("tom",Object.keys(TOMS))}
-   <button class="primary" id="smGo">Montar esboço</button><div id="smOut">${out||""}</div></div>`;
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let SAMPLE=null,sermon=null,smCtl=null;
+window.claude?.use?.("sample").then(s=>{SAMPLE=s}).catch(()=>{});
+/* Exemplo pronto (aparece antes de gerar e quando a IA não está disponível) */
+const EXAMPLE={titulo:"Quando parece que não tem saída",ideia_central:"Deus não esquece de você, mesmo nos dias difíceis. Ele dá força nova todos os dias.",
+ tema:"esperança",ocasiao:"Culto de domingo",minutos:15,
+ passagens:[
+  {ref:"Isaías 40:31",texto:"Mas os que esperam no Senhor renovarão as suas forças; subirão com asas como águias; correrão, e não se cansarão; caminharão, e não se fatigarão.",
+   quem:"O profeta Isaías. Profeta era a pessoa que Deus usava para levar recados dele ao povo.",para_quem:"Para o povo de Israel, que estava passando por um tempo muito difícil e se sentia esquecido por Deus.",
+   quando:"Uns 700 anos antes de Jesus nascer. O povo tinha medo de perder tudo e ser levado para longe de casa.",
+   explicacao:"Sabe quando você está tão cansado que não consegue nem levantar? Isaías diz que quem confia em Deus recebe energia nova. A águia não bate as asas o tempo todo: ela abre as asas e deixa o vento levar. Confiar em Deus é parecido: a gente para de fazer força sozinho e deixa Deus nos levar.",
+   palavras:[{p:"Esperar no Senhor",s:"Confiar que Deus vai agir, mesmo antes de ver acontecer."},{p:"Renovar",s:"Deixar novo de novo, como bateria recarregada."},{p:"Fatigar",s:"Ficar muito cansado."}],
+   lembrar:"Quando eu estiver cansado, posso pedir força nova para Deus."},
+  {ref:"Jeremias 29:11",texto:"Porque eu bem sei os pensamentos que penso de vós, diz o Senhor; pensamentos de paz, e não de mal, para vos dar o fim que esperais.",
+   quem:"O profeta Jeremias. Ele escreveu uma carta, como quem manda uma mensagem para alguém que está longe.",para_quem:"Para as famílias de Israel que tinham sido levadas à força para a Babilônia, um país distante.",
+   quando:"Uns 600 anos antes de Jesus. Eles estavam longe de casa e Deus avisou que ficariam lá por 70 anos.",
+   explicacao:"Imagine mudar de cidade sem querer e ficar triste achando que nada vai dar certo. Deus manda dizer: 'Eu tenho um plano bom para vocês'. A promessa não era que tudo seria rápido, mas que Deus não tinha desistido deles.",
+   palavras:[{p:"Pensamentos de paz",s:"Planos bons, que trazem tranquilidade."},{p:"O fim que esperais",s:"Um futuro com esperança."}],
+   lembrar:"Mesmo quando demora, Deus tem um plano bom para mim."},
+  {ref:"Lamentações 3:22-23",texto:"As misericórdias do Senhor são a causa de não sermos consumidos, porque as suas misericórdias não têm fim; novas são cada manhã; grande é a tua fidelidade.",
+   quem:"A tradição diz que foi Jeremias, o mesmo profeta da carta.",para_quem:"Para o povo que tinha visto a cidade de Jerusalém ser destruída.",
+   quando:"Logo depois que Jerusalém foi destruída, uns 586 anos antes de Jesus. Era um dos momentos mais tristes da história do povo.",
+   explicacao:"O livro se chama Lamentações porque está cheio de choro. Mas, bem no meio da tristeza, o autor lembra: o amor de Deus é como o sol, que nasce de novo toda manhã. Ontem pode ter sido ruim, mas hoje Deus começa tudo de novo com a gente.",
+   palavras:[{p:"Misericórdia",s:"Quando Deus é bondoso com a gente mesmo sem merecermos."},{p:"Consumidos",s:"Destruídos, acabados."},{p:"Fidelidade",s:"Cumprir o que promete, sempre."}],
+   lembrar:"Todo dia é uma chance nova com Deus."}],
+ roteiro:[
+  {parte:"Começo",min:2,falar:"Pergunte: 'Quem aqui já ficou tão cansado que quis desistir?' Deixe as pessoas levantarem a mão. Diga que hoje vamos ver três recados de Deus para dias assim.",ref:""},
+  {parte:"Primeiro recado: força nova",min:4,falar:"Leia Isaías 40:31. Explique a imagem da águia que abre as asas e deixa o vento levar. Confiar em Deus é parar de fazer força sozinho.",ref:"Isaías 40:31"},
+  {parte:"Segundo recado: Deus tem um plano",min:4,falar:"Conte que Jeremias escreveu uma carta para quem estava longe de casa. Leia Jeremias 29:11. Deus não desistiu deles, e não desiste de nós.",ref:"Jeremias 29:11"},
+  {parte:"Terceiro recado: todo dia é novo",min:3,falar:"Leia Lamentações 3:22-23. Compare o amor de Deus com o sol que nasce toda manhã.",ref:"Lamentações 3:22-23"},
+  {parte:"Final e oração",min:2,falar:"Convide todos a fechar os olhos e entregar a Deus o que está pesando. Termine lendo de novo: 'novas são cada manhã'.",ref:""}],
+ desafio:"Escreva Lamentações 3:23 num papel e leia toda manhã desta semana, antes de pegar o celular.",
+ oracao:"Senhor, obrigado porque o teu amor é novo todo dia. Quando a gente estiver cansado, dá força nova. Amém."};
+
+function openSerm(){if(!sermon)sermon=EXAMPLE;renderSerm();smEl.classList.add("open");document.body.classList.remove("focus")}
+document.getElementById("smClose").onclick=()=>{smCtl?.abort();smEl.classList.remove("open")};
+function chipRow(key,label,opts,fmt){return `<div class="label">${label}</div><div class="chips">${opts.map(o=>`<button class="chip ${SM[key]===o?"on":""}" data-k="${key}" data-v="${o}">${fmt?fmt(o):o}</button>`).join("")}</div>`}
+function renderSerm(){
+  smPage.innerHTML=`<div class="sw"><p class="lead">Monte uma pregação com as passagens, o contexto de cada uma e o roteiro com o tempo de cada parte. Tudo explicado de um jeito simples, que até uma criança entende.</p>
+   ${chipRow("tema","Tema",Object.keys(NEAR),cap)}
+   <div class="label">Passagem principal <span style="text-transform:none;letter-spacing:0;font-weight:500">(opcional)</span></div>
+   <input id="smRef" class="field" placeholder="Ex.: Salmos 23 ou João 15:1-5" value="${esc(SM.ref)}" autocomplete="off">
+   ${chipRow("ocasiao","Para quem",OCAS)}${chipRow("dur","Duração",[15,30,45],d=>d+" min")}
+   <button class="primary" id="smGo">${premium?"✦ Gerar pregação com IA":"✦ Gerar com IA · Premium"}</button>
+   <div id="smOut">${sermon?sermonHTML(sermon):""}</div></div>`;
   smPage.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const k=b.dataset.k;SM[k]=k==="dur"?+b.dataset.v:b.dataset.v;
     smPage.querySelectorAll(`.chip[data-k="${k}"]`).forEach(x=>x.classList.toggle("on",x===b))});
-  document.getElementById("smGo").onclick=()=>{const o=document.getElementById("smOut");
-    o.innerHTML=`<div style="margin-top:26px">${Array.from({length:7},(_,i)=>`<div class="skel" style="width:${60+((i*29)%40)}%"></div>`).join("")}</div>`;
-    setTimeout(()=>{o.innerHTML=buildSermon();bindSermon();o.scrollIntoView({behavior:"smooth",block:"start"})},1100)}}
-function buildSermon(){const t=SM.tema,D=SM.dur,m=f=>Math.max(1,Math.round(D*f));
-  const rel=new Set([t,...(NEAR[t]||[])]),vs=V.filter(v=>v.t.includes(t)).concat(V.filter(v=>!v.t.includes(t)&&v.t.some(x=>rel.has(x))));
-  const base=vs[0],pts=[vs[1]||vs[0],vs[2]||vs[0],vs[3]||vs[1]||vs[0]],heads=TOMS[SM.tom];
-  const tips=["Leia em voz alta e destaque a palavra-chave do versículo.","Mostre como o texto conversa com a vida de quem está ouvindo.","Conte uma experiência curta, de até um minuto, sobre esse ponto."];
-  const blocks=[
-   `<div class="blk"><h4>Introdução <span>${m(.1)} min</span></h4><p>Abra com uma pergunta para a igreja: em que momento desta semana o tema <b>${t}</b> esteve presente na sua vida?</p><p>Leia o texto base em voz alta e faça um momento de silêncio.</p></div>`,
-   ...pts.map((v,i)=>`<div class="blk"><h4>${i+1}. ${heads[i]} <span>${m(.25)} min</span></h4><q>${v.x}</q><p><b>${v.r}</b></p><ul><li>${tips[i]}</li></ul></div>`),
-   `<div class="blk"><h4>Aplicação <span>${m(.1)} min</span></h4><p><b>Desafio da semana:</b> ${DESAFIO[SM.ocasiao]}</p></div>`,
-   `<div class="blk"><h4>Conclusão e oração <span>${m(.05)} min</span></h4><p>Retome a pergunta do início e convide a igreja a orar sobre ${t}. Encerre lendo de novo ${base.r}.</p></div>`];
-  const free=premium?blocks.length:2;
-  return `<div class="outline"><h3>${cap(t)} à luz da Palavra</h3><p class="meta">${SM.ocasiao} · ${D} min · tom ${SM.tom.toLowerCase()} · texto base: <b>${base.r}</b></p>
-   ${blocks.slice(0,free).join("")}${premium?"":`<div class="locked">${blocks.slice(free).join("")}</div>
-   <div class="unlock"><div class="crown" style="margin:0">✦</div><b>O esboço completo é do Premium</b><p>Os três pontos, aplicação, conclusão, tempo de cada parte e esboços ilimitados.</p><button class="primary" id="smPrem" style="max-width:20rem">Testar 7 dias grátis</button></div>`}
-   ${premium?`<div class="row" style="margin-top:14px"><button class="primary" id="smCopy">Copiar esboço</button><button class="sec" id="smNew">Outro tema</button></div>`:""}
-   <p class="disclaim">O esboço é um ponto de partida. Ore, estude o contexto de cada texto e coloque a sua própria voz e experiência na pregação.</p></div>`}
-function bindSermon(){const pr=document.getElementById("smPrem");if(pr)pr.onclick=()=>{smEl.classList.remove("open");openPremium()};
-  const cp=document.getElementById("smCopy");if(cp)cp.onclick=()=>{const txt=document.querySelector(".outline").innerText.replace(/\n{3,}/g,"\n\n");
-    try{navigator.clipboard.writeText(txt).then(()=>toast("Esboço copiado"),()=>toast("Não deu para copiar neste navegador"))}catch{toast("Não deu para copiar neste navegador")}};
-  const nw=document.getElementById("smNew");if(nw)nw.onclick=()=>{smPage.scrollTo({top:0,behavior:"smooth"})}}
+  document.getElementById("smRef").oninput=e=>SM.ref=e.target.value.slice(0,60);
+  document.getElementById("smGo").onclick=generate;bindSermon()}
+function prompt(){const n=SM.dur<=15?3:SM.dur<=30?4:5;
+  return `Você é um professor de Bíblia que explica para crianças de 10 a 12 anos. Monte uma pregação de ${SM.dur} minutos, em português do Brasil, para: ${SM.ocasiao}. Tema: ${SM.tema}.${SM.ref?` Passagem principal escolhida pela pessoa: ${SM.ref}. Use-a como a primeira passagem.`:""}
+
+Regras:
+- Linguagem muito simples: frases curtas, palavras do dia a dia, exemplos da vida de uma família brasileira. Toda palavra difícil precisa ser explicada.
+- Use exatamente ${n} passagens bíblicas que combinem com o tema.
+- "texto": o texto bíblico na tradução de João Ferreira de Almeida em domínio público (ortografia atual). Seja fiel ao versículo; não invente versículos.
+- Contexto histórico correto. Não invente fatos. Se a autoria for incerta, escreva "a tradição diz que".
+- "explicacao": 3 a 5 frases com uma comparação do cotidiano.
+- O roteiro deve somar exatamente ${SM.dur} minutos e dizer o que a pessoa fala em cada parte, como um passo a passo.
+
+Responda SOMENTE com um objeto JSON neste formato:
+{"titulo":"","ideia_central":"uma frase","passagens":[{"ref":"Livro 1:2","texto":"","quem":"quem escreveu, explicado","para_quem":"","quando":"","explicacao":"","palavras":[{"p":"palavra","s":"significado simples"}],"lembrar":"uma frase para levar para casa"}],"roteiro":[{"parte":"","min":2,"falar":"","ref":"Livro 1:2 ou vazio"}],"desafio":"","oracao":""}`}
+async function generate(){
+  if(!premium){smEl.classList.remove("open");openPremium();toast("O Púlpito com IA é do Premium");return}
+  const out=document.getElementById("smOut");
+  if(!SAMPLE){out.innerHTML=`<p class="disclaim" style="margin-top:20px">A geração com IA funciona quando o protótipo é aberto no Claude. Abaixo está o exemplo pronto.</p>`+sermonHTML(EXAMPLE);bindSermon();return}
+  smCtl?.abort();smCtl=new AbortController();const btn=document.getElementById("smGo");btn.disabled=true;
+  const steps=["Escolhendo as passagens…","Buscando o contexto de cada uma…","Explicando de um jeito simples…","Montando o roteiro com os tempos…"];let si=0;
+  out.innerHTML=`<div class="gen"><div class="breath" style="width:90px;height:90px"></div><b id="genTxt">${steps[0]}</b><small>Isso pode levar até um minuto.</small><button class="ghost" id="genStop">Parar</button></div>`;
+  const iv=setInterval(()=>{si=Math.min(si+1,steps.length-1);const g=document.getElementById("genTxt");if(g)g.textContent=steps[si]},9000);
+  document.getElementById("genStop").onclick=()=>smCtl.abort();
+  try{const r=await SAMPLE.json(prompt(),{signal:smCtl.signal,cache:false});
+    if(!r||!Array.isArray(r.passagens)||!r.passagens.length||!Array.isArray(r.roteiro))throw{code:"invalid_json"};
+    sermon={...r,tema:SM.tema,ocasiao:SM.ocasiao,minutos:SM.dur,ia:true};out.innerHTML=sermonHTML(sermon);bindSermon();
+    out.scrollIntoView({behavior:"smooth",block:"start"})}
+  catch(e){const msg={cancelled:"Geração interrompida.",not_granted:"Você não permitiu o uso do Claude nesta página.",rate_limited:"Muitos pedidos seguidos. Espere um pouco e tente de novo.",
+      invalid_json:"A resposta veio incompleta. Tente gerar de novo.",refused:"Não foi possível gerar com esse pedido. Tente outro tema ou passagem."}[e.code]||"Algo deu errado. Tente de novo em instantes.";
+    out.innerHTML=`<p class="disclaim" style="margin-top:20px">${msg}</p>`+(sermon?sermonHTML(sermon):"");bindSermon()}
+  finally{clearInterval(iv);btn.disabled=false}}
+function sermonHTML(s){const ps=s.passagens||[];
+  return `<div class="outline">${s.ia?"":`<span class="ex-tag">Exemplo pronto</span>`}<h3>${esc(s.titulo)}</h3>
+   <p class="meta">${esc(s.ocasiao||"")} · ${esc(s.minutos||"")} min · tema ${esc(s.tema||"")}</p>
+   <div class="big-idea"><small>A ideia em uma frase</small>${esc(s.ideia_central)}</div>
+   <div class="label" style="margin-top:22px">Passagens · toque para ver o contexto</div>
+   <div class="pcards">${ps.map((p,i)=>`<button class="pcard" data-i="${i}" style="--c1:${["#F2C879","#9EC5E8","#E8A9A9","#A9D3C7","#C9B6E8"][i%5]}"><span class="pn">${i+1}</span><b>${esc(p.ref)}</b><span class="pt">${esc(String(p.texto).slice(0,90))}${String(p.texto).length>90?"…":""}</span><span class="go">Ver contexto ›</span></button>`).join("")}</div>
+   <div class="label" style="margin-top:26px">Roteiro passo a passo</div>
+   <ol class="tl">${(s.roteiro||[]).map(r=>{const k=ps.findIndex(p=>r.ref&&p.ref===r.ref);
+     return `<li><div class="tm">${esc(r.min)} min</div><div><b>${esc(r.parte)}</b><p>${esc(r.falar)}</p>${k>=0?`<button class="link pref" data-i="${k}">Abrir ${esc(r.ref)} ›</button>`:""}</div></li>`}).join("")}</ol>
+   <div class="blk"><h4>Desafio da semana</h4><p>${esc(s.desafio)}</p></div>
+   <div class="blk"><h4>Oração final</h4><p><i>${esc(s.oracao)}</i></p></div>
+   <div class="row" style="margin-top:8px"><button class="primary" id="smCopy">Copiar pregação</button><button class="sec" id="smTop">Nova pregação</button></div>
+   <p class="disclaim">${s.ia?"Gerado com IA. ":""}Confira os textos na sua Bíblia, ore e coloque a sua própria voz. O esboço é um ponto de partida.</p></div>`}
+function openPassage(p){
+  openSheet(`<div class="pass"><span class="k">Para ler em voz alta</span><h2>${esc(p.ref)}</h2>
+   <blockquote class="read-me">“${esc(p.texto)}”</blockquote>
+   <div class="ctx"><div><span>✍️</span><div><b>Quem escreveu</b><p>${esc(p.quem)}</p></div></div>
+    <div><span>👥</span><div><b>Para quem</b><p>${esc(p.para_quem)}</p></div></div>
+    <div><span>🕰️</span><div><b>O que estava acontecendo</b><p>${esc(p.quando)}</p></div></div></div>
+   <div class="label">Explicando de um jeito simples</div><p class="simple">${esc(p.explicacao)}</p>
+   ${(p.palavras||[]).length?`<div class="label">Palavras difíceis</div><dl class="gloss">${p.palavras.map(w=>`<dt>${esc(w.p)}</dt><dd>${esc(w.s)}</dd>`).join("")}</dl>`:""}
+   <div class="keep"><small>Para levar para casa</small>${esc(p.lembrar)}</div>
+   <button class="sec" id="psCopy" style="width:100%;margin-top:16px">Copiar texto bíblico</button></div>`,"Contexto da passagem");
+  document.getElementById("psCopy").onclick=()=>{try{navigator.clipboard.writeText(`${p.texto} (${p.ref})`).then(()=>toast("Texto copiado"),()=>toast("Não deu para copiar neste navegador"))}catch{toast("Não deu para copiar neste navegador")}}}
+function bindSermon(){const s=document.querySelector(".outline");if(!s)return;const cur=sermon||EXAMPLE;
+  s.querySelectorAll(".pcard,.pref").forEach(b=>b.onclick=()=>openPassage(cur.passagens[+b.dataset.i]));
+  document.getElementById("smCopy").onclick=()=>{const t=[cur.titulo,cur.ideia_central,"",...cur.passagens.map(p=>`${p.ref}\n${p.texto}\nContexto: ${p.quando}\nExplicação: ${p.explicacao}`),"","ROTEIRO",...cur.roteiro.map(r=>`${r.min} min · ${r.parte}: ${r.falar}`),"","Desafio: "+cur.desafio,"Oração: "+cur.oracao].join("\n");
+    try{navigator.clipboard.writeText(t).then(()=>toast("Pregação copiada"),()=>toast("Não deu para copiar neste navegador"))}catch{toast("Não deu para copiar neste navegador")}};
+  document.getElementById("smTop").onclick=()=>smPage.scrollTo({top:0,behavior:"smooth"})}
 document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;closePray();smEl.classList.remove("open")});
 
 /* ---------- Feed e tempo de leitura ---------- */
