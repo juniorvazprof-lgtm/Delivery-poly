@@ -67,7 +67,7 @@ const shadowMesh = new T.InstancedMesh(new T.CircleGeometry(0.5, 14).rotateX(-Ma
 shadowMesh.frustumCulled = false; shadowMesh.count = 0; shadowMesh.renderOrder = 1; scene.add(shadowMesh);
 const _sm = new T.Matrix4();
 const splatPool = new CubePool(scene, 320, { opacity: 0.32, depthWrite: false, size: [1, 0.02, 1] });
-const mageRoot = new T.Group(), mageBody = buildModel({ ...MAGE, scale: 1.4 });
+const mageRoot = new T.Group(), mageBody = buildModel({ ...MAGE, scale: 1.3 });
 mageRoot.add(mageBody, blobShadow(0.5)); scene.add(mageRoot);
 
 // ---------- estado ----------
@@ -256,7 +256,7 @@ function updateEnemy(e, dt) {
   const kd = Math.pow(0.003, dt); e.kx *= kd; e.kz *= kd;
   if (sp > 0.1) e.face = Math.atan2(vx, vz);
   // contato com o Mago
-  if (d < e.r + CFG.mage.radius && e.stunT <= 0) hurtMage(c.dmg * (e.elite ? e.elite.dmg : 1));
+  if (d < e.r * 0.75 + CFG.mage.radius && e.stunT <= 0) hurtMage(c.dmg * (e.elite ? e.elite.dmg : 1));
   // longe demais: reaparece do outro lado (o enxame nunca some)
   if (d > Math.hypot(viewW, viewH) * 0.95 && !c.boss) { const [x, z] = spawnPoint(); e.x = x; e.z = z; }
 }
