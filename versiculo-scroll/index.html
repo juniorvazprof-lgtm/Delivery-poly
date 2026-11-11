@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111">
+<title>Versículo Scroll</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--fg:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;color:var(--fg);font-family:Georgia,"Times New Roman",serif;overflow:hidden}
+#feed{height:100dvh;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none}
+#feed::-webkit-scrollbar{display:none}
+.card{height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;flex-direction:column;justify-content:center;padding:24px 72px 24px 24px}
+.card blockquote{font-size:clamp(1.4rem,5.5vw,2.3rem);line-height:1.4;text-shadow:0 2px 12px rgba(0,0,0,.35)}
+.card cite{display:block;margin-top:20px;font:600 1rem system-ui,sans-serif;opacity:.9;font-style:normal}
+.tag{position:absolute;top:calc(env(safe-area-inset-top) + 18px);left:24px;font:600 .8rem system-ui;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+.actions{position:absolute;right:14px;bottom:calc(env(safe-area-inset-bottom) + 90px);display:flex;flex-direction:column;gap:22px;font-family:system-ui}
+.actions button{background:rgba(0,0,0,.25);border:0;color:#fff;width:52px;height:52px;border-radius:50%;font-size:1.5rem;cursor:pointer;backdrop-filter:blur(6px)}
+.actions span{display:block;text-align:center;font-size:.7rem;margin-top:4px}
+.liked{color:#ff4d6d!important}
+header{position:fixed;top:0;left:0;right:0;display:flex;justify-content:center;gap:22px;padding:calc(env(safe-area-inset-top) + 14px) 0 0;font:600 1rem system-ui;z-index:5;pointer-events:none}
+header button{pointer-events:auto;background:none;border:0;color:#fff;opacity:.6;font:inherit;cursor:pointer;padding-bottom:4px}
+header button.on{opacity:1;border-bottom:2px solid #fff}
+.empty{height:100dvh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:system-ui;opacity:.8}
+#toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:#fff;color:#000;padding:10px 18px;border-radius:20px;font:600 .9rem system-ui;opacity:0;transition:.3s;z-index:9}
+#toast.show{opacity:1}
+.hint{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 24px);left:0;right:0;text-align:center;font:.8rem system-ui;opacity:.7;animation:b 1.6s infinite}
+@keyframes b{50%{transform:translateY(-6px)}}
+</style>
+</head>
+<body>
+<header><button id="tPara" class="on">Para você</button><button id="tFav">Favoritos</button></header>
+<main id="feed"></main>
+<div id="toast"></div>
+<script src="versiculos.js"></script>
+<script>
+const G=["linear-gradient(160deg,#1e3c72,#2a5298)","linear-gradient(160deg,#42275a,#734b6d)","linear-gradient(160deg,#134e5e,#71b280)","linear-gradient(160deg,#c94b4b,#4b134f)","linear-gradient(160deg,#0f2027,#2c5364)","linear-gradient(160deg,#614385,#516395)","linear-gradient(160deg,#b06ab3,#4568dc)","linear-gradient(160deg,#e65c00,#9c2a00)","linear-gradient(160deg,#283c86,#45a247)","linear-gradient(160deg,#3a1c71,#d76d77)"];
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let favs=new Set(store.get("favs",[])),mode="para",queue=[],count=0;
+const feed=document.getElementById("feed"),toast=document.getElementById("toast");
+const id=v=>v.r;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function msg(t){toast.textContent=t;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),1500)}
+function card(v,first){
+  const el=document.createElement("section");el.className="card";
+  el.style.background=G[(count++)%G.length];
+  const on=favs.has(id(v));
+  el.innerHTML=`<div class="tag">${v.t}</div><blockquote>“${v.x}”</blockquote><cite>${v.r}</cite>
+  <div class="actions">
+   <div><button class="like ${on?"liked":""}" aria-label="Curtir">${on?"♥":"♡"}</button><span>Amém</span></div>
+   <div><button class="share" aria-label="Compartilhar">↗</button><span>Enviar</span></div>
+   <div><button class="copy" aria-label="Copiar">⧉</button><span>Copiar</span></div>
+  </div>${first?'<div class="hint">Deslize para cima ↑</div>':""}`;
+  const like=el.querySelector(".like");
+  const toggle=()=>{if(favs.has(id(v))){favs.delete(id(v));like.textContent="♡";like.classList.remove("liked")}else{favs.add(id(v));like.textContent="♥";like.classList.add("liked");msg("Salvo nos favoritos 🙏")}store.set("favs",[...favs])};
+  like.onclick=toggle;
+  let last=0;el.addEventListener("click",e=>{if(e.target.closest("button"))return;const n=Date.now();if(n-last<300&&!favs.has(id(v)))toggle();last=n});
+  const txt=`“${v.x}” — ${v.r}`;
+  el.querySelector(".share").onclick=async()=>{if(navigator.share){try{await navigator.share({text:txt})}catch{}}else{navigator.clipboard?.writeText(txt);msg("Copiado!")}};
+  el.querySelector(".copy").onclick=()=>{navigator.clipboard?.writeText(txt);msg("Copiado!")};
+  return el;
+}
+function more(n=5){for(let i=0;i<n;i++){if(!queue.length)queue=shuffle(VERSICULOS);feed.appendChild(card(queue.pop(),feed.children.length===0))}}
+function render(){
+  feed.innerHTML="";count=0;feed.scrollTop=0;
+  if(mode==="para"){queue=shuffle(VERSICULOS);more(6)}
+  else{const l=VERSICULOS.filter(v=>favs.has(id(v)));if(!l.length)feed.innerHTML='<div class="empty">Toque duas vezes ou em ♡ num versículo para salvá-lo aqui.</div>';l.forEach(v=>feed.appendChild(card(v)))}
+}
+feed.addEventListener("scroll",()=>{if(mode==="para"&&feed.scrollTop+feed.clientHeight*3>feed.scrollHeight)more(5)});
+tPara.onclick=()=>{mode="para";tPara.classList.add("on");tFav.classList.remove("on");render()};
+tFav.onclick=()=>{mode="fav";tFav.classList.add("on");tPara.classList.remove("on");render()};
+render();
+</script>
+</body>
+</html>
