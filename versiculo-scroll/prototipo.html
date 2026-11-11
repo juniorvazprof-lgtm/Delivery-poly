@@ -152,11 +152,11 @@ cite b{color:var(--ink);font-weight:700}
 
 /* Ler capítulo */
 cite .read{border:0;background:none;color:var(--gold);font:700 .8rem var(--sans);padding:6px 0;cursor:pointer}
-#reader,#player,#prem{position:fixed;inset:0;z-index:11;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .6s var(--spring);visibility:hidden}
+#reader,#player,#prem,#pray,#serm{position:fixed;inset:0;z-index:11;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .6s var(--spring);visibility:hidden}
 #prem{z-index:12}
-#reader.open,#player.open,#prem.open{transform:none;visibility:visible}
-#reader header,#player header,#prem header{position:sticky;opacity:1!important;pointer-events:auto!important;background:var(--bg);padding-bottom:12px;border-bottom:1px solid var(--line)}
-#reader h2,#player h2,#prem h2{margin:0;font:450 1.3rem var(--serif)}
+#reader.open,#player.open,#prem.open,#pray.open,#serm.open{transform:none;visibility:visible}
+#reader header,#player header,#prem header,#pray header,#serm header{position:sticky;opacity:1!important;pointer-events:auto!important;background:var(--bg);padding-bottom:12px;border-bottom:1px solid var(--line)}
+#reader h2,#player h2,#prem h2,#pray h2,#serm h2{margin:0;font:450 1.3rem var(--serif)}
 #reader h2 small{display:block;font:600 .7rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:2px}
 .x{border:0;background:var(--glass);border:1px solid var(--line);color:var(--ink);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1rem}
 .page{flex:1;overflow-y:auto;user-select:text;-webkit-user-select:text;
@@ -296,6 +296,46 @@ body.playing .cover.lg.cur{animation:breathe 5s ease-in-out infinite}
 .done h3{margin:0;font:450 1.8rem var(--serif)}
 #adv .primary{background:#F1ECE2;color:#0B0A10}
 
+/* Oração do dia */
+#pray .page{display:flex;flex-direction:column}
+.dots{display:flex;gap:6px;justify-content:center;margin-bottom:10px}
+.dots i{width:22px;height:4px;border-radius:4px;background:var(--line);transition:background .5s}
+.dots i.on{background:var(--gold)}
+.step{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;max-width:30rem;margin:0 auto;width:100%;animation:stepIn .7s var(--ease)}
+@keyframes stepIn{from{opacity:0;transform:translateY(18px)}}
+.step .k{font:700 .68rem var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.step h3{margin:0;font:450 2rem/1.15 var(--serif);text-wrap:balance}
+.step blockquote{font-size:1.35rem;border-left:2px solid var(--gold);padding-left:16px}
+.step blockquote cite{opacity:1;transform:none;margin-top:10px;font-size:.82rem}
+.step .prompt{margin:0;color:var(--muted);line-height:1.6}
+.breath{width:150px;height:150px;margin:10px auto;border-radius:50%;display:grid;place-items:center;font:600 .9rem var(--sans);color:var(--ink);
+  background:radial-gradient(circle,color-mix(in srgb,var(--gold) 35%,transparent),transparent 70%);animation:breath 8s ease-in-out infinite}
+@keyframes breath{0%,100%{transform:scale(.75)}50%{transform:scale(1.1)}}
+.notif{display:flex;gap:12px;align-items:flex-start;background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin:0 0 18px}
+.notif .ic{width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center;background:var(--ink);color:var(--gold);font:italic 600 1rem var(--serif)}
+.notif b{font-size:.84rem}.notif small{float:right;color:var(--muted);font-size:.72rem}
+.notif p{margin:3px 0 0;font-size:.84rem;color:var(--muted);line-height:1.4}
+
+/* Púlpito */
+.sw{max-width:34rem;margin:0 auto}
+.sw .lead{color:var(--muted);line-height:1.5;margin:0 0 20px}
+.sw .chips{margin-bottom:18px}
+.sw .chip{padding:9px 13px;font-size:.84rem;text-transform:none}
+.outline{position:relative;margin-top:26px;animation:stepIn .7s var(--ease)}
+.outline h3{font:500 1.7rem/1.2 var(--serif);margin:0 0 6px;text-wrap:balance}
+.outline .meta{color:var(--muted);font-size:.82rem;margin:0 0 20px}
+.blk{border-top:1px solid var(--line);padding:16px 0}
+.blk h4{display:flex;justify-content:space-between;gap:10px;margin:0 0 8px;font:700 .95rem var(--sans)}
+.blk h4 span{font:700 .72rem var(--sans);color:var(--gold);white-space:nowrap}
+.blk p,.blk li{margin:0 0 6px;line-height:1.6;font-size:.93rem}
+.blk ul{margin:0;padding-left:18px}
+.blk q{display:block;font:400 1.05rem/1.5 var(--serif);margin:4px 0 8px;quotes:"“" "”"}
+.locked{filter:blur(6px);pointer-events:none;user-select:none;opacity:.6}
+.unlock{position:absolute;left:0;right:0;bottom:0;top:46%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center;padding:20px;
+  background:linear-gradient(transparent,var(--bg) 35%)}
+.unlock p{margin:0;color:var(--muted);font-size:.9rem;max-width:22rem}
+.disclaim{font-size:.78rem;color:var(--muted);line-height:1.5;border:1px dashed var(--line);border-radius:14px;padding:12px;margin-top:10px}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}}
 </style>
 
@@ -325,6 +365,8 @@ body.playing .cover.lg.cur{animation:breathe 5s ease-in-out infinite}
 </section>
 <div id="mini" aria-label="Tocando agora"><span class="cover" id="mCov"></span><div id="mInfo"><b id="mT"></b><small id="mA"></small></div>
   <button id="mPP" aria-label="Tocar ou pausar"></button><button id="mX" aria-label="Fechar player">✕</button><span class="mbar"><i id="mBar"></i></span></div>
+<section id="pray" role="dialog" aria-modal="true" aria-label="Oração do dia"><header><h2>Oração do dia</h2><div class="hbtn"><button class="x" id="pyBell" aria-label="Horário da oração">🔔</button><button class="x" id="pyClose" aria-label="Fechar">✕</button></div></header><div class="page" id="pyPage"></div></section>
+<section id="serm" role="dialog" aria-modal="true" aria-label="Púlpito"><header><h2>Púlpito</h2><button class="x" id="smClose" aria-label="Fechar">✕</button></header><div class="page" id="smPage"></div></section>
 <div id="adv" role="dialog" aria-modal="true" aria-label="Anúncio"><div class="advtop"><span>Anúncio · exemplo</span><span class="cd" id="cd"></span></div>
   <div class="advbody" id="advBody"></div><div class="advfoot" id="advFoot"></div></div>
 
@@ -421,7 +463,7 @@ function makeCard(v,first,daily){
     <button class="theme" aria-label="Ver só versículos sobre ${v.t[0]}">${v.t[0]}</button>
     <blockquote style="font-size:${size}">${words.map((w,i)=>`<span class="w" style="--i:${i}">${w}</span>`).join(" ")}</blockquote>
     <cite><b>${v.r}</b> · <button class="read">Ler capítulo ›</button></cite>
-    ${daily?`<button class="remind ${remind?"on":""}"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>${remind?"Lembrete às "+remind:"Receber todo dia"}</button>`:""}</div>
+    ${daily?`<button class="remind ${remind?"on":""}"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>${remind?"Lembrete às "+remind:"Receber todo dia"}</button> <button class="remind pray-btn">🙏 Orar agora</button>`:""}</div>
    <div class="rail">
     <button class="act heart ${isL?"on":""}" aria-pressed="${isL}" aria-label="Curtir">${ICON.heart}<span>Amém</span></button>
     <button class="act save ${isS?"on":""}" aria-pressed="${isS}" aria-label="Salvar">${ICON.save}<span>Salvar</span></button>
@@ -435,7 +477,7 @@ function makeCard(v,first,daily){
   c.querySelector(".send").onclick=()=>{openShare(v);bump(v,5)};
   c.querySelector(".read").onclick=()=>openReader(v);
   c.querySelector(".disc").onclick=()=>openPlayer(tr,true);
-  if(daily)c.querySelector(".remind").onclick=openRemind;
+  if(daily){c.querySelector(".remind").onclick=openRemind;c.querySelector(".pray-btn").onclick=openPray}
   c.querySelector(".more").onclick=()=>openMenu(v);
   c.querySelector(".theme").onclick=()=>setFilter(v.t[0]);
   // gestos: toque simples = modo foco, toque duplo = curtir, segurar = menu
@@ -527,7 +569,7 @@ function openRemind(){
     remind=pick;S.set("lumen.remind",remind);closeSheet();refreshRemind();toast(`Combinado. Todo dia às <em>${pick}</em>`)};
   const off=document.getElementById("offR");if(off)off.onclick=()=>{remind=null;S.set("lumen.remind",null);closeSheet();refreshRemind();toast("Lembrete desativado")};
 }
-function refreshRemind(){const b=feed.querySelector(".daily .remind");if(!b)return;b.classList.toggle("on",!!remind);
+function refreshRemind(){const b=feed.querySelector(".daily .remind:not(.pray-btn)");if(!b)return;b.classList.toggle("on",!!remind);
   b.lastChild.textContent=remind?"Lembrete às "+remind:"Receber todo dia"}
 
 /* ---------- Ler capítulo ---------- */
@@ -594,8 +636,9 @@ function openSaved(){
    ${top.length?`<div class="label">O que tem tocado você</div><div class="taste">${top.map(([t,s])=>`<div>${t}<span><i style="width:${Math.max(8,s/max*100)}%"></i></span></div>`).join("")}</div>`:""}
    ${list.length?`<div class="label">Seus versículos</div>`+list.map(v=>`<div class="saved-item"><div><q>${v.x}</q><small>${v.r}</small></div><button class="rm" data-r="${v.r}" aria-label="Remover ${v.r}">✕</button></div>`).join("")
      :'<div class="empty">Toque em <b>Salvar</b> num versículo para guardá-lo aqui e reler quando precisar.</div>'}
-   <button class="link" id="redo">Mudar como estou me sentindo</button><br><button class="link" id="toPrem">✦ ${premium?"Você é Premium":"Conhecer o Premium"}</button>`,"Salvos");
+   <button class="link" id="redo">Mudar como estou me sentindo</button><br><button class="link" id="toPray">🙏 Oração do dia</button><br><button class="link" id="toSerm">✦ Púlpito: esboços de pregação</button><br><button class="link" id="toPrem">✦ ${premium?"Você é Premium":"Conhecer o Premium"}</button>`,"Salvos");
   document.getElementById("toPrem").onclick=()=>{closeSheet();openPremium()};
+  document.getElementById("toPray").onclick=()=>{closeSheet();openPray()};document.getElementById("toSerm").onclick=()=>{closeSheet();openSerm()};
   sheet.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{saved=saved.filter(r=>r!==b.dataset.r);persist();syncCards();
     const it=b.closest(".saved-item");it.style.transition=".35s";it.style.opacity="0";it.style.transform="translateX(30px)";setTimeout(openSaved,300)});
   document.getElementById("redo").onclick=()=>{closeSheet();setTimeout(onboarding,350)};
@@ -673,7 +716,7 @@ function stopVoice(st,f=.8){if(!st)return;clearInterval(st.timer);const g=st.bus
 
 /* ---------- Estado de reprodução, Premium e recompensas ---------- */
 let premium=S.get("lumen.prem",false),soundOn=S.get("lumen.sound",false),rewardUntil=S.get("lumen.rwu",0),rw=S.get("lumen.rw",{day:null,n:0}),warned=false;
-const MAX_REWARDS=2,REWARD_MIN=30,PREVIEW=30;
+const MAX_REWARDS=3,REWARD_MIN=15,PREVIEW=30;
 const canFull=()=>premium||Date.now()<rewardUntil;
 function rewardsLeft(){const d=dayKey(new Date());if(rw.day!==d)rw={day:d,n:0};return MAX_REWARDS-rw.n}
 const P={tr:null,mode:null,voice:null,start:0,offset:0,playing:false,gated:false};
@@ -722,7 +765,7 @@ function renderPlayer(){const tr=shown(),al=albumOf(tr),cur=P.mode==="player"&&P
   document.getElementById("pPP").onclick=()=>{if(cur&&P.playing)pause();else if(cur)resume();else play(tr,"player",0);renderPlayer()};
   document.getElementById("pPrev").onclick=()=>{play(list[(i-1+list.length)%list.length],"player",0);renderPlayer()};
   document.getElementById("pNext").onclick=()=>{play(list[(i+1)%list.length],"player",0);renderPlayer()};
-  document.getElementById("pill").onclick=()=>{if(!premium&&!canFull())rewardSheet();else if(!premium)openPremium()};
+  document.getElementById("pill").onclick=()=>{if(!premium&&rewardsLeft()>0)rewardSheet();else if(!premium)openPremium()};
   pPage.querySelectorAll(".albums button").forEach(b=>b.onclick=()=>{selAl=b.dataset.a;renderPlayer()});
   pPage.querySelectorAll(".trk").forEach(b=>b.onclick=()=>{play(TR.find(t=>t.id===b.dataset.t),"player",0);renderPlayer()});
   refreshPlayer()}
@@ -735,7 +778,7 @@ function refreshPlayer(){const tr=shown(),cur=P.mode==="player"&&P.tr===tr,e=cur
   document.getElementById("ly").style.transform=`translateY(${(1-li)*2.2}em)`;
   document.querySelectorAll("#ly p").forEach((p,k)=>p.classList.toggle("on",k===li&&cur));
   const pill=document.getElementById("pill");
-  pill.innerHTML=premium?"✦ Premium · <b>ouça sem limites</b>":canFull()?`Grátis por mais <b>${mmss((rewardUntil-Date.now())/1000)}</b>`:`Prévias de 30 s · <b>Ouvir 30 min grátis ›</b>`}
+  pill.innerHTML=premium?"✦ Premium · <b>ouça sem limites</b>":canFull()?`Grátis por mais <b>${mmss((rewardUntil-Date.now())/1000)}</b>${rewardsLeft()>0?" · <b>+15 min ›</b>":""}`:`Prévias de 30 s · <b>Ouvir 15 min grátis ›</b>`}
 
 /* ---------- Mini player ---------- */
 const mini=document.getElementById("mini");
@@ -754,7 +797,7 @@ function tick(){
     if(P.gated&&e>=PREVIEW){pause();P.offset=0;gate("preview")}
     else if(e>=P.tr.dur){if(!canFull()){pause();P.offset=0;gate("expired")}
       else{const l=TR.filter(t=>t.al===P.tr.al);play(l[(l.indexOf(P.tr)+1)%l.length],"player",0);if(playerOpen)renderPlayer()}}
-    if(!premium&&!P.gated){const left=rewardUntil-Date.now();if(left>0&&left<300000&&!warned){warned=true;toast("Faltam 5 minutos do seu tempo grátis")}}}
+    if(!premium&&!P.gated){const left=rewardUntil-Date.now();if(left>0&&left<180000&&!warned){warned=true;if(rewardsLeft()>0&&!sheet.classList.contains("open"))extendSheet();else toast("Faltam 3 minutos do seu tempo grátis")}}}
   if(P.playing&&P.mode==="feed"&&elapsed()>P.tr.dur)play(P.tr,"feed",0);
   if(playerOpen)refreshPlayer();if(P.mode==="player")updateMini()}
 
@@ -762,18 +805,19 @@ function tick(){
 function offerHTML(){const left=rewardsLeft();
   return (left>0?`<button class="primary" id="oAd">▶ Assistir anúncio e ouvir ${REWARD_MIN} min grátis</button>
      <p class="fine">Você pode fazer isso mais ${left} ${left>1?"vezes":"vez"} hoje.</p>`
-   :`<p class="sub">Você já usou seus ${MAX_REWARDS} períodos grátis de hoje. Amanhã tem mais.</p>`)+
+   :`<p class="sub">Você já usou os ${MAX_REWARDS} anúncios de hoje. Amanhã tem mais.</p>`)+
    `<button class="${left>0?"sec":"primary"}" id="oPrem" style="width:100%;margin-top:${left>0?14:0}px">✦ Testar o Premium por 7 dias</button>`}
 function bindOffer(){const a=document.getElementById("oAd");if(a)a.onclick=watchAd;document.getElementById("oPrem").onclick=()=>{closeSheet();openPremium()}}
 function gate(kind){const tr=P.tr;
   const h=kind==="expired"?["Seu tempo grátis acabou","Deixamos a música terminar para não cortar no meio. Quer continuar ouvindo?"]
     :[`Gostou de “${tr.t}”?`,"Essa foi uma prévia de 30 segundos. Escolha como continuar ouvindo o louvor completo."];
   openSheet(`<h2>${h[0]}</h2><p class="sub">${h[1]}</p>${offerHTML()}`,"Continuar ouvindo");bindOffer();if(playerOpen)renderPlayer()}
+function extendSheet(){openSheet(`<h2>Faltam 3 minutos</h2><p class="sub">Assista a mais um anúncio e some <b>+${REWARD_MIN} min</b> ao seu tempo, sem parar a música.</p>${offerHTML()}`,"Ganhar mais tempo");bindOffer()}
 function rewardSheet(){openSheet(`<h2>Ouça ${REWARD_MIN} minutos de louvor grátis</h2><p class="sub">Assista a um anúncio curto e todos os álbuns ficam liberados, completos, por ${REWARD_MIN} minutos.</p>${offerHTML()}`,"Ouvir grátis");bindOffer()}
 
 /* ---------- Anúncio com recompensa (simulado) ---------- */
 const adv=document.getElementById("adv");
-function watchAd(){if(rewardsLeft()<=0)return;closeSheet();const was=P.playing;pause();
+function watchAd(){if(rewardsLeft()<=0)return;closeSheet();const was=P.playing||adv._was;adv._was=false;pause();
   const D=6;let t0=Date.now();adv.classList.add("open");
   document.getElementById("advBody").innerHTML=`<div class="advmedia">Conferência Exemplo 2027</div><p>Três dias de louvor e palavra em São Paulo. Anúncio de exemplo.</p>`;
   document.getElementById("advFoot").innerHTML=`<div class="rbar"><i id="rb"></i></div><div class="rlabel">Sua recompensa: ${REWARD_MIN} min de louvor completo</div>`;
@@ -781,12 +825,14 @@ function watchAd(){if(rewardsLeft()<=0)return;closeSheet();const was=P.playing;p
   const iv=setInterval(()=>{const p=Math.min(1,(Date.now()-t0)/(D*1000));document.getElementById("rb").style.width=p*100+"%";cd.textContent=Math.ceil(D*(1-p))||"✓";
     if(p<1)return;clearInterval(iv);vibrate(15);
     rw.n++;S.set("lumen.rw",rw);rewardUntil=Math.max(Date.now(),rewardUntil)+REWARD_MIN*60000;S.set("lumen.rwu",rewardUntil);warned=false;
-    document.getElementById("advBody").innerHTML=`<div class="done"><div class="ok">✓</div><h3>${REWARD_MIN} minutos liberados</h3><p>Todos os álbuns completos, até ${new Date(rewardUntil).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}.</p></div>`;
-    document.getElementById("advFoot").innerHTML=`<button class="primary" id="advGo">Ouvir agora</button>`;
+    document.getElementById("advBody").innerHTML=`<div class="done"><div class="ok">✓</div><h3>Você tem ${Math.round((rewardUntil-Date.now())/60000)} minutos</h3><p>Louvor completo e sem interrupções até ${new Date(rewardUntil).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}.</p></div>`;
+    const more=rewardsLeft();
+    document.getElementById("advFoot").innerHTML=`<button class="primary" id="advGo">Ouvir agora</button>`+(more>0?`<button class="sec" id="advMore" style="background:transparent;color:#F1ECE2;border-color:rgba(255,255,255,.2)">Ver mais 1 anúncio · +${REWARD_MIN} min <small>(${more} ${more>1?"restantes":"restante"})</small></button>`:"");
+    const m=document.getElementById("advMore");if(m)m.onclick=()=>{adv._was=was;watchAd()};
     document.getElementById("advGo").onclick=()=>{adv.classList.remove("open");
       if(P.tr&&P.mode==="player")play(P.tr,"player",P.offset);else if(was)resume();
-      if(!playerOpen)openPlayer(P.tr&&P.mode==="player"?P.tr:TR.find(t=>t.al===selAl),!(P.mode==="player"));else renderPlayer();
-      toast(`<em>${REWARD_MIN} min</em> de louvor liberados`)}},100)}
+      if(!playerOpen)openPlayer(P.tr&&P.mode==="player"?P.tr:TR.find(t=>t.al===selAl),!(P.mode==="player"));else{if(P.mode!=="player")play(shown(),"player",0);renderPlayer()}
+      toast("Louvor liberado <em>sem interrupções</em>")}},100)}
 
 /* ---------- Seja Premium ---------- */
 const premEl=document.getElementById("prem"),prPage=document.getElementById("prPage");
@@ -794,7 +840,7 @@ const PLANS=[{id:"anual",n:"Anual",d:"R$ 7,49 por mês · economize 50%",p:"R$ 8
  {id:"mensal",n:"Mensal",d:"Cancele quando quiser",p:"R$ 14,90",u:"por mês"},{id:"familia",n:"Família",d:"Até 5 pessoas",p:"R$ 129,90",u:"por ano"}];
 const PERKS=[["Louvores completos, sem limite","Todos os álbuns, offline e com a tela desligada"],["Sem anúncios","O feed fica só com a Palavra"],
  ["Bíblia narrada e modo dormir","Versículos em voz calma com trilha suave"],["Planos de leitura e explicações","Contexto e aplicação de cada versículo"],
- ["Temas visuais exclusivos","Para o feed e para as imagens que você compartilha"],["Imagens sem marca d’água","E mais modelos para Stories"]];
+ ["Temas visuais exclusivos","Para o feed e para as imagens que você compartilha"],["Imagens sem marca d’água","E mais modelos para Stories"],["Púlpito: esboços de pregação","Sermões prontos e ajustados à sua igreja"]];
 let plan="anual";
 function openPremium(){closeSheet();renderPremium();premEl.classList.add("open")}
 function closePremium(){premEl.classList.remove("open")}
@@ -827,6 +873,87 @@ function makeAd(){const a=ADS[adI++%ADS.length],c=document.createElement("sectio
   c.querySelector(".adcta").onclick=()=>toast("Aqui abriria o site do anunciante");c.querySelector(".noads").onclick=openPremium;return c}
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||adv.classList.contains("open"))return;
   if(premEl.classList.contains("open"))closePremium();else if(!sheet.classList.contains("open"))closePlayer()});
+
+/* ---------- Oração do dia ---------- */
+const prayEl=document.getElementById("pray"),pyPage=document.getElementById("pyPage");
+let prayAt=S.get("lumen.prayAt",null),pStep=0,pSteps=[];
+function pickLiked(tags,used){const L=V.filter(v=>liked.has(v.r)&&!used.includes(v.r));
+  return L.find(v=>v.t.some(t=>tags.includes(t)))||L[0]||V.find(v=>v.t.some(t=>tags.includes(t))&&!used.includes(v.r))}
+function openPray(){const used=[];const mk=(k,title,tags,prompt)=>{const v=pickLiked(tags,used);used.push(v.r);return{k,title,v,prompt}};
+  pSteps=[mk("Agradeça","Comece agradecendo",["gratidão","alegria","amor","graça"],"Agradeça a Deus por algo de hoje, por menor que pareça. Fale com suas palavras."),
+    mk("Entregue","Entregue o que pesa",["ansiedade","paz","descanso","cuidado"],"Conte a Deus o que está pesando no seu coração e deixe isso com ele."),
+    mk("Peça","Peça direção",["força","coragem","fé","confiança","esperança","propósito"],"Peça força e direção para o que vem pela frente, para você e para quem você ama.")];
+  pStep=0;renderPray();prayEl.classList.add("open");document.body.classList.remove("focus")}
+function renderPray(){const n=pSteps.length+2,mine=V.some(v=>liked.has(v.r));
+  let body;
+  if(pStep===0)body=`<div class="step"><span class="k">Antes de começar</span><h3>Respire fundo e acalme o coração</h3><div class="breath">respire</div>
+     <p class="prompt">${mine?"Hoje você vai orar com versículos que você curtiu.":"Curta versículos no feed para que suas orações usem as palavras que mais tocam você."}</p>
+     <button class="primary" id="pyNext">Começar a oração</button></div>`;
+  else if(pStep<=pSteps.length){const s=pSteps[pStep-1];
+    body=`<div class="step"><span class="k">${pStep} de ${pSteps.length} · ${s.k}</span><h3>${s.title}</h3>
+     <blockquote>“${s.v.x}”<cite><b>${s.v.r}</b>${liked.has(s.v.r)?" · você curtiu":""}</cite></blockquote>
+     <p class="prompt">${s.prompt}</p><button class="primary" id="pyNext">${pStep<pSteps.length?"Continuar":"Concluir"}</button></div>`}
+  else{const c=S.get("lumen.prayCount",0)+1;S.set("lumen.prayCount",c);
+    body=`<div class="step" style="text-align:center;align-items:center"><div class="crown" style="background:var(--heart);color:#fff">♥</div><h3>Amém</h3>
+     <p class="prompt">Esta foi sua ${c}ª oração no Lumen.${prayAt?` Amanhã às ${prayAt} tem mais.`:""}</p>
+     ${prayAt?"":`<button class="sec" id="pyTime" style="width:100%">🔔 Lembrar todo dia</button>`}<button class="primary" id="pyDone" style="width:100%">Voltar ao feed</button></div>`;
+    setTimeout(()=>heartAt(innerWidth/2,innerHeight*.35),300)}
+  pyPage.innerHTML=`<div class="dots">${Array.from({length:n},(_,i)=>`<i class="${i<=pStep?"on":""}"></i>`).join("")}</div>${body}`;
+  const nx=document.getElementById("pyNext");if(nx)nx.onclick=()=>{pStep++;vibrate(6);renderPray()};
+  const dn=document.getElementById("pyDone");if(dn)dn.onclick=closePray;
+  const tm=document.getElementById("pyTime");if(tm)tm.onclick=openPrayTime}
+function closePray(){prayEl.classList.remove("open")}
+document.getElementById("pyClose").onclick=closePray;document.getElementById("pyBell").onclick=openPrayTime;
+function openPrayTime(){const T=["06:00","07:00","12:00","18:00","21:00","22:00"];let pick=prayAt||"07:00";
+  const v=V.find(x=>liked.has(x.r))||V[0];
+  openSheet(`<h2>Hora da sua oração</h2><p class="sub">Todo dia, no horário escolhido, você recebe um convite para orar com um versículo que você curtiu.</p>
+   <div class="notif"><span class="ic">l</span><div><b>Hora da sua oração 🙏</b> <small id="nT">${pick}</small><p>“${v.x.length>70?v.x.slice(0,70)+"…":v.x}” ${v.r}</p></div></div>
+   <div class="times">${T.map(t=>`<button class="chip ${t===pick?"on":""}" data-t="${t}">${t}</button>`).join("")}</div>
+   <button class="primary" id="okP">Ativar oração diária</button>${prayAt?'<button class="ghost" id="offP">Desativar</button>':""}`,"Horário da oração");
+  sheet.querySelectorAll(".times .chip").forEach(b=>b.onclick=()=>{pick=b.dataset.t;document.getElementById("nT").textContent=pick;sheet.querySelectorAll(".times .chip").forEach(x=>x.classList.toggle("on",x===b))});
+  document.getElementById("okP").onclick=async()=>{try{if("Notification"in window)await Notification.requestPermission()}catch{}
+    prayAt=pick;S.set("lumen.prayAt",pick);closeSheet();toast(`Oração diária às <em>${pick}</em>`);if(prayEl.classList.contains("open"))renderPray()};
+  const off=document.getElementById("offP");if(off)off.onclick=()=>{prayAt=null;S.set("lumen.prayAt",null);closeSheet();toast("Oração diária desativada")}}
+
+/* ---------- Púlpito: esboços de pregação ---------- */
+const smEl=document.getElementById("serm"),smPage=document.getElementById("smPage");
+const SM={tema:"esperança",ocasiao:"Culto de domingo",dur:30,tom:"Pastoral"};
+const TOMS={Pastoral:["Deus vê você","Deus fala com você","Deus caminha com você"],Evangelístico:["A nossa necessidade","A resposta de Deus","O convite de hoje"],Didático:["O contexto do texto","O princípio que ele ensina","Como aplicar hoje"]};
+const DESAFIO={"Culto de domingo":"Escolha um dos versículos de hoje, escreva num papel e leia todas as manhãs desta semana.","Jovens":"Mande um dos versículos de hoje para um amigo que precisa ouvir isso.",
+ "Célula":"Em duplas, compartilhem onde esse tema aparece na vida de vocês e orem um pelo outro.","Culto de oração":"Separe 10 minutos por dia nesta semana para orar sobre esse tema."};
+const cap=t=>t[0].toUpperCase()+t.slice(1);
+function openSerm(){renderSermForm();smEl.classList.add("open");document.body.classList.remove("focus")}
+document.getElementById("smClose").onclick=()=>smEl.classList.remove("open");
+function chipRow(key,opts,fmt){return `<div class="label">${{tema:"Tema",ocasiao:"Ocasião",dur:"Duração",tom:"Tom"}[key]}</div><div class="chips">${opts.map(o=>`<button class="chip ${SM[key]===o?"on":""}" data-k="${key}" data-v="${o}">${fmt?fmt(o):o}</button>`).join("")}</div>`}
+function renderSermForm(out){
+  smPage.innerHTML=`<div class="sw"><p class="lead">Escolha o tema e a ocasião. O Púlpito monta um esboço de pregação com textos bíblicos, tempo de cada parte e um desafio para a igreja.</p>
+   ${chipRow("tema",Object.keys(NEAR),cap)}${chipRow("ocasiao",Object.keys(DESAFIO))}${chipRow("dur",[15,30,45],d=>d+" min")}${chipRow("tom",Object.keys(TOMS))}
+   <button class="primary" id="smGo">Montar esboço</button><div id="smOut">${out||""}</div></div>`;
+  smPage.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const k=b.dataset.k;SM[k]=k==="dur"?+b.dataset.v:b.dataset.v;
+    smPage.querySelectorAll(`.chip[data-k="${k}"]`).forEach(x=>x.classList.toggle("on",x===b))});
+  document.getElementById("smGo").onclick=()=>{const o=document.getElementById("smOut");
+    o.innerHTML=`<div style="margin-top:26px">${Array.from({length:7},(_,i)=>`<div class="skel" style="width:${60+((i*29)%40)}%"></div>`).join("")}</div>`;
+    setTimeout(()=>{o.innerHTML=buildSermon();bindSermon();o.scrollIntoView({behavior:"smooth",block:"start"})},1100)}}
+function buildSermon(){const t=SM.tema,D=SM.dur,m=f=>Math.max(1,Math.round(D*f));
+  const rel=new Set([t,...(NEAR[t]||[])]),vs=V.filter(v=>v.t.includes(t)).concat(V.filter(v=>!v.t.includes(t)&&v.t.some(x=>rel.has(x))));
+  const base=vs[0],pts=[vs[1]||vs[0],vs[2]||vs[0],vs[3]||vs[1]||vs[0]],heads=TOMS[SM.tom];
+  const tips=["Leia em voz alta e destaque a palavra-chave do versículo.","Mostre como o texto conversa com a vida de quem está ouvindo.","Conte uma experiência curta, de até um minuto, sobre esse ponto."];
+  const blocks=[
+   `<div class="blk"><h4>Introdução <span>${m(.1)} min</span></h4><p>Abra com uma pergunta para a igreja: em que momento desta semana o tema <b>${t}</b> esteve presente na sua vida?</p><p>Leia o texto base em voz alta e faça um momento de silêncio.</p></div>`,
+   ...pts.map((v,i)=>`<div class="blk"><h4>${i+1}. ${heads[i]} <span>${m(.25)} min</span></h4><q>${v.x}</q><p><b>${v.r}</b></p><ul><li>${tips[i]}</li></ul></div>`),
+   `<div class="blk"><h4>Aplicação <span>${m(.1)} min</span></h4><p><b>Desafio da semana:</b> ${DESAFIO[SM.ocasiao]}</p></div>`,
+   `<div class="blk"><h4>Conclusão e oração <span>${m(.05)} min</span></h4><p>Retome a pergunta do início e convide a igreja a orar sobre ${t}. Encerre lendo de novo ${base.r}.</p></div>`];
+  const free=premium?blocks.length:2;
+  return `<div class="outline"><h3>${cap(t)} à luz da Palavra</h3><p class="meta">${SM.ocasiao} · ${D} min · tom ${SM.tom.toLowerCase()} · texto base: <b>${base.r}</b></p>
+   ${blocks.slice(0,free).join("")}${premium?"":`<div class="locked">${blocks.slice(free).join("")}</div>
+   <div class="unlock"><div class="crown" style="margin:0">✦</div><b>O esboço completo é do Premium</b><p>Os três pontos, aplicação, conclusão, tempo de cada parte e esboços ilimitados.</p><button class="primary" id="smPrem" style="max-width:20rem">Testar 7 dias grátis</button></div>`}
+   ${premium?`<div class="row" style="margin-top:14px"><button class="primary" id="smCopy">Copiar esboço</button><button class="sec" id="smNew">Outro tema</button></div>`:""}
+   <p class="disclaim">O esboço é um ponto de partida. Ore, estude o contexto de cada texto e coloque a sua própria voz e experiência na pregação.</p></div>`}
+function bindSermon(){const pr=document.getElementById("smPrem");if(pr)pr.onclick=()=>{smEl.classList.remove("open");openPremium()};
+  const cp=document.getElementById("smCopy");if(cp)cp.onclick=()=>{const txt=document.querySelector(".outline").innerText.replace(/\n{3,}/g,"\n\n");
+    try{navigator.clipboard.writeText(txt).then(()=>toast("Esboço copiado"),()=>toast("Não deu para copiar neste navegador"))}catch{toast("Não deu para copiar neste navegador")}};
+  const nw=document.getElementById("smNew");if(nw)nw.onclick=()=>{smPage.scrollTo({top:0,behavior:"smooth"})}}
+document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;closePray();smEl.classList.remove("open")});
 
 /* ---------- Feed e tempo de leitura ---------- */
 let active=null,since=0;
