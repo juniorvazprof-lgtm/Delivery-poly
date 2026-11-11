@@ -524,6 +524,22 @@ body.deep .page{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 48px)}
 .pend p{margin:0;color:#9A95A3}
 .pend .primary{background:#EDE8DF;color:#0D0C12;max-width:20rem}
 
+/* Barra no topo (preferência ou quando o aparelho esconde a parte de baixo) */
+body.navtop #bnav{top:0;bottom:auto;padding-top:calc(env(safe-area-inset-top,0px) + 4px);padding-bottom:4px;border-top:0;border-bottom:1px solid var(--line)}
+body.navtop.focus #bnav{transform:translateY(-110%)}
+body.navtop header{top:calc(env(safe-area-inset-top,0px) + 62px);padding-top:8px}
+body.navtop #filter{top:calc(env(safe-area-inset-top,0px) + 116px)}
+body.navtop .card{padding-top:150px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 72px)}
+body.navtop .rail{bottom:calc(env(safe-area-inset-bottom,0px) + 40px)}
+body.navtop.has-mini .rail{bottom:calc(env(safe-area-inset-bottom,0px) + 100px)}
+body.navtop .music,body.navtop .hint{bottom:calc(env(safe-area-inset-bottom,0px) + 24px)}
+body.navtop #mini{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+body.navtop #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 28px)}
+body.navtop #player,body.navtop #prem,body.navtop #you{top:calc(env(safe-area-inset-top,0px) + 62px)}
+body.navtop .page{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 48px)}
+/* Barra sempre visível acima de tudo que não é tela interna */
+#bnav{min-height:64px}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}}
 </style>
 
@@ -707,7 +723,7 @@ function makeCard(v,first,daily){
   c.addEventListener("pointerup",e=>{clearTimeout(timer);if(e.target.closest("button")||moved||held)return;
     const n=Date.now();
     if(n-last<300){clearTimeout(single);last=0;heartAt(e.clientX,e.clientY);if(!liked.has(v.r))toggleLike(c)}
-    else{last=n;single=setTimeout(()=>document.body.classList.toggle("focus"),300)}});
+    else{last=n;single=setTimeout(()=>{if(document.body.classList.contains("focus"))document.body.classList.remove("focus")},300)}});
   return c;
 }
 function sparks(btn){for(let i=0;i<8;i++){const s=document.createElement("i");s.className="spark";s.style.setProperty("--a",i*45+"deg");btn.appendChild(s);setTimeout(()=>s.remove(),650)}}
@@ -761,9 +777,11 @@ function openMenu(v){
    <button class="opt" data-a="tema">${ICON.tag}<div>Ver mais sobre ${v.t[0]}<small>Filtra o feed por este tema</small></div></button>
    <button class="opt" data-a="ouvir">${ICON.ear}<div>Ouvir em voz alta</div></button>
    <button class="opt" data-a="copiar">${ICON.copy}<div>Copiar texto</div></button>
+   <button class="opt" data-a="foco">${IC("lens")}<div>Modo foco<small>Esconde tudo e deixa só o versículo. Toque para sair.</small></div></button>
    <button class="opt" data-a="menos">${ICON.less}<div>Mostrar menos assim<small>Diminui este tema no seu feed</small></div></button>`,"Opções do versículo");
   sheet.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const a=b.dataset.a;closeSheet();
     if(a==="copiar")copy(v);else if(a==="tema")setFilter(v.t[0]);
+    else if(a==="foco"){setTimeout(()=>document.body.classList.add("focus"),300)}
     else if(a==="menos"){v.t.forEach(t=>taste[t]=Math.min(taste[t]||0,0)-3);persist();toast(`Vamos mostrar menos sobre <em>${v.t[0]}</em>`)}
     else if(a==="ler")setTimeout(()=>openReader(v),250);
     else toast("O áudio chega na próxima versão")});
@@ -859,6 +877,7 @@ function renderYou(){
     <button class="ri" data-a="pray">${IC("candle")}Orar agora<span class="v">${IC("chev")}</span></button>
     <button class="ri" data-a="prayAt">${IC("bell")}Horário da oração<span class="v">${prayAt||"Desligado"}${IC("chev")}</span></button>
     <button class="ri" data-a="remind">${IC("book")}Versículo do dia<span class="v">${remind||"Desligado"}${IC("chev")}</span></button>
+    <button class="ri" data-a="nav">${IC("home")}Barra de navegação<span class="v">${document.body.classList.contains("navtop")?"Em cima":"Embaixo"}${IC("chev")}</span></button>
     <button class="ri" data-a="mood">${IC("mood")}Como estou me sentindo<span class="v">${IC("chev")}</span></button></div>
    ${top.length?`<div class="group"><div class="label">O que tem tocado você</div><div class="taste">${top.map(([t,s])=>`<div>${t}<span><i style="width:${Math.max(8,s/max*100)}%"></i></span></div>`).join("")}</div></div>`:""}
    <div class="group"><div class="label">Salvos</div>
@@ -867,7 +886,7 @@ function renderYou(){
    <div class="group"><div class="label">Plano</div>
     <button class="ri" data-a="prem">${IC("star")}Lumen Premium<span class="v">${premium?"Ativo":"Grátis"}${IC("chev")}</span></button></div></div>`;
   yPage.querySelectorAll(".ri").forEach(b=>b.onclick=()=>{const a=b.dataset.a;
-    if(a==="pray")openPray();else if(a==="prayAt")openPrayTime();else if(a==="remind")openRemind();else if(a==="mood")onboarding();else goTab("premium")});
+    if(a==="nav"){const top=!document.body.classList.contains("navtop");document.body.classList.toggle("navtop",top);S.set("lumen.navpos",top?"top":"bottom");renderYou();toast(top?"Barra em cima":"Barra embaixo")}else if(a==="pray")openPray();else if(a==="prayAt")openPrayTime();else if(a==="remind")openRemind();else if(a==="mood")onboarding();else goTab("premium")});
   yPage.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{saved=saved.filter(r=>r!==b.dataset.r);persist();syncCards();
     const it=b.closest(".saved-item");it.style.transition=".35s";it.style.opacity="0";it.style.transform="translateX(30px)";setTimeout(renderYou,300)});
 }
@@ -1349,6 +1368,11 @@ more(4);
 requestAnimationFrame(()=>{const f=feed.firstElementChild;f.classList.add("active");active=f;since=Date.now();setLight(f._v)});
 if(!S.get("lumen.onb",0))setTimeout(onboarding,900);
 updateBody();setInterval(tick,500);
+/* A barra fica embaixo; se não couber na área visível do aparelho, sobe para o topo */
+(function(){const pref=S.get("lumen.navpos",null);if(pref==="top")document.body.classList.add("navtop");
+  const check=()=>{if(S.get("lumen.navpos",null))return;const r=bnav.getBoundingClientRect(),vh=window.visualViewport?.height||innerHeight;
+    if(r.height===0||r.bottom>vh+2)document.body.classList.add("navtop")};
+  setTimeout(check,600);window.visualViewport?.addEventListener("resize",check);addEventListener("resize",check)})();
 document.querySelectorAll("[data-i]").forEach(el=>el.outerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${IP[el.dataset.i]}</svg>`);
 [["rClose","back"],["pyClose","back"],["smClose","back"],["pyBell","bell"],["mX","close"]].forEach(([id,n])=>document.getElementById(id).innerHTML=`<svg viewBox="0 0 24 24">${IP[n]}</svg>`);
 document.getElementById("pPrem").insertAdjacentHTML("afterbegin",IC("star"));
