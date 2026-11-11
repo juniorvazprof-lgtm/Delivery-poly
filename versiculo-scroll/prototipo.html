@@ -137,6 +137,44 @@ cite b{color:var(--ink);font-weight:700}
 .hint small{letter-spacing:.04em;text-transform:none;font-weight:500;opacity:.8}
 @keyframes hint{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 
+/* Versículo do dia */
+.daily-badge{display:flex;align-items:center;gap:10px;margin-bottom:10px;font:700 .66rem var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--ink)}
+.daily-badge i{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 0 var(--gold);animation:beat 2.4s ease-out infinite}
+@keyframes beat{0%{box-shadow:0 0 0 0 rgba(226,190,116,.6)}70%,100%{box-shadow:0 0 0 10px rgba(226,190,116,0)}}
+.daily-meta{font:500 .82rem var(--sans);color:var(--muted);margin:0 0 22px;text-transform:capitalize}
+.remind{display:inline-flex;align-items:center;gap:8px;margin-top:22px;border:1px solid var(--line);background:var(--glass);color:var(--ink);
+  font:600 .8rem var(--sans);padding:10px 14px;border-radius:99px;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.remind svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round}
+.remind.on{border-color:var(--gold)}
+.streak{color:var(--gold);font-weight:700}
+.times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 20px}
+.times .chip{text-align:center;padding:12px 0}
+
+/* Ler capítulo */
+cite .read{border:0;background:none;color:var(--gold);font:700 .8rem var(--sans);padding:6px 0;cursor:pointer}
+#reader{position:fixed;inset:0;z-index:11;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .6s var(--spring);visibility:hidden}
+#reader.open{transform:none;visibility:visible}
+#reader header{position:sticky;opacity:1!important;pointer-events:auto!important;background:var(--bg);padding-bottom:12px;border-bottom:1px solid var(--line)}
+#reader h2{margin:0;font:450 1.3rem var(--serif)}
+#reader h2 small{display:block;font:600 .7rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.x{border:0;background:var(--glass);border:1px solid var(--line);color:var(--ink);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1rem}
+.page{flex:1;overflow-y:auto;user-select:text;-webkit-user-select:text;
+  padding:24px max(24px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 60px) max(24px,env(safe-area-inset-left,0px))}
+.page article{max-width:36rem;margin:0 auto;font:400 1.16rem/1.75 var(--serif)}
+.page sup{font:700 .62rem var(--sans);color:var(--gold);margin:0 4px 0 2px;vertical-align:.45em}
+.page .vv{border-radius:6px;transition:background 1s var(--ease)}
+.page .vv.hl{background:color-mix(in srgb,var(--gold) 20%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 20%,transparent)}
+.skel{height:1.1rem;border-radius:6px;background:var(--line);margin:14px 0;animation:shim 1.2s ease-in-out infinite alternate}
+@keyframes shim{to{opacity:.4}}
+.page .note{font:500 .9rem/1.6 var(--sans);color:var(--muted);border:1px dashed var(--line);border-radius:16px;padding:16px;margin-top:24px}
+
+/* Compartilhar imagem */
+.shot{display:flex;justify-content:center;margin:0 0 18px}
+.shot img{max-width:100%;max-height:52vh;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.3);-webkit-touch-callout:default;user-select:auto;-webkit-user-select:auto;animation:rise .6s var(--spring)}
+@keyframes rise{from{transform:translateY(20px) scale(.96);opacity:0}}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sec{border:1px solid var(--line);background:var(--glass);color:var(--ink);font:700 .9rem var(--sans);padding:15px;border-radius:99px;cursor:pointer}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}}
 </style>
 
@@ -151,6 +189,10 @@ cite b{color:var(--ink);font-weight:700}
 <div id="toast" role="status" aria-live="polite"></div>
 <div class="veil" id="veil"></div>
 <section class="sheet" id="sheet" role="dialog" aria-modal="true"></section>
+<section id="reader" role="dialog" aria-modal="true" aria-label="Leitura do capítulo">
+  <header><h2 id="rTitle"></h2><button class="x" id="rClose" aria-label="Fechar leitura">✕</button></header>
+  <div class="page" id="rPage"></div>
+</section>
 
 <script>
 const V=[
@@ -235,15 +277,17 @@ const ICON={
 };
 
 /* ---------- Card ---------- */
-function makeCard(v,first){
-  const c=document.createElement("section");c.className="card";c._v=v;
+function makeCard(v,first,daily){
+  const c=document.createElement("section");c.className="card"+(daily?" daily":"");c._v=v;
   const words=v.x.split(" "),len=v.x.length;
   const size=len<60?"clamp(2rem,8.4vw,3.2rem)":len<110?"clamp(1.6rem,6.6vw,2.6rem)":"clamp(1.35rem,5.4vw,2.1rem)";
   const isL=liked.has(v.r),isS=saved.includes(v.r);
   c.innerHTML=`<div class="inner" style="--n:${words.length}">
+    ${daily?`<div class="daily-badge"><i></i>Versículo do dia</div><p class="daily-meta">${todayLabel()}${streak.n>1?` · <span class="streak">${streak.n} dias seguidos</span>`:""}</p>`:""}
     <button class="theme" aria-label="Ver só versículos sobre ${v.t[0]}">${v.t[0]}</button>
     <blockquote style="font-size:${size}">${words.map((w,i)=>`<span class="w" style="--i:${i}">${w}</span>`).join(" ")}</blockquote>
-    <cite><b>${v.r}</b> · Almeida</cite></div>
+    <cite><b>${v.r}</b> · <button class="read">Ler capítulo ›</button></cite>
+    ${daily?`<button class="remind ${remind?"on":""}"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>${remind?"Lembrete às "+remind:"Receber todo dia"}</button>`:""}</div>
    <div class="rail">
     <button class="act heart ${isL?"on":""}" aria-pressed="${isL}" aria-label="Curtir">${ICON.heart}<span>Amém</span></button>
     <button class="act save ${isS?"on":""}" aria-pressed="${isS}" aria-label="Salvar">${ICON.save}<span>Salvar</span></button>
@@ -253,7 +297,9 @@ function makeCard(v,first){
    </div>${first?'<div class="hint">deslize ↑<small>toque duas vezes para curtir</small></div>':""}`;
   c.querySelector(".heart").onclick=()=>toggleLike(c);
   c.querySelector(".save").onclick=()=>toggleSave(c);
-  c.querySelector(".send").onclick=()=>{copy(v,"Versículo copiado. Cole no WhatsApp ou nos Stories");bump(v,5)};
+  c.querySelector(".send").onclick=()=>{openShare(v);bump(v,5)};
+  c.querySelector(".read").onclick=()=>openReader(v);
+  if(daily)c.querySelector(".remind").onclick=openRemind;
   c.querySelector(".more").onclick=()=>openMenu(v);
   c.querySelector(".theme").onclick=()=>setFilter(v.t[0]);
   // gestos: toque simples = modo foco, toque duplo = curtir, segurar = menu
@@ -324,7 +370,86 @@ function openMenu(v){
   sheet.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const a=b.dataset.a;closeSheet();
     if(a==="copiar")copy(v);else if(a==="tema")setFilter(v.t[0]);
     else if(a==="menos"){v.t.forEach(t=>taste[t]=Math.min(taste[t]||0,0)-3);persist();toast(`Vamos mostrar menos sobre <em>${v.t[0]}</em>`)}
-    else toast(a==="ler"?"A leitura do capítulo chega na próxima versão":"O áudio chega na próxima versão")});
+    else if(a==="ler")setTimeout(()=>openReader(v),250);
+    else toast("O áudio chega na próxima versão")});
+}
+
+/* ---------- Versículo do dia ---------- */
+const dayKey=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+const todayLabel=()=>new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+let streak=S.get("lumen.streak",{n:0,last:null}),remind=S.get("lumen.remind",null);
+(function(){const t=dayKey(new Date()),y=dayKey(new Date(Date.now()-864e5));
+  if(streak.last!==t){streak.n=streak.last===y?streak.n+1:1;streak.last=t;S.set("lumen.streak",streak)}})();
+function dailyVerse(){const d=new Date(),n=Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/864e5);return V[(n*7)%V.length]}
+function openRemind(){
+  const T=["06:00","07:00","08:00","12:00","18:00","21:00"];let pick=remind||"07:00";
+  openSheet(`<h2>Um versículo todo dia</h2><p class="sub">Escolha o horário. Você recebe uma notificação curta com a palavra do dia.</p>
+   <div class="times">${T.map(t=>`<button class="chip ${t===pick?"on":""}" data-t="${t}">${t}</button>`).join("")}</div>
+   <button class="primary" id="okR">Ativar lembrete</button>${remind?'<button class="ghost" id="offR">Desativar</button>':""}`,"Lembrete diário");
+  sheet.querySelectorAll(".times .chip").forEach(b=>b.onclick=()=>{pick=b.dataset.t;sheet.querySelectorAll(".times .chip").forEach(x=>x.classList.toggle("on",x===b));vibrate(5)});
+  document.getElementById("okR").onclick=async()=>{try{if("Notification"in window)await Notification.requestPermission()}catch{}
+    remind=pick;S.set("lumen.remind",remind);closeSheet();refreshRemind();toast(`Combinado. Todo dia às <em>${pick}</em>`)};
+  const off=document.getElementById("offR");if(off)off.onclick=()=>{remind=null;S.set("lumen.remind",null);closeSheet();refreshRemind();toast("Lembrete desativado")};
+}
+function refreshRemind(){const b=feed.querySelector(".daily .remind");if(!b)return;b.classList.toggle("on",!!remind);
+  b.lastChild.textContent=remind?"Lembrete às "+remind:"Receber todo dia"}
+
+/* ---------- Ler capítulo ---------- */
+const BOOKS={"Pedro":"peter","João":"john","Filipenses":"philippians","Salmos":"psalms","Mateus":"matthew","Josué":"joshua","Isaías":"isaiah",
+ "Timóteo":"timothy","Jeremias":"jeremiah","Romanos":"romans","Lamentações":"lamentations","Coríntios":"corinthians","Efésios":"ephesians",
+ "Hebreus":"hebrews","Provérbios":"proverbs","Tessalonicenses":"thessalonians","Eclesiastes":"ecclesiastes"};
+const reader=document.getElementById("reader"),rPage=document.getElementById("rPage");
+function parseRef(r){const m=r.match(/^(\d\s)?(.+?)\s(\d+):(\d+)(?:-(\d+))?$/);return{n:m[1]||"",book:m[2],ch:+m[3],a:+m[4],b:+(m[5]||m[4])}}
+async function openReader(v){
+  const p=parseRef(v.r);document.getElementById("rTitle").innerHTML=`${p.n}${p.book} ${p.ch}<small>Almeida · domínio público</small>`;
+  rPage.innerHTML=`<article>${Array.from({length:8},(_,i)=>`<div class="skel" style="width:${70+((i*37)%30)}%"></div>`).join("")}</article>`;
+  reader.classList.add("open");document.body.classList.remove("focus");
+  try{
+    const ctl=new AbortController();setTimeout(()=>ctl.abort(),7000);
+    const res=await fetch(`https://bible-api.com/${encodeURIComponent((p.n+BOOKS[p.book]).trim()+" "+p.ch)}?translation=almeida`,{signal:ctl.signal});
+    if(!res.ok)throw 0;const data=await res.json();
+    rPage.innerHTML=`<article>${data.verses.map(x=>`<span class="vv" data-n="${x.verse}"><sup>${x.verse}</sup>${x.text.replace(/\s+/g," ").trim()}</span> `).join("")}</article>`;
+  }catch{
+    rPage.innerHTML=`<article><span class="vv" data-n="${p.a}"><sup>${p.a}</sup>${v.x}</span>
+      <div class="note">Não foi possível carregar o capítulo agora. Verifique a internet e tente de novo. No app final, a Bíblia inteira fica guardada no celular e funciona sem internet.</div></article>`}
+  const hits=[...rPage.querySelectorAll(".vv")].filter(s=>+s.dataset.n>=p.a&&+s.dataset.n<=p.b);
+  setTimeout(()=>{hits[0]?.scrollIntoView({block:"center",behavior:"smooth"});hits.forEach(h=>h.classList.add("hl"))},450);
+}
+function closeReader(){reader.classList.remove("open")}
+document.getElementById("rClose").onclick=closeReader;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeReader()});
+
+/* ---------- Compartilhar como imagem ---------- */
+function rgba(h,a){const n=parseInt(h.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`}
+function wrap(ctx,text,max){const out=[];let line="";for(const w of text.split(" ")){const t=line?line+" "+w:w;if(ctx.measureText(t).width>max&&line){out.push(line);line=w}else line=t}out.push(line);return out}
+async function renderShot(v){
+  try{await Promise.all([document.fonts.load('400 80px "Fraunces"'),document.fonts.load('italic 400 44px "Fraunces"'),document.fonts.load('600 36px "Manrope"')])}catch{}
+  const W=1080,H=1920,cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d");
+  x.fillStyle="#0E0D14";x.fillRect(0,0,W,H);
+  [[180,420,v.h[0],.6],[920,1560,v.h[1],.5]].forEach(([cx,cy,c,a])=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,1050);g.addColorStop(0,rgba(c,a));g.addColorStop(1,rgba(c,0));x.fillStyle=g;x.fillRect(0,0,W,H)});
+  const len=v.x.length,fs=len<60?104:len<110?86:70,L=120,M=W-2*L;
+  x.font=`400 ${fs}px "Fraunces", Georgia, serif`;const lines=wrap(x,"“"+v.x+"”",M),lh=fs*1.3;
+  const top=H/2-(lines.length*lh)/2;
+  x.fillStyle="#E2BE74";x.font='700 30px "Manrope", sans-serif';x.letterSpacing="8px";x.fillText(v.t[0].toUpperCase(),L,top-70);x.letterSpacing="0px";
+  x.fillRect(L,top-120,44,3);
+  x.fillStyle="#F1ECE2";x.font=`400 ${fs}px "Fraunces", Georgia, serif`;lines.forEach((l,i)=>x.fillText(l,L,top+i*lh+fs));
+  x.fillStyle="rgba(241,236,226,.72)";x.font='600 40px "Manrope", sans-serif';x.fillText(v.r,L,top+lines.length*lh+fs*.4+70);
+  x.textAlign="center";x.fillStyle="rgba(226,190,116,.9)";x.font='italic 400 48px "Fraunces", Georgia, serif';x.fillText("lumen",W/2,H-150);
+  return cv;
+}
+async function openShare(v){
+  openSheet(`<h2>Compartilhar</h2><p class="sub">Imagem pronta para Stories e status do WhatsApp.</p><div class="shot"><div class="skel" style="width:60%;height:46vh;border-radius:18px;margin:0"></div></div>
+   <div class="row"><button class="primary" id="shShare">Compartilhar</button><button class="sec" id="shSave">Salvar imagem</button></div>
+   <button class="ghost" id="shCopy">Copiar só o texto</button>`,"Compartilhar versículo");
+  const cv=await renderShot(v),url=cv.toDataURL("image/png");
+  const shot=sheet.querySelector(".shot");if(!shot)return;shot.innerHTML=`<img alt="Imagem do versículo ${v.r}" src="${url}">`;
+  const file=()=>new Promise(r=>cv.toBlob(b=>r(new File([b],"versiculo.png",{type:"image/png"}))));
+  document.getElementById("shShare").onclick=async()=>{try{const f=await file();
+      if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:`${v.r} · lumen`});return}throw 0}
+    catch(e){if(e&&e.name==="AbortError")return;toast("Pressione a imagem para salvar e enviar")}};
+  document.getElementById("shSave").onclick=()=>{try{const a=document.createElement("a");a.href=url;a.download="versiculo-"+v.r.replace(/\W+/g,"-")+".png";a.click()}catch{}
+    toast("Se não baixar, pressione a imagem e escolha Salvar")};
+  document.getElementById("shCopy").onclick=()=>copy(v);
 }
 function openSaved(){
   const list=saved.map(byRef).filter(Boolean);
@@ -368,7 +493,8 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{
   if(idx>=feed.children.length-2)more(4);
 }),{root:feed,threshold:[.6]});
 function more(n){for(let i=0;i<n;i++){const c=makeCard(pick(),!feed.children.length);feed.appendChild(c);io.observe(c)}}
-more(5);
+{const d=dailyVerse();recent.push(d.r);const c=makeCard(d,true,true);feed.appendChild(c);io.observe(c)}
+more(4);
 requestAnimationFrame(()=>{const f=feed.firstElementChild;f.classList.add("active");active=f;since=Date.now();setLight(f._v)});
 if(!S.get("lumen.onb",0))setTimeout(onboarding,900);
 </script>
