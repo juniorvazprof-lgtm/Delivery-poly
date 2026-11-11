@@ -1,0 +1,539 @@
+{
+ "versao": "Bíblia Livre (BLIVRE)",
+ "edicao": "2018",
+ "base": "Almeida 1819, Textus Receptus, atualizada para o português do Brasil",
+ "licenca": "Creative Commons Atribuição 4.0 Brasil",
+ "credito": "Bíblia Livre (BLIVRE), © Diego Santos, Mario Sérgio e Marco Teles, 2018. CC BY 4.0 Brasil.",
+ "fonte": "https://github.com/damarals/biblias (release BLIVRE.json); original em sites.google.com/site/biblialivre",
+ "alteracoes": "Espaços e pontuação normalizados; títulos acrósticos hebraicos removidos do Salmo 119; Salmo 46: versículos 2 e 3, unidos na origem, separados; erros de digitação corrigidos em Salmos 34:18 (sava → salva) e Provérbios 3:6 (todas → todos); 15 versículos vazios no arquivo de origem completados a partir da Almeida 1911 (domínio público), com ortografia atualizada: Mt 17:21, Mt 18:11, Mt 23:14, Mc 7:16, Mc 9:44, Mc 9:46, Mc 11:26, Mc 15:28, Lc 17:36, Lc 23:17, At 8:37, At 15:34, At 24:7, At 28:29, Rm 16:24.",
+ "livros": [
+  {
+   "abrev": "Gn",
+   "nome": "Gênesis",
+   "testamento": "AT",
+   "capitulos": 50,
+   "versiculos": 1533,
+   "arquivo": "blivre/Gn.json"
+  },
+  {
+   "abrev": "Êx",
+   "nome": "Êxodo",
+   "testamento": "AT",
+   "capitulos": 40,
+   "versiculos": 1213,
+   "arquivo": "blivre/Ex.json"
+  },
+  {
+   "abrev": "Lv",
+   "nome": "Levítico",
+   "testamento": "AT",
+   "capitulos": 27,
+   "versiculos": 859,
+   "arquivo": "blivre/Lv.json"
+  },
+  {
+   "abrev": "Nm",
+   "nome": "Números",
+   "testamento": "AT",
+   "capitulos": 36,
+   "versiculos": 1288,
+   "arquivo": "blivre/Nm.json"
+  },
+  {
+   "abrev": "Dt",
+   "nome": "Deuteronômio",
+   "testamento": "AT",
+   "capitulos": 34,
+   "versiculos": 959,
+   "arquivo": "blivre/Dt.json"
+  },
+  {
+   "abrev": "Js",
+   "nome": "Josué",
+   "testamento": "AT",
+   "capitulos": 24,
+   "versiculos": 658,
+   "arquivo": "blivre/Js.json"
+  },
+  {
+   "abrev": "Jz",
+   "nome": "Juízes",
+   "testamento": "AT",
+   "capitulos": 21,
+   "versiculos": 618,
+   "arquivo": "blivre/Jz.json"
+  },
+  {
+   "abrev": "Rt",
+   "nome": "Rute",
+   "testamento": "AT",
+   "capitulos": 4,
+   "versiculos": 85,
+   "arquivo": "blivre/Rt.json"
+  },
+  {
+   "abrev": "1Sm",
+   "nome": "1 Samuel",
+   "testamento": "AT",
+   "capitulos": 31,
+   "versiculos": 810,
+   "arquivo": "blivre/1Sm.json"
+  },
+  {
+   "abrev": "2Sm",
+   "nome": "2 Samuel",
+   "testamento": "AT",
+   "capitulos": 24,
+   "versiculos": 695,
+   "arquivo": "blivre/2Sm.json"
+  },
+  {
+   "abrev": "1Rs",
+   "nome": "1 Reis",
+   "testamento": "AT",
+   "capitulos": 22,
+   "versiculos": 816,
+   "arquivo": "blivre/1Rs.json"
+  },
+  {
+   "abrev": "2Rs",
+   "nome": "2 Reis",
+   "testamento": "AT",
+   "capitulos": 25,
+   "versiculos": 719,
+   "arquivo": "blivre/2Rs.json"
+  },
+  {
+   "abrev": "1Cr",
+   "nome": "1 Crônicas",
+   "testamento": "AT",
+   "capitulos": 29,
+   "versiculos": 942,
+   "arquivo": "blivre/1Cr.json"
+  },
+  {
+   "abrev": "2Cr",
+   "nome": "2 Crônicas",
+   "testamento": "AT",
+   "capitulos": 36,
+   "versiculos": 822,
+   "arquivo": "blivre/2Cr.json"
+  },
+  {
+   "abrev": "Ed",
+   "nome": "Esdras",
+   "testamento": "AT",
+   "capitulos": 10,
+   "versiculos": 280,
+   "arquivo": "blivre/Ed.json"
+  },
+  {
+   "abrev": "Ne",
+   "nome": "Neemias",
+   "testamento": "AT",
+   "capitulos": 13,
+   "versiculos": 406,
+   "arquivo": "blivre/Ne.json"
+  },
+  {
+   "abrev": "Et",
+   "nome": "Ester",
+   "testamento": "AT",
+   "capitulos": 10,
+   "versiculos": 167,
+   "arquivo": "blivre/Et.json"
+  },
+  {
+   "abrev": "Jó",
+   "nome": "Jó",
+   "testamento": "AT",
+   "capitulos": 42,
+   "versiculos": 1070,
+   "arquivo": "blivre/Job.json"
+  },
+  {
+   "abrev": "Sl",
+   "nome": "Salmos",
+   "testamento": "AT",
+   "capitulos": 150,
+   "versiculos": 2461,
+   "arquivo": "blivre/Sl.json"
+  },
+  {
+   "abrev": "Pv",
+   "nome": "Provérbios",
+   "testamento": "AT",
+   "capitulos": 31,
+   "versiculos": 915,
+   "arquivo": "blivre/Pv.json"
+  },
+  {
+   "abrev": "Ec",
+   "nome": "Eclesiastes",
+   "testamento": "AT",
+   "capitulos": 12,
+   "versiculos": 222,
+   "arquivo": "blivre/Ec.json"
+  },
+  {
+   "abrev": "Ct",
+   "nome": "Cânticos",
+   "testamento": "AT",
+   "capitulos": 8,
+   "versiculos": 117,
+   "arquivo": "blivre/Ct.json"
+  },
+  {
+   "abrev": "Is",
+   "nome": "Isaías",
+   "testamento": "AT",
+   "capitulos": 66,
+   "versiculos": 1292,
+   "arquivo": "blivre/Is.json"
+  },
+  {
+   "abrev": "Jr",
+   "nome": "Jeremias",
+   "testamento": "AT",
+   "capitulos": 52,
+   "versiculos": 1364,
+   "arquivo": "blivre/Jr.json"
+  },
+  {
+   "abrev": "Lm",
+   "nome": "Lamentações",
+   "testamento": "AT",
+   "capitulos": 5,
+   "versiculos": 154,
+   "arquivo": "blivre/Lm.json"
+  },
+  {
+   "abrev": "Ez",
+   "nome": "Ezequiel",
+   "testamento": "AT",
+   "capitulos": 48,
+   "versiculos": 1273,
+   "arquivo": "blivre/Ez.json"
+  },
+  {
+   "abrev": "Dn",
+   "nome": "Daniel",
+   "testamento": "AT",
+   "capitulos": 12,
+   "versiculos": 357,
+   "arquivo": "blivre/Dn.json"
+  },
+  {
+   "abrev": "Os",
+   "nome": "Oseias",
+   "testamento": "AT",
+   "capitulos": 14,
+   "versiculos": 197,
+   "arquivo": "blivre/Os.json"
+  },
+  {
+   "abrev": "Jl",
+   "nome": "Joel",
+   "testamento": "AT",
+   "capitulos": 3,
+   "versiculos": 73,
+   "arquivo": "blivre/Jl.json"
+  },
+  {
+   "abrev": "Am",
+   "nome": "Amós",
+   "testamento": "AT",
+   "capitulos": 9,
+   "versiculos": 146,
+   "arquivo": "blivre/Am.json"
+  },
+  {
+   "abrev": "Ob",
+   "nome": "Obadias",
+   "testamento": "AT",
+   "capitulos": 1,
+   "versiculos": 21,
+   "arquivo": "blivre/Ob.json"
+  },
+  {
+   "abrev": "Jn",
+   "nome": "Jonas",
+   "testamento": "AT",
+   "capitulos": 4,
+   "versiculos": 48,
+   "arquivo": "blivre/Jn.json"
+  },
+  {
+   "abrev": "Mq",
+   "nome": "Miqueias",
+   "testamento": "AT",
+   "capitulos": 7,
+   "versiculos": 105,
+   "arquivo": "blivre/Mq.json"
+  },
+  {
+   "abrev": "Na",
+   "nome": "Naum",
+   "testamento": "AT",
+   "capitulos": 3,
+   "versiculos": 47,
+   "arquivo": "blivre/Na.json"
+  },
+  {
+   "abrev": "Hc",
+   "nome": "Habacuque",
+   "testamento": "AT",
+   "capitulos": 3,
+   "versiculos": 56,
+   "arquivo": "blivre/Hc.json"
+  },
+  {
+   "abrev": "Sf",
+   "nome": "Sofonias",
+   "testamento": "AT",
+   "capitulos": 3,
+   "versiculos": 53,
+   "arquivo": "blivre/Sf.json"
+  },
+  {
+   "abrev": "Ag",
+   "nome": "Ageu",
+   "testamento": "AT",
+   "capitulos": 2,
+   "versiculos": 38,
+   "arquivo": "blivre/Ag.json"
+  },
+  {
+   "abrev": "Zc",
+   "nome": "Zacarias",
+   "testamento": "AT",
+   "capitulos": 14,
+   "versiculos": 211,
+   "arquivo": "blivre/Zc.json"
+  },
+  {
+   "abrev": "Ml",
+   "nome": "Malaquias",
+   "testamento": "AT",
+   "capitulos": 4,
+   "versiculos": 55,
+   "arquivo": "blivre/Ml.json"
+  },
+  {
+   "abrev": "Mt",
+   "nome": "Mateus",
+   "testamento": "NT",
+   "capitulos": 28,
+   "versiculos": 1071,
+   "arquivo": "blivre/Mt.json"
+  },
+  {
+   "abrev": "Mc",
+   "nome": "Marcos",
+   "testamento": "NT",
+   "capitulos": 16,
+   "versiculos": 678,
+   "arquivo": "blivre/Mc.json"
+  },
+  {
+   "abrev": "Lc",
+   "nome": "Lucas",
+   "testamento": "NT",
+   "capitulos": 24,
+   "versiculos": 1151,
+   "arquivo": "blivre/Lc.json"
+  },
+  {
+   "abrev": "Jo",
+   "nome": "João",
+   "testamento": "NT",
+   "capitulos": 21,
+   "versiculos": 879,
+   "arquivo": "blivre/Jo.json"
+  },
+  {
+   "abrev": "At",
+   "nome": "Atos",
+   "testamento": "NT",
+   "capitulos": 28,
+   "versiculos": 1007,
+   "arquivo": "blivre/At.json"
+  },
+  {
+   "abrev": "Rm",
+   "nome": "Romanos",
+   "testamento": "NT",
+   "capitulos": 16,
+   "versiculos": 433,
+   "arquivo": "blivre/Rm.json"
+  },
+  {
+   "abrev": "1Co",
+   "nome": "1 Coríntios",
+   "testamento": "NT",
+   "capitulos": 16,
+   "versiculos": 437,
+   "arquivo": "blivre/1Co.json"
+  },
+  {
+   "abrev": "2Co",
+   "nome": "2 Coríntios",
+   "testamento": "NT",
+   "capitulos": 13,
+   "versiculos": 257,
+   "arquivo": "blivre/2Co.json"
+  },
+  {
+   "abrev": "Gl",
+   "nome": "Gálatas",
+   "testamento": "NT",
+   "capitulos": 6,
+   "versiculos": 149,
+   "arquivo": "blivre/Gl.json"
+  },
+  {
+   "abrev": "Ef",
+   "nome": "Efésios",
+   "testamento": "NT",
+   "capitulos": 6,
+   "versiculos": 155,
+   "arquivo": "blivre/Ef.json"
+  },
+  {
+   "abrev": "Fp",
+   "nome": "Filipenses",
+   "testamento": "NT",
+   "capitulos": 4,
+   "versiculos": 104,
+   "arquivo": "blivre/Fp.json"
+  },
+  {
+   "abrev": "Cl",
+   "nome": "Colossenses",
+   "testamento": "NT",
+   "capitulos": 4,
+   "versiculos": 95,
+   "arquivo": "blivre/Cl.json"
+  },
+  {
+   "abrev": "1Ts",
+   "nome": "1 Tessalonicenses",
+   "testamento": "NT",
+   "capitulos": 5,
+   "versiculos": 89,
+   "arquivo": "blivre/1Ts.json"
+  },
+  {
+   "abrev": "2Ts",
+   "nome": "2 Tessalonicenses",
+   "testamento": "NT",
+   "capitulos": 3,
+   "versiculos": 47,
+   "arquivo": "blivre/2Ts.json"
+  },
+  {
+   "abrev": "1Tm",
+   "nome": "1 Timóteo",
+   "testamento": "NT",
+   "capitulos": 6,
+   "versiculos": 113,
+   "arquivo": "blivre/1Tm.json"
+  },
+  {
+   "abrev": "2Tm",
+   "nome": "2 Timóteo",
+   "testamento": "NT",
+   "capitulos": 4,
+   "versiculos": 83,
+   "arquivo": "blivre/2Tm.json"
+  },
+  {
+   "abrev": "Tt",
+   "nome": "Tito",
+   "testamento": "NT",
+   "capitulos": 3,
+   "versiculos": 46,
+   "arquivo": "blivre/Tt.json"
+  },
+  {
+   "abrev": "Fm",
+   "nome": "Filemom",
+   "testamento": "NT",
+   "capitulos": 1,
+   "versiculos": 25,
+   "arquivo": "blivre/Fm.json"
+  },
+  {
+   "abrev": "Hb",
+   "nome": "Hebreus",
+   "testamento": "NT",
+   "capitulos": 13,
+   "versiculos": 303,
+   "arquivo": "blivre/Hb.json"
+  },
+  {
+   "abrev": "Tg",
+   "nome": "Tiago",
+   "testamento": "NT",
+   "capitulos": 5,
+   "versiculos": 108,
+   "arquivo": "blivre/Tg.json"
+  },
+  {
+   "abrev": "1Pe",
+   "nome": "1 Pedro",
+   "testamento": "NT",
+   "capitulos": 5,
+   "versiculos": 105,
+   "arquivo": "blivre/1Pe.json"
+  },
+  {
+   "abrev": "2Pe",
+   "nome": "2 Pedro",
+   "testamento": "NT",
+   "capitulos": 3,
+   "versiculos": 61,
+   "arquivo": "blivre/2Pe.json"
+  },
+  {
+   "abrev": "1Jo",
+   "nome": "1 João",
+   "testamento": "NT",
+   "capitulos": 5,
+   "versiculos": 105,
+   "arquivo": "blivre/1Jo.json"
+  },
+  {
+   "abrev": "2Jo",
+   "nome": "2 João",
+   "testamento": "NT",
+   "capitulos": 1,
+   "versiculos": 13,
+   "arquivo": "blivre/2Jo.json"
+  },
+  {
+   "abrev": "3Jo",
+   "nome": "3 João",
+   "testamento": "NT",
+   "capitulos": 1,
+   "versiculos": 14,
+   "arquivo": "blivre/3Jo.json"
+  },
+  {
+   "abrev": "Jd",
+   "nome": "Judas",
+   "testamento": "NT",
+   "capitulos": 1,
+   "versiculos": 25,
+   "arquivo": "blivre/Jd.json"
+  },
+  {
+   "abrev": "Ap",
+   "nome": "Apocalipse",
+   "testamento": "NT",
+   "capitulos": 22,
+   "versiculos": 405,
+   "arquivo": "blivre/Ap.json"
+  }
+ ]
+}

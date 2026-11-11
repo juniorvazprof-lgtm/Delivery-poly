@@ -659,43 +659,94 @@ body.navtop.has-mini #player .page{padding-bottom:calc(env(safe-area-inset-botto
 
 <script>
 const V=[
-{x:"Lançando sobre ele toda a vossa ansiedade, porque ele tem cuidado de vós.",r:"1 Pedro 5:7",t:["ansiedade","cuidado"],h:["#9EC5E8","#C9B6E8"]},
-{x:"Não estejais inquietos por coisa alguma; antes as vossas petições sejam conhecidas diante de Deus pela oração.",r:"Filipenses 4:6",t:["ansiedade","oração"],h:["#A9D3C7","#9EC5E8"]},
-{x:"E a paz de Deus, que excede todo o entendimento, guardará os vossos corações.",r:"Filipenses 4:7",t:["paz","ansiedade"],h:["#B8D8C8","#E8D7A9"]},
-{x:"Deixo-vos a paz, a minha paz vos dou. Não se turbe o vosso coração.",r:"João 14:27",t:["paz"],h:["#A9D3C7","#D6C3E8"]},
-{x:"Aquietai-vos, e sabei que eu sou Deus.",r:"Salmos 46:10",t:["paz","descanso"],h:["#B5C7E8","#E8DDC4"]},
-{x:"Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.",r:"Mateus 11:28",t:["descanso","cuidado"],h:["#E8C9A9","#C9B6E8"]},
-{x:"O Senhor é o meu pastor; nada me faltará.",r:"Salmos 23:1",t:["cuidado","confiança"],h:["#C8DDA9","#F2C879"]},
-{x:"Ainda que eu andasse pelo vale da sombra da morte, não temeria mal algum, porque tu estás comigo.",r:"Salmos 23:4",t:["coragem","cuidado"],h:["#9FA9D8","#E8B9A9"]},
-{x:"Posso todas as coisas naquele que me fortalece.",r:"Filipenses 4:13",t:["força"],h:["#F2B879","#E89A9A"]},
-{x:"Esforça-te, e tem bom ânimo; não temas, porque o Senhor teu Deus é contigo, por onde quer que andares.",r:"Josué 1:9",t:["coragem","força"],h:["#F2C879","#E89A9A"]},
-{x:"Os que esperam no Senhor renovarão as suas forças; subirão com asas como águias.",r:"Isaías 40:31",t:["força","esperança"],h:["#9EC5E8","#F2C879"]},
-{x:"Não temas, porque eu sou contigo; eu te fortaleço, e te ajudo, e te sustento.",r:"Isaías 41:10",t:["coragem","força"],h:["#F2C879","#B5C7E8"]},
-{x:"Porque Deus não nos deu o espírito de temor, mas de fortaleza, e de amor, e de moderação.",r:"2 Timóteo 1:7",t:["coragem"],h:["#E8A9A9","#F2C879"]},
-{x:"Porque eu bem sei os pensamentos que penso de vós; pensamentos de paz, para vos dar o fim que esperais.",r:"Jeremias 29:11",t:["esperança","propósito"],h:["#F2C879","#C9B6E8"]},
-{x:"Sabemos que todas as coisas contribuem juntamente para o bem daqueles que amam a Deus.",r:"Romanos 8:28",t:["propósito","esperança"],h:["#E8C9A9","#A9D3C7"]},
-{x:"As suas misericórdias não têm fim; novas são cada manhã.",r:"Lamentações 3:22-23",t:["esperança","graça"],h:["#F7D9A0","#F2B8C6"]},
-{x:"Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça.",r:"João 3:16",t:["amor","graça"],h:["#F2A9A9","#F2C879"]},
-{x:"O amor é sofredor, é benigno; o amor não é invejoso, não se ensoberbece.",r:"1 Coríntios 13:4",t:["amor"],h:["#F2B8C6","#E8C9A9"]},
-{x:"Permanecem a fé, a esperança e o amor; mas o maior destes é o amor.",r:"1 Coríntios 13:13",t:["amor","esperança"],h:["#F2B8C6","#C9B6E8"]},
-{x:"Nós o amamos a ele porque ele nos amou primeiro.",r:"1 João 4:19",t:["amor"],h:["#F2A9A9","#F7D9A0"]},
-{x:"A minha graça te basta, porque o meu poder se aperfeiçoa na fraqueza.",r:"2 Coríntios 12:9",t:["graça","força"],h:["#D6C3E8","#F2C879"]},
-{x:"Pela graça sois salvos, por meio da fé; e isto não vem de vós, é dom de Deus.",r:"Efésios 2:8",t:["graça","fé"],h:["#C9B6E8","#F7D9A0"]},
-{x:"Ora, a fé é o firme fundamento das coisas que se esperam, e a prova das coisas que se não veem.",r:"Hebreus 11:1",t:["fé","esperança"],h:["#B5C7E8","#F2C879"]},
-{x:"Confia no Senhor de todo o teu coração, e não te estribes no teu próprio entendimento.",r:"Provérbios 3:5",t:["confiança","fé"],h:["#C8DDA9","#B5C7E8"]},
-{x:"Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará.",r:"Salmos 37:5",t:["confiança","propósito"],h:["#A9D3C7","#F2C879"]},
-{x:"Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.",r:"Salmos 119:105",t:["propósito","fé"],h:["#F7D9A0","#F2B879"]},
-{x:"Este é o dia que fez o Senhor; regozijemo-nos, e alegremo-nos nele.",r:"Salmos 118:24",t:["gratidão","alegria"],h:["#F7D9A0","#C8DDA9"]},
-{x:"Em tudo dai graças, porque esta é a vontade de Deus em Cristo Jesus para convosco.",r:"1 Tessalonicenses 5:18",t:["gratidão"],h:["#F2C879","#A9D3C7"]},
-{x:"Regozijai-vos sempre no Senhor; outra vez digo, regozijai-vos.",r:"Filipenses 4:4",t:["alegria","gratidão"],h:["#F7D9A0","#F2B8C6"]},
-{x:"Perto está o Senhor dos que têm o coração quebrantado.",r:"Salmos 34:18",t:["cuidado","descanso"],h:["#B5C7E8","#D6C3E8"]},
-{x:"Sara os quebrantados de coração, e liga as suas feridas.",r:"Salmos 147:3",t:["cuidado","graça"],h:["#D6C3E8","#A9D3C7"]},
-{x:"Pedi, e dar-se-vos-á; buscai, e encontrareis; batei, e abrir-se-vos-á.",r:"Mateus 7:7",t:["oração","fé"],h:["#F2C879","#9EC5E8"]},
-{x:"No mundo tereis aflições, mas tende bom ânimo; eu venci o mundo.",r:"João 16:33",t:["coragem","esperança"],h:["#E89A9A","#F2C879"]},
-{x:"Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia.",r:"Salmos 46:1",t:["força","confiança"],h:["#9FA9D8","#F2C879"]},
-{x:"Buscai primeiro o reino de Deus, e a sua justiça, e todas estas coisas vos serão acrescentadas.",r:"Mateus 6:33",t:["propósito","oração"],h:["#C8DDA9","#F7D9A0"]},
-{x:"Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu.",r:"Eclesiastes 3:1",t:["propósito","descanso"],h:["#E8DDC4","#B5C7E8"]},
-];
+{"x": "Lançando sobre ele toda a vossa ansiedade; porque ele tem cuidado de vós.", "r": "1 Pedro 5:7", "t": ["ansiedade", "cuidado"], "h": ["#9EC5E8", "#C9B6E8"]},
+{"x": "Não estejais ansiosos por coisa alguma; mas em tudo, por meio de orações e súplicas com ações de gratidão, sejam os vossos pedidos conhecidos por Deus.", "r": "Filipenses 4:6", "t": ["ansiedade", "oração"], "h": ["#C9B6E8", "#9EC5E8"]},
+{"x": "E a paz de Deus, que excede todo entendimento, guardará os vossos corações e as vossas mentes em Cristo Jesus.", "r": "Filipenses 4:7", "t": ["paz", "ansiedade"], "h": ["#A9D3C7", "#D6C3E8"]},
+{"x": "A paz vos deixo, minha paz vos dou; vou dá-la a vós, não como o mundo a dá. Não se perturbe vosso coração, nem se atemorize.", "r": "João 14:27", "t": ["paz"], "h": ["#D6C3E8", "#A9D3C7"]},
+{"x": "Ficai quietos, e sabei que eu sou Deus; eu serei exaltado entre as nações; serei exaltado sobre a terra.", "r": "Salmos 46:10", "t": ["paz", "descanso"], "h": ["#A9D3C7", "#D6C3E8"]},
+{"x": "Vinde a mim todos vós que estais cansados e sobrecarregados, e eu vos farei descansar.", "r": "Mateus 11:28", "t": ["descanso", "cuidado"], "h": ["#E8DDC4", "#B5C7E8"]},
+{"x": "O SENHOR é meu pastor, nada me faltará.", "r": "Salmos 23:1", "t": ["cuidado", "confiança"], "h": ["#C8DDA9", "#F2C879"]},
+{"x": "Ainda que eu venha a andar pelo vale da sombra da morte, não temerei mal algum, porque tu estás comigo; tua vara e teu cajado me consolam.", "r": "Salmos 23:4", "t": ["coragem", "cuidado"], "h": ["#E89A9A", "#F2C879"]},
+{"x": "Posso todas as coisas naquele que me fortalece.", "r": "Filipenses 4:13", "t": ["força"], "h": ["#F2B879", "#E89A9A"]},
+{"x": "Olha que te mando que te esforces e sejas valente: não temas nem desmaies, porque o SENHOR teu Deus será contigo onde quer que fores.", "r": "Josué 1:9", "t": ["coragem", "força"], "h": ["#E89A9A", "#F2C879"]},
+{"x": "Mas os que confiam no SENHOR renovarão as forças, subirão com asas como águias; correrão, e não se cansarão; caminharão, e não se fatigarão.", "r": "Isaías 40:31", "t": ["força", "esperança"], "h": ["#F2B879", "#E89A9A"]},
+{"x": "Não temas, porque eu estou contigo; não te assombres, porque eu sou teu Deus. Eu te fortaleço, te ajudo, e te sustento com a minha mão direita de justiça.", "r": "Isaías 41:10", "t": ["coragem", "força"], "h": ["#E89A9A", "#F2C879"]},
+{"x": "Pois Deus não nos deu espírito de medo; mas sim de força, de amor, e de moderação.", "r": "2 Timóteo 1:7", "t": ["coragem"], "h": ["#F2C879", "#E89A9A"]},
+{"x": "Porque eu sei os pensamentos que penso quanto a vós, diz o SENHOR, pensamentos de paz, e não de mal, para vos dar um futuro com esperança.", "r": "Jeremias 29:11", "t": ["esperança", "propósito"], "h": ["#C9B6E8", "#F2C879"]},
+{"x": "E sabemos que todas as coisas juntamente contribuem para o bem daqueles que amam a Deus, dos que são chamados segundo o seu propósito.", "r": "Romanos 8:28", "t": ["propósito", "esperança"], "h": ["#E8C9A9", "#A9D3C7"]},
+{"x": "É pelas bondades do SENHOR que não somos consumidos, porque suas misericórdias não têm fim. Elas são novas a cada manhã; grande é a tua fidelidade.", "r": "Lamentações 3:22-23", "t": ["esperança", "graça"], "h": ["#C9B6E8", "#F2C879"]},
+{"x": "Porque Deus amou ao mundo de tal maneira, que deu o seu Filho unigênito; para que todo aquele que nele crê não pereça, mas tenha a vida eterna.", "r": "João 3:16", "t": ["amor", "graça"], "h": ["#F2B8C6", "#E8C9A9"]},
+{"x": "O amor é paciente, é bondoso; o amor não é invejoso; o amor não é orgulhoso, não é arrogante.", "r": "1 Coríntios 13:4", "t": ["amor"], "h": ["#E8C9A9", "#F2B8C6"]},
+{"x": "E agora continuam a fé, a esperança, e o amor, estes três; porém o maior destes é o amor.", "r": "1 Coríntios 13:13", "t": ["amor", "esperança"], "h": ["#F2B8C6", "#E8C9A9"]},
+{"x": "Nós amamos, porque ele nos amou primeiro.", "r": "1 João 4:19", "t": ["amor"], "h": ["#E8C9A9", "#F2B8C6"]},
+{"x": "Mas ele me disse: “Minha graça te basta, porque meu poder se aperfeiçoa na fraqueza”. Por isso, com muito prazer, eu me orgulharei nas minhas fraquezas, para que o poder de Cristo habite em mim.", "r": "2 Coríntios 12:9", "t": ["graça", "força"], "h": ["#D6C3E8", "#F2C879"]},
+{"x": "Porque pela graça sois salvos, por meio da fé; e isto não vem de vós; é dom de Deus.", "r": "Efésios 2:8", "t": ["graça", "fé"], "h": ["#F2C879", "#D6C3E8"]},
+{"x": "Ora, a fé é a certeza das coisas que se esperam, e a prova das coisas que não se veem.", "r": "Hebreus 11:1", "t": ["fé", "esperança"], "h": ["#B5C7E8", "#F2C879"]},
+{"x": "Confia no SENHOR com todo o teu coração; e não te apoies em teu próprio entendimento.", "r": "Provérbios 3:5", "t": ["confiança", "fé"], "h": ["#B5C7E8", "#C8DDA9"]},
+{"x": "Conduz teu caminho ao SENHOR, e confia nele; e ele lhe fará o bem.", "r": "Salmos 37:5", "t": ["confiança", "propósito"], "h": ["#C8DDA9", "#B5C7E8"]},
+{"x": "Tua palavra é lâmpada para meus pés e luz para meu caminho.", "r": "Salmos 119:105", "t": ["propósito", "fé"], "h": ["#A9D3C7", "#E8C9A9"]},
+{"x": "Este é o dia em que o SENHOR agiu; alegremos e enchamos de alegria nele.", "r": "Salmos 118:24", "t": ["gratidão", "alegria"], "h": ["#F2C879", "#A9D3C7"]},
+{"x": "Agradecei em tudo, pois essa é a vontade de Deus em Cristo Jesus para vós mesmos.", "r": "1 Tessalonicenses 5:18", "t": ["gratidão"], "h": ["#A9D3C7", "#F2C879"]},
+{"x": "Alegrai-vos sempre no Senhor. Volto a dizer: alegrai-vos.", "r": "Filipenses 4:4", "t": ["alegria", "gratidão"], "h": ["#F7D9A0", "#F2B8C6"]},
+{"x": "O SENHOR está perto daqueles que estão com o coração partido, e salva os aflitos de espírito.", "r": "Salmos 34:18", "t": ["cuidado", "descanso"], "h": ["#F2C879", "#C8DDA9"]},
+{"x": "Ele sara aos de coração partido, e os cura de suas dores.", "r": "Salmos 147:3", "t": ["cuidado", "graça"], "h": ["#C8DDA9", "#F2C879"]},
+{"x": "Pedi, e vos será dado; buscai, e achareis; batei, e vos será aberto.", "r": "Mateus 7:7", "t": ["oração", "fé"], "h": ["#9EC5E8", "#F2C879"]},
+{"x": "Estas coisas tenho vos dito para que tenhais paz em mim; no mundo tereis aflição; mas tende bom ânimo; eu venci o mundo.", "r": "João 16:33", "t": ["coragem", "esperança"], "h": ["#F2C879", "#E89A9A"]},
+{"x": "Deus é nosso refúgio e força; socorro oportuno nas angústias.", "r": "Salmos 46:1", "t": ["força", "confiança"], "h": ["#E89A9A", "#F2B879"]},
+{"x": "Mas buscai primeiramente o seu Reino e a sua justiça, e todas estas coisas vos serão acrescentadas.", "r": "Mateus 6:33", "t": ["propósito", "oração"], "h": ["#E8C9A9", "#A9D3C7"]},
+{"x": "Para todas as coisas há um tempo determinado, e todo propósito abaixo do céu tem seu tempo.", "r": "Eclesiastes 3:1", "t": ["propósito", "descanso"], "h": ["#A9D3C7", "#E8C9A9"]},
+{"x": "O SENHOR é minha luz e minha salvação; a quem temerei? O SENHOR é a força da minha vida; de quem terei medo?", "r": "Salmos 27:1", "t": ["coragem", "confiança"], "h": ["#F2C879", "#E89A9A"]},
+{"x": "Experimentai, e vede que o SENHOR é bom; bem-aventurado é o homem que confia nele.", "r": "Salmos 34:8", "t": ["alegria", "gratidão"], "h": ["#F2B8C6", "#F7D9A0"]},
+{"x": "E agrada-te no SENHOR; e ele te dará os pedidos de teu coração.", "r": "Salmos 37:4", "t": ["alegria", "propósito"], "h": ["#F7D9A0", "#F2B8C6"]},
+{"x": "Entrega tuas preocupações ao SENHOR, e ele te sustentará; ele não permitirá que o justo fique caído para sempre.", "r": "Salmos 55:22", "t": ["ansiedade", "cuidado"], "h": ["#C9B6E8", "#9EC5E8"]},
+{"x": "No dia em que eu tiver medo, eu confiarei em ti.", "r": "Salmos 56:3", "t": ["coragem", "confiança"], "h": ["#F2C879", "#E89A9A"]},
+{"x": "Certamente minha alma se aquieta por causa de Deus; dele vem minha salvação.", "r": "Salmos 62:1", "t": ["descanso", "paz"], "h": ["#E8DDC4", "#B5C7E8"]},
+{"x": "Minha carne e meu coração desfalecem; porém Deus será a rocha do meu coração e minha porção para sempre.", "r": "Salmos 73:26", "t": ["força", "cuidado"], "h": ["#F2B879", "#E89A9A"]},
+{"x": "Aquele que mora no esconderijo do Altíssimo, à sombra do Todo-Poderoso habitará.", "r": "Salmos 91:1", "t": ["cuidado", "descanso"], "h": ["#F2C879", "#C8DDA9"]},
+{"x": "Porque ele ordenou aos anjos quanto a ti, para que guardem todos os teus caminhos.", "r": "Salmos 91:11", "t": ["cuidado", "confiança"], "h": ["#C8DDA9", "#F2C879"]},
+{"x": "Entrai pelas portas dele com agradecimento, por seus pátios com canto de louvor; agradecei a ele, e bendizei o seu nome.", "r": "Salmos 100:4", "t": ["gratidão", "alegria"], "h": ["#A9D3C7", "#F2C879"]},
+{"x": "Louva ao SENHOR, ó minha alma; e não te esqueças de nenhum dos benefícios dele.", "r": "Salmos 103:2", "t": ["gratidão"], "h": ["#F2C879", "#A9D3C7"]},
+{"x": "Levanto meus olhos aos montes. De onde virá meu socorro? Meu socorro vem do SENHOR, que fez os céus e a terra.", "r": "Salmos 121:1-2", "t": ["confiança", "força"], "h": ["#B5C7E8", "#C8DDA9"]},
+{"x": "Eu te louvarei porque de um jeito assombroso e maravilhoso eu fui feito; maravilhosas são tuas obras; e minha alma sabe muito bem.", "r": "Salmos 139:14", "t": ["amor", "propósito"], "h": ["#F2B8C6", "#E8C9A9"]},
+{"x": "De madrugada faze com que eu ouça tua bondade, porque em ti confio; faze-me saber o caminho que devo seguir, porque a ti levanto minha alma.", "r": "Salmos 143:8", "t": ["oração", "confiança"], "h": ["#9EC5E8", "#F2C879"]},
+{"x": "Dá reconhecimento a ele em todos os teus caminhos; e ele endireitará tuas veredas.", "r": "Provérbios 3:6", "t": ["propósito", "confiança"], "h": ["#E8C9A9", "#A9D3C7"]},
+{"x": "Confia tuas obras ao SENHOR, e teus pensamentos serão firmados.", "r": "Provérbios 16:3", "t": ["propósito"], "h": ["#A9D3C7", "#E8C9A9"]},
+{"x": "O nome do SENHOR é uma torre forte; o justo correrá até ele, e ficará seguro.", "r": "Provérbios 18:10", "t": ["força", "cuidado"], "h": ["#F2B879", "#E89A9A"]},
+{"x": "Tu guardarás em completa paz aquele que tem firme entendimento, pois ele confia em ti.", "r": "Isaías 26:3", "t": ["paz", "confiança"], "h": ["#D6C3E8", "#A9D3C7"]},
+{"x": "Quando passares pelas águas, estarei contigo; e ao passares pelos rios, eles não te submergirão; quando passares pelo fogo, não te queimarás, nem a chamas arderão em ti.", "r": "Isaías 43:2", "t": ["coragem", "cuidado"], "h": ["#F2C879", "#E89A9A"]},
+{"x": "Porque montes se removerão e morros se retirarão, porém minha bondade não se removerá de ti, nem o pacto de minha paz se retirará, diz o SENHOR, que tem compaixão de ti.", "r": "Isaías 54:10", "t": ["amor", "graça"], "h": ["#E8C9A9", "#F2B8C6"]},
+{"x": "O SENHOR está no meio de ti, guerreiro que salva; ele terá prazer em ti com alegria; ele te aquietará em seu amor, se encherá de alegria por causa de ti com júbilo.", "r": "Sofonias 3:17", "t": ["amor", "alegria"], "h": ["#F2B8C6", "#E8C9A9"]},
+{"x": "Assim brilhe vossa luz diante das pessoas, para que vejam vossas boas obras, e glorifiquem ao vosso Pai, que está nos céus.", "r": "Mateus 5:16", "t": ["propósito"], "h": ["#A9D3C7", "#E8C9A9"]},
+{"x": "Não andeis, pois, ansiosos pelo dia de amanhã, porque o amanhã cuidará de si mesmo. Basta a cada dia o seu mal.", "r": "Mateus 6:34", "t": ["ansiedade", "descanso"], "h": ["#9EC5E8", "#C9B6E8"]},
+{"x": "Ensinando-lhes a guardar todas as coisas que eu vos tenho mandado. E eis que eu estou convosco todos os dias, até o fim dos tempos.", "r": "Mateus 28:20", "t": ["cuidado", "fé"], "h": ["#F2C879", "#C8DDA9"]},
+{"x": "E Jesus lhe disse: Se podes? Tudo é possível ao que crê.", "r": "Marcos 9:23", "t": ["fé"], "h": ["#B5C7E8", "#F2C879"]},
+{"x": "Portanto eu vos digo que tudo o que pedirdes orando, crede que recebereis, e vós o tereis.", "r": "Marcos 11:24", "t": ["oração", "fé"], "h": ["#9EC5E8", "#F2C879"]},
+{"x": "Falou-lhes pois Jesus outra vez, dizendo: Eu sou a luz do mundo; quem me seguir não andará em trevas, mas terá luz de vida.", "r": "João 8:12", "t": ["fé", "esperança"], "h": ["#B5C7E8", "#F2C879"]},
+{"x": "O ladrão não vem para outra coisa, a não ser roubar, e matar, e destruir; eu vim para que tenham vida, e a tenham em abundância.", "r": "João 10:10", "t": ["graça", "alegria"], "h": ["#F2C879", "#D6C3E8"]},
+{"x": "Não se perturbe vosso coração; credes em Deus, crede também em mim.", "r": "João 14:1", "t": ["paz", "fé"], "h": ["#A9D3C7", "#D6C3E8"]},
+{"x": "Eu sou a videira, vós sois os ramos; quem está em mim, e eu nele, esse dá muito fruto; porque sem mim nada podeis fazer.", "r": "João 15:5", "t": ["propósito", "fé"], "h": ["#A9D3C7", "#E8C9A9"]},
+{"x": "Mas Deus prova o seu amor por nós através de Cristo haver morrido por nós, quando ainda éramos pecadores.", "r": "Romanos 5:8", "t": ["amor", "graça"], "h": ["#F2B8C6", "#E8C9A9"]},
+{"x": "Então, que diremos acerca dessas coisas? Se Deus é por nós, quem será contra nós?", "r": "Romanos 8:31", "t": ["coragem", "confiança"], "h": ["#E89A9A", "#F2C879"]},
+{"x": "Pois tenho certeza que nem a morte, nem a vida, nem anjos, nem principados, nem o presente, nem o futuro, nem poderes, nem altura, nem profundeza, nem qualquer outra criatura poderá nos separar do amor de Deus, que está em Cristo Jesus, nosso Senhor.", "r": "Romanos 8:38-39", "t": ["amor"], "h": ["#F2B8C6", "#E8C9A9"]},
+{"x": "Alegrai-vos na esperança. Sede pacientes na aflição. Perseverai na oração.", "r": "Romanos 12:12", "t": ["esperança", "oração"], "h": ["#C9B6E8", "#F2C879"]},
+{"x": "O Deus da esperança vos encha de toda alegria e paz na fé, para que abundeis em esperança no poder do Espírito Santo.", "r": "Romanos 15:13", "t": ["esperança", "alegria"], "h": ["#F2C879", "#C9B6E8"]},
+{"x": "Por isso não desfalecemos; mas ainda que nosso ser exterior se destrua, todavia o interior se renova a cada dia.", "r": "2 Coríntios 4:16", "t": ["força", "esperança"], "h": ["#E89A9A", "#F2B879"]},
+{"x": "Portanto, se alguém está em Cristo, uma nova criatura é; as coisas velhas já passaram, eis que tudo se fez novo.", "r": "2 Coríntios 5:17", "t": ["graça", "esperança"], "h": ["#D6C3E8", "#F2C879"]},
+{"x": "Porém não cansemos de fazer o bem, pois no tempo devido colheremos, se não desistirmos.", "r": "Gálatas 6:9", "t": ["força", "propósito"], "h": ["#E89A9A", "#F2B879"]},
+{"x": "Por fim, fortalecei-vos no Senhor e na força do seu poder.", "r": "Efésios 6:10", "t": ["força", "coragem"], "h": ["#F2B879", "#E89A9A"]},
+{"x": "Tudo quanto fizerdes, fazei de coração, como que para o Senhor, e não para as pessoas.", "r": "Colossenses 3:23", "t": ["propósito"], "h": ["#A9D3C7", "#E8C9A9"]},
+{"x": "Portanto, acheguemo-nos com confiança ao trono da graça, para que possamos receber misericórdia e encontrar graça para sermos socorridos no tempo adequado.", "r": "Hebreus 4:16", "t": ["oração", "graça"], "h": ["#F2C879", "#9EC5E8"]},
+{"x": "A vossa maneira de viver seja sem ganância, contentando-vos com as coisas que tendes. Pois ele disse: Não te deixarei, nem te desampararei.", "r": "Hebreus 13:5", "t": ["cuidado", "confiança"], "h": ["#F2C879", "#C8DDA9"]},
+{"x": "Se algum de vós tem falta de sabedoria, peça a Deus, que concede generosamente a todos sem repreender, e lhe será dada.", "r": "Tiago 1:5", "t": ["oração", "propósito"], "h": ["#F2C879", "#9EC5E8"]},
+{"x": "Se confessarmos nossos pecados, ele é fiel e justo para nos perdoar os pecados e nos purificar de toda injustiça.", "r": "1 João 1:9", "t": ["graça"], "h": ["#F2C879", "#D6C3E8"]},
+{"x": "No amor não há medo; pelo contrário, o perfeito amor expulsa o medo; pois o medo envolve castigo; e o que teme não está aperfeiçoado em amor.", "r": "1 João 4:18", "t": ["amor", "coragem"], "h": ["#F2B8C6", "#E8C9A9"]},
+{"x": "E Deus limpará toda lágrima dos olhos deles; e não haverá mais morte, nem pranto, nem clamor, nem mais haverá dor; porque as primeiras coisas já passaram.", "r": "Apocalipse 21:4", "t": ["esperança", "descanso"], "h": ["#C9B6E8", "#F2C879"]},
+{"x": "O SENHOR te abençoe, e te guarde: Faça resplandecer o SENHOR seu rosto sobre ti, e tenha de ti misericórdia: O SENHOR levante a ti seu rosto, e ponha em ti paz.", "r": "Números 6:24-26", "t": ["cuidado", "paz"], "h": ["#C8DDA9", "#F2C879"]},
+{"x": "Esforçai-vos e tende ânimo; não temais, nem tenhais medo deles: que o SENHOR teu Deus é o que vai contigo: não te deixará nem te desamparará.", "r": "Deuteronômio 31:6", "t": ["coragem", "força"], "h": ["#E89A9A", "#F2C879"]},
+{"x": "Porque sua ira dura por um momento; mas seu favor dura por toda a vida; o choro fica pela noite, mas a alegria vem pela manhã.", "r": "Salmos 30:5", "t": ["esperança", "alegria"], "h": ["#F2C879", "#C9B6E8"]},
+{"x": "Tu me farás conhecer o caminho da vida; fartura de alegrias há em tua presença; agrados estão em tua mão direita para sempre.", "r": "Salmos 16:11", "t": ["alegria", "propósito"], "h": ["#F2B8C6", "#F7D9A0"]},
+{"x": "Pois, se com a tua boca declarares que Jesus é Senhor, e em teu coração creres que Deus o ressuscitou dos mortos, serás salvo.", "r": "Romanos 10:9", "t": ["fé", "graça"], "h": ["#B5C7E8", "#F2C879"]},
+{"x": "Mas vós recebereis poder do Espírito Santo, que virá sobre vós; e vós sereis minhas testemunhas, tanto em Jerusalém como em toda a Judeia, e Samaria, e até ao último lugar da terra.", "r": "Atos 1:8", "t": ["coragem", "propósito"], "h": ["#E89A9A", "#F2C879"]}];
 const NEAR={ansiedade:["paz","descanso","oração"],paz:["descanso","ansiedade","confiança"],descanso:["paz","cuidado"],cuidado:["amor","descanso"],
  coragem:["força","fé"],força:["coragem","esperança"],esperança:["fé","propósito"],propósito:["confiança","esperança"],amor:["graça","cuidado"],
  graça:["amor","fé"],fé:["confiança","esperança"],confiança:["fé","paz"],gratidão:["alegria","amor"],alegria:["gratidão","esperança"],oração:["fé","paz"]};
@@ -776,7 +827,7 @@ function makeCard(v,first,daily){
     ${daily?`<div class="daily-badge"><i></i>Versículo do dia</div><p class="daily-meta">${todayLabel()}${streak.n>1?` · <span class="streak">${streak.n} dias seguidos</span>`:""}</p>`:""}
     <button class="theme" aria-label="Ver só versículos sobre ${v.t[0]}">${v.t[0]}</button>
     <blockquote style="font-size:${size}">${words.map((w,i)=>`<span class="w" style="--i:${i}">${w}</span>`).join(" ")}</blockquote>
-    <cite><b>${v.r}</b> · <button class="read">Ler capítulo ›</button></cite>
+    <cite><b>${v.r}</b> · BLIVRE · <button class="read">Ler capítulo ›</button></cite>
     ${daily?`<button class="remind pray-btn">${IC("candle")}Orar com este versículo</button>`:""}</div>
    <div class="rail">
     <button class="act heart ${isL?"on":""}" aria-pressed="${isL}" aria-label="Curtir">${ICON.heart}<span>Amém</span></button>
@@ -889,23 +940,20 @@ function refreshRemind(){const b=feed.querySelector(".daily .remind:not(.pray-bt
   b.lastChild.textContent=remind?"Lembrete às "+remind:"Receber todo dia"}
 
 /* ---------- Ler capítulo ---------- */
-const BOOKS={"Pedro":"peter","João":"john","Filipenses":"philippians","Salmos":"psalms","Mateus":"matthew","Josué":"joshua","Isaías":"isaiah",
- "Timóteo":"timothy","Jeremias":"jeremiah","Romanos":"romans","Lamentações":"lamentations","Coríntios":"corinthians","Efésios":"ephesians",
- "Hebreus":"hebrews","Provérbios":"proverbs","Tessalonicenses":"thessalonians","Eclesiastes":"ecclesiastes"};
-const reader=document.getElementById("reader"),rPage=document.getElementById("rPage");
-function parseRef(r){const m=r.match(/^(\d\s)?(.+?)\s(\d+):(\d+)(?:-(\d+))?$/);return{n:m[1]||"",book:m[2],ch:+m[3],a:+m[4],b:+(m[5]||m[4])}}
+const BOOKS={"Gênesis": "Gn", "Êxodo": "Êx", "Levítico": "Lv", "Números": "Nm", "Deuteronômio": "Dt", "Josué": "Js", "Juízes": "Jz", "Rute": "Rt", "1 Samuel": "1Sm", "2 Samuel": "2Sm", "1 Reis": "1Rs", "2 Reis": "2Rs", "1 Crônicas": "1Cr", "2 Crônicas": "2Cr", "Esdras": "Ed", "Neemias": "Ne", "Ester": "Et", "Jó": "Jó", "Salmos": "Sl", "Provérbios": "Pv", "Eclesiastes": "Ec", "Cânticos": "Ct", "Isaías": "Is", "Jeremias": "Jr", "Lamentações": "Lm", "Ezequiel": "Ez", "Daniel": "Dn", "Oseias": "Os", "Joel": "Jl", "Amós": "Am", "Obadias": "Ob", "Jonas": "Jn", "Miqueias": "Mq", "Naum": "Na", "Habacuque": "Hc", "Sofonias": "Sf", "Ageu": "Ag", "Zacarias": "Zc", "Malaquias": "Ml", "Mateus": "Mt", "Marcos": "Mc", "Lucas": "Lc", "João": "Jo", "Atos": "At", "Romanos": "Rm", "1 Coríntios": "1Co", "2 Coríntios": "2Co", "Gálatas": "Gl", "Efésios": "Ef", "Filipenses": "Fp", "Colossenses": "Cl", "1 Tessalonicenses": "1Ts", "2 Tessalonicenses": "2Ts", "1 Timóteo": "1Tm", "2 Timóteo": "2Tm", "Tito": "Tt", "Filemom": "Fm", "Hebreus": "Hb", "Tiago": "Tg", "1 Pedro": "1Pe", "2 Pedro": "2Pe", "1 João": "1Jo", "2 João": "2Jo", "3 João": "3Jo", "Judas": "Jd", "Apocalipse": "Ap", "Lamentações de Jeremias": "Lm", "Cantares": "Ct", "Oséias": "Os", "Miquéias": "Mq"};
+const BIBLE_CREDIT="Bíblia Livre (BLIVRE), © Diego Santos, Mario Sérgio e Marco Teles, 2018. Licença CC BY 4.0 Brasil.";
+const reader=document.getElementById("reader"),rPage=document.getElementById("rPage"),bookCache={};
+function parseRef(r){const m=String(r).trim().match(/^(.+?)\s(\d+):(\d+)(?:\s?[-–]\s?(\d+))?$/);if(!m)return null;return{book:m[1],ab:BOOKS[m[1]],ch:+m[2],a:+m[3],b:+(m[4]||m[3])}}
+async function loadBook(ab){if(!bookCache[ab]){const res=await fetch(`biblia/blivre/${({"Jó":"Job","Êx":"Ex"})[ab]||ab}.json`);if(!res.ok)throw 0;bookCache[ab]=await res.json()}return bookCache[ab]}
+async function lookupRef(ref){const p=parseRef(ref);if(!p||!p.ab)return null;try{const b=await loadBook(p.ab),c=b.capitulos[p.ch-1];if(!c)return null;const vs=c.slice(p.a-1,p.b);return vs.length?vs.join(" "):null}catch{return null}}
 async function openReader(v){
-  const p=parseRef(v.r);document.getElementById("rTitle").innerHTML=`${p.n}${p.book} ${p.ch}<small>Almeida · domínio público</small>`;
+  const p=parseRef(v.r);document.getElementById("rTitle").innerHTML=`${p.book} ${p.ch}<small>Bíblia Livre (BLIVRE)</small>`;
   rPage.innerHTML=`<article>${Array.from({length:8},(_,i)=>`<div class="skel" style="width:${70+((i*37)%30)}%"></div>`).join("")}</article>`;
   reader.classList.add("open");document.body.classList.remove("focus");
-  try{
-    const ctl=new AbortController();setTimeout(()=>ctl.abort(),7000);
-    const res=await fetch(`https://bible-api.com/${encodeURIComponent((p.n+BOOKS[p.book]).trim()+" "+p.ch)}?translation=almeida`,{signal:ctl.signal});
-    if(!res.ok)throw 0;const data=await res.json();
-    rPage.innerHTML=`<article>${data.verses.map(x=>`<span class="vv" data-n="${x.verse}"><sup>${x.verse}</sup>${x.text.replace(/\s+/g," ").trim()}</span> `).join("")}</article>`;
-  }catch{
-    rPage.innerHTML=`<article><span class="vv" data-n="${p.a}"><sup>${p.a}</sup>${v.x}</span>
-      <div class="note">Não foi possível carregar o capítulo agora. Verifique a internet e tente de novo. No app final, a Bíblia inteira fica guardada no celular e funciona sem internet.</div></article>`}
+  try{const b=await loadBook(p.ab),c=b.capitulos[p.ch-1];
+    rPage.innerHTML=`<article>${c.map((t,k)=>`<span class="vv" data-n="${k+1}"><sup>${k+1}</sup>${esc(t)}</span> `).join("")}</article><p class="fine" style="margin-top:28px">${BIBLE_CREDIT}</p>`}
+  catch{rPage.innerHTML=`<article><span class="vv" data-n="${p.a}"><sup>${p.a}</sup>${esc(v.x)}</span>
+      <div class="note">Não foi possível abrir o capítulo agora. No app instalado, a Bíblia inteira fica guardada no celular e funciona sem internet.</div></article>`}
   const hits=[...rPage.querySelectorAll(".vv")].filter(s=>+s.dataset.n>=p.a&&+s.dataset.n<=p.b);
   setTimeout(()=>{hits[0]?.scrollIntoView({block:"center",behavior:"smooth"});hits.forEach(h=>h.classList.add("hl"))},450);
 }
@@ -965,7 +1013,8 @@ function renderYou(){
     ${list.length?list.map(v=>`<div class="saved-item"><div><q>${v.x}</q><small>${v.r}</small></div><button class="rm" data-r="${v.r}" aria-label="Remover ${v.r}">${IP.close?`<svg viewBox="0 0 24 24">${IP.close}</svg>`:""}</button></div>`).join("")
       :'<div class="empty">Toque em <b>Salvar</b> num versículo para guardá-lo aqui.</div>'}</div>
    <div class="group"><div class="label">Plano</div>
-    <button class="ri" data-a="prem">${IC("star")}Lumen Premium<span class="v">${premium?"Ativo":"Grátis"}${IC("chev")}</span></button></div></div>`;
+    <button class="ri" data-a="prem">${IC("star")}Lumen Premium<span class="v">${premium?"Ativo":"Grátis"}${IC("chev")}</span></button></div>
+   <p class="fine">Textos bíblicos: ${BIBLE_CREDIT}</p></div>`;
   yPage.querySelectorAll(".ri").forEach(b=>b.onclick=()=>{const a=b.dataset.a;
     if(a==="nav"){const top=!document.body.classList.contains("navtop");document.body.classList.toggle("navtop",top);S.set("lumen.navpos",top?"top":"bottom");renderYou();toast(top?"Barra em cima":"Barra embaixo")}else if(a==="pray")openPray();else if(a==="prayAt")openPrayTime();else if(a==="remind")openRemind();else if(a==="mood")onboarding();else goTab("premium")});
   yPage.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{saved=saved.filter(r=>r!==b.dataset.r);persist();syncCards();
@@ -1442,33 +1491,33 @@ window.claude?.use?.("sample").then(s=>{SAMPLE=s}).catch(()=>{});
 const EXAMPLE={titulo:"Quando parece que não tem saída",ideia_central:"Deus não esquece de você, mesmo nos dias difíceis. Ele dá força nova todos os dias.",
  tema:"esperança",ocasiao:"Culto de domingo",minutos:15,
  passagens:[
-  {ref:"Isaías 40:31",texto:"Mas os que esperam no Senhor renovarão as suas forças; subirão com asas como águias; correrão, e não se cansarão; caminharão, e não se fatigarão.",
+  {ref:"Isaías 40:31",texto:"Mas os que confiam no SENHOR renovarão as forças, subirão com asas como águias; correrão, e não se cansarão; caminharão, e não se fatigarão.",
    quem:"Quem escreveu foi Isaías. Ele era profeta, alguém que levava recados de Deus para o povo.",
    para_quem:"Para o povo de Israel. Eles estavam passando por um tempo difícil e achavam que Deus tinha esquecido deles.",
    quando:"Uns 700 anos antes de Jesus nascer. O povo estava com medo de perder tudo.",
    explicacao:"Sabe quando você está tão cansado que não consegue nem levantar? Isaías diz que quem confia em Deus ganha força nova. A águia não fica batendo as asas o tempo todo: ela abre as asas e deixa o vento levar. Confiar em Deus é parecido.",
-   palavras:[{p:"Esperar no Senhor",s:"Confiar que Deus vai agir, mesmo antes de ver acontecer."},{p:"Renovar",s:"Deixar novo de novo, como uma bateria recarregada."},{p:"Fatigar",s:"Ficar muito cansado."}],
+   palavras:[{p:"Confiar no Senhor",s:"Acreditar que Deus vai agir, mesmo antes de ver acontecer."},{p:"Renovar",s:"Deixar novo de novo, como uma bateria recarregada."},{p:"Fatigar",s:"Ficar muito cansado."}],
    lembrar:"Quando eu estiver cansado, posso pedir força nova para Deus."},
-  {ref:"Jeremias 29:11",texto:"Porque eu bem sei os pensamentos que penso de vós, diz o Senhor; pensamentos de paz, e não de mal, para vos dar o fim que esperais.",
+  {ref:"Jeremias 29:11",texto:"Porque eu sei os pensamentos que penso quanto a vós, diz o SENHOR, pensamentos de paz, e não de mal, para vos dar um futuro com esperança.",
    quem:"Quem escreveu foi Jeremias, outro profeta. Esse versículo faz parte de uma carta.",
    para_quem:"Para famílias de Israel que tinham sido levadas à força para a Babilônia, um país distante.",
    quando:"Uns 600 anos antes de Jesus. Deus avisou que eles ficariam longe de casa por 70 anos.",
    explicacao:"Imagine mudar de cidade sem querer e achar que nada vai dar certo. Deus manda dizer: eu tenho um plano bom para vocês. Ele não prometeu que seria rápido. Prometeu que não tinha desistido deles.",
-   palavras:[{p:"Pensamentos de paz",s:"Planos bons, que trazem tranquilidade."},{p:"O fim que esperais",s:"Um futuro com esperança."}],
+   palavras:[{p:"Pensamentos de paz",s:"Planos bons, que trazem tranquilidade."},{p:"Futuro com esperança",s:"Um amanhã bom, preparado por Deus."}],
    lembrar:"Mesmo quando demora, Deus tem um plano bom para mim."},
-  {ref:"Lamentações 3:22-23",texto:"As misericórdias do Senhor são a causa de não sermos consumidos, porque as suas misericórdias não têm fim; novas são cada manhã; grande é a tua fidelidade.",
+  {ref:"Lamentações 3:22-23",texto:"É pelas bondades do SENHOR que não somos consumidos, porque suas misericórdias não têm fim. Elas são novas a cada manhã; grande é a tua fidelidade.",
    quem:"A tradição diz que foi Jeremias, o mesmo profeta da carta.",
    para_quem:"Para o povo que tinha acabado de ver a cidade de Jerusalém ser destruída.",
    quando:"Logo depois da destruição de Jerusalém, uns 586 anos antes de Jesus. Foi um dos dias mais tristes da história do povo.",
    explicacao:"O livro se chama Lamentações porque está cheio de choro. Mas, no meio da tristeza, o autor lembra que o amor de Deus é como o sol: nasce de novo toda manhã. Ontem pode ter sido ruim. Hoje Deus começa de novo com a gente.",
-   palavras:[{p:"Misericórdia",s:"Quando Deus é bondoso com a gente, mesmo sem a gente merecer."},{p:"Consumidos",s:"Destruídos, acabados."},{p:"Fidelidade",s:"Cumprir sempre o que promete."}],
+   palavras:[{p:"Bondades e misericórdias",s:"Quando Deus é bondoso com a gente, mesmo sem a gente merecer."},{p:"Consumidos",s:"Destruídos, acabados."},{p:"Fidelidade",s:"Cumprir sempre o que promete."}],
    lembrar:"Todo dia é uma chance nova com Deus."}],
  partes:[
   {nome:"Abertura",min:2,ref:"",fala:"Que bom ter você aqui hoje.\n\nEu quero começar com uma pergunta. Quem aqui já ficou tão cansado que deu vontade de desistir? Pode ser cansaço do corpo, da escola, do trabalho. Ou aquele cansaço de tentar e não dar certo. (pergunte e espere)\n\nEu também já me senti assim. E sabe o que eu descobri? A Bíblia está cheia de gente cansada. Gente que achou que não tinha saída.\n\nHoje nós vamos ver três recados de Deus para dias assim. Três recados curtos, que cabem no bolso.\n\nSe você esquecer todo o resto, lembre só disto: Deus não esquece de você, mesmo nos dias difíceis."},
-  {nome:"Força nova",min:4,ref:"Isaías 40:31",fala:"O primeiro recado está no livro de Isaías. Isaías era profeta. Profeta é alguém que leva recados de Deus para as pessoas.\n\nO povo de Israel estava passando por um tempo muito difícil. Eles se sentiam esquecidos. Então Deus mandou este recado:\n\n[LEITURA]\n\n(pausa)\n\nRepare na águia. A águia é uma ave enorme. Quando ela quer subir bem alto, ela não fica batendo as asas sem parar. Ela abre as asas e deixa o vento levar.\n\nConfiar em Deus é parecido. A gente para de fazer força sozinho e deixa Deus nos levar.\n\nPensa numa criança aprendendo a nadar. Enquanto ela se debate, ela afunda. Quando ela relaxa e confia nos braços do pai, ela boia.\n\nEsperar no Senhor não é ficar parado. É continuar caminhando, sabendo que a força vem dele.\n\nEntão, nesta semana, quando o cansaço bater, faça uma oração bem curta: Senhor, me dá força nova."},
+  {nome:"Força nova",min:4,ref:"Isaías 40:31",fala:"O primeiro recado está no livro de Isaías. Isaías era profeta. Profeta é alguém que leva recados de Deus para as pessoas.\n\nO povo de Israel estava passando por um tempo muito difícil. Eles se sentiam esquecidos. Então Deus mandou este recado:\n\n[LEITURA]\n\n(pausa)\n\nRepare na águia. A águia é uma ave enorme. Quando ela quer subir bem alto, ela não fica batendo as asas sem parar. Ela abre as asas e deixa o vento levar.\n\nConfiar em Deus é parecido. A gente para de fazer força sozinho e deixa Deus nos levar.\n\nPensa numa criança aprendendo a nadar. Enquanto ela se debate, ela afunda. Quando ela relaxa e confia nos braços do pai, ela boia.\n\nConfiar no Senhor não é ficar parado. É continuar caminhando, sabendo que a força vem dele.\n\nEntão, nesta semana, quando o cansaço bater, faça uma oração bem curta: Senhor, me dá força nova."},
   {nome:"Deus tem um plano",min:3,ref:"Jeremias 29:11",fala:"O segundo recado é de Jeremias. Ele também era profeta, e escreveu uma carta.\n\nEssa carta foi para famílias que tinham sido levadas à força para um país distante, a Babilônia. Imagine ter que mudar de cidade sem querer, longe dos amigos e da sua casa.\n\nDeus avisou que eles iam ficar lá muito tempo: setenta anos. Mas olha o que ele disse:\n\n[LEITURA]\n\n(leia devagar a última frase de novo)\n\nDeus não prometeu que tudo ia ser rápido. Ele prometeu que não tinha desistido deles.\n\nTalvez você esteja esperando alguma coisa há muito tempo. Um emprego, uma cura, uma resposta. A demora não quer dizer que Deus esqueceu. Ele tem um plano bom, mesmo quando a gente ainda não consegue ver."},
-  {nome:"Todo dia é novo",min:3,ref:"Lamentações 3:22-23",fala:"O terceiro recado está num livro com um nome triste: Lamentações. Lamentar é chorar de tristeza.\n\nEsse livro foi escrito depois que a cidade de Jerusalém foi destruída. Foi um dos dias mais tristes da história do povo. A tradição diz que quem escreveu foi o mesmo Jeremias.\n\nE bem no meio de todo aquele choro, aparece isto:\n\n[LEITURA]\n\n(pausa)\n\nMisericórdia é quando Deus é bondoso com a gente, mesmo sem a gente merecer.\n\nPensa no sol. Não importa como foi o dia de ontem: amanhã de manhã o sol nasce de novo. O amor de Deus é assim. Ele começa de novo com você todo dia.\n\nSe ontem você errou, brigou ou desanimou, hoje é um dia novo. Deus não guarda mágoa. Ele abre os braços."},
-  {nome:"Desafio da semana",min:1,ref:"",fala:"Agora eu quero deixar um desafio bem simples para esta semana.\n\nEscreva num papel: as misericórdias do Senhor são novas cada manhã. Cole no espelho ou guarde na carteira.\n\nTodo dia, antes de pegar o celular, leia essa frase. Só isso. (olhe para a igreja) Você topa?"},
+  {nome:"Todo dia é novo",min:3,ref:"Lamentações 3:22-23",fala:"O terceiro recado está num livro com um nome triste: Lamentações. Lamentar é chorar de tristeza.\n\nEsse livro foi escrito depois que a cidade de Jerusalém foi destruída. Foi um dos dias mais tristes da história do povo. A tradição diz que quem escreveu foi o mesmo Jeremias.\n\nE bem no meio de todo aquele choro, aparece isto:\n\n[LEITURA]\n\n(pausa)\n\nMisericórdia, essa palavra do versículo, é quando Deus é bondoso com a gente, mesmo sem a gente merecer.\n\nPensa no sol. Não importa como foi o dia de ontem: amanhã de manhã o sol nasce de novo. O amor de Deus é assim. Ele começa de novo com você todo dia.\n\nSe ontem você errou, brigou ou desanimou, hoje é um dia novo. Deus não guarda mágoa. Ele abre os braços."},
+  {nome:"Desafio da semana",min:1,ref:"",fala:"Agora eu quero deixar um desafio bem simples para esta semana.\n\nEscreva num papel: as misericórdias do Senhor são novas a cada manhã. Cole no espelho ou guarde na carteira.\n\nTodo dia, antes de pegar o celular, leia essa frase. Só isso. (olhe para a igreja) Você topa?"},
   {nome:"Oração final",min:2,ref:"",fala:"Vamos fechar os olhos. (pausa)\n\nPense em uma coisa que está pesando no seu coração agora. Não precisa falar em voz alta. Só entregue para Deus.\n\nSenhor, obrigado porque o teu amor é novo todo dia. Quando a gente estiver cansado, dá força nova, como a águia. Quando a resposta demorar, lembra a gente de que tu tens um plano bom. E quando a gente errar, recomeça com a gente amanhã de manhã.\n\nEm nome de Jesus, amém."}]};
 
 function openSerm(){if(!sermon)sermon=EXAMPLE;renderSerm();smEl.classList.add("open");document.body.classList.remove("focus")}
@@ -1501,7 +1550,7 @@ COMO ESCREVER A FALA
 
 PARTES (nesta ordem): "Abertura"; ${n} pontos, cada um com nome curto (2 a 4 palavras); "Desafio da semana"; "Oração final". A soma de "min" deve ser exatamente ${SM.dur}.
 
-PASSAGENS: ${n}, uma por ponto. "texto" na tradução de João Ferreira de Almeida em domínio público, com ortografia atual, fiel ao versículo. Não invente versículos.
+PASSAGENS: ${n}, uma por ponto. "ref" no formato "Livro capítulo:versículo" ou "Livro capítulo:início-fim", com o nome do livro por extenso em português (ex.: "Salmos 23:1", "1 Pedro 5:7"). "texto": o versículo, fiel à Almeida. O app substitui pelo texto oficial da Bíblia Livre. Não invente versículos.
 Para cada passagem, explique como um professor conversando com uma criança de 10 a 12 anos (1 a 3 frases em cada campo). Não invente fatos históricos; se a autoria for incerta, escreva "a tradição diz que".
 
 Responda SOMENTE com um objeto JSON neste formato:
@@ -1517,6 +1566,7 @@ async function generate(){
   document.getElementById("genStop").onclick=()=>smCtl.abort();
   try{const r=await SAMPLE.json(sermPrompt(),{signal:smCtl.signal,cache:false});
     if(!r||!Array.isArray(r.passagens)||!r.passagens.length||!Array.isArray(r.partes)||!r.partes.length)throw{code:"invalid_json"};
+    for(const ps of r.passagens){const t=await lookupRef(ps.ref);if(t)ps.texto=t;else ps.conferir=true}
     sermon={...r,tema:SM.tema,ocasiao:SM.ocasiao,minutos:SM.dur,ia:true};out.innerHTML=sermonHTML(sermon);bindSermon()}
   catch(e){const msg={cancelled:"Geração interrompida.",not_granted:"Você não permitiu o uso do Claude nesta página.",rate_limited:"Muitos pedidos seguidos. Espere um pouco e tente de novo.",
       invalid_json:"A resposta veio incompleta. Tente gerar de novo, ou escolha uma duração menor.",refused:"Não foi possível gerar com esse pedido. Tente outro tema ou passagem."}[e.code]||"Algo deu errado. Tente de novo em instantes.";
