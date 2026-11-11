@@ -121,6 +121,7 @@ export const CFG = {
     brutamonte: { model: 'cascalco', scale: 0.5, hp: 60, speed: 1.15, radius: 0.42, dmg: 14, xp: 8, tint: 0.75, heavy: true },
     cuspidor: { model: 'fanaluz', scale: 0.42, hp: 20, speed: 1.4, radius: 0.3, dmg: 8, xp: 5, tint: 0.75, ranged: { keep: 4.5, every: 2.6, speed: 3.6, dmg: 9 } },
     minichefe: { model: 'ferfogo', scale: 1.0, hp: 900, speed: 1.35, radius: 0.75, dmg: 20, xp: 60, tint: 0.85, heavy: true, boss: 'mini' },
+    minerio: { model: null, scale: 1.1, hp: 40, speed: 0, radius: 0.6, dmg: 0, xp: 0, tint: 1, heavy: true, ore: true },
     guardiao: { model: 'arborion', scale: 2.5, hp: 4200, speed: 1.15, radius: 1.6, dmg: 22, xp: 0, tint: 0.80, heavy: true, boss: 'final' },
   },
   elite: { chanceFrom: 150, chance: 0.04, hp: 7, scale: 1.45, r: 1.3, xp: 30, speed: 1.1, dmg: 1.5, reels: 1 },
@@ -154,4 +155,15 @@ export const CFG = {
     horda: { name: 'HORDA', sub: 'O triplo de inimigos', color: '#ffb15a', dur: 15 },
   },
   combo: { window: 1.6 },
+  // minério: rochas que os feitiços quebram, soltam cristais e às vezes ouro
+  ore: { chance: 0.55, perZone: { cristal: 3, ruinas: 1, bosque: 1, clareira: 1 }, gems: 4, gemValue: 3, coin: 0.4 },
+  // santuários: fique dentro do círculo até ele fechar e ganhe uma bênção temporária
+  shrines: { chance: 0.4, radius: 1.5, charge: 3.5, decay: 0.35,
+    buffs: {
+      furia: { name: 'FÚRIA ARCANA', sub: '+60% de dano', color: '#ff4f5a', glow: '#ff2a3a', dur: 12, w: 3, dmg: 1.6 },
+      vento: { name: 'PASSOS DO VENTO', sub: '+45% de velocidade', color: '#5ff2ff', glow: '#2fd8ff', dur: 12, w: 2, speed: 1.45 },
+      fluxo: { name: 'FLUXO TOTAL', sub: 'Feitiços recarregam 40% mais rápido', color: '#ffe066', glow: '#ffc020', dur: 12, w: 2, cd: 0.6 },
+      egide: { name: 'ÉGIDE', sub: 'Invulnerável', color: '#ffffff', glow: '#dfe8ff', dur: 6, w: 1, inv: true },
+      chamado: { name: 'CHAMADO', sub: 'Todos os cristais vêm até você', color: '#5dff9a', glow: '#2aff7a', dur: 0, w: 2, heal: 25 },
+    } },
 };

@@ -72,7 +72,7 @@ export class Spell {
   r_arcano(fx, t) { for (const [x, z] of this.orbs || []) { fx.glow(x, 0.55, z, 1.1, '#9a4dff', 0.9); fx.glow(x, 0.55, z, 0.45, '#f4e8ff', 1); fx.cube(x, 0.55, z, 0.16, 0.16, 0.16, '#ffffff', t * 3, t * 4, 0); } }
   u_raio(dt) {
     if ((this.t -= dt) > 0) return; this.t = this.cd();
-    const g = this.g, m = g.mage, pool = g.query(m.x, m.z, g.reach());
+    const g = this.g, m = g.mage, pool = g.foes(m.x, m.z, g.reach());
     if (!pool.length) { this.t = 0.2; return; }
     for (let s = 0; s < this.v('strikes'); s++) {
       let cur = pool[Math.floor(Math.random() * pool.length)], hit = new Set(), fromX = m.x, fromZ = m.z;
@@ -176,7 +176,7 @@ export class Spell {
   // grupo mais denso de inimigos (amostra), para meteoros e buraco negro
   densest(n, maxR = this.g.reach(1.4)) {
     const g = this.g, m = g.mage, pool = g.query(m.x, m.z, maxR);
-    const cand = pool.sort(() => Math.random() - 0.5).slice(0, 14).map(e => ({ e, k: g.query(e.x, e.z, 2).length })).sort((a, b) => b.k - a.k);
+    const cand = pool.filter(e => !e.cfg.ore).sort(() => Math.random() - 0.5).slice(0, 14).map(e => ({ e, k: g.query(e.x, e.z, 2).length })).sort((a, b) => b.k - a.k);
     const out = [];
     for (const { e } of cand) { if (out.length >= n) break; if (out.every(o => Math.hypot(o.x - e.x, o.z - e.z) > 2.5)) out.push({ x: e.x, z: e.z }); }
     return out;
@@ -243,7 +243,7 @@ export class Spell {
     if (!st.on && (this.t -= dt) <= 0) { st.on = this.v('dur'); st.acc = 0; g.shake(0.15); }
     if (!st.on) return;
     st.on = Math.max(0, st.on - dt); st.acc += this.v('rate') * dt;
-    const pool = g.query(m.x, m.z, g.reach(1.4));
+    const pool = g.foes(m.x, m.z, g.reach(1.4));
     while (st.acc >= 1) {
       st.acc -= 1;
       const e = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null, x = e ? e.x : m.x + (Math.random() - 0.5) * 8, z = e ? e.z : m.z + (Math.random() - 0.5) * 12;
@@ -279,7 +279,7 @@ export class Spell {
   u_orbes(dt) {
     if ((this.t -= dt) > 0) return; this.t = this.cd();
     const g = this.g, m = g.mage, n = this.v('count');
-    if (!g.query(m.x, m.z, g.reach()).length) { this.t = 0.3; return; }
+    if (!g.foes(m.x, m.z, g.reach()).length) { this.t = 0.3; return; }
     for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + Math.random(); this.orb(m.x, m.z, Math.sin(a), Math.cos(a), false); }
   }
   orb(x, z, dx, dz, child) {

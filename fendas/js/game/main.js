@@ -6,6 +6,11 @@ import { MODELS } from '../data/models.js';
 import { CFG } from './config.js';
 import { ModelBatch, CubePool, GlowPool } from './instanced.js';
 import { World, MAGE } from './world.js';
+// rocha de minério e santuário (voxel)
+const ORE = { parts: [[-3, 0, -2.6, 6, 2.6, 5.2, '#4a4658'], [-2.2, 2.6, -1.8, 4.2, 1.6, 3.6, '#5a5668'], [-1.6, 2.2, 0.8, 1.2, 3.2, 1.2, 'glowOreAm'],
+  [0.8, 3, -1, 1.2, 2.6, 1.2, 'glowOreQz'], [1.6, 1.4, 1.8, 1, 1.8, 1, 'glowOreAm'], [-2.8, 1.6, -1.4, 0.9, 1.6, 0.9, 'glowOreQz']] };
+const SHRINE = { parts: [[-4, 0, -4, 8, 0.8, 8, '#4a4658'], [-3, 0.8, -3, 6, 0.8, 6, '#5a5668'], [-3.2, 1.6, -3.2, 1.2, 5, 1.2, '#7a7590'], [2, 1.6, -3.2, 1.2, 5, 1.2, '#7a7590'],
+  [-3.2, 1.6, 2, 1.2, 5, 1.2, '#7a7590'], [2, 1.6, 2, 1.2, 5, 1.2, '#7a7590'], [-1.2, 1.6, -1.2, 2.4, 2.4, 2.4, '#3a3648']] };
 import { Spell, nextDesc } from './spells.js';
 import { M, metaMods, endRun, initMenu, showMenu } from './meta.js';
 
@@ -39,9 +44,22 @@ function resize() {
 addEventListener('resize', resize);
 
 // ---------- recursos de desenho ----------
-const world = new World(scene);
+const world = new World(scene, onChunk);
+const shrineBatch = new ModelBatch(scene, SHRINE, 0.22, 40);
+// cada bloco novo de cenário pode trazer minério e um santuário; ao sair da tela, somem
+function onChunk(key, c) {
+  if (!c) { for (const e of G.enemies) if (e.chunk === key && e.cfg.ore) e.dead = true; G.shrines = (G.shrines || []).filter(s => s.chunk !== key); return; }
+  const O = CFG.ore, S = CFG.shrines, far = (x, z) => Math.hypot(x, z) > 4;
+  if (c.rnd() < O.chance) { const n = 1 + Math.floor(c.rnd() * (O.perZone[c.zone] || 1));
+    for (let q = 0; q < n; q++) { const id = key + 'o' + q, x = c.x0 + 1 + c.rnd() * (c.size - 2), z = c.z0 + 1 + c.rnd() * (c.size - 2);
+      if (!G.broken?.has(id) && far(x, z) && G.enemies) { const e = spawn('minerio', x, z); e.chunk = key; e.oid = id; e.face = c.rnd() * 6; } } }
+  if (c.rnd() < S.chance) { const id = key + 's', x = c.x0 + 2 + c.rnd() * (c.size - 4), z = c.z0 + 2 + c.rnd() * (c.size - 4);
+    const keys = Object.keys(S.buffs), tot = keys.reduce((a, k) => a + S.buffs[k].w, 0); let r = c.rnd() * tot, type = keys[0];
+    for (const k of keys) if ((r -= S.buffs[k].w) <= 0) { type = k; break; }
+    if (far(x, z) && G.shrines) G.shrines.push({ id, chunk: key, x, z, type, prog: 0, used: G.usedShrines?.has(id) }); }
+}
 const batches = {};
-for (const [k, e] of Object.entries(CFG.enemies)) batches[k] = new ModelBatch(scene, MODELS[e.model], e.scale, e.boss ? 2 : 420, e.tint);
+for (const [k, e] of Object.entries(CFG.enemies)) batches[k] = new ModelBatch(scene, MODELS[e.model] || ORE, e.scale, e.boss ? 2 : 420, e.tint);
 const gemsPool = new CubePool(scene, 520), fxCubes = new CubePool(fxScene, 400), glow = new GlowPool(fxScene, 2600);
 const fxApi2 = { glow: (...a) => glow.add(...a), cube: (...a) => fxCubes.add(...a) };
 // sombras redondas sob inimigos (ajudam a ler a posição de cada um)
@@ -55,7 +73,7 @@ mageRoot.add(mageBody, blobShadow(0.5)); scene.add(mageRoot);
 // ---------- estado ----------
 const G = {
   mode: 'start', t: 0, enemies: [], projectiles: [], gems: [], fx: [], particles: [], splats: [], numbers: [],
-  spells: [], passives: {}, mods: {}, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0,
+  spells: [], passives: {}, mods: {}, shrines: [], buffs: {}, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0,
   spawnAcc: 0, nextEvent: 0, event: null, eventT: 0, boss: null, miniDone: false, bossDone: false, queue: 0,
 };
 const mage = G.mage = { x: 0, z: 0, face: Math.PI, hp: 100, maxHp: 100, inv: 0, mx: 0, mz: 0 };
@@ -65,6 +83,8 @@ function recalc() {
   G.mods = { dmg: (1 + P.poder.per * p('poder')) * mm.dmg, cd: Math.max(0.45, (1 - P.pressa.per * p('pressa')) * mm.cd), area: 1 + P.alcance.per * p('alcance'),
     magnet: CFG.mage.magnet * (1 + P.ima.per * p('ima')) * mm.magnet, regen: P.vigor.regen * p('vigor'), speed: CFG.mage.speed * (1 + P.passo.per * p('passo')) * mm.speed,
     count: Math.floor((p('quantidade') + 1) / 2), dur: 1 + P.duracao.per * p('duracao'), crit: CFG.drops.critBase + P.sorte.crit * p('sorte'), luck: 1 + P.sorte.drop * p('sorte') };
+  const B = CFG.shrines.buffs, on = k => (G.buffs?.[k] || 0) > 0;
+  if (on('furia')) G.mods.dmg *= B.furia.dmg; if (on('vento')) G.mods.speed *= B.vento.speed; if (on('fluxo')) G.mods.cd *= B.fluxo.cd;
   const old = mage.maxHp; mage.maxHp = CFG.mage.hp + mm.hp + P.vigor.hp * p('vigor'); mage.hp += Math.max(0, mage.maxHp - old);
 }
 
@@ -82,7 +102,9 @@ G.query = (x, z, r) => {
     for (const e of a) if (!e.dead && Math.hypot(e.x - x, e.z - z) < r + e.r) out.push(e); }
   return out;
 };
-G.nearest = (x, z, n, maxR) => G.query(x, z, maxR).sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z)).slice(0, n);
+G.foes = (x, z, r) => G.query(x, z, r).filter(e => !e.cfg.ore);
+// alvos: inimigos primeiro; sem inimigos por perto, os feitiços miram o minério
+G.nearest = (x, z, n, maxR) => { const f = G.foes(x, z, maxR); return (f.length ? f : G.query(x, z, maxR)).sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z)).slice(0, n); };
 
 // ---------- efeitos ----------
 G.fx = [];
@@ -135,6 +157,12 @@ G.damage = (e, dmg, o = {}) => {
   if (e.hp <= 0) kill(e);
 };
 function kill(e) {
+  if (e.cfg.ore) {   // minério quebrado: cristais e às vezes ouro
+    e.dead = true; G.broken.add(e.oid); const O = CFG.ore;
+    for (let i = 0; i < O.gems; i++) dropGem(e.x + rand(-0.4, 0.4), e.z + rand(-0.4, 0.4), O.gemValue);
+    if (Math.random() < O.coin * G.mods.luck) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, coin: true, t: 0 });
+    fxApi.burst(e.x, e.z, '#9dff4a', 14, 3); fxApi.burst(e.x, e.z, '#7fd8ff', 10, 3); G.shake(0.08); return;
+  }
   e.dead = true; G.kills++;
   if (e.corruptT > 0 && G.blasts.length < 60) G.blasts.push({ x: e.x, z: e.z, dmg: Math.min(50, ST.corruptDmg * G.mods.dmg + e.maxHp * ST.corruptHp) });
   if (Math.random() < (e.elite ? CFG.drops.heartElite : CFG.drops.heart) * G.mods.luck) G.gems.push({ x: e.x - 0.2, z: e.z, v: 0, heart: true, t: 0 });
@@ -149,6 +177,13 @@ function kill(e) {
   if (e.cfg.boss === 'mini') G.gems.push({ x: e.x, z: e.z, v: 0, chest: 3, t: 0, pull: true });
   if (e.cfg.boss === 'final') { G.bossDone = true; setTimeout(() => finish(true), 1200); }
   if (e === G.boss) { G.boss = null; $('bossbar').hidden = true; }
+}
+function bless(type, s) {
+  const b = CFG.shrines.buffs[type];
+  banner(b.name, b.sub, b.color); G.shake(0.2); fxApi.ring(s.x, s.z, CFG.shrines.radius * 1.6, b.glow, 0.5, true); fxApi.burst(mage.x, mage.z, b.glow, 20, 4);
+  if (b.dur) { G.buffs[type] = b.dur; recalc(); }
+  if (b.heal) mage.hp = Math.min(mage.maxHp, mage.hp + b.heal);
+  if (type === 'chamado') for (const g of G.gems) g.pull = true;
 }
 function dropGem(x, z, v) {
   if (G.gems.length > 480) { const g = G.gems[Math.floor(Math.random() * G.gems.length)]; if (!g.coin) { g.v += v; return; } }
@@ -178,7 +213,7 @@ function pickType() {
 }
 function director(dt) {
   if (G.bossDone) return;
-  const alive = G.enemies.length;
+  const alive = G.enemies.length - G.enemies.filter(e => e.cfg.ore).length;
   let rate = CFG.spawnRate(G.t) * (G.event?.kind === 'horda' ? 3 : 1) * (G.boss?.cfg.boss === 'final' ? 0.3 : 1);
   G.spawnAcc += rate * dt;
   while (G.spawnAcc >= 1) {
@@ -201,6 +236,7 @@ function director(dt) {
   if (!G.bossSpawned && G.t >= CFG.runTime) { G.bossSpawned = true; const [x, z] = spawnPoint(); G.boss = spawn('guardiao', x, z); banner('GUARDIÃO', 'Arborion Ancião desperta', '#c58bff'); showBoss('Arborion Ancião'); }
 }
 function updateEnemy(e, dt) {
+  if (e.cfg.ore) { e.flash -= dt; e.burnT = 0; return; }
   const c = e.cfg, dx = mage.x - e.x, dz = mage.z - e.z, d = Math.hypot(dx, dz) || 1;
   e.flash -= dt; e.soakT -= dt; e.stunT -= dt; e.slowT -= dt; e.freezeT -= dt; e.shockT -= dt; e.corruptT -= dt; e.exposeT -= dt;
   if (e.burnT > 0) { e.burnT -= dt; if ((e.burnTick -= dt) <= 0) { e.burnTick = 0.5; G.damage(e, ST.burnDps(G.t) * G.mods.dmg, { quiet: true, noProc: true }); if (e.dead) return; } }
@@ -241,14 +277,14 @@ function separate() {
   for (const a of grid.values()) for (let i = 0; i < a.length; i++) for (let j = i + 1; j < Math.min(a.length, i + 6); j++) {
     const p = a[i], q = a[j], dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz), min = p.r + q.r;
     if (d >= min || d < 1e-4) continue;
-    const o = (min - d) / d * 0.5, wp = p.cfg.heavy ? 0.2 : 1, wq = q.cfg.heavy ? 0.2 : 1;
+    const o = (min - d) / d * 0.5, wp = p.cfg.ore ? 0 : p.cfg.heavy ? 0.2 : 1, wq = q.cfg.ore ? 0 : q.cfg.heavy ? 0.2 : 1;
     p.x -= dx * o * wp; p.z -= dz * o * wp; q.x += dx * o * wq; q.z += dz * o * wq;
   }
 }
 
 // ---------- Mago ----------
 function hurtMage(dmg) {
-  if (mage.inv > 0 || G.mode !== 'play') return;
+  if (mage.inv > 0 || G.mode !== 'play' || G.buffs.egide > 0) return;
   mage.hp -= dmg; mage.inv = CFG.mage.iframes;
   document.body.classList.remove('hurt'); void document.body.offsetWidth; document.body.classList.add('hurt');
   try { navigator.vibrate?.(30); } catch { /* ignorar */ }
@@ -414,6 +450,15 @@ function step(dt) {
       else addXp(g.v); }
   }
   G.gems = G.gems.filter(g => !g.done);
+  // santuários e bênçãos
+  const SH = CFG.shrines;
+  for (const s of G.shrines) { if (s.used) continue;
+    const inside = Math.hypot(s.x - mage.x, s.z - mage.z) < SH.radius;
+    s.prog = Math.max(0, Math.min(1, s.prog + (inside ? dt / SH.charge : -dt * SH.decay)));
+    if (s.prog >= 1) { s.used = true; G.usedShrines.add(s.id); bless(s.type, s); } }
+  let ended = false;
+  for (const k in G.buffs) if (G.buffs[k] > 0 && (G.buffs[k] -= dt) <= 0) { G.buffs[k] = 0; ended = true; }
+  if (ended) recalc();
   // explosões de corrompidos (fora da recursão do dano)
   const bl = G.blasts.splice(0, 20);
   for (const b of bl) { fxApi.ring(b.x, b.z, ST.corruptR, '#c58bff', 0.3, true); fxApi.burst(b.x, b.z, '#d78bff', 6, 3); for (const e of G.query(b.x, b.z, ST.corruptR)) G.damage(e, b.dmg, { noProc: true, silent: true, color: '#e0b8ff' }); }
@@ -488,6 +533,18 @@ function draw(now) {
     if (fx.k === 'spikes') for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + fx.seed, rr = fx.r * 0.55 * hash(i, fx.seed), h = Math.sin(Math.min(1, p * 2.5) * Math.PI) * 0.8; fxCubes.add(fx.x + Math.sin(a) * rr, h / 2, fx.z + Math.cos(a) * rr, 0.16, h + 0.01, 0.16, i % 2 ? '#c9a36b' : '#8a6a44', 0, a, 0); glow.add(fx.x + Math.sin(a) * rr, 0.1, fx.z + Math.cos(a) * rr, 0.5, '#ffcf8a', 0.4 * k); }
     if (fx.k === 'cloud') for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + fx.seed, rr = fx.r * p * (0.5 + 0.5 * hash(i, fx.seed)); glow.add(fx.x + Math.sin(a) * rr, 0.3 + hash(i + 3, fx.seed) * 0.6, fx.z + Math.cos(a) * rr, 1.2 * k + 0.3, '#ffe6cc', 0.7 * k); }
   }
+  shrineBatch.begin();
+  for (const s of G.shrines) {
+    const b = CFG.shrines.buffs[s.type], R = CFG.shrines.radius;
+    shrineBatch.add(s.x, 0, s.z, 0, 1, 0, 1, s.used ? 0.5 : 1);
+    if (s.used) continue;
+    const bob = 1.9 + Math.sin(t * 2 + s.x) * 0.1;
+    fxCubes.add(s.x, bob, s.z, 0.26, 0.4, 0.26, b.color, 0, t * 1.5, 0.6);
+    glow.add(s.x, bob, s.z, 1.6, b.glow, 0.8); glow.add(s.x, 0.1, s.z, R * 2.2, b.glow, 0.12 + s.prog * 0.3);
+    const n = 40; for (let i = 0; i < n; i++) { const a = i / n * 6.283 - Math.PI, lit = i / n < s.prog;
+      glow.add(s.x + Math.sin(a) * R, 0.12, s.z - Math.cos(a) * R, lit ? 0.55 : 0.3, lit ? b.color : b.glow, lit ? 1 : 0.35); }
+  }
+  shrineBatch.end();
   let sg = 0;
   if (G.boss) { const e = G.boss, R = e.r + 0.9, n = 40, col = e.cfg.boss === 'final' ? '#c58bff' : '#ff8a3d';
     glow.add(e.x, 0.1, e.z, R * 2.6, col, 0.25 + 0.08 * Math.sin(t * 4));
@@ -542,6 +599,8 @@ function hud() {
   $('hpfill').style.width = Math.max(0, mage.hp / mage.maxHp * 100) + '%';
   const cb = $('combo'); cb.hidden = G.combo < 5; cb.querySelector('b').textContent = 'x' + G.combo;
   if (G.boss) $('bossfill').style.width = Math.max(0, G.boss.hp / G.boss.maxHp * 100) + '%';
+  const bl = Object.entries(G.buffs).filter(([, v]) => v > 0);
+  $('buffs').innerHTML = bl.map(([k, v]) => `<i style="--c:${CFG.shrines.buffs[k].color}">${CFG.shrines.buffs[k].name} <b>${Math.ceil(v)}s</b></i>`).join('');
   if (settings.fps) $('fps').textContent = `${fps} fps · ${G.enemies.length} inimigos · ${renderer.info.render.calls} draws`;
 }
 function renderLoadout() {
@@ -561,8 +620,9 @@ const settings = { fps: false };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('fendas_settings_v1')) || {}); } catch { /* sem storage */ }
 function start() {
   G.meta = metaMods();
+  world.reset();
   Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], splats: [], numbers: [],
-    spells: [], passives: {}, blasts: [], found: new Set(), slots: [], nextChamp: 0, banned: new Set(), rerolls: CFG.mage.rerolls + G.meta.rerolls, bans: CFG.mage.bans + G.meta.bans, chests: 0, revives: G.meta.revive, evolutions: 0, opened: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
+    spells: [], passives: {}, blasts: [], found: new Set(), shrines: [], buffs: {}, usedShrines: new Set(), broken: new Set(), slots: [], nextChamp: 0, banned: new Set(), rerolls: CFG.mage.rerolls + G.meta.rerolls, bans: CFG.mage.bans + G.meta.bans, chests: 0, revives: G.meta.revive, evolutions: 0, opened: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
     miniDone: false, bossDone: false, bossSpawned: false, queue: 0 });
   Object.assign(mage, { x: 0, z: 0, face: Math.PI, inv: 0 });
   recalc(); mage.hp = mage.maxHp;

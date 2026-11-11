@@ -146,3 +146,6 @@ body.landscape #hud, body.landscape .screen { max-width: 520px; margin: 0 auto; 
 #st-list { display: flex; flex-direction: column; gap: 6px; margin: 0; }
 #st-list div { display: flex; justify-content: space-between; padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); }
 #st-list dt { font-size: 14px; color: var(--muted); } #st-list dd { margin: 0; font: 700 14px var(--pix); color: var(--ink); }
+#buffs { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; align-items: flex-start; }
+#buffs i { font: 700 10px var(--pix); font-style: normal; color: var(--c); background: #07060ccc; border: 1px solid var(--c); padding: 2px 6px; }
+#buffs b { color: var(--ink); }
