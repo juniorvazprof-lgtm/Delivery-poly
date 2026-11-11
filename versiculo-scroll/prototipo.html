@@ -1,0 +1,273 @@
+<title>Lumen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: um versículo por tela, rolagem com snap; uma "luz" de vela atrás do texto muda de cor a cada versículo; trilho de ações vertical à direita */
+:root{
+  --bg:#ECE9E4; --ink:#1D1B22; --muted:#6E6A73; --gold:#A87B2C; --glass:rgba(255,255,255,.55); --line:rgba(29,27,34,.10);
+  --glow-a:#F2C879; --glow-b:#C9B6E8; --glow-op:.55;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif; --sans:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --spring:cubic-bezier(.2,.9,.25,1.15); --ease:cubic-bezier(.22,.8,.24,1);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E0D14; --ink:#F1ECE2; --muted:#8F8A99; --gold:#E2BE74; --glass:rgba(255,255,255,.07); --line:rgba(255,255,255,.10); --glow-op:.42; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E0D14; --ink:#F1ECE2; --muted:#8F8A99; --gold:#E2BE74; --glass:rgba(255,255,255,.07); --line:rgba(255,255,255,.10); --glow-op:.42; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-tap-highlight-color:transparent;user-select:none}
+
+/* Luz ambiente */
+#light{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+#light i{position:absolute;width:85vmax;height:85vmax;border-radius:50%;filter:blur(70px);opacity:var(--glow-op);transition:background 1.6s var(--ease)}
+#light i:nth-child(1){background:radial-gradient(circle,var(--glow-a),transparent 62%);left:-30vmax;top:-20vmax;animation:drift1 22s ease-in-out infinite alternate}
+#light i:nth-child(2){background:radial-gradient(circle,var(--glow-b),transparent 62%);right:-35vmax;bottom:-30vmax;animation:drift2 26s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(18vmax,22vmax) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-20vmax,-14vmax) scale(.9)}}
+#grain{position:fixed;inset:0;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* Topo */
+header{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px));transition:opacity .5s var(--ease)}
+.brand{font-family:var(--serif);font-style:italic;font-size:1.25rem;letter-spacing:.01em}
+.brand b{color:var(--gold);font-weight:500}
+.tabs{display:flex;gap:4px;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:99px;padding:3px}
+.tabs button{border:0;background:none;color:var(--muted);font:600 .78rem var(--sans);padding:7px 13px;border-radius:99px;cursor:pointer;transition:.3s var(--ease)}
+.tabs button.on{background:var(--ink);color:var(--bg)}
+body.immersed header{opacity:.25}
+
+/* Feed */
+#feed{position:relative;height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}
+#feed::-webkit-scrollbar{display:none}
+.card{height:100%;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;align-items:center;
+  padding:0 calc(max(20px,env(safe-area-inset-right,0px)) + 72px) 0 max(28px,env(safe-area-inset-left,0px))}
+.inner{max-width:30rem;transform:scale(.94) translateY(14px);opacity:.25;transition:transform .9s var(--spring),opacity .7s var(--ease)}
+.card.active .inner{transform:none;opacity:1}
+.theme{font:700 .66rem var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.theme::before{content:"";width:18px;height:1px;background:currentColor}
+blockquote{margin:0;font-family:var(--serif);font-weight:350;line-height:1.32;letter-spacing:-.01em;font-variation-settings:"opsz" 96;text-wrap:pretty}
+blockquote .w{display:inline-block;opacity:.12;filter:blur(6px);transform:translateY(6px);transition:opacity .7s var(--ease),filter .8s var(--ease),transform .8s var(--ease)}
+.card.active blockquote .w{opacity:1;filter:none;transform:none;transition-delay:calc(var(--i) * 38ms + 120ms)}
+cite{display:flex;align-items:center;gap:10px;margin-top:26px;font:500 .9rem var(--sans);font-style:normal;color:var(--muted);opacity:0;transform:translateX(-8px);transition:.8s var(--ease)}
+.card.active cite{opacity:1;transform:none;transition-delay:calc(var(--n) * 38ms + 350ms)}
+cite b{color:var(--ink);font-weight:600}
+
+/* Trilho de ações */
+.rail{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 14%);display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:8px 6px;border-radius:30px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  opacity:0;transform:translateX(16px);transition:.7s var(--ease)}
+.card.active .rail{opacity:1;transform:none;transition-delay:.25s}
+.act{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--ink);cursor:pointer;padding:6px 4px;font:600 .6rem var(--sans);letter-spacing:.04em}
+.act svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;transition:transform .5s var(--spring)}
+.act:active svg{transform:scale(.82)}
+.act:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:12px}
+.act span{color:var(--muted)}
+.act .core{transition:fill .4s var(--ease),transform .6s var(--spring);transform-origin:center;transform-box:fill-box}
+.act .ray{transition:opacity .4s, transform .6s var(--spring);transform-origin:13px 13px;opacity:.0;transform:scale(.6)}
+.amen.on{color:var(--gold)} .amen.on .core{fill:var(--gold)} .amen.on .ray{opacity:1;transform:none}
+.amen.on span,.save.on span{color:var(--gold)} .save.on{color:var(--gold)} .save.on path{fill:var(--gold)}
+.sep{width:20px;height:1px;background:var(--line);margin:2px 0}
+
+/* Toque duplo: luz que acende */
+.burst{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;pointer-events:none;z-index:8;
+  background:radial-gradient(circle,var(--gold) 0%,transparent 70%);animation:burst .9s var(--ease) forwards}
+.burst.r{background:none;border:1.5px solid var(--gold);animation:ring .9s var(--ease) forwards}
+@keyframes burst{0%{transform:scale(.4);opacity:.9}100%{transform:scale(16);opacity:0}}
+@keyframes ring{0%{transform:scale(.5);opacity:1}100%{transform:scale(7);opacity:0}}
+
+/* Avisos e folhas */
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);transform:translate(-50%,20px);opacity:0;z-index:9;
+  background:var(--ink);color:var(--bg);font:600 .82rem var(--sans);padding:11px 18px;border-radius:99px;white-space:nowrap;transition:.5s var(--spring);pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast em{font-style:normal;color:var(--gold)}
+.veil{position:fixed;inset:0;z-index:7;background:rgba(10,8,16,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:.4s var(--ease)}
+.veil.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--bg);border-radius:26px 26px 0 0;border-top:1px solid var(--line);
+  padding:10px max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px) max(20px,env(safe-area-inset-left,0px));
+  transform:translateY(105%);transition:transform .55s var(--spring);max-height:78%;overflow:auto}
+.sheet.open{transform:none}
+.sheet .grab{width:38px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 16px}
+.sheet h2{font:500 1.35rem var(--serif);margin:0 0 4px}
+.sheet p.sub{margin:0 0 16px;color:var(--muted);font-size:.85rem}
+.opt{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--ink);font:600 .95rem var(--sans);padding:14px 4px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left}
+.opt svg{width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:1.6}
+.saved-item{padding:14px 2px;border-bottom:1px solid var(--line)}
+.saved-item q{font-family:var(--serif);font-size:1.02rem;line-height:1.4;quotes:"“" "”"}
+.saved-item div{margin-top:6px;font-size:.78rem;color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:.9rem}
+.taste{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.taste span{font:600 .72rem var(--sans);padding:6px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.taste span b{color:var(--gold)}
+
+/* Dica inicial */
+.hint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 26px);text-align:center;font:600 .72rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);animation:hint 2.2s var(--ease) infinite}
+@keyframes hint{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-8px);opacity:1}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}
+}
+</style>
+
+<div id="light"><i></i><i></i></div>
+<div id="grain"></div>
+<header>
+  <div class="brand">lu<b>m</b>en</div>
+  <nav class="tabs"><button id="tFeed" class="on">Para você</button><button id="tSaved">Salvos</button></nav>
+</header>
+<main id="feed" aria-label="Versículos"></main>
+<div id="toast" role="status"></div>
+<div class="veil" id="veil"></div>
+<section class="sheet" id="sheet" aria-modal="true" role="dialog"></section>
+
+<script>
+const V=[
+{x:"Lançando sobre ele toda a vossa ansiedade, porque ele tem cuidado de vós.",r:"1 Pedro 5:7",t:["ansiedade","cuidado"],h:["#9EC5E8","#C9B6E8"]},
+{x:"Não estejais inquietos por coisa alguma; antes as vossas petições sejam conhecidas diante de Deus pela oração.",r:"Filipenses 4:6",t:["ansiedade","oração"],h:["#A9D3C7","#9EC5E8"]},
+{x:"E a paz de Deus, que excede todo o entendimento, guardará os vossos corações.",r:"Filipenses 4:7",t:["paz","ansiedade"],h:["#B8D8C8","#E8D7A9"]},
+{x:"Deixo-vos a paz, a minha paz vos dou. Não se turbe o vosso coração.",r:"João 14:27",t:["paz"],h:["#A9D3C7","#D6C3E8"]},
+{x:"Aquietai-vos, e sabei que eu sou Deus.",r:"Salmos 46:10",t:["paz","descanso"],h:["#B5C7E8","#E8DDC4"]},
+{x:"Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.",r:"Mateus 11:28",t:["descanso","cuidado"],h:["#E8C9A9","#C9B6E8"]},
+{x:"O Senhor é o meu pastor; nada me faltará.",r:"Salmos 23:1",t:["cuidado","confiança"],h:["#C8DDA9","#F2C879"]},
+{x:"Ainda que eu andasse pelo vale da sombra da morte, não temeria mal algum, porque tu estás comigo.",r:"Salmos 23:4",t:["coragem","cuidado"],h:["#9FA9D8","#E8B9A9"]},
+{x:"Posso todas as coisas naquele que me fortalece.",r:"Filipenses 4:13",t:["força"],h:["#F2B879","#E89A9A"]},
+{x:"Esforça-te, e tem bom ânimo; não temas, porque o Senhor teu Deus é contigo, por onde quer que andares.",r:"Josué 1:9",t:["coragem","força"],h:["#F2C879","#E89A9A"]},
+{x:"Os que esperam no Senhor renovarão as suas forças; subirão com asas como águias.",r:"Isaías 40:31",t:["força","esperança"],h:["#9EC5E8","#F2C879"]},
+{x:"Não temas, porque eu sou contigo; eu te fortaleço, e te ajudo, e te sustento.",r:"Isaías 41:10",t:["coragem","força"],h:["#F2C879","#B5C7E8"]},
+{x:"Porque Deus não nos deu o espírito de temor, mas de fortaleza, e de amor, e de moderação.",r:"2 Timóteo 1:7",t:["coragem"],h:["#E8A9A9","#F2C879"]},
+{x:"Porque eu bem sei os pensamentos que penso de vós; pensamentos de paz, para vos dar o fim que esperais.",r:"Jeremias 29:11",t:["esperança","propósito"],h:["#F2C879","#C9B6E8"]},
+{x:"Sabemos que todas as coisas contribuem juntamente para o bem daqueles que amam a Deus.",r:"Romanos 8:28",t:["propósito","esperança"],h:["#E8C9A9","#A9D3C7"]},
+{x:"As suas misericórdias não têm fim; novas são cada manhã.",r:"Lamentações 3:22-23",t:["esperança","graça"],h:["#F7D9A0","#F2B8C6"]},
+{x:"Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça.",r:"João 3:16",t:["amor","graça"],h:["#F2A9A9","#F2C879"]},
+{x:"O amor é sofredor, é benigno; o amor não é invejoso, não se ensoberbece.",r:"1 Coríntios 13:4",t:["amor"],h:["#F2B8C6","#E8C9A9"]},
+{x:"Permanecem a fé, a esperança e o amor; mas o maior destes é o amor.",r:"1 Coríntios 13:13",t:["amor","esperança"],h:["#F2B8C6","#C9B6E8"]},
+{x:"Nós o amamos a ele porque ele nos amou primeiro.",r:"1 João 4:19",t:["amor"],h:["#F2A9A9","#F7D9A0"]},
+{x:"A minha graça te basta, porque o meu poder se aperfeiçoa na fraqueza.",r:"2 Coríntios 12:9",t:["graça","força"],h:["#D6C3E8","#F2C879"]},
+{x:"Pela graça sois salvos, por meio da fé; e isto não vem de vós, é dom de Deus.",r:"Efésios 2:8",t:["graça","fé"],h:["#C9B6E8","#F7D9A0"]},
+{x:"Ora, a fé é o firme fundamento das coisas que se esperam, e a prova das coisas que se não veem.",r:"Hebreus 11:1",t:["fé","esperança"],h:["#B5C7E8","#F2C879"]},
+{x:"Confia no Senhor de todo o teu coração, e não te estribes no teu próprio entendimento.",r:"Provérbios 3:5",t:["confiança","fé"],h:["#C8DDA9","#B5C7E8"]},
+{x:"Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará.",r:"Salmos 37:5",t:["confiança","propósito"],h:["#A9D3C7","#F2C879"]},
+{x:"Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.",r:"Salmos 119:105",t:["propósito","fé"],h:["#F7D9A0","#F2B879"]},
+{x:"Este é o dia que fez o Senhor; regozijemo-nos, e alegremo-nos nele.",r:"Salmos 118:24",t:["gratidão","alegria"],h:["#F7D9A0","#C8DDA9"]},
+{x:"Em tudo dai graças, porque esta é a vontade de Deus em Cristo Jesus para convosco.",r:"1 Tessalonicenses 5:18",t:["gratidão"],h:["#F2C879","#A9D3C7"]},
+{x:"Regozijai-vos sempre no Senhor; outra vez digo, regozijai-vos.",r:"Filipenses 4:4",t:["alegria","gratidão"],h:["#F7D9A0","#F2B8C6"]},
+{x:"Perto está o Senhor dos que têm o coração quebrantado.",r:"Salmos 34:18",t:["cuidado","descanso"],h:["#B5C7E8","#D6C3E8"]},
+{x:"Sara os quebrantados de coração, e liga as suas feridas.",r:"Salmos 147:3",t:["cuidado","graça"],h:["#D6C3E8","#A9D3C7"]},
+{x:"Pedi, e dar-se-vos-á; buscai, e encontrareis; batei, e abrir-se-vos-á.",r:"Mateus 7:7",t:["oração","fé"],h:["#F2C879","#9EC5E8"]},
+{x:"No mundo tereis aflições, mas tende bom ânimo; eu venci o mundo.",r:"João 16:33",t:["coragem","esperança"],h:["#E89A9A","#F2C879"]},
+{x:"Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia.",r:"Salmos 46:1",t:["força","confiança"],h:["#9FA9D8","#F2C879"]},
+{x:"Buscai primeiro o reino de Deus, e a sua justiça, e todas estas coisas vos serão acrescentadas.",r:"Mateus 6:33",t:["propósito","oração"],h:["#C8DDA9","#F7D9A0"]},
+{x:"Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu.",r:"Eclesiastes 3:1",t:["propósito","descanso"],h:["#E8DDC4","#B5C7E8"]},
+];
+const NEAR={ansiedade:["paz","descanso","oração"],paz:["descanso","ansiedade","confiança"],descanso:["paz","cuidado"],cuidado:["amor","descanso"],
+ coragem:["força","fé"],força:["coragem","esperança"],esperança:["fé","propósito"],propósito:["confiança","esperança"],amor:["graça","cuidado"],
+ graça:["amor","fé"],fé:["confiança","esperança"],confiança:["fé","paz"],gratidão:["alegria","amor"],alegria:["gratidão","esperança"],oração:["fé","paz"]};
+
+const S={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let taste=S.get("lumen.taste",{}), amen=new Set(S.get("lumen.amen",[])), saved=new Set(S.get("lumen.saved",[])), announced=new Set(S.get("lumen.ann",[]));
+const recent=[]; const feed=document.getElementById("feed");
+const save=()=>{S.set("lumen.taste",taste);S.set("lumen.amen",[...amen]);S.set("lumen.saved",[...saved]);S.set("lumen.ann",[...announced])};
+
+/* ---------- Personalização ---------- */
+function bump(v,w){v.t.forEach((t,i)=>{taste[t]=Math.max(-5,(taste[t]||0)+w*(i?0.6:1))});
+  if(w>0){const top=v.t[0];if((taste[top]||0)>=6&&!announced.has(top)){announced.add(top);toast(`Mais versículos sobre <em>${top}</em> para você`)}}save()}
+function score(v){return v.t.reduce((s,t,i)=>s+Math.max(0,taste[t]||0)*(i?0.6:1),0)}
+function pick(){
+  const pool=V.filter(v=>!recent.includes(v.r)); const r=Math.random(); let list=pool;
+  const top=Object.entries(taste).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
+  if(top.length&&r<.7){list=pool.filter(v=>score(v)>0)}
+  else if(top.length&&r<.9){const near=new Set(top.slice(0,3).flatMap(t=>NEAR[t]||[]));list=pool.filter(v=>v.t.some(t=>near.has(t)))}
+  if(!list.length)list=pool;
+  const w=list.map(v=>1+score(v)); let n=Math.random()*w.reduce((a,b)=>a+b,0);
+  const v=list.find((_,i)=>(n-=w[i])<=0)||list[0];
+  recent.push(v.r); if(recent.length>14)recent.shift(); return v;
+}
+
+/* ---------- Ícones ---------- */
+const ICON={
+ amen:`<svg viewBox="0 0 26 26"><g class="ray">${[0,45,90,135,180,225,270,315].map(a=>`<line x1="13" y1="2" x2="13" y2="4.6" transform="rotate(${a} 13 13)"/>`).join("")}</g><path class="core" d="M13 7.5c1.9 2.3 3.6 4.1 3.6 6.4a3.6 3.6 0 0 1-7.2 0c0-1.3.6-2.4 1.5-3.4.3 1 .9 1.6 1.6 1.8-.4-1.6-.2-3.2.5-4.8z"/></svg>`,
+ save:`<svg viewBox="0 0 26 26"><path d="M8 4.5h10a1 1 0 0 1 1 1v16l-6-4-6 4v-16a1 1 0 0 1 1-1z"/></svg>`,
+ send:`<svg viewBox="0 0 26 26"><path d="M21.5 4.5 11 15M21.5 4.5l-6.5 17-4-6.5-6.5-4z"/></svg>`,
+ more:`<svg viewBox="0 0 26 26"><circle cx="7" cy="13" r=".9"/><circle cx="13" cy="13" r=".9"/><circle cx="19" cy="13" r=".9"/></svg>`,
+ book:`<svg viewBox="0 0 24 24"><path d="M4 5.5C7 4 10 4 12 6c2-2 5-2 8-.5V19c-3-1.5-6-1.5-8 .5-2-2-5-2-8-.5z M12 6v13.5"/></svg>`,
+ copy:`<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>`,
+ ear:`<svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 4-4 4.5-4 8a3 3 0 0 1-6 0M10 9a2 2 0 0 1 4 0"/></svg>`
+};
+
+/* ---------- Card ---------- */
+function makeCard(v,first){
+  const c=document.createElement("section"); c.className="card"; c._v=v;
+  const words=v.x.split(" "); const len=v.x.length;
+  const size=len<60?"clamp(2rem,8.4vw,3.2rem)":len<110?"clamp(1.6rem,6.6vw,2.6rem)":"clamp(1.35rem,5.4vw,2.1rem)";
+  c.innerHTML=`<div class="inner" style="--n:${words.length}">
+    <div class="theme">${v.t[0]}</div>
+    <blockquote style="font-size:${size}">${words.map((w,i)=>`<span class="w" style="--i:${i}">${w}</span>`).join(" ")}</blockquote>
+    <cite><b>${v.r}</b> · Almeida</cite></div>
+   <div class="rail">
+    <button class="act amen ${amen.has(v.r)?"on":""}" aria-label="Amém">${ICON.amen}<span>Amém</span></button>
+    <button class="act save ${saved.has(v.r)?"on":""}" aria-label="Salvar">${ICON.save}<span>Salvar</span></button>
+    <div class="sep"></div>
+    <button class="act send" aria-label="Enviar">${ICON.send}<span>Enviar</span></button>
+    <button class="act more" aria-label="Mais opções">${ICON.more}</button>
+   </div>${first?'<div class="hint">deslize ↑</div>':""}`;
+  c.querySelector(".amen").onclick=e=>{e.stopPropagation();toggleAmen(c)};
+  c.querySelector(".save").onclick=e=>{e.stopPropagation();toggleSave(c)};
+  c.querySelector(".send").onclick=e=>{e.stopPropagation();copy(v,"Copiado. Cole no WhatsApp ou nos Stories");bump(v,5)};
+  c.querySelector(".more").onclick=e=>{e.stopPropagation();openMenu(v)};
+  // toque duplo e pressionar
+  let last=0,timer=null,moved=false;
+  c.addEventListener("pointerdown",e=>{if(e.target.closest(".rail"))return;moved=false;timer=setTimeout(()=>{if(!moved){vibrate(12);openMenu(v)}},520)});
+  c.addEventListener("pointermove",()=>{moved=true;clearTimeout(timer)});
+  c.addEventListener("pointerup",e=>{clearTimeout(timer);if(e.target.closest(".rail")||moved)return;
+    const n=Date.now(); if(n-last<320){burst(e.clientX,e.clientY);if(!amen.has(v.r))toggleAmen(c);last=0}else last=n});
+  return c;
+}
+function toggleAmen(c){const v=c._v,b=c.querySelector(".amen");
+  if(amen.has(v.r)){amen.delete(v.r);b.classList.remove("on");bump(v,-2)}else{amen.add(v.r);b.classList.add("on");vibrate(8);bump(v,3)} save()}
+function toggleSave(c){const v=c._v,b=c.querySelector(".save");
+  if(saved.has(v.r)){saved.delete(v.r);b.classList.remove("on")}else{saved.add(v.r);b.classList.add("on");bump(v,4);toast("Guardado em Salvos")} save()}
+
+/* ---------- Efeitos ---------- */
+function burst(x,y){["","r"].forEach(k=>{const d=document.createElement("div");d.className="burst "+k;d.style.left=x+"px";d.style.top=y+"px";document.body.appendChild(d);setTimeout(()=>d.remove(),950)})}
+function vibrate(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch{}}
+let tt;function toast(h){const t=document.getElementById("toast");t.innerHTML=h;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2200)}
+function copy(v,msg){const s=`“${v.x}” — ${v.r}`;
+  const ok=()=>toast(msg||"Copiado"); try{navigator.clipboard.writeText(s).then(ok,()=>toast("Não foi possível copiar aqui"))}catch{toast("Não foi possível copiar aqui")}}
+function setLight(v){const r=document.documentElement.style;r.setProperty("--glow-a",v.h[0]);r.setProperty("--glow-b",v.h[1])}
+
+/* ---------- Folhas ---------- */
+const veil=document.getElementById("veil"),sheet=document.getElementById("sheet");
+function openSheet(html){sheet.innerHTML='<div class="grab"></div>'+html;veil.classList.add("open");sheet.classList.add("open")}
+function closeSheet(){veil.classList.remove("open");sheet.classList.remove("open");tFeed.classList.add("on");tSaved.classList.remove("on")}
+veil.onclick=closeSheet;
+function openMenu(v){
+  openSheet(`<h2>${v.r}</h2><p class="sub">${v.t.join(" · ")}</p>
+   <button class="opt" data-a="ler">${ICON.book}Ler o capítulo inteiro</button>
+   <button class="opt" data-a="ouvir">${ICON.ear}Ouvir este versículo</button>
+   <button class="opt" data-a="copiar">${ICON.copy}Copiar texto</button>`);
+  sheet.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const a=b.dataset.a;closeSheet();
+    if(a==="copiar")copy(v);else toast(a==="ler"?"Leitura do capítulo chega na próxima versão":"Áudio chega na próxima versão")});
+}
+function openSaved(){
+  const list=V.filter(v=>saved.has(v.r));
+  const top=Object.entries(taste).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  openSheet(`<h2>Salvos</h2><p class="sub">${list.length?list.length+" versículo"+(list.length>1?"s":""):"Nada salvo ainda"}</p>
+   ${top.length?`<div class="taste">${top.map(([t,s])=>`<span>${t} <b>${Math.round(s)}</b></span>`).join("")}</div>`:""}
+   ${list.length?list.map(v=>`<div class="saved-item"><q>${v.x}</q><div>${v.r}</div></div>`).join(""):'<div class="empty">Toque em Salvar num versículo para guardá-lo aqui.</div>'}`);
+}
+tSaved.onclick=()=>{tSaved.classList.add("on");tFeed.classList.remove("on");openSaved()};
+tFeed.onclick=closeSheet;
+
+/* ---------- Feed e tempo de leitura ---------- */
+let active=null,since=0;
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting&&e.intersectionRatio>.6&&e.target!==active){
+    if(active){const dt=Date.now()-since; if(dt>5000)bump(active._v,1); else if(dt<900)bump(active._v,-1); active.classList.remove("active")}
+    active=e.target; since=Date.now(); active.classList.add("active"); setLight(active._v);
+    document.body.classList.toggle("immersed",[...feed.children].indexOf(active)>0);
+    const h=active.querySelector(".hint"); if([...feed.children].indexOf(active)>0)document.querySelectorAll(".hint").forEach(x=>x.remove());
+    if(feed.lastElementChild===active||feed.children[feed.children.length-2]===active)more(4);
+  }}),{root:feed,threshold:[.6]});
+function more(n){for(let i=0;i<n;i++){const c=makeCard(pick(),!feed.children.length);feed.appendChild(c);io.observe(c)}}
+more(5);
+requestAnimationFrame(()=>{const f=feed.firstElementChild;f.classList.add("active");active=f;since=Date.now();setLight(f._v)});
+</script>
