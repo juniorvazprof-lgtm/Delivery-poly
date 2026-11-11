@@ -10,7 +10,7 @@ export const CFG = {
   mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.6, slots: 4, passiveSlots: 4, rerolls: 2, bans: 2 },
 
   // XP para o próximo nível
-  xpFor: lvl => Math.floor(6 + lvl * 3 + Math.pow(lvl, 1.68)),   // cada nível pede mais cristais
+  xpFor: lvl => Math.floor(6 + lvl * 3 + Math.pow(lvl, 1.6)),   // cada nível pede mais cristais
 
   // ---- feitiços (nível 1 a 5); cada linha lista os valores por nível ----
   spells: {
@@ -35,7 +35,7 @@ export const CFG = {
     // ---- poderes "absurdos": grandes, raros e com recarga longa ----
     anel: { name: 'Anel de fogo', glyph: '◯', color: '#ff5a1f', el: 'fogo', big: true,
       desc: ['Um pequeno anel de fogo gira em volta do Mago e queima quem toca nele.', 'Anel maior', '+dano', 'Anel maior e queima mais rápido', 'Anel enorme: a cada 5 s solta uma onda de fogo'],
-      radius: [1.1, 1.5, 1.6, 2.1, 2.6], band: 0.45, dmg: [6, 7, 10, 11, 14], tick: [0.35, 0.35, 0.33, 0.25, 0.22], waveEvery: 5, wave: 60 },
+      radius: [1.1, 1.5, 1.6, 2.1, 2.6], band: 0.45, dmg: [4, 5, 7, 9, 12], tick: [0.45, 0.42, 0.38, 0.32, 0.26], waveEvery: 5, wave: 60 },
     meteoro: { name: 'Chuva de meteoros', glyph: '☄', color: '#ffb15a', el: 'fogo', big: true,
       desc: ['Um meteoro cai sobre o maior grupo de inimigos. A sombra mostra onde.', '+dano', '+1 meteoro', 'Cratera maior e recarga menor', '+1 meteoro e dano enorme'],
       cd: [6.5, 6.0, 5.6, 4.8, 4.2], count: [1, 1, 2, 2, 3], dmg: [80, 105, 115, 140, 210], radius: [2.0, 2.1, 2.2, 2.7, 3.0], fall: 0.85 },
@@ -73,7 +73,7 @@ export const CFG = {
 
   // ---- status elementais ----
   status: {
-    burnDps: t => 3 + t / 60,          // dano a cada meio segundo, cresce com o tempo
+    burnDps: t => 2 + t / 90,          // dano a cada meio segundo, cresce com o tempo
     exposeMul: 1.25,
     shockDmg: 14, shockRange: 2.8,     // Sobrecarga: o próximo golpe num eletrizado descarrega um raio
     soakShockMul: 1.8,                 // Condutor: raio em encharcado
@@ -128,18 +128,18 @@ export const CFG = {
   // campeão: elite gigante e resistente; o baú dele rola 3 melhorias
   // elites do baú: poucas, em momentos fixos, bem resistentes e lentas. As elites comuns não soltam baú.
   chestElites: [{ at: 120, reels: 1 }, { at: 180, reels: 1 }, { at: 300, reels: 3 }, { at: 400, reels: 3 }],
-  champion: { hpFlat: 320, scale: 2.2, r: 1.9, xp: 120, speed: 0.6, dmg: 2 },
+  champion: { hpFlat: 320, scale: 2.2, r: 1.9, xp: 120, speed: 0.6, dmg: 1.5 },
 
   // ---- diretor: o que nasce em cada minuto (pesos) e quantos por segundo ----
   waves: [
     { from: 0, mix: { rastejante: 1 } },
     { from: 50, mix: { rastejante: 3, espectro: 1 } },
-    { from: 110, mix: { rastejante: 3, espectro: 2, investida: 1 } },
+    { from: 110, mix: { rastejante: 3, espectro: 2, investida: 1, cuspidor: 1 } },
     { from: 170, mix: { rastejante: 2, espectro: 2, investida: 1, brutamonte: 1 } },
     { from: 250, mix: { rastejante: 2, espectro: 2, investida: 2, brutamonte: 1, cuspidor: 1 } },
     { from: 360, mix: { espectro: 3, investida: 2, brutamonte: 2, cuspidor: 2 } },
   ],
-  spawnRate: t => Math.min(11, 0.7 + t / 40 + Math.pow(t / 200, 2)),   // inimigos por segundo
+  spawnRate: t => Math.min(11, 0.8 + t / 38 + Math.pow(t / 200, 2)),   // inimigos por segundo
   hpScale: t => 1 + t / 120 + Math.pow(t / 250, 2),
   drops: { heart: 0.012, heartElite: 0.4, heal: 20, critBase: 0.03 },
   maxAlive: 220,

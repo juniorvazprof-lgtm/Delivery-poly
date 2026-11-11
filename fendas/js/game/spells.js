@@ -157,7 +157,7 @@ export class Spell {
   u_anel(dt) {
     const g = this.g, m = g.mage, c = this.cfg, st = this.state, R = this.area(this.v('radius'));
     st.tick = (st.tick || 0) - dt;
-    if (st.tick <= 0) { st.tick = this.v('tick'); let n = 0; for (const e of g.query(m.x, m.z, R + c.band)) if (Math.hypot(e.x - m.x, e.z - m.z) > R - c.band - e.r) { n++; g.damage(e, this.dmg(), { burn: 1.5, quiet: true, color: '#ff8a3d' }); }
+    if (st.tick <= 0) { st.tick = this.v('tick'); let n = 0; for (const e of g.query(m.x, m.z, R + c.band)) if (Math.hypot(e.x - m.x, e.z - m.z) > R - c.band - e.r) { n++; g.damage(e, this.dmg(), { quiet: true, color: '#ff8a3d' }); }
       if (this.evo && n) m.hp = Math.min(m.maxHp, m.hp + Math.min(n, 8) * this.v('heal')); }
     if (this.level >= 5 && (st.wave = (st.wave ?? this.v('waveEvery')) - dt) <= 0) {
       st.wave = this.v('waveEvery');
