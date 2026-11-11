@@ -93,13 +93,13 @@ cite b{color:var(--ink);font-weight:700}
 @keyframes halo{0%{transform:scale(.4);opacity:.45}100%{transform:scale(14);opacity:0}}
 
 /* Avisos e folhas */
-#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);transform:translate(-50%,20px);opacity:0;z-index:12;
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);transform:translate(-50%,20px);opacity:0;z-index:20;
   background:var(--ink);color:var(--bg);font:600 .84rem var(--sans);padding:12px 18px;border-radius:99px;max-width:calc(100% - 32px);text-align:center;transition:.5s var(--spring);pointer-events:none}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #toast em{font-style:normal;color:var(--gold)}
-.veil{position:fixed;inset:0;z-index:9;background:rgba(10,8,16,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:.4s var(--ease)}
+.veil{position:fixed;inset:0;z-index:14;background:rgba(10,8,16,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:.4s var(--ease)}
 .veil.open{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--bg);border-radius:28px 28px 0 0;border-top:1px solid var(--line);
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--bg);border-radius:28px 28px 0 0;border-top:1px solid var(--line);
   padding:0 max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px) max(20px,env(safe-area-inset-left,0px));
   transform:translateY(105%);transition:transform .55s var(--spring);max-height:82%;overflow:auto;max-width:560px;margin:0 auto}
 .sheet.open{transform:none}
@@ -152,10 +152,11 @@ cite b{color:var(--ink);font-weight:700}
 
 /* Ler capítulo */
 cite .read{border:0;background:none;color:var(--gold);font:700 .8rem var(--sans);padding:6px 0;cursor:pointer}
-#reader{position:fixed;inset:0;z-index:11;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .6s var(--spring);visibility:hidden}
-#reader.open{transform:none;visibility:visible}
-#reader header{position:sticky;opacity:1!important;pointer-events:auto!important;background:var(--bg);padding-bottom:12px;border-bottom:1px solid var(--line)}
-#reader h2{margin:0;font:450 1.3rem var(--serif)}
+#reader,#player,#prem{position:fixed;inset:0;z-index:11;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .6s var(--spring);visibility:hidden}
+#prem{z-index:12}
+#reader.open,#player.open,#prem.open{transform:none;visibility:visible}
+#reader header,#player header,#prem header{position:sticky;opacity:1!important;pointer-events:auto!important;background:var(--bg);padding-bottom:12px;border-bottom:1px solid var(--line)}
+#reader h2,#player h2,#prem h2{margin:0;font:450 1.3rem var(--serif)}
 #reader h2 small{display:block;font:600 .7rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:2px}
 .x{border:0;background:var(--glass);border:1px solid var(--line);color:var(--ink);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1rem}
 .page{flex:1;overflow-y:auto;user-select:text;-webkit-user-select:text;
@@ -175,6 +176,126 @@ cite .read{border:0;background:none;color:var(--gold);font:700 .8rem var(--sans)
 .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sec{border:1px solid var(--line);background:var(--glass);color:var(--ink);font:700 .9rem var(--sans);padding:15px;border-radius:99px;cursor:pointer}
 
+/* Som no feed */
+.hr{display:flex;gap:8px;align-items:center}
+.tabs button{padding:8px 11px}
+#snd{position:relative;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--ink);display:grid;place-items:center;cursor:pointer;flex:none}
+#snd svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#snd.on{color:var(--gold)}
+#snd.nudge::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--gold);animation:nudge 2s ease-out infinite}
+@keyframes nudge{0%{transform:scale(.85);opacity:1}100%{transform:scale(1.35);opacity:0}}
+.music{position:absolute;left:max(28px,env(safe-area-inset-left,0px));right:110px;bottom:calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;align-items:center;gap:10px;
+  font:600 .78rem var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;transition:opacity .5s}
+.music b{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
+body:not(.sound) .music,.card:has(.hint) .music,body.has-mini .music{opacity:0}
+.eq{display:inline-flex;gap:2px;align-items:flex-end;height:12px;flex:none}
+.eq i{width:2px;height:4px;background:var(--gold);border-radius:1px;animation:eq .9s ease-in-out infinite alternate}
+.eq i:nth-child(2){animation-delay:.3s}.eq i:nth-child(3){animation-delay:.6s}
+@keyframes eq{to{height:12px}}
+body:not(.playing) .eq i{animation:none}
+.disc{width:40px;height:40px;border-radius:50%;margin:6px 0 4px;border:0;cursor:pointer;
+  background:radial-gradient(circle,var(--bg) 0 13%,transparent 14%),conic-gradient(from 0deg,var(--c1),var(--c2),var(--c1));box-shadow:0 0 0 3px color-mix(in srgb,var(--ink) 12%,transparent)}
+body.playing .card.active .disc{animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+body.has-mini .rail{bottom:calc(env(safe-area-inset-bottom,0px) + 13% + 44px)}
+
+/* Player */
+.now{max-width:24rem;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.cover{position:relative;display:flex;align-items:flex-end;aspect-ratio:1;border-radius:22px;overflow:hidden;padding:16px;color:#F1ECE2;font:italic 450 1.2rem/1.1 var(--serif);
+  background:radial-gradient(circle at 28% 25%,var(--c1),transparent 62%),radial-gradient(circle at 78% 82%,var(--c2),transparent 60%),#16141E}
+.cover small{position:absolute;top:14px;left:16px;font:700 .56rem var(--sans);letter-spacing:.2em;text-transform:uppercase;opacity:.75;font-style:normal}
+.cover.lg{flex:none;height:auto;width:min(66vw,280px);margin:4px auto;font-size:1.7rem;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+body.playing .cover.lg.cur{animation:breathe 5s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.025)}}
+.ttl h3{margin:0;font:500 1.4rem var(--serif)}.ttl p{margin:2px 0 0;color:var(--muted);font-size:.85rem}
+.bar{height:4px;border-radius:4px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .5s linear}
+.bar.gated i{background:var(--gold)}
+.t2{display:flex;justify-content:space-between;margin-top:-6px;font:600 .72rem var(--sans);color:var(--muted);font-variant-numeric:tabular-nums}
+.ctrls{display:flex;justify-content:center;align-items:center;gap:30px}
+.ctrls button{border:0;background:none;color:var(--ink);cursor:pointer;display:grid;place-items:center;width:44px;height:44px}
+.ctrls svg{width:26px;height:26px;fill:currentColor}
+.ctrls .pp{width:66px;height:66px;border-radius:50%;background:var(--ink);color:var(--bg);transition:transform .4s var(--spring)}
+.ctrls .pp:active{transform:scale(.9)}
+.pill{align-self:center;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--glass);color:var(--ink);border-radius:99px;padding:9px 14px;font:600 .8rem var(--sans);cursor:pointer;font-variant-numeric:tabular-nums}
+.pill b{color:var(--gold)}
+.lyrics{height:6.6em;overflow:hidden;text-align:center;font:400 1.12rem var(--serif);-webkit-mask:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+.lyrics div{transition:transform .8s var(--ease)}
+.lyrics p{margin:0;height:2.2em;line-height:2.2em;opacity:.28;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .6s,transform .6s}
+.lyrics p.on{opacity:1;transform:scale(1.04)}
+.sect{max-width:24rem;margin:30px auto 0}
+.albums{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory;padding:4px 2px 8px}
+.albums::-webkit-scrollbar{display:none}
+.albums button{flex:0 0 128px;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:var(--ink);scroll-snap-align:start}
+.albums .cover{font-size:1rem;border-radius:16px;transition:transform .4s var(--spring)}
+.albums button:active .cover{transform:scale(.95)}
+.albums button.sel .cover{outline:2px solid var(--gold);outline-offset:3px}
+.albums span{display:block;margin-top:8px;font:600 .74rem var(--sans);color:var(--muted)}
+.trk{display:flex;align-items:center;gap:14px;width:100%;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);padding:13px 2px;cursor:pointer;text-align:left}
+.trk .n{width:20px;text-align:center;color:var(--muted);font:600 .8rem var(--sans)}
+.trk div{flex:1;min-width:0}.trk b{display:block;font-size:.95rem;font-weight:600}.trk small{color:var(--muted);font-size:.76rem}
+.trk.on b,.trk.on .n{color:var(--gold)}
+.lock{font:700 .6rem var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--gold);border:1px solid color-mix(in srgb,var(--gold) 50%,transparent);border-radius:99px;padding:4px 8px;white-space:nowrap}
+.pchip{border:0;background:linear-gradient(135deg,#E2BE74,#B98A3A);color:#1D1B22;font:800 .74rem var(--sans);padding:10px 14px;border-radius:99px;cursor:pointer}
+.hbtn{display:flex;gap:8px;align-items:center}
+#mini{position:fixed;z-index:6;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 12px);
+  max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:8px;border-radius:20px;background:var(--glass);border:1px solid var(--line);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transform:translateY(140%);opacity:0;transition:.5s var(--spring);overflow:hidden}
+#mini.on{transform:none;opacity:1}
+#mini .cover{width:44px;height:44px;border-radius:12px;padding:0;flex:none}
+#mInfo{flex:1;min-width:0;cursor:pointer}#mInfo b{display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#mInfo small{color:var(--muted);font-size:.74rem}
+#mini button{border:0;background:none;color:var(--ink);width:40px;height:40px;display:grid;place-items:center;cursor:pointer}
+#mini svg{width:22px;height:22px;fill:currentColor}
+.mbar{position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--line)}.mbar i{display:block;height:100%;width:0;background:var(--gold);transition:width .5s linear}
+
+/* Premium */
+.pw{max-width:26rem;margin:0 auto}
+.crown{width:64px;height:64px;border-radius:20px;margin:4px auto 16px;display:grid;place-items:center;background:linear-gradient(135deg,#E2BE74,#B98A3A);color:#1D1B22;font-size:1.7rem;animation:pop .7s var(--spring)}
+.pw h3{text-align:center;font:450 2rem/1.15 var(--serif);margin:0 0 8px;text-wrap:balance}
+.pw .lead{text-align:center;color:var(--muted);margin:0 0 22px;line-height:1.5}
+.perks{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:14px}
+.perks li{display:flex;gap:12px;font-size:.94rem;font-weight:600;line-height:1.35}
+.perks li::before{content:"✓";color:var(--gold);font-weight:800}
+.perks small{display:block;color:var(--muted);font-weight:500;font-size:.8rem;margin-top:2px}
+.plans{display:grid;gap:12px;margin-bottom:16px}
+.plan{position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px;border:1.5px solid var(--line);background:var(--glass);border-radius:18px;padding:16px;cursor:pointer;color:var(--ink);text-align:left;transition:.3s var(--ease)}
+.plan.on{border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 18%,transparent)}
+.plan b{display:block;font-size:1rem}.plan small{color:var(--muted);font-size:.78rem}
+.plan .pr{font:800 1rem var(--sans);text-align:right;white-space:nowrap}.plan .pr small{display:block;font-weight:600}
+.badge{position:absolute;top:-10px;left:14px;background:var(--gold);color:#1D1B22;font:800 .58rem var(--sans);letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:99px}
+.fine{text-align:center;color:var(--muted);font-size:.76rem;line-height:1.5;margin:10px 0 0}
+
+/* Anúncio no feed */
+.card.ad{padding-right:max(24px,env(safe-area-inset-right,0px))}
+.ad-in{width:100%;max-width:26rem;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.adtop{display:flex;gap:8px;align-items:center}
+.spon{font:700 .64rem var(--sans);letter-spacing:.14em;text-transform:uppercase;background:var(--glass);border:1px solid var(--line);padding:5px 10px;border-radius:99px}
+.ex{font:600 .72rem var(--sans);color:var(--muted)}
+.admedia{width:100%;aspect-ratio:4/3;max-height:34vh;border-radius:22px;display:flex;align-items:flex-end;padding:20px;color:#fff;font:italic 450 1.7rem/1.1 var(--serif);text-shadow:0 2px 12px rgba(0,0,0,.25);
+  background:radial-gradient(circle at 25% 20%,var(--a),transparent 65%),linear-gradient(160deg,var(--a),var(--b))}
+.adbrand{font:700 .8rem var(--sans);color:var(--muted)}
+.ad-in h3{margin:0;font:500 1.45rem/1.2 var(--serif);text-wrap:balance}
+.ad-in p{margin:0;color:var(--muted);line-height:1.5;font-size:.92rem}
+.ad-in .link{align-self:center;padding:6px}
+
+/* Anúncio com recompensa */
+#adv{position:fixed;inset:0;z-index:18;background:#0B0A10;color:#F1ECE2;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .4s;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) max(20px,env(safe-area-inset-left,0px))}
+#adv.open{opacity:1;pointer-events:auto}
+.advtop{display:flex;justify-content:space-between;align-items:center;font:700 .68rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#9A95A3}
+.cd{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:2px solid #E2BE74;color:#F1ECE2;font:700 .9rem var(--sans);letter-spacing:0}
+.advbody{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;width:100%;max-width:26rem;margin:0 auto}
+.advmedia{aspect-ratio:3/4;max-height:52vh;border-radius:24px;display:flex;align-items:flex-end;padding:22px;font:italic 450 2rem/1.1 var(--serif);
+  background:radial-gradient(circle at 30% 25%,#9FA9D8,transparent 60%),radial-gradient(circle at 75% 80%,#E89A9A,transparent 60%),#1B1930;animation:kb 8s ease-in-out infinite alternate}
+@keyframes kb{to{transform:scale(1.03)}}
+.advbody p{margin:0;color:#B9B4C2;font-size:.9rem}
+.advfoot{width:100%;max-width:26rem;margin:0 auto;display:grid;gap:10px}
+.rbar{height:4px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}.rbar i{display:block;height:100%;width:0;background:#E2BE74}
+.rlabel{text-align:center;font:600 .82rem var(--sans);color:#C9C4D0}
+.done{display:grid;justify-items:center;gap:12px;text-align:center}
+.done .ok{width:76px;height:76px;border-radius:50%;background:#E2BE74;color:#0B0A10;display:grid;place-items:center;font-size:2rem;animation:pop .6s var(--spring)}
+.done h3{margin:0;font:450 1.8rem var(--serif)}
+#adv .primary{background:#F1ECE2;color:#0B0A10}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}}
 </style>
 
@@ -182,7 +303,8 @@ cite .read{border:0;background:none;color:var(--gold);font:700 .8rem var(--sans)
 <div id="grain"></div>
 <header>
   <div class="brand">lu<b>m</b>en</div>
-  <nav class="tabs"><button id="tFeed" class="on">Para você</button><button id="tSaved">Salvos</button></nav>
+  <div class="hr"><button id="snd" aria-label="Ligar trilha sonora"></button>
+  <nav class="tabs"><button id="tFeed" class="on">Para você</button><button id="tListen">Ouvir</button><button id="tSaved">Salvos</button></nav></div>
 </header>
 <button id="filter" aria-label="Remover filtro de tema"><span></span><i>✕</i></button>
 <main id="feed" aria-label="Versículos"></main>
@@ -193,6 +315,18 @@ cite .read{border:0;background:none;color:var(--gold);font:700 .8rem var(--sans)
   <header><h2 id="rTitle"></h2><button class="x" id="rClose" aria-label="Fechar leitura">✕</button></header>
   <div class="page" id="rPage"></div>
 </section>
+<section id="player" role="dialog" aria-modal="true" aria-label="Ouvir louvores">
+  <header><h2>Ouvir</h2><div class="hbtn"><button class="pchip" id="pPrem">✦ Premium</button><button class="x" id="pClose" aria-label="Fechar player">✕</button></div></header>
+  <div class="page" id="pPage"></div>
+</section>
+<section id="prem" role="dialog" aria-modal="true" aria-label="Lumen Premium">
+  <header><h2>Premium</h2><button class="x" id="prClose" aria-label="Fechar">✕</button></header>
+  <div class="page" id="prPage"></div>
+</section>
+<div id="mini" aria-label="Tocando agora"><span class="cover" id="mCov"></span><div id="mInfo"><b id="mT"></b><small id="mA"></small></div>
+  <button id="mPP" aria-label="Tocar ou pausar"></button><button id="mX" aria-label="Fechar player">✕</button><span class="mbar"><i id="mBar"></i></span></div>
+<div id="adv" role="dialog" aria-modal="true" aria-label="Anúncio"><div class="advtop"><span>Anúncio · exemplo</span><span class="cd" id="cd"></span></div>
+  <div class="advbody" id="advBody"></div><div class="advfoot" id="advFoot"></div></div>
 
 <script>
 const V=[
@@ -281,7 +415,7 @@ function makeCard(v,first,daily){
   const c=document.createElement("section");c.className="card"+(daily?" daily":"");c._v=v;
   const words=v.x.split(" "),len=v.x.length;
   const size=len<60?"clamp(2rem,8.4vw,3.2rem)":len<110?"clamp(1.6rem,6.6vw,2.6rem)":"clamp(1.35rem,5.4vw,2.1rem)";
-  const isL=liked.has(v.r),isS=saved.includes(v.r);
+  const tr=trackFor(v);const isL=liked.has(v.r),isS=saved.includes(v.r);
   c.innerHTML=`<div class="inner" style="--n:${words.length}">
     ${daily?`<div class="daily-badge"><i></i>Versículo do dia</div><p class="daily-meta">${todayLabel()}${streak.n>1?` · <span class="streak">${streak.n} dias seguidos</span>`:""}</p>`:""}
     <button class="theme" aria-label="Ver só versículos sobre ${v.t[0]}">${v.t[0]}</button>
@@ -294,11 +428,13 @@ function makeCard(v,first,daily){
     <div class="sep"></div>
     <button class="act send" aria-label="Enviar">${ICON.send}<span>Enviar</span></button>
     <button class="act more" aria-label="Mais opções">${ICON.more}<span>Mais</span></button>
-   </div>${first?'<div class="hint">deslize ↑<small>toque duas vezes para curtir</small></div>':""}`;
+    <button class="disc" style="--c1:${albumOf(tr).colors[0]};--c2:${albumOf(tr).colors[1]}" aria-label="Ouvir ${tr.t}"></button>
+   </div><div class="music"><span class="eq"><i></i><i></i><i></i></span><b>${tr.t} · ${albumOf(tr).name}</b></div>${first?'<div class="hint">deslize ↑<small>toque duas vezes para curtir</small></div>':""}`;
   c.querySelector(".heart").onclick=()=>toggleLike(c);
   c.querySelector(".save").onclick=()=>toggleSave(c);
   c.querySelector(".send").onclick=()=>{openShare(v);bump(v,5)};
   c.querySelector(".read").onclick=()=>openReader(v);
+  c.querySelector(".disc").onclick=()=>openPlayer(tr,true);
   if(daily)c.querySelector(".remind").onclick=openRemind;
   c.querySelector(".more").onclick=()=>openMenu(v);
   c.querySelector(".theme").onclick=()=>setFilter(v.t[0]);
@@ -324,7 +460,7 @@ function toggleSave(c,silent){const v=c._v,b=c.querySelector(".save");
   if(saved.includes(v.r)){saved=saved.filter(r=>r!==v.r);b.classList.remove("on");if(!silent)toast("Removido dos Salvos")}
   else{saved.unshift(v.r);b.classList.add("on");bump(v,4);vibrate(8);toast("Guardado em Salvos")}
   b.setAttribute("aria-pressed",saved.includes(v.r));persist()}
-function syncCards(){feed.querySelectorAll(".card").forEach(c=>{const r=c._v.r;
+function syncCards(){feed.querySelectorAll(".card:not(.ad)").forEach(c=>{const r=c._v.r;
   c.querySelector(".heart").classList.toggle("on",liked.has(r));c.querySelector(".save").classList.toggle("on",saved.includes(r))})}
 
 /* ---------- Efeitos ---------- */
@@ -352,7 +488,7 @@ function openSheet(html,label,cb){sheet.innerHTML='<div class="grab" aria-hidden
   onClose=cb||null;veil.classList.add("open");sheet.classList.add("open");document.body.classList.remove("focus");
   setTimeout(()=>sheet.querySelector("button")?.focus({preventScroll:true}),300);bindDrag()}
 function closeSheet(){if(!sheet.classList.contains("open"))return;veil.classList.remove("open");sheet.classList.remove("open");sheet.style.transform="";
-  tFeed.classList.add("on");tSaved.classList.remove("on");const cb=onClose;onClose=null;cb&&cb()}
+  setTab(playerOpen?"listen":"feed");const cb=onClose;onClose=null;cb&&cb()}
 veil.onclick=closeSheet;
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
 function bindDrag(){const g=sheet.querySelector(".grab");let y0=null,dy=0;
@@ -458,13 +594,16 @@ function openSaved(){
    ${top.length?`<div class="label">O que tem tocado você</div><div class="taste">${top.map(([t,s])=>`<div>${t}<span><i style="width:${Math.max(8,s/max*100)}%"></i></span></div>`).join("")}</div>`:""}
    ${list.length?`<div class="label">Seus versículos</div>`+list.map(v=>`<div class="saved-item"><div><q>${v.x}</q><small>${v.r}</small></div><button class="rm" data-r="${v.r}" aria-label="Remover ${v.r}">✕</button></div>`).join("")
      :'<div class="empty">Toque em <b>Salvar</b> num versículo para guardá-lo aqui e reler quando precisar.</div>'}
-   <button class="link" id="redo">Mudar como estou me sentindo</button>`,"Salvos");
+   <button class="link" id="redo">Mudar como estou me sentindo</button><br><button class="link" id="toPrem">✦ ${premium?"Você é Premium":"Conhecer o Premium"}</button>`,"Salvos");
+  document.getElementById("toPrem").onclick=()=>{closeSheet();openPremium()};
   sheet.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{saved=saved.filter(r=>r!==b.dataset.r);persist();syncCards();
     const it=b.closest(".saved-item");it.style.transition=".35s";it.style.opacity="0";it.style.transform="translateX(30px)";setTimeout(openSaved,300)});
   document.getElementById("redo").onclick=()=>{closeSheet();setTimeout(onboarding,350)};
 }
-tSaved.onclick=()=>{tSaved.classList.add("on");tFeed.classList.remove("on");openSaved()};
-tFeed.onclick=closeSheet;
+tSaved.onclick=()=>{setTab("saved");openSaved()};
+tFeed.onclick=()=>{closeSheet();closePlayer();closePremium()};
+tListen.onclick=()=>{closeSheet();openPlayer()};
+function setTab(n){tFeed.classList.toggle("on",n==="feed");tListen.classList.toggle("on",n==="listen");tSaved.classList.toggle("on",n==="saved")}
 
 /* ---------- Primeiro acesso: humor ---------- */
 function onboarding(){
@@ -482,19 +621,230 @@ function onboarding(){
   document.getElementById("skip").onclick=closeSheet;
 }
 
+/* ---------- Música: catálogo de exemplo ---------- */
+const ALBUMS=[
+ {id:"manha",name:"Manhã",colors:["#F7D9A0","#E58FA6"],tags:["gratidão","alegria","esperança"]},
+ {id:"quietude",name:"Quietude",colors:["#9EC5E8","#B49AE0"],tags:["paz","descanso","ansiedade","cuidado"]},
+ {id:"coragem",name:"Coragem",colors:["#F2B879","#D9676F"],tags:["coragem","força","confiança"]},
+ {id:"noite",name:"Para dormir",colors:["#8E9AD8","#4B4785"],tags:["fé","graça","amor","oração","propósito"]}];
+const P1=[[0,7,12,16],[-3,4,9,12],[-7,0,5,9],[-5,2,7,11]],P2=[[0,7,12,15],[-4,3,8,12],[3,10,15,19],[-2,5,10,14]],
+      P3=[[0,7,11,16],[5,12,16,21]],P4=[[0,7,14,16],[-5,2,9,11],[-3,4,11,12],[-7,0,7,9]];
+const TR=[
+ {id:"t1",t:"Novas cada manhã",al:"manha",key:50,bpm:78,prog:P1,step:.5,dur:186,ly:["As misericórdias do Senhor","são a causa de não sermos consumidos","as suas misericórdias não têm fim","novas são cada manhã","grande é a tua fidelidade"]},
+ {id:"t2",t:"Este é o dia",al:"manha",key:55,bpm:84,prog:P4,step:.5,dur:174,ly:["Este é o dia que fez o Senhor","regozijemo-nos","e alegremo-nos nele","dai graças ao Senhor","porque ele é bom"]},
+ {id:"t3",t:"Lâmpada",al:"manha",key:52,bpm:72,prog:P3,step:1,dur:198,ly:["Lâmpada para os meus pés","é a tua palavra","e luz para o meu caminho","guia os meus passos","Senhor"]},
+ {id:"t4",t:"Aquietai-vos",al:"quietude",key:48,bpm:60,prog:P3,step:1,dur:204,ly:["Aquietai-vos","e sabei que eu sou Deus","serei exaltado entre as nações","serei exaltado sobre a terra","o Senhor está conosco"]},
+ {id:"t5",t:"Águas tranquilas",al:"quietude",key:53,bpm:64,prog:P1,step:1,dur:192,ly:["O Senhor é o meu pastor","nada me faltará","deitar-me faz em verdes pastos","guia-me mansamente","a águas tranquilas"]},
+ {id:"t6",t:"Vinde a mim",al:"quietude",key:51,bpm:62,prog:P4,step:1,dur:186,ly:["Vinde a mim","todos os que estais cansados","e eu vos aliviarei","aprendei de mim","e encontrareis descanso"]},
+ {id:"t7",t:"Asas como águias",al:"coragem",key:50,bpm:90,prog:P2,step:.5,dur:180,ly:["Os que esperam no Senhor","renovarão as suas forças","subirão com asas como águias","correrão e não se cansarão","caminharão e não se fatigarão"]},
+ {id:"t8",t:"Não temas",al:"coragem",key:45,bpm:86,prog:P2,step:.5,dur:192,ly:["Não temas","porque eu sou contigo","não te assombres","porque eu sou teu Deus","eu te fortaleço"]},
+ {id:"t9",t:"Refúgio",al:"coragem",key:47,bpm:80,prog:P1,step:.5,dur:180,ly:["Deus é o nosso refúgio","e fortaleza","socorro bem presente","na angústia","pelo que não temeremos"]},
+ {id:"t10",t:"À sombra do Altíssimo",al:"noite",key:43,bpm:54,prog:P3,step:2,dur:240,ly:["Aquele que habita","no esconderijo do Altíssimo","à sombra do Onipotente","descansará","ele é o meu refúgio"]},
+ {id:"t11",t:"Em paz me deito",al:"noite",key:46,bpm:52,prog:P4,step:2,dur:228,ly:["Em paz também","me deitarei e dormirei","porque só tu, Senhor","me fazes habitar","em segurança"]},
+ {id:"t12",t:"Noite serena",al:"noite",key:44,bpm:50,prog:P1,step:2,dur:234,ly:["O Senhor te guardará","de todo o mal","guardará a tua alma","a tua entrada e a tua saída","desde agora e para sempre"]}];
+const albumOf=tr=>ALBUMS.find(a=>a.id===tr.al);
+function trackFor(v){const al=ALBUMS.find(a=>a.tags.includes(v.t[0]))||ALBUMS[1],l=TR.filter(t=>t.al===al.id);
+  return l[[...v.r].reduce((s,c)=>s+c.charCodeAt(0),0)%l.length]}
+const mmss=s=>{s=Math.max(0,Math.floor(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const coverStyle=al=>`--c1:${al.colors[0]};--c2:${al.colors[1]}`;
+
+/* ---------- Motor de áudio (trilha gerada no navegador, só para o protótipo) ---------- */
+let AC=null,master,dly;
+function ac(){if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.7;
+  const comp=AC.createDynamicsCompressor();master.connect(comp).connect(AC.destination);
+  dly=AC.createDelay();dly.delayTime.value=.38;const fb=AC.createGain();fb.gain.value=.3;const wet=AC.createGain();wet.gain.value=.35;
+  dly.connect(fb).connect(dly);dly.connect(wet).connect(master)}
+  if(AC.state==="suspended")AC.resume();return AC}
+const hz=m=>440*2**((m-69)/12);
+function env(c,dest,t,a,peak,hold,rel){const g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+a);g.gain.setValueAtTime(peak,t+hold);g.gain.linearRampToValueAtTime(0,t+hold+rel);g.connect(dest);return g}
+function chord(tr,i,t,bar,bus){const c=AC,ch=tr.prog[i%tr.prog.length].map(n=>n+tr.key);
+  ch.forEach(n=>["triangle","sine"].forEach((type,k)=>{const o=c.createOscillator();o.type=type;o.frequency.value=hz(n+12)*(k?1.004:1);
+    o.connect(env(c,bus,t,1.2,.035,bar,1.4));o.start(t);o.stop(t+bar+1.6)}));
+  const b=c.createOscillator();b.type="sine";b.frequency.value=hz(ch[0]-12);b.connect(env(c,bus,t,.4,.12,bar-.2,.8));b.start(t);b.stop(t+bar+1);
+  const step=60/tr.bpm*tr.step,pat=[0,1,2,3,2,1];
+  for(let s=0;s<Math.round(bar/step);s++){const n=ch[pat[s%6]%ch.length]+24,tt=t+s*step,o=c.createOscillator(),g=c.createGain();
+    o.type="triangle";o.frequency.value=hz(n);g.gain.setValueAtTime(0,tt);g.gain.linearRampToValueAtTime(.07,tt+.01);g.gain.exponentialRampToValueAtTime(.0001,tt+1.6);
+    o.connect(g);g.connect(bus);g.connect(dly);o.start(tt);o.stop(tt+1.7)}}
+function startVoice(tr,offset){const c=ac(),bus=c.createGain(),lp=c.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1600;
+  bus.gain.setValueAtTime(0,c.currentTime);bus.gain.linearRampToValueAtTime(1,c.currentTime+1.4);bus.connect(lp).connect(master);
+  const bar=60/tr.bpm*4;let i=Math.floor(offset/bar),t=c.currentTime+.05;
+  const st={bus,timer:0};const run=()=>{while(t<c.currentTime+1.2){chord(tr,i++,t,bar,bus);t+=bar}};run();st.timer=setInterval(run,300);return st}
+function stopVoice(st,f=.8){if(!st)return;clearInterval(st.timer);const g=st.bus.gain,n=AC.currentTime;g.cancelScheduledValues(n);g.setValueAtTime(g.value,n);g.linearRampToValueAtTime(0,n+f);setTimeout(()=>st.bus.disconnect(),f*1000+2500)}
+
+/* ---------- Estado de reprodução, Premium e recompensas ---------- */
+let premium=S.get("lumen.prem",false),soundOn=S.get("lumen.sound",false),rewardUntil=S.get("lumen.rwu",0),rw=S.get("lumen.rw",{day:null,n:0}),warned=false;
+const MAX_REWARDS=2,REWARD_MIN=30,PREVIEW=30;
+const canFull=()=>premium||Date.now()<rewardUntil;
+function rewardsLeft(){const d=dayKey(new Date());if(rw.day!==d)rw={day:d,n:0};return MAX_REWARDS-rw.n}
+const P={tr:null,mode:null,voice:null,start:0,offset:0,playing:false,gated:false};
+const elapsed=()=>P.playing?P.offset+(Date.now()-P.start)/1000:P.offset;
+function play(tr,mode,offset=0){stopVoice(P.voice);Object.assign(P,{tr,mode,offset,start:Date.now(),playing:true,gated:mode==="player"&&!canFull()});
+  if(P.gated)P.offset=Math.min(offset,PREVIEW-1);P.voice=startVoice(tr,P.offset);updateBody()}
+function pause(){if(!P.playing)return;P.offset=elapsed();P.playing=false;stopVoice(P.voice,.5);P.voice=null;updateBody()}
+const resume=()=>play(P.tr,P.mode,P.offset);
+const I={play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',pause:'<svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>',
+ prev:'<svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM9.5 12 18 5v14z"/></svg>',next:'<svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM6 5l8.5 7L6 19z"/></svg>',
+ on:'<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+ off:'<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>'};
+const snd=document.getElementById("snd");
+function updateBody(){document.body.classList.toggle("playing",P.playing);document.body.classList.toggle("sound",soundOn);
+  snd.innerHTML=soundOn?I.on:I.off;snd.classList.toggle("on",soundOn);snd.setAttribute("aria-label",soundOn?"Desligar trilha":"Ligar trilha");
+  snd.classList.toggle("nudge",!S.get("lumen.sndUsed",0));updateMini();if(playerOpen)refreshPlayer()}
+function feedSound(card){if(!soundOn||P.mode==="player")return;
+  if(!card||!card._v){if(P.playing)pause();return}
+  const tr=trackFor(card._v);if(P.playing&&P.tr===tr)return;play(tr,"feed",Math.random()*60)}
+snd.onclick=()=>{soundOn=!soundOn;S.set("lumen.sound",soundOn);S.set("lumen.sndUsed",1);
+  if(soundOn){if(P.mode==="player"&&P.tr)resume();else feedSound(active);toast("Trilha ligada · <em>faixas de exemplo</em>")}else pause();updateBody()};
+document.addEventListener("pointerdown",()=>{if(soundOn&&!P.playing&&P.mode!=="player")feedSound(active)},{once:true});
+
+/* ---------- Tela do player ---------- */
+let playerOpen=false,selAl="quietude";
+const playerEl=document.getElementById("player"),pPage=document.getElementById("pPage");
+function openPlayer(tr,autoplay){playerOpen=true;setTab("listen");document.body.classList.remove("focus");
+  if(tr){selAl=tr.al;if(autoplay)play(tr,"player",0)}else if(P.mode==="player"&&P.tr)selAl=P.tr.al;
+  renderPlayer();playerEl.classList.add("open");updateMini()}
+function closePlayer(){if(!playerOpen)return;playerOpen=false;playerEl.classList.remove("open");setTab("feed");updateMini()}
+document.getElementById("pClose").onclick=closePlayer;document.getElementById("pPrem").onclick=openPremium;
+const shown=()=>P.mode==="player"&&P.tr?P.tr:TR.find(t=>t.al===selAl);
+function renderPlayer(){const tr=shown(),al=albumOf(tr),cur=P.mode==="player"&&P.tr===tr;
+  document.getElementById("pPrem").hidden=premium;
+  pPage.innerHTML=`<div class="now">
+    <div class="cover lg ${cur?"cur":""}" style="${coverStyle(al)}"><small>Lumen Originals</small>${al.name}</div>
+    <div class="ttl"><h3>${tr.t}</h3><p>${al.name} · faixa de exemplo</p></div>
+    <div class="bar" id="pBar"><i></i></div><div class="t2"><span id="pE">0:00</span><span id="pD">${mmss(tr.dur)}</span></div>
+    <div class="ctrls"><button id="pPrev" aria-label="Anterior">${I.prev}</button><button class="pp" id="pPP" aria-label="Tocar ou pausar">${cur&&P.playing?I.pause:I.play}</button><button id="pNext" aria-label="Próxima">${I.next}</button></div>
+    <button class="pill" id="pill"></button>
+    <div class="lyrics" aria-label="Letra"><div id="ly">${tr.ly.map(l=>`<p>${l}</p>`).join("")}</div></div></div>
+   <div class="sect"><div class="label">Álbuns</div><div class="albums">${ALBUMS.map(a=>`<button data-a="${a.id}" class="${a.id===selAl?"sel":""}"><span class="cover" style="${coverStyle(a)}">${a.name}</span><span>${TR.filter(t=>t.al===a.id).length} faixas</span></button>`).join("")}</div>
+   <div class="label" style="margin-top:18px">${albumOf(TR.find(t=>t.al===selAl)).name}</div>
+   ${TR.filter(t=>t.al===selAl).map((t,i)=>`<button class="trk ${P.mode==="player"&&P.tr===t?"on":""}" data-t="${t.id}"><span class="n">${i+1}</span><div><b>${t.t}</b><small>${mmss(t.dur)}</small></div>${canFull()?"":`<span class="lock">Prévia 30 s</span>`}</button>`).join("")}</div>`;
+  const list=TR.filter(t=>t.al===tr.al),i=list.indexOf(tr);
+  document.getElementById("pPP").onclick=()=>{if(cur&&P.playing)pause();else if(cur)resume();else play(tr,"player",0);renderPlayer()};
+  document.getElementById("pPrev").onclick=()=>{play(list[(i-1+list.length)%list.length],"player",0);renderPlayer()};
+  document.getElementById("pNext").onclick=()=>{play(list[(i+1)%list.length],"player",0);renderPlayer()};
+  document.getElementById("pill").onclick=()=>{if(!premium&&!canFull())rewardSheet();else if(!premium)openPremium()};
+  pPage.querySelectorAll(".albums button").forEach(b=>b.onclick=()=>{selAl=b.dataset.a;renderPlayer()});
+  pPage.querySelectorAll(".trk").forEach(b=>b.onclick=()=>{play(TR.find(t=>t.id===b.dataset.t),"player",0);renderPlayer()});
+  refreshPlayer()}
+function refreshPlayer(){const tr=shown(),cur=P.mode==="player"&&P.tr===tr,e=cur?elapsed():0,gated=cur?P.gated:!canFull();
+  const bar=document.getElementById("pBar");if(!bar)return;
+  bar.classList.toggle("gated",gated);bar.firstChild.style.width=(gated?e/PREVIEW:e/tr.dur)*100+"%";
+  document.getElementById("pE").textContent=mmss(e);document.getElementById("pD").textContent=gated?"0:30 · prévia":mmss(tr.dur);
+  const pp=document.getElementById("pPP");pp.innerHTML=cur&&P.playing?I.pause:I.play;
+  const li=Math.min(tr.ly.length-1,Math.floor(e/(tr.dur/tr.ly.length)));
+  document.getElementById("ly").style.transform=`translateY(${(1-li)*2.2}em)`;
+  document.querySelectorAll("#ly p").forEach((p,k)=>p.classList.toggle("on",k===li&&cur));
+  const pill=document.getElementById("pill");
+  pill.innerHTML=premium?"✦ Premium · <b>ouça sem limites</b>":canFull()?`Grátis por mais <b>${mmss((rewardUntil-Date.now())/1000)}</b>`:`Prévias de 30 s · <b>Ouvir 30 min grátis ›</b>`}
+
+/* ---------- Mini player ---------- */
+const mini=document.getElementById("mini");
+function updateMini(){const on=P.mode==="player"&&P.tr&&!playerOpen;mini.classList.toggle("on",!!on);document.body.classList.toggle("has-mini",!!on);
+  if(!P.tr)return;const al=albumOf(P.tr);document.getElementById("mCov").setAttribute("style",coverStyle(al));
+  document.getElementById("mT").textContent=P.tr.t;document.getElementById("mA").textContent=al.name+(P.gated?" · prévia":"");
+  document.getElementById("mPP").innerHTML=P.playing?I.pause:I.play;
+  document.getElementById("mBar").style.width=(P.gated?elapsed()/PREVIEW:elapsed()/P.tr.dur)*100+"%"}
+document.getElementById("mInfo").onclick=()=>openPlayer();
+document.getElementById("mPP").onclick=()=>{P.playing?pause():resume()};
+document.getElementById("mX").onclick=()=>{pause();P.mode=null;P.tr=null;updateMini();if(soundOn)feedSound(active)};
+
+/* ---------- Relógio: prévia, fim da faixa, tempo grátis ---------- */
+function tick(){
+  if(P.playing&&P.mode==="player"){const e=elapsed();
+    if(P.gated&&e>=PREVIEW){pause();P.offset=0;gate("preview")}
+    else if(e>=P.tr.dur){if(!canFull()){pause();P.offset=0;gate("expired")}
+      else{const l=TR.filter(t=>t.al===P.tr.al);play(l[(l.indexOf(P.tr)+1)%l.length],"player",0);if(playerOpen)renderPlayer()}}
+    if(!premium&&!P.gated){const left=rewardUntil-Date.now();if(left>0&&left<300000&&!warned){warned=true;toast("Faltam 5 minutos do seu tempo grátis")}}}
+  if(P.playing&&P.mode==="feed"&&elapsed()>P.tr.dur)play(P.tr,"feed",0);
+  if(playerOpen)refreshPlayer();if(P.mode==="player")updateMini()}
+
+/* ---------- Ofertas: prévia, recompensa, tempo esgotado ---------- */
+function offerHTML(){const left=rewardsLeft();
+  return (left>0?`<button class="primary" id="oAd">▶ Assistir anúncio e ouvir ${REWARD_MIN} min grátis</button>
+     <p class="fine">Você pode fazer isso mais ${left} ${left>1?"vezes":"vez"} hoje.</p>`
+   :`<p class="sub">Você já usou seus ${MAX_REWARDS} períodos grátis de hoje. Amanhã tem mais.</p>`)+
+   `<button class="${left>0?"sec":"primary"}" id="oPrem" style="width:100%;margin-top:${left>0?14:0}px">✦ Testar o Premium por 7 dias</button>`}
+function bindOffer(){const a=document.getElementById("oAd");if(a)a.onclick=watchAd;document.getElementById("oPrem").onclick=()=>{closeSheet();openPremium()}}
+function gate(kind){const tr=P.tr;
+  const h=kind==="expired"?["Seu tempo grátis acabou","Deixamos a música terminar para não cortar no meio. Quer continuar ouvindo?"]
+    :[`Gostou de “${tr.t}”?`,"Essa foi uma prévia de 30 segundos. Escolha como continuar ouvindo o louvor completo."];
+  openSheet(`<h2>${h[0]}</h2><p class="sub">${h[1]}</p>${offerHTML()}`,"Continuar ouvindo");bindOffer();if(playerOpen)renderPlayer()}
+function rewardSheet(){openSheet(`<h2>Ouça ${REWARD_MIN} minutos de louvor grátis</h2><p class="sub">Assista a um anúncio curto e todos os álbuns ficam liberados, completos, por ${REWARD_MIN} minutos.</p>${offerHTML()}`,"Ouvir grátis");bindOffer()}
+
+/* ---------- Anúncio com recompensa (simulado) ---------- */
+const adv=document.getElementById("adv");
+function watchAd(){if(rewardsLeft()<=0)return;closeSheet();const was=P.playing;pause();
+  const D=6;let t0=Date.now();adv.classList.add("open");
+  document.getElementById("advBody").innerHTML=`<div class="advmedia">Conferência Exemplo 2027</div><p>Três dias de louvor e palavra em São Paulo. Anúncio de exemplo.</p>`;
+  document.getElementById("advFoot").innerHTML=`<div class="rbar"><i id="rb"></i></div><div class="rlabel">Sua recompensa: ${REWARD_MIN} min de louvor completo</div>`;
+  const cd=document.getElementById("cd");
+  const iv=setInterval(()=>{const p=Math.min(1,(Date.now()-t0)/(D*1000));document.getElementById("rb").style.width=p*100+"%";cd.textContent=Math.ceil(D*(1-p))||"✓";
+    if(p<1)return;clearInterval(iv);vibrate(15);
+    rw.n++;S.set("lumen.rw",rw);rewardUntil=Math.max(Date.now(),rewardUntil)+REWARD_MIN*60000;S.set("lumen.rwu",rewardUntil);warned=false;
+    document.getElementById("advBody").innerHTML=`<div class="done"><div class="ok">✓</div><h3>${REWARD_MIN} minutos liberados</h3><p>Todos os álbuns completos, até ${new Date(rewardUntil).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}.</p></div>`;
+    document.getElementById("advFoot").innerHTML=`<button class="primary" id="advGo">Ouvir agora</button>`;
+    document.getElementById("advGo").onclick=()=>{adv.classList.remove("open");
+      if(P.tr&&P.mode==="player")play(P.tr,"player",P.offset);else if(was)resume();
+      if(!playerOpen)openPlayer(P.tr&&P.mode==="player"?P.tr:TR.find(t=>t.al===selAl),!(P.mode==="player"));else renderPlayer();
+      toast(`<em>${REWARD_MIN} min</em> de louvor liberados`)}},100)}
+
+/* ---------- Seja Premium ---------- */
+const premEl=document.getElementById("prem"),prPage=document.getElementById("prPage");
+const PLANS=[{id:"anual",n:"Anual",d:"R$ 7,49 por mês · economize 50%",p:"R$ 89,90",u:"por ano",badge:"Mais escolhido"},
+ {id:"mensal",n:"Mensal",d:"Cancele quando quiser",p:"R$ 14,90",u:"por mês"},{id:"familia",n:"Família",d:"Até 5 pessoas",p:"R$ 129,90",u:"por ano"}];
+const PERKS=[["Louvores completos, sem limite","Todos os álbuns, offline e com a tela desligada"],["Sem anúncios","O feed fica só com a Palavra"],
+ ["Bíblia narrada e modo dormir","Versículos em voz calma com trilha suave"],["Planos de leitura e explicações","Contexto e aplicação de cada versículo"],
+ ["Temas visuais exclusivos","Para o feed e para as imagens que você compartilha"],["Imagens sem marca d’água","E mais modelos para Stories"]];
+let plan="anual";
+function openPremium(){closeSheet();renderPremium();premEl.classList.add("open")}
+function closePremium(){premEl.classList.remove("open")}
+document.getElementById("prClose").onclick=closePremium;
+function renderPremium(){const sel=PLANS.find(p=>p.id===plan);
+  prPage.innerHTML=`<div class="pw"><div class="crown">✦</div>
+   <h3>${premium?"Você é Premium":"Lumen Premium"}</h3><p class="lead">${premium?"Obrigado por apoiar o Lumen. Aproveite tudo sem limites.":"A Palavra continua grátis. O Premium é para quem quer ir mais fundo, com louvor e sem interrupções."}</p>
+   <ul class="perks">${PERKS.map(([a,b])=>`<li><div>${a}<small>${b}</small></div></li>`).join("")}</ul>
+   ${premium?`<button class="sec" id="prOff" style="width:100%">Voltar ao plano grátis (demonstração)</button>`:`
+   <div class="plans">${PLANS.map(p=>`<button class="plan ${p.id===plan?"on":""}" data-p="${p.id}" aria-pressed="${p.id===plan}">${p.badge?`<span class="badge">${p.badge}</span>`:""}<div><b>${p.n}</b><small>${p.d}</small></div><div class="pr">${p.p}<small>${p.u}</small></div></button>`).join("")}</div>
+   <button class="primary" id="prGo">Testar 7 dias grátis</button>
+   <p class="fine">Depois, ${sel.p} ${sel.u}. Cancele quando quiser.<br>Demonstração: nada é cobrado.</p>`}</div>`;
+  prPage.querySelectorAll(".plan").forEach(b=>b.onclick=()=>{plan=b.dataset.p;vibrate(5);renderPremium()});
+  const go=document.getElementById("prGo");if(go)go.onclick=()=>setPremium(true);
+  const off=document.getElementById("prOff");if(off)off.onclick=()=>setPremium(false)}
+function setPremium(on){premium=on;S.set("lumen.prem",on);closePremium();
+  if(on){feed.querySelectorAll(".card.ad").forEach(c=>{if(c!==active){io.unobserve(c);c.remove()}});P.gated=false;toast("✦ Premium ativado <em>(demonstração)</em>")}
+  else toast("Você voltou ao plano grátis");
+  if(playerOpen)renderPlayer();updateMini()}
+
+/* ---------- Card de anúncio no feed ---------- */
+const ADS=[{brand:"Livraria Exemplo",big:"Bíblia de Estudo",head:"Bíblias de estudo com 20% de desconto",body:"Capa dura, letra grande e comentários em cada capítulo.",cta:"Ver ofertas",c:["#E8C9A9","#9C6B4A"]},
+ {brand:"Conferência Exemplo",big:"Conferência 2027",head:"Três dias de louvor e palavra em São Paulo",body:"Ingressos do primeiro lote com preço especial.",cta:"Garantir ingresso",c:["#9FA9D8","#3E3A6E"]},
+ {brand:"Camisetas Exemplo",big:"Coleção Salmos",head:"Camisetas de algodão com versículos",body:"Estampas minimalistas. Frete grátis acima de R$ 150.",cta:"Conhecer coleção",c:["#C8DDA9","#4E6B4A"]}];
+let adI=0;
+function makeAd(){const a=ADS[adI++%ADS.length],c=document.createElement("section");c.className="card ad";c._h=a.c;
+  c.innerHTML=`<div class="inner ad-in"><div class="adtop"><span class="spon">Patrocinado</span><span class="ex">anúncio de exemplo</span></div>
+   <div class="admedia" style="--a:${a.c[0]};--b:${a.c[1]}">${a.big}</div><b class="adbrand">${a.brand}</b><h3>${a.head}</h3><p>${a.body}</p>
+   <button class="primary adcta">${a.cta}</button><button class="link noads">Remover anúncios com o Premium</button></div>`;
+  c.querySelector(".adcta").onclick=()=>toast("Aqui abriria o site do anunciante");c.querySelector(".noads").onclick=openPremium;return c}
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||adv.classList.contains("open"))return;
+  if(premEl.classList.contains("open"))closePremium();else if(!sheet.classList.contains("open"))closePlayer()});
+
 /* ---------- Feed e tempo de leitura ---------- */
 let active=null,since=0;
 const io=new IntersectionObserver(es=>es.forEach(e=>{
   if(!e.isIntersecting||e.intersectionRatio<.6||e.target===active)return;
-  if(active){const dt=Date.now()-since;if(dt>5000)bump(active._v,1);else if(dt<900)bump(active._v,-1);active.classList.remove("active")}
-  active=e.target;since=Date.now();active.classList.add("active");setLight(active._v);
+  if(active){const dt=Date.now()-since;if(active._v){if(dt>5000)bump(active._v,1);else if(dt<900)bump(active._v,-1)}active.classList.remove("active")}
+  active=e.target;since=Date.now();active.classList.add("active");setLight(active._v||{h:active._h});feedSound(active);
   const idx=[...feed.children].indexOf(active);
   if(idx>0)feed.querySelectorAll(".hint").forEach(h=>{h.style.opacity=0;setTimeout(()=>h.remove(),400)});
   if(idx>=feed.children.length-2)more(4);
 }),{root:feed,threshold:[.6]});
-function more(n){for(let i=0;i<n;i++){const c=makeCard(pick(),!feed.children.length);feed.appendChild(c);io.observe(c)}}
+let made=1,sinceAd=0,adsShown=0;
+function more(n){for(let i=0;i<n;i++){
+  if(!premium&&made>=10&&sinceAd>=8&&adsShown<6){const a=makeAd();feed.appendChild(a);io.observe(a);sinceAd=0;adsShown++;continue}
+  const c=makeCard(pick(),!feed.children.length);feed.appendChild(c);io.observe(c);made++;sinceAd++}}
 {const d=dailyVerse();recent.push(d.r);const c=makeCard(d,true,true);feed.appendChild(c);io.observe(c)}
 more(4);
 requestAnimationFrame(()=>{const f=feed.firstElementChild;f.classList.add("active");active=f;since=Date.now();setLight(f._v)});
 if(!S.get("lumen.onb",0))setTimeout(onboarding,900);
+updateBody();setInterval(tick,500);
 </script>
