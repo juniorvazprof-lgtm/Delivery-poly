@@ -1,5 +1,6 @@
 // @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Versículo do dia */
+import { html } from "../../utils/html";
 import { store } from "../../core/state";
 import { V } from "../../data/verses";
 import { feed } from "../feed/feed";
@@ -17,7 +18,7 @@ export function openRemind(){
    <button class="primary" id="okR">Ativar lembrete</button>${store.remind?'<button class="ghost" id="offR">Desativar</button>':""}`,"Lembrete diário");
   sheet.querySelectorAll(".times .chip").forEach(b=>b.onclick=()=>{pick=b.dataset.t;sheet.querySelectorAll(".times .chip").forEach(x=>x.classList.toggle("on",x===b));vibrate(5)});
   document.getElementById("okR").onclick=async()=>{try{if("Notification"in window)await Notification.requestPermission()}catch{}
-    store.remind=pick;S.set("lumen.remind",store.remind);closeSheet();refreshRemind();toast(`Combinado. Todo dia às <em>${pick}</em>`)};
+    store.remind=pick;S.set("lumen.remind",store.remind);closeSheet();refreshRemind();toast(html`Combinado. Todo dia às <em>${pick}</em>`)};
   const off=document.getElementById("offR");if(off)off.onclick=()=>{store.remind=null;S.set("lumen.remind",null);closeSheet();refreshRemind();toast("Lembrete desativado")};
 }
 export function refreshRemind(){const b=feed.querySelector(".daily .remind:not(.pray-btn)");if(!b)return;b.classList.toggle("on",!!store.remind);

@@ -1,5 +1,6 @@
 // @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Seja Premium */
+import { html } from "../../utils/html";
 import { setTab } from "../../app/navigation";
 import { store } from "../../core/state";
 import { feed, io } from "../feed/feed";
@@ -44,6 +45,6 @@ export function renderPremium(){const sel=PLANS.find(p=>p.id===store.plan);
   const off=document.getElementById("prOff");if(off)off.onclick=()=>setPremium(false)}
 export function setPremium(on){store.premium=on;S.set("lumen.prem",on);renderPremium();if(smEl.classList.contains("open"))renderSerm();
   if(youEl.classList.contains("open"))renderYou();
-  if(on){feed.querySelectorAll(".card.ad").forEach(c=>{if(c!==store.active){io.unobserve(c);c.remove()}});P.gated=false;toast("Premium ativado <em>(demonstração)</em>")}
+  if(on){feed.querySelectorAll(".card.ad").forEach(c=>{if(c!==store.active){io.unobserve(c);c.remove()}});P.gated=false;toast(html`Premium ativado <em>(demonstração)</em>`)}
   else toast("Você voltou ao plano grátis");
   if(store.playerOpen)renderPlayer();updateMini()}

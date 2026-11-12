@@ -3,7 +3,7 @@
 import { loadBook, parseRef } from "../../services/bible";
 import { esc } from "../../utils/text";
 
-export const reader=document.getElementById("reader"),rPage=document.getElementById("rPage"),bookCache={};
+export const reader=document.getElementById("reader"),rPage=document.getElementById("rPage");
 export async function openReader(v){
   const p=parseRef(v.r);document.getElementById("rTitle").innerHTML=`${p.book} ${p.ch}`;
   rPage.innerHTML=`<article>${Array.from({length:8},(_,i)=>`<div class="skel" style="width:${70+((i*37)%30)}%"></div>`).join("")}</article>`;

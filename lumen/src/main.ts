@@ -1,5 +1,6 @@
 // @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Ponto de entrada: inicializa as telas e liga os eventos, na mesma ordem do protótipo. */
+import { html } from "./utils/html";
 import "./styles/index.css";
 import { bnav, goTab } from "./app/navigation";
 import { store } from "./core/state";
@@ -34,7 +35,7 @@ bnav.querySelectorAll("button").forEach(b=>b.onclick=()=>{vibrate(4);goTab(b.dat
 {const deepIds=["reader","pray","serm","np"],mo=new MutationObserver(()=>document.body.classList.toggle("deep",deepIds.some(id=>document.getElementById(id).classList.contains("open"))));
   deepIds.forEach(id=>mo.observe(document.getElementById(id),{attributes:true,attributeFilter:["class"]}))}
 snd.onclick=()=>{store.soundOn=!store.soundOn;S.set("lumen.sound",store.soundOn);S.set("lumen.sndUsed",1);
-  if(store.soundOn){if(P.mode==="player"&&P.tr)resume();else feedSound(store.active);toast("Trilha de demonstração · <em>louvores originais em breve</em>")}else pause();updateBody()};
+  if(store.soundOn){if(P.mode==="player"&&P.tr)resume();else feedSound(store.active);toast(html`Trilha de demonstração · <em>louvores originais em breve</em>`)}else pause();updateBody()};
 document.addEventListener("pointerdown",()=>{if(store.soundOn&&!P.playing&&P.mode!=="player")feedSound(store.active)},{once:true});
 document.getElementById("pPrem").onclick=()=>goTab("premium");
 document.getElementById("npClose").onclick=closeNP;

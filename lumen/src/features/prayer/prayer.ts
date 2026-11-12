@@ -1,5 +1,6 @@
 // @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Oração do dia */
+import { html } from "../../utils/html";
 import { store } from "../../core/state";
 import { V } from "../../data/verses";
 import { S } from "../../services/storage";
@@ -43,5 +44,5 @@ export function openPrayTime(){const T=["06:00","07:00","12:00","18:00","21:00",
    <button class="primary" id="okP">Ativar oração diária</button>${store.prayAt?'<button class="ghost" id="offP">Desativar</button>':""}`,"Horário da oração");
   sheet.querySelectorAll(".times .chip").forEach(b=>b.onclick=()=>{pick=b.dataset.t;document.getElementById("nT").textContent=pick;sheet.querySelectorAll(".times .chip").forEach(x=>x.classList.toggle("on",x===b))});
   document.getElementById("okP").onclick=async()=>{try{if("Notification"in window)await Notification.requestPermission()}catch{}
-    store.prayAt=pick;S.set("lumen.prayAt",pick);closeSheet();toast(`Oração diária às <em>${pick}</em>`);if(prayEl.classList.contains("open"))renderPray()};
+    store.prayAt=pick;S.set("lumen.prayAt",pick);closeSheet();toast(html`Oração diária às <em>${pick}</em>`);if(prayEl.classList.contains("open"))renderPray()};
   const off=document.getElementById("offP");if(off)off.onclick=()=>{store.prayAt=null;S.set("lumen.prayAt",null);closeSheet();toast("Oração diária desativada")}}

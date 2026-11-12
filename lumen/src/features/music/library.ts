@@ -1,5 +1,6 @@
 // @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Ouvir: biblioteca, ranking, playlists e fila */
+import { html } from "../../utils/html";
 import { setTab } from "../../app/navigation";
 import { store } from "../../core/state";
 import { NEAR } from "../../data/themes";
@@ -40,7 +41,7 @@ export function playNextId(id){if(!Q.ids.length||P.mode!=="player"){playQueue([i
 export function addQueue(id){if(!Q.ids.length||P.mode!=="player"){playQueue([id],0,"");return}Q.ids.push(id);toast("Adicionada à fila");renderPlayer()}
 export function toggleSongLike(id,btn){const on=!store.songLikes.includes(id);store.songLikes=on?[id,...store.songLikes]:store.songLikes.filter(x=>x!==id);saveMusic();
   if(btn){btn.classList.toggle("on",on);if(on){btn.classList.remove("pop");void btn.offsetWidth;btn.classList.add("pop");vibrate(8)}}
-  toast(on?"Adicionada às <em>Curtidas</em>":"Removida das Curtidas");
+  toast(on?html`Adicionada às <em>Curtidas</em>`:"Removida das Curtidas");
   document.querySelectorAll(`.hb[data-h="${id}"]`).forEach(b=>b.classList.toggle("on",on))}
 export function openPlayer(tr,autoplay){premEl.classList.remove("open");closeYou();store.playerOpen=true;setTab("listen");document.body.classList.remove("focus");
   if(tr&&autoplay&&store.musicPreview){const l=TR.filter(t=>t.al===tr.al);playQueue(l.map(t=>t.id),l.indexOf(tr),albumOf(tr).name);openNP()}
@@ -60,14 +61,14 @@ export function trow(t,k,o={}){const al=albumOf(t),lk=store.songLikes.includes(t
 export function list(ids,key,src,o={}){store.ctx[key]={ids,src};return `<div class="tlist" data-ctx="${key}">${ids.map(T).filter(Boolean).map((t,k)=>trow(t,k,typeof o==="function"?o(t,k):o)).join("")}</div>`}
 export function bindLists(root){
   root.querySelectorAll(".tlist").forEach(L=>{const c=store.ctx[L.dataset.ctx];
-    L.querySelectorAll(".tplay").forEach(b=>b.onclick=()=>{playQueue(c.ids,+b.dataset.k,c.src);if(!canFull())toast("Prévia de 30 s · <em>ouça completo com anúncio ou Premium</em>")});
+    L.querySelectorAll(".tplay").forEach(b=>b.onclick=()=>{playQueue(c.ids,+b.dataset.k,c.src);if(!canFull())toast(html`Prévia de 30 s · <em>ouça completo com anúncio ou Premium</em>`)});
     L.querySelectorAll(".hb").forEach(b=>b.onclick=()=>toggleSongLike(b.dataset.h,b));
     L.querySelectorAll(".mb").forEach(b=>b.onclick=()=>songMenu(b.dataset.m,c))})}
 export function renderLib(){store.ctx={};document.getElementById("pPrem").hidden=true;
   if(!store.musicPreview){pPage.innerHTML=`<div class="sw soonpage"><div class="albums" aria-hidden="true">${ALBUMS.slice(0,3).map(a=>`<span class="cover" style="${coverStyle(a)}">${a.name}</span>`).join("")}</div>
     ${SB}<h3>Louvores originais</h3><p class="lead">${SOONS.Louvores}</p>
     <button class="primary" id="ntfM">${S.get("lumen.notify",[]).includes("Louvores")?"Você será avisado":"Me avise quando chegar"}</button><button class="ghost" id="prevM">Ver prévia do player</button></div>`;
-    document.getElementById("ntfM").onclick=()=>{S.set("lumen.notify",[...new Set([...S.get("lumen.notify",[]),"Louvores"])]);toast("Combinado. <em>Vamos te avisar</em>");renderLib()};
+    document.getElementById("ntfM").onclick=()=>{S.set("lumen.notify",[...new Set([...S.get("lumen.notify",[]),"Louvores"])]);toast(html`Combinado. <em>Vamos te avisar</em>`);renderLib()};
     document.getElementById("prevM").onclick=()=>{store.musicPreview=true;renderLib()};return}
   let h="";const d=store.LV.det;
   if(d){const back=`<button class="backrow" id="libBack">${IC("back")}Voltar</button>`;
@@ -132,7 +133,7 @@ export function pickPlaylist(id){
    ${store.pls.map(p=>`<button class="librow" data-pk="${p.id}">${cov({colors:p.c},"sm")}<span class="tt"><b>${esc(p.name)}</b><small>${p.ids.includes(id)?"Já está aqui":p.ids.length+" músicas"}</small></span></button>`).join("")}`,"Escolher playlist");
   document.getElementById("pkNew").onclick=()=>{closeSheet();setTimeout(()=>newPlaylist(id),280)};
   sheet.querySelectorAll("[data-pk]").forEach(b=>b.onclick=()=>{const p=store.pls.find(x=>x.id===b.dataset.pk);
-    if(!p.ids.includes(id))p.ids.push(id);saveMusic();closeSheet();toast(`Adicionada a <em>${esc(p.name)}</em>`);if(store.playerOpen)renderLib()})}
+    if(!p.ids.includes(id))p.ids.push(id);saveMusic();closeSheet();toast(html`Adicionada a <em>${(p.name)}</em>`);if(store.playerOpen)renderLib()})}
 export function newPlaylist(withId){
   openSheet(`<h2>Nova playlist</h2><p class="sub">Escolha um nome. Você pode mudar depois.</p>
    <input id="plName" class="field" maxlength="40" placeholder="Ex.: Para orar de manhã" autocomplete="off">
@@ -142,7 +143,7 @@ export function newPlaylist(withId){
   inp.oninput=()=>ok.disabled=!inp.value.trim();
   sheet.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{inp.value=b.dataset.n;ok.disabled=false});
   ok.onclick=()=>{const p={id:"pl"+Date.now(),name:inp.value.trim().slice(0,40),c:PLC[store.pls.length%PLC.length],ids:withId?[withId]:[]};store.pls.push(p);saveMusic();closeSheet();
-    toast(`Playlist <em>${esc(p.name)}</em> criada`);if(store.playerOpen){store.LV.det={type:"pl",id:p.id};renderLib()}}}
+    toast(html`Playlist <em>${(p.name)}</em> criada`);if(store.playerOpen){store.LV.det={type:"pl",id:p.id};renderLib()}}}
 export function plMenu(pid){const p=store.pls.find(x=>x.id===pid);
   openSheet(`<h2>${esc(p.name)}</h2><p class="sub">Playlist · ${p.ids.length} músicas</p>
    <input id="plRen" class="field" maxlength="40" value="${esc(p.name)}" aria-label="Nome da playlist"><button class="sec" id="plSave" style="width:100%">Salvar nome</button>

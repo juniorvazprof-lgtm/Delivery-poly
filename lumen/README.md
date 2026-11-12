@@ -10,7 +10,8 @@ Esta pasta é o código de produção, organizado em módulos com Vite + TypeScr
 npm install
 npm run dev            # servidor local com recarregamento automático
 npm run typecheck      # confere os tipos (TypeScript)
-npm run build          # gera dist/index.html (arquivo único) + dist/biblia
+npm run build          # gera dist/index.html (arquivo único, com CSP) + dist/biblia
+npm run test:security  # build + testes de segurança (Playwright)
 npm run build:preview  # build + dist-preview/lumen.html, a página usada na prévia publicada
 ```
 
@@ -37,8 +38,9 @@ src/
 │   ├── storage.ts         armazenamento local seguro (nunca lança erro, valida o tipo salvo)
 │   ├── bible.ts           referências ("1 Pedro 5:7") e carregamento dos livros sob demanda
 │   └── audio-engine.ts    trilhas de demonstração geradas no navegador
+├── security/              validação dos dados salvos e da resposta da IA (ver SECURITY.md)
 ├── ui/                    peças reutilizáveis: ícones, folhas, avisos, arrastar, "Em breve"
-├── utils/                 formatação, texto seguro (esc) e área de transferência
+├── utils/                 html seguro (html``), formatação, texto e área de transferência
 ├── app/navigation.ts      barra de navegação e troca de abas
 ├── features/              uma pasta por função
 │   ├── feed/              feed, cards, recomendação, filtro por tema, menu do versículo
@@ -61,16 +63,16 @@ src/
 - **Estado compartilhado só em `core/state.ts`.** Os módulos leem e alteram `store.<chave>`. O que precisa durar entre sessões é gravado com `S.set` (`services/storage.ts`), sempre com o prefixo `lumen.`.
 - **Funções ainda não prontas** aparecem como "Em breve" e são ligadas em `config/features.ts`.
 - **Textos bíblicos só da Bíblia Livre.** Nada de versículo escrito de memória. Para mudar o feed, edite `data/versiculos-feed.json` com textos tirados de `public/biblia`.
-- **Texto vindo de fora** (IA, nomes digitados pela pessoa) passa por `esc()` (`utils/text.ts`) antes de entrar no HTML.
+- **Segurança:** dados de fora entram no HTML só pelo template `html``` (`utils/html.ts`), e tudo o que é lido do aparelho passa por `security/validate.ts`. Regras completas em [SECURITY.md](SECURITY.md).
 - **IDs únicos.** Cada botão tem um `id` exclusivo no app inteiro. Telas diferentes não reaproveitam o mesmo `id`.
 
 ## Situação da tipagem
 
-Os arquivos centrais (`types.ts`, `services/storage.ts`, `data/verses.ts`, `config/features.ts`) já são TypeScript estrito. Os módulos migrados do protótipo começam com `// @ts-nocheck` e serão tipados aos poucos, um por vez, retirando essa linha e corrigindo o que o `npm run typecheck` apontar.
+Já são TypeScript estrito: `types.ts`, `core/state.ts`, `config/features.ts`, `data/verses.ts`, `services/storage.ts`, `services/bible.ts`, `security/*`, `utils/html.ts`, `utils/text.ts`, `utils/format.ts` e `utils/clipboard.ts`. Os módulos migrados do protótipo começam com `// @ts-nocheck` e serão tipados aos poucos, um por vez, retirando essa linha e corrigindo o que o `npm run typecheck` apontar.
 
 ## Próximas etapas
 
-1. **Segurança:** trocar a montagem de telas por `innerHTML` por funções que escapam texto por padrão, adicionar a política de segurança de conteúdo (CSP) e validar todos os dados salvos.
+1. ~~Segurança~~ (feito: ver SECURITY.md).
 2. **Offline e desempenho:** service worker, carregamento sob demanda de Ouvir e Púlpito, feed com quantidade limitada de cards na memória.
 3. **Testes:** Vitest para referências, recomendação, fila e formatação; Playwright para os fluxos principais; teste que confere os versículos do feed contra a Bíblia.
 4. **Android:** Capacitor, ajustes de segurança do Android e geração do pacote para a Play Store.

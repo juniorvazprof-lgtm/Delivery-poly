@@ -1,5 +1,6 @@
 // @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Personalização */
+import { html } from "../../utils/html";
 import { persist } from "../../core/persist";
 import { store } from "../../core/state";
 import { NEAR } from "../../data/themes";
@@ -8,7 +9,7 @@ import { recent } from "./feed";
 import { toast } from "../../ui/effects";
 
 export function bump(v,w){v.t.forEach((t,i)=>{store.taste[t]=Math.min(40,Math.max(-5,(store.taste[t]||0)+w*(i?.6:1)))});
-  if(w>0){const t=v.t[0];if(store.taste[t]>=6&&!store.announced.has(t)){store.announced.add(t);toast(`Mais versículos sobre <em>${t}</em> para você`)}}persist()}
+  if(w>0){const t=v.t[0];if(store.taste[t]>=6&&!store.announced.has(t)){store.announced.add(t);toast(html`Mais versículos sobre <em>${t}</em> para você`)}}persist()}
 export const score=v=>v.t.reduce((s,t,i)=>s+Math.max(0,store.taste[t]||0)*(i?.6:1),0);
 export function pick(){
   let base=store.filterTag?V.filter(v=>v.t.includes(store.filterTag)):V;

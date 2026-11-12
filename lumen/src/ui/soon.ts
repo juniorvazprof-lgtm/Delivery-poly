@@ -1,5 +1,6 @@
 // @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Aba Você */
+import { html } from "../utils/html";
 import { store } from "../core/state";
 import { renderLib } from "../features/music/library";
 import { S } from "../services/storage";
@@ -17,5 +18,5 @@ export function soon(name){const w=S.get("lumen.notify",[]),on=w.includes(name);
   openSheet(`<div style="margin:2px 0 10px"><span class="soonb big">Em breve</span></div><h2>${name}</h2><p class="sub">${SOONS[name]||""}</p>
    <button class="primary" id="ntf" ${on?"disabled":""}>${on?"Você será avisado":"Me avise quando chegar"}</button>
    ${name==="Louvores"?'<button class="ghost" id="prev">Ver prévia do player</button>':""}`,"Em breve");
-  document.getElementById("ntf").onclick=()=>{S.set("lumen.notify",[...new Set([...w,name])]);closeSheet();toast("Combinado. <em>Vamos te avisar</em>")};
+  document.getElementById("ntf").onclick=()=>{S.set("lumen.notify",[...new Set([...w,name])]);closeSheet();toast(html`Combinado. <em>Vamos te avisar</em>`)};
   const pv=document.getElementById("prev");if(pv)pv.onclick=()=>{closeSheet();store.musicPreview=true;renderLib()}}

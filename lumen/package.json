@@ -6,10 +6,11 @@
   "description": "Lumen: versículos da Bíblia em um feed para deslizar.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/add-csp.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "build:preview": "vite build && node scripts/preview-page.mjs"
+    "build:preview": "npm run build && node scripts/preview-page.mjs",
+    "test:security": "npm run build && node tests/security.e2e.cjs"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

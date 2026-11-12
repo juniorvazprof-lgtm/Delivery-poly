@@ -1,5 +1,6 @@
 // @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Folhas */
+import { html } from "../../utils/html";
 import { persist } from "../../core/persist";
 import { store } from "../../core/state";
 import { openReader } from "../bible/reader";
@@ -20,7 +21,7 @@ export function openMenu(v){
   sheet.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const a=b.dataset.a;closeSheet();
     if(a==="copiar")copy(v);else if(a==="tema")setFilter(v.t[0]);
     else if(a==="foco"){setTimeout(()=>document.body.classList.add("focus"),300)}
-    else if(a==="menos"){v.t.forEach(t=>store.taste[t]=Math.min(store.taste[t]||0,0)-3);persist();toast(`Vamos mostrar menos sobre <em>${v.t[0]}</em>`)}
+    else if(a==="menos"){v.t.forEach(t=>store.taste[t]=Math.min(store.taste[t]||0,0)-3);persist();toast(html`Vamos mostrar menos sobre <em>${v.t[0]}</em>`)}
     else if(a==="ler")setTimeout(()=>openReader(v),250);
     else setTimeout(()=>soon("Ouvir em voz alta"),280)});
 }

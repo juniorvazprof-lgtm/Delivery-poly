@@ -1,5 +1,6 @@
 // @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Anúncio com recompensa (simulado) */
+import { html } from "../../utils/html";
 import { store } from "../../core/state";
 import { TR } from "../music/catalog";
 import { openNP, playQueue } from "../music/library";
@@ -25,4 +26,4 @@ export function watchAd(){if(rewardsLeft()<=0)return;closeSheet();const was=P.pl
     document.getElementById("advGo").onclick=()=>{adv.classList.remove("open");
       if(P.tr&&P.mode==="player")play(P.tr,"player",P.offset);else if(was)resume();
       if(!(P.mode==="player"&&P.tr))playQueue(TR.filter(t=>t.al==="quietude").map(t=>t.id),0,"Quietude");else renderPlayer();openNP();
-      toast("Louvor liberado <em>sem interrupções</em>")}},100)}
+      toast(html`Louvor liberado <em>sem interrupções</em>`)}},100)}

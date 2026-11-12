@@ -1,37 +1,45 @@
 /* Estado global */
 import { S } from "../services/storage";
+import { V } from "../data/verses";
+import { TR } from "../features/music/catalog";
+import * as valid from "../security/validate";
+
+/** Conjuntos conhecidos, usados para descartar ids inválidos lidos do aparelho. */
+const REFS = new Set(V.map(v => v.r));
+const TRACKS = new Set<string>(TR.map((t: { id: string }) => t.id));
+const THEMES = new Set(V.flatMap(v => v.t));
 
 /** Estado mutável compartilhado do app. Cada chave é lida e alterada pelos módulos como store.<chave>. */
 export const store: any = {
-  taste: S.get("lumen.taste",{}),
-  liked: new Set(S.get("lumen.liked",[])),
-  saved: S.get("lumen.saved2",[]),
-  announced: new Set(S.get("lumen.ann",[])),
+  taste: valid.numberMap(S.get("lumen.taste", {}), THEMES, -5, 40),
+  liked: new Set(valid.idList(S.get("lumen.liked", []), REFS, valid.LIMITS.saved)),
+  saved: valid.idList(S.get("lumen.saved2", []), REFS, valid.LIMITS.saved),
+  announced: new Set(valid.idList(S.get("lumen.ann", []), THEMES, 20)),
   filterTag: null,
   tt: null,
   onClose: null,
-  streak: S.get("lumen.streak",{n:0,last:null}),
-  remind: S.get("lumen.remind",null),
+  streak: valid.streak(S.get("lumen.streak", {})),
+  remind: valid.time(S.get("lumen.remind", null)),
   AC: null,
   master: null,
   dly: null,
   premium: false,
   musicPreview: false,
-  soundOn: S.get("lumen.sound",false),
-  rewardUntil: S.get("lumen.rwu",0),
-  rw: S.get("lumen.rw",{day:null,n:0}),
+  soundOn: S.get<boolean>("lumen.sound", false) === true,
+  rewardUntil: valid.timestamp(S.get("lumen.rwu", 0)),
+  rw: valid.rewards(S.get("lumen.rw", {})),
   warned: false,
-  songLikes: S.get("lumen.songLikes",[]),
-  pls: S.get("lumen.pls",[]),
-  plays: S.get("lumen.plays",{}),
-  recentS: S.get("lumen.recentS",[]),
+  songLikes: valid.idList(S.get("lumen.songLikes", []), TRACKS, 500),
+  pls: valid.playlists(S.get("lumen.pls", []), TRACKS),
+  plays: valid.numberMap(S.get("lumen.plays", {}), TRACKS, 0, 1e6),
+  recentS: valid.idList(S.get("lumen.recentS", []), TRACKS, valid.LIMITS.recent),
   playerOpen: false,
   LV: {tab:"home",det:null,range:"week"},
   npOpen: false,
   ctx: {},
   plan: "anual",
   adI: 0,
-  prayAt: S.get("lumen.prayAt",null),
+  prayAt: valid.time(S.get("lumen.prayAt", null)),
   pStep: 0,
   pSteps: [],
   SAMPLE: null,
