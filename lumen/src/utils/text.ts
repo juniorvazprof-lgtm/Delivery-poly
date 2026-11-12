@@ -13,3 +13,12 @@ export function cleanText(value: unknown, max: number): string {
     .trim()
     .slice(0, max);
 }
+
+/**
+ * Texto para os cards do feed: palavras em CAIXA ALTA (ex.: SENHOR) viram "Senhor",
+ * e a frase começa com maiúscula, assim como o início após ponto final, ! ou ?.
+ */
+export function softCase(t: string): string {
+  const s = t.replace(/\p{Lu}{2,}/gu, w => w[0] + w.slice(1).toLocaleLowerCase("pt-BR"));
+  return s.replace(/(^|[.!?]\s+)([«“"'(]?)(\p{Ll})/gu, (_m, a: string, b: string, c: string) => a + b + c.toLocaleUpperCase("pt-BR"));
+}

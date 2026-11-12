@@ -36,3 +36,5 @@ cite .read{border:0;background:none;color:var(--gold);font:700 .8rem var(--sans)
 @keyframes rise{from{transform:translateY(20px) scale(.96);opacity:0}}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sec{border:1px solid var(--line);background:var(--glass);color:var(--ink);font:700 .9rem var(--sans);padding:15px;border-radius:99px;cursor:pointer}
+
+.page .vv{display:block;margin:0 0 .85em;padding:2px 4px}

@@ -1,4 +1,5 @@
 /* Card */
+import { softCase } from "../../utils/text";
 import type { FeedCard, Verse } from "../../types";
 import { closestFrom } from "../../utils/dom";
 import { html, raw, setHTML } from "../../utils/html";
@@ -21,7 +22,7 @@ import { IC, ICON } from "../../ui/icons";
 /** Cria o card de um versículo, com as ações e os gestos (toque duplo, segurar). */
 export function makeCard(v:Verse,first:boolean,daily?:boolean):FeedCard{
   const c:FeedCard=document.createElement("section");c.className="card"+(daily?" daily":"");c._v=v;
-  const words=v.x.split(" "),len=v.x.length;
+  const words=softCase(v.x).split(" "),len=v.x.length;
   const size=len<60?"clamp(2rem,8.4vw,3.2rem)":len<110?"clamp(1.6rem,6.6vw,2.6rem)":"clamp(1.35rem,5.4vw,2.1rem)";
   const tr=trackFor(v);const isL=store.liked.has(v.r),isS=store.saved.includes(v.r);
   setHTML(c, html`<div class="inner" data-style="--n:${words.length}">

@@ -174,3 +174,11 @@ body.navtop #player,body.navtop #prem,body.navtop #you{top:calc(env(safe-area-in
 body.navtop .page{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 48px)}
 /* Barra sempre visível acima de tudo que não é tela interna */
 #bnav{min-height:64px}
+
+.stats button{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:14px 10px;text-align:center;color:inherit;font:inherit}
+.stats button:active{transform:scale(.97)}
+.mine{display:flex;gap:6px;margin:0 0 6px}
+.mine button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:99px;border:1px solid var(--line);color:var(--muted);font:600 .86rem var(--sans);background:none}
+.mine button svg{width:16px;height:16px}
+.mine button.on{background:var(--glass);color:var(--ink);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}
+.more-mine{display:block;margin:12px auto 0}

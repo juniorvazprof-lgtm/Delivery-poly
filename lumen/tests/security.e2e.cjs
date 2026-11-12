@@ -127,6 +127,7 @@ async function main() {
       ok(!!rows[0] && !/red|url|onmouseover/.test(rows[0].style), "cores adulteradas trocadas por cores padrão");
       await page.tap("#bnav [data-tab=you]");
       await page.waitForTimeout(600);
+      await page.tap("#yPage .stats [data-mt=saved]"); await page.waitForTimeout(300);
       ok((await page.$$eval("#yPage .saved-item", n => n.length)) === 1, "salvos: só referências que existem na Bíblia do app");
       ok(!(await page.evaluate(() => window.__pwned || ({}).polluted)), "nenhum código executado e nenhum protótipo poluído");
       ok(errors.length === 0, "app abre normalmente com dados corrompidos" + (errors.length ? `: ${errors.join(" | ")}` : ""));
