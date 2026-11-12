@@ -16,6 +16,7 @@ import { albumOf, trackFor } from "../music/catalog";
 import { openPlayer } from "../music/library";
 import { openPray } from "../prayer/prayer";
 import { loadShare } from "../../app/lazy";
+import { useShare } from "../share/limit";
 import { heartAt, toast, vibrate } from "../../ui/effects";
 import { IC, ICON } from "../../ui/icons";
 
@@ -41,7 +42,7 @@ export function makeCard(v:Verse,first:boolean,daily?:boolean):FeedCard{
    </div><div class="music"><span class="eq"><i></i><i></i><i></i></span><b>${tr.t} · ${albumOf(tr).name}</b></div>${first?raw('<div class="hint">deslize ↑<small>toque duas vezes para curtir</small></div>'):""}`);
   q(c, ".heart").onclick=()=>toggleLike(c);
   q(c, ".save").onclick=()=>toggleSave(c);
-  q(c, ".send").onclick=()=>{loadShare().then(m=>m.openShare(v));bump(v,5)};
+  q(c, ".send").onclick=()=>{if(!useShare())return;loadShare().then(m=>m.openShare(v));bump(v,5)};
   q(c, ".read").onclick=()=>openReader(v);
   q(c, ".disc").onclick=()=>openPlayer(tr,true);
   if(daily)q(c, ".pray-btn").onclick=()=>openPray(v);

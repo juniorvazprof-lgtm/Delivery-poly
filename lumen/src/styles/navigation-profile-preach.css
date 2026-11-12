@@ -182,3 +182,16 @@ body.navtop .page{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 48px)}
 .mine button svg{width:16px;height:16px}
 .mine button.on{background:var(--glass);color:var(--ink);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}
 .more-mine{display:block;margin:12px auto 0}
+
+/* Barra flutuante em pílula */
+#bnav{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 10px);
+  padding:6px;gap:4px;min-height:0;border:1px solid var(--line);border-radius:999px;
+  background:color-mix(in srgb,var(--bg) 70%,#2A2833 30%);box-shadow:0 10px 30px rgba(0,0,0,.28)}
+#bnav button{max-width:none;min-height:56px;border-radius:999px;gap:2px;font-size:.7rem;transition:background .3s var(--ease),color .3s}
+#bnav button.on{background:color-mix(in srgb,var(--ink) 12%,transparent)}
+#bnav button:active{transform:scale(.96)}
+body.navtop #bnav{top:calc(env(safe-area-inset-top,0px) + 8px);bottom:auto;padding:6px;border:1px solid var(--line)}
+.music,.hint{bottom:calc(env(safe-area-inset-bottom,0px) + 100px)}
+#mini{bottom:calc(env(safe-area-inset-bottom,0px) + 92px)}
+body.navtop #mini{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+body.navtop .music,body.navtop .hint{bottom:calc(env(safe-area-inset-bottom,0px) + 24px)}
