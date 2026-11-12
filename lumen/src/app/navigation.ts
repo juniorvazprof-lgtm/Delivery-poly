@@ -7,7 +7,6 @@ import { updateMini } from "../features/music/mini-player";
 import { closePray } from "../features/prayer/prayer";
 import { openPremium, premEl } from "../features/premium/premium";
 import { closeYou, openYou } from "../features/profile/profile";
-import { smEl } from "../features/pulpit/pulpit";
 import { closeSheet } from "../ui/sheet";
 
 export const bnav=byId("bnav");
@@ -18,5 +17,5 @@ export function goTab(n:Tab|string){closeSheet();
   if(n!=="premium")premEl.classList.remove("open");
   if(n!=="you")closeYou();
   if(n==="listen"&&!store.playerOpen)openPlayer();if(n==="premium")openPremium();if(n==="you")openYou();
-  if(n==="feed"){closeReader();closePray();smEl.classList.remove("open")}
+  if(n==="feed"){closeReader();closePray();byId("serm").classList.remove("open")}
   setTab(n)}

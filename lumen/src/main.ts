@@ -1,4 +1,5 @@
 /* Ponto de entrada: inicializa as telas e liga os eventos, na mesma ordem do protótipo. */
+import { startOffline } from "./services/offline";
 import type { FeedCard, SampleFn } from "./types";
 import { raw, setHTML } from "./utils/html";
 import { byId, qa } from "./utils/dom";
@@ -18,8 +19,6 @@ import { updateMini } from "./features/music/mini-player";
 import { P, feedSound, pause, resume, snd, updateBody } from "./features/music/playback";
 import { onboarding } from "./features/onboarding/onboarding";
 import { closePray } from "./features/prayer/prayer";
-import { closePreach, goPart } from "./features/pulpit/preach";
-import { smEl } from "./features/pulpit/pulpit";
 import { S } from "./services/storage";
 import { setLight, toast, vibrate } from "./ui/effects";
 import { IC, IP } from "./ui/icons";
@@ -50,14 +49,14 @@ byId("pyClose").onclick=closePray;
 byId("pyBell").onclick=()=>soon("Lembretes");
 // Na prévia publicada no Claude, a página pode pedir ao Claude (Púlpito com IA). No app instalado isso não existe.
 (window as Window & {claude?:{use?:(n:string)=>Promise<SampleFn|null>}}).claude?.use?.("sample").then(s=>{store.SAMPLE=s}).catch(()=>{});
-byId("smClose").onclick=()=>{store.smCtl?.abort();smEl.classList.remove("open")};
-document.addEventListener("keydown",e=>{if(!store.PR)return;if(e.key==="ArrowRight")goPart(1);else if(e.key==="ArrowLeft")goPart(-1);else if(e.key==="Escape")closePreach()});
-document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;closePray();smEl.classList.remove("open")});
+byId("smClose").onclick=()=>{store.smCtl?.abort();byId("serm").classList.remove("open")};
+document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;closePray();byId("serm").classList.remove("open")});
 {const d=dailyVerse();recent.push(d.r);const c=makeCard(d,true,true);feed.appendChild(c);io.observe(c)}
 more(4);
 requestAnimationFrame(()=>{const f=feed.firstElementChild as FeedCard|null;if(!f||!f._v)return;f.classList.add("active");store.active=f;store.since=Date.now();setLight(f._v)});
 if(!S.get<number>("lumen.onb",0))setTimeout(onboarding,900);
 updateBody();
+startOffline();
 setInterval(tick,500);
 (function(){const pref=S.get("lumen.navpos",null);if(pref==="top")document.body.classList.add("navtop");
   const check=()=>{if(S.get("lumen.navpos",null))return;const r=bnav.getBoundingClientRect(),vh=window.visualViewport?.height||innerHeight;

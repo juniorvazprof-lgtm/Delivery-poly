@@ -10,7 +10,7 @@ import { updateMini } from "../music/mini-player";
 import { renderPlayer } from "../music/now-playing";
 import { P } from "../music/playback";
 import { closeYou, renderYou, youEl } from "../profile/profile";
-import { openSerm, renderSerm, smEl } from "../pulpit/pulpit";
+import { loadPulpit } from "../../app/lazy";
 import { S } from "../../services/storage";
 import { toast, vibrate } from "../../ui/effects";
 import { IC } from "../../ui/icons";
@@ -25,7 +25,7 @@ export const PERKS=[["Louvores completos, sem limite","Todos os álbuns, offline
  ["Temas visuais exclusivos","Para o feed e para as imagens que você compartilha"],["Imagens sem marca d’água","E mais modelos para Stories"],["Púlpito com IA","Pregações com passagens, contexto e roteiro"]];
 export function openPremium(){closeSheet();closeYou();if(store.playerOpen){store.playerOpen=false;playerEl.classList.remove("open");updateMini()}renderPremium();premEl.classList.add("open");setTab("premium")}
 export function closePremium(){if(!premEl.classList.contains("open"))return;premEl.classList.remove("open");setTab(store.playerOpen?"listen":"feed")}
-export const TOOLS=[{id:"pulpito",ic:"pulpit",n:"Púlpito",d:"Exemplo pronto e modo Pregar já disponíveis. Pregação com IA em breve.",go:()=>openSerm()},
+export const TOOLS=[{id:"pulpito",ic:"pulpit",n:"Púlpito",d:"Exemplo pronto e modo Pregar já disponíveis. Pregação com IA em breve.",go:()=>{loadPulpit().then(m=>m.openSerm())}},
  {id:"louvor",ic:"note",n:"Louvores sem limite",d:"Todos os álbuns completos, sem anúncio.",soon:"Louvores"},
  {id:"semads",ic:"noads",n:"Sem anúncios",d:"O feed fica só com a Palavra.",soon:"Lumen Premium"}];
 export const SOON="Em breve: Bíblia narrada, planos de leitura e novos temas visuais.";
@@ -44,7 +44,7 @@ export function renderPremium(){const sel=PLANS.find(p=>p.id===store.plan);
   qa(prPage, ".seg button").forEach(b=>b.onclick=()=>{store.plan=b.dataset.p||store.plan;vibrate(5);renderPremium()});
   const go=byIdMaybe("prGo");if(go)go.onclick=()=>soon("Lumen Premium");
   const off=byIdMaybe("prOff");if(off)off.onclick=()=>setPremium(false)}
-export function setPremium(on:boolean){store.premium=on;S.set("lumen.prem",on);renderPremium();if(smEl.classList.contains("open"))renderSerm();
+export function setPremium(on:boolean){store.premium=on;S.set("lumen.prem",on);renderPremium();if(byId("serm").classList.contains("open"))loadPulpit().then(m=>m.renderSerm());
   if(youEl.classList.contains("open"))renderYou();
   if(on){qa(feed, ".card.ad").forEach(c=>{if(c!==store.active){io.unobserve(c);c.remove()}});P.gated=false;toast(html`Premium ativado <em>(demonstração)</em>`)}
   else toast("Você voltou ao plano grátis");

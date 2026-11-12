@@ -25,4 +25,21 @@ export const io=new IntersectionObserver(es=>es.forEach(e=>{
 /** Acrescenta n cards ao fim do feed. */
 export function more(n:number){for(let i=0;i<n;i++){
   if(ADS_ON&&!store.premium&&store.made>=10&&store.sinceAd>=8&&store.adsShown<6){const a=makeAd();feed.appendChild(a);io.observe(a);store.sinceAd=0;store.adsShown++;continue}
-  const c=makeCard(pick(),!feed.children.length);feed.appendChild(c);io.observe(c);store.made++;store.sinceAd++}}
+  const c=makeCard(pick(),!feed.children.length);feed.appendChild(c);io.observe(c);store.made++;store.sinceAd++}
+  trimFeed()}
+
+/** Quantos cards ficam na memória, no máximo. Os que ficaram bem para trás são removidos. */
+export const MAX_CARDS=24, KEEP_BEHIND=6;
+/**
+ * Remove os cards antigos acima da tela, para o feed não crescer sem limite na memória.
+ * Como cada card ocupa a altura inteira da tela, a rolagem é ajustada na mesma medida
+ * e a pessoa não percebe nenhum salto.
+ */
+export function trimFeed(){
+  if(feed.children.length<=MAX_CARDS||!store.active)return;
+  const idx=[...feed.children].indexOf(store.active);
+  const remove=Math.min(idx-KEEP_BEHIND,feed.children.length-MAX_CARDS);
+  if(remove<=0)return;
+  const h=feed.clientHeight;
+  for(let i=0;i<remove;i++){const c=feed.firstElementChild;if(!c)break;io.unobserve(c);c.remove()}
+  feed.scrollTop-=remove*h}

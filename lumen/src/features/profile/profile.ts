@@ -1,7 +1,8 @@
 /* Aba Você */
+import { bibleCachedCount, canWorkOffline, downloadBible } from "../../services/offline";
 import type { Verse } from "../../types";
 import { html, raw, setHTML } from "../../utils/html";
-import { byId, qa } from "../../utils/dom";
+import { byId, byIdMaybe, qa } from "../../utils/dom";
 import { goTab } from "../../app/navigation";
 import { persist } from "../../core/persist";
 import { store } from "../../core/state";
@@ -28,6 +29,7 @@ export function renderYou(){
     <button class="ri" data-a="prayAt">${IC("bell")}Horário da oração<span class="v">${SB}</span></button>
     <button class="ri" data-a="remind">${IC("book")}Lembrete do versículo do dia<span class="v">${SB}</span></button>
     <button class="ri" data-a="nav">${IC("home")}Barra de navegação<span class="v">${document.body.classList.contains("navtop")?"Em cima":"Embaixo"}${IC("chev")}</span></button>
+    ${canWorkOffline()?html`<button class="ri" data-a="offline" id="offRow">${IC("book")}Bíblia sem internet<span class="v" id="offVal">…</span></button>`:""}
     <button class="ri" data-a="mood">${IC("mood")}Como estou me sentindo<span class="v">${IC("chev")}</span></button></div>
    ${top.length?html`<div class="group"><div class="label">O que tem tocado você</div><div class="taste">${top.map(([t,s])=>html`<div>${t}<span><i data-style="width:${Math.max(8,s/max*100)}%"></i></span></div>`)}</div></div>`:""}
    <div class="group"><div class="label">Salvos</div>
@@ -37,8 +39,28 @@ export function renderYou(){
     <button class="ri" data-a="prem">${IC("star")}Lumen Premium<span class="v">${store.premium?"Ativo":"Grátis"}${IC("chev")}</span></button></div>
    <button class="link about" id="aboutBible">${IC("book")}Sobre a Bíblia e as fontes</button></div>`);
   byId("aboutBible").onclick=openAboutBible;
+  if(canWorkOffline())refreshOfflineRow();
   qa(yPage, ".ri").forEach(b=>b.onclick=()=>{const a=b.dataset.a;
+    if(a==="offline"){startBibleDownload();return}
     if(a==="nav"){const top=!document.body.classList.contains("navtop");document.body.classList.toggle("navtop",top);S.set("lumen.navpos",top?"top":"bottom");renderYou();toast(top?"Barra em cima":"Barra embaixo")}else if(a==="pray")openPray();else if(a==="prayAt"||a==="remind")soon("Lembretes");else if(a==="mood")onboarding();else goTab("premium")});
   qa(yPage, ".rm").forEach(b=>b.onclick=()=>{store.saved=store.saved.filter(r=>r!==b.dataset.r);persist();syncCards();
     const it=b.closest<HTMLElement>(".saved-item");if(!it)return;it.style.transition=".35s";it.style.opacity="0";it.style.transform="translateX(30px)";setTimeout(renderYou,300)});
+}
+
+/* ---------- Bíblia sem internet ---------- */
+let downloading=false;
+async function refreshOfflineRow(){
+  const v=byIdMaybe("offVal");if(!v||downloading)return;
+  const n=await bibleCachedCount();
+  v.textContent=n>=66?"Guardada ✓":n>0?`${n} de 66 livros`:"Baixar (4 MB)";
+}
+async function startBibleDownload(){
+  const v=byIdMaybe("offVal");if(!v||downloading)return;
+  if(!navigator.onLine){toast("Conecte-se à internet para baixar a Bíblia");return}
+  downloading=true;
+  try{
+    const n=await downloadBible((done,total)=>{const el=byIdMaybe("offVal");if(el)el.textContent=`Baixando… ${Math.round(done/total*100)}%`});
+    toast(n>=66?"Bíblia guardada. Agora você lê qualquer capítulo sem internet.":"Parte da Bíblia foi guardada. Tente de novo para completar.");
+  }catch{toast("O download parou. Tente de novo com uma conexão melhor.")}
+  finally{downloading=false;refreshOfflineRow()}
 }

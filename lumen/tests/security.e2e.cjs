@@ -17,7 +17,7 @@ let failures = 0;
 const ok = (cond, msg) => { console.log(`${cond ? "✓" : "✗"} ${msg}`); if (!cond) failures++; };
 
 function serveDist(port) {
-  const types = { ".html": "text/html; charset=utf-8", ".json": "application/json", ".js": "text/javascript" };
+  const types = { ".html": "text/html; charset=utf-8", ".json": "application/json", ".js": "text/javascript", ".css": "text/css", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml" };
   const server = http.createServer((req, res) => {
     let rel = decodeURIComponent(req.url.split("?")[0]);
     if (rel.endsWith("/")) rel += "index.html";

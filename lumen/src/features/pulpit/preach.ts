@@ -51,5 +51,7 @@ export function renderPreach(){const PR=store.PR;if(!PR)return;const s=PR.s,n=s.
     const body=byId("pBody");let x0:number|null=null,y0=0;
     body.onpointerdown=e=>{x0=e.clientX;y0=e.clientY};
     body.onpointerup=e=>{if(x0===null)return;const dx=e.clientX-x0,dy=e.clientY-y0;x0=null;if(Math.abs(dx)>70&&Math.abs(dy)<50)goPart(dx<0?1:-1)}}}
+/* Teclado no modo Pregar (registrado quando o módulo carrega) */
+document.addEventListener("keydown",e=>{if(!store.PR)return;if(e.key==="ArrowRight")goPart(1);else if(e.key==="ArrowLeft")goPart(-1);else if(e.key==="Escape")closePreach()});
 export function goPart(d:number){if(!store.PR)return;const n=store.PR.s.partes.length,j=store.PR.i+d;if(j<0||j>n)return;store.PR.i=j;store.PR.last=Date.now();vibrate(6);renderPreach()}
 export function setFs(d:number){const PR=store.PR;if(!PR)return;PR.fs=Math.max(1,Math.min(2.2,+(PR.fs+d).toFixed(2)));S.set("lumen.fs",PR.fs);prEl.style.setProperty("--fs",PR.fs+"rem")}

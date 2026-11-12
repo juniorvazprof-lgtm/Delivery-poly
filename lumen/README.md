@@ -78,3 +78,9 @@ Todo o código é TypeScript estrito (`strict: true`), sem `@ts-nocheck`. `npm r
 2. **Offline e desempenho:** service worker, carregamento sob demanda de Ouvir e Púlpito, feed com quantidade limitada de cards na memória.
 3. **Testes:** já existem o roteiro de telas e os testes de segurança (Playwright). Faltam testes unitários (Vitest) para referências, recomendação, fila e formatação, e um teste que confere os versículos do feed contra a Bíblia.
 4. **Android:** Capacitor, ajustes de segurança do Android e geração do pacote para a Play Store.
+
+## Offline e desempenho
+- **Sem internet:** o service worker (`sw/sw.js`, gerado em `dist/sw.js` por `scripts/build-sw.mjs`) guarda o app na instalação. Cada livro da Bíblia lido fica guardado; na aba Você, "Bíblia sem internet" baixa os 66 livros (~4 MB).
+- **Carregamento sob demanda:** o Púlpito e o compartilhar só são baixados quando abertos (`src/app/lazy.ts`).
+- **Memória do feed:** no máximo 24 cards no DOM; os antigos são removidos sem mover a tela (`trimFeed` em `features/feed/feed.ts`).
+- Teste: `npm run test:offline`.
