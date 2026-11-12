@@ -15,5 +15,4 @@ cd versiculo-scroll && python3 -m http.server 8000
 Abra http://localhost:8000 no celular ou navegador.
 
 ## Adicionar versículos
-Edite `versiculos.js` (`t` tema, `x` texto, `r` referência).
-Texto baseado na tradução de Almeida em domínio público. Versões como NVI/ARA são protegidas por direitos autorais — use-as só com licença.
+Os versículos vêm da Bíblia Livre (BLIVRE), © Diego Santos, Mario Sérgio e Marco Teles, 2018, licença CC BY 4.0 Brasil. Veja `dados/CATALOGO.md` para a fonte, a licença e as correções feitas. Versões como NVI e ARA têm direitos autorais e só podem ser usadas com licença.

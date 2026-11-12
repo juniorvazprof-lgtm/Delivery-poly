@@ -474,6 +474,11 @@ body.deep .page{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 48px)}
 .seg small{display:block;font-size:.66rem;color:var(--muted)}
 .seg em{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font:800 .58rem var(--sans);font-style:normal;background:var(--gold);color:#1D1B22;padding:3px 7px;border-radius:99px;white-space:nowrap}
 
+.link.about{display:flex;align-items:center;gap:8px;margin:4px auto 0;color:var(--muted);font-weight:600;font-size:.8rem}
+.link.about svg{width:16px;height:16px}
+.about-b p,.about-b li{font-size:.9rem;line-height:1.6;margin:0 0 10px}
+.about-b ul{padding-left:18px;margin:0 0 12px}
+.about-b .label{margin-top:16px}
 /* Púlpito: preparar */
 .newsm{margin-top:26px;border-top:1px solid var(--line);padding-top:6px}
 .newsm summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:14px 2px;font:700 .95rem var(--sans)}
@@ -827,7 +832,7 @@ function makeCard(v,first,daily){
     ${daily?`<div class="daily-badge"><i></i>Versículo do dia</div><p class="daily-meta">${todayLabel()}${streak.n>1?` · <span class="streak">${streak.n} dias seguidos</span>`:""}</p>`:""}
     <button class="theme" aria-label="Ver só versículos sobre ${v.t[0]}">${v.t[0]}</button>
     <blockquote style="font-size:${size}">${words.map((w,i)=>`<span class="w" style="--i:${i}">${w}</span>`).join(" ")}</blockquote>
-    <cite><b>${v.r}</b> · BLIVRE · <button class="read">Ler capítulo ›</button></cite>
+    <cite><b>${v.r}</b> · <button class="read">Ler capítulo ›</button></cite>
     ${daily?`<button class="remind pray-btn">${IC("candle")}Orar com este versículo</button>`:""}</div>
    <div class="rail">
     <button class="act heart ${isL?"on":""}" aria-pressed="${isL}" aria-label="Curtir">${ICON.heart}<span>Amém</span></button>
@@ -947,11 +952,11 @@ function parseRef(r){const m=String(r).trim().match(/^(.+?)\s(\d+):(\d+)(?:\s?[-
 async function loadBook(ab){if(!bookCache[ab]){const res=await fetch(`biblia/blivre/${({"Jó":"Job","Êx":"Ex"})[ab]||ab}.json`);if(!res.ok)throw 0;bookCache[ab]=await res.json()}return bookCache[ab]}
 async function lookupRef(ref){const p=parseRef(ref);if(!p||!p.ab)return null;try{const b=await loadBook(p.ab),c=b.capitulos[p.ch-1];if(!c)return null;const vs=c.slice(p.a-1,p.b);return vs.length?vs.join(" "):null}catch{return null}}
 async function openReader(v){
-  const p=parseRef(v.r);document.getElementById("rTitle").innerHTML=`${p.book} ${p.ch}<small>Bíblia Livre (BLIVRE)</small>`;
+  const p=parseRef(v.r);document.getElementById("rTitle").innerHTML=`${p.book} ${p.ch}`;
   rPage.innerHTML=`<article>${Array.from({length:8},(_,i)=>`<div class="skel" style="width:${70+((i*37)%30)}%"></div>`).join("")}</article>`;
   reader.classList.add("open");document.body.classList.remove("focus");
   try{const b=await loadBook(p.ab),c=b.capitulos[p.ch-1];
-    rPage.innerHTML=`<article>${c.map((t,k)=>`<span class="vv" data-n="${k+1}"><sup>${k+1}</sup>${esc(t)}</span> `).join("")}</article><p class="fine" style="margin-top:28px">${BIBLE_CREDIT}</p>`}
+    rPage.innerHTML=`<article>${c.map((t,k)=>`<span class="vv" data-n="${k+1}"><sup>${k+1}</sup>${esc(t)}</span> `).join("")}</article>`}
   catch{rPage.innerHTML=`<article><span class="vv" data-n="${p.a}"><sup>${p.a}</sup>${esc(v.x)}</span>
       <div class="note">Não foi possível abrir o capítulo agora. No app instalado, a Bíblia inteira fica guardada no celular e funciona sem internet.</div></article>`}
   const hits=[...rPage.querySelectorAll(".vv")].filter(s=>+s.dataset.n>=p.a&&+s.dataset.n<=p.b);
@@ -1014,12 +1019,30 @@ function renderYou(){
       :'<div class="empty">Toque em <b>Salvar</b> num versículo para guardá-lo aqui.</div>'}</div>
    <div class="group"><div class="label">Plano</div>
     <button class="ri" data-a="prem">${IC("star")}Lumen Premium<span class="v">${premium?"Ativo":"Grátis"}${IC("chev")}</span></button></div>
-   <p class="fine">Textos bíblicos: ${BIBLE_CREDIT}</p></div>`;
+   <button class="link about" id="aboutBible">${IC("book")}Sobre a Bíblia e as fontes</button></div>`;
+  document.getElementById("aboutBible").onclick=openAboutBible;
   yPage.querySelectorAll(".ri").forEach(b=>b.onclick=()=>{const a=b.dataset.a;
     if(a==="nav"){const top=!document.body.classList.contains("navtop");document.body.classList.toggle("navtop",top);S.set("lumen.navpos",top?"top":"bottom");renderYou();toast(top?"Barra em cima":"Barra embaixo")}else if(a==="pray")openPray();else if(a==="prayAt")openPrayTime();else if(a==="remind")openRemind();else if(a==="mood")onboarding();else goTab("premium")});
   yPage.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{saved=saved.filter(r=>r!==b.dataset.r);persist();syncCards();
     const it=b.closest(".saved-item");it.style.transition=".35s";it.style.opacity="0";it.style.transform="translateX(30px)";setTimeout(renderYou,300)});
 }
+
+function openAboutBible(){
+  openSheet(`<h2>Sobre a Bíblia</h2><p class="sub">De onde vêm os textos bíblicos do Lumen.</p>
+   <div class="about-b"><div class="label">Bíblia utilizada</div>
+    <p><b>Bíblia Livre (BLIVRE)</b>, edição de 2018. Atualização para o português do Brasil da tradução de João Ferreira de Almeida de 1819, a partir do Textus Receptus.</p>
+    <p>© Diego Santos, Mario Sérgio e Marco Teles. Licença Creative Commons Atribuição 4.0 Brasil, que permite o uso com o devido crédito.</p>
+    <div class="label">Onde o texto aparece</div>
+    <p>Todos os versículos do feed, a leitura dos capítulos, as passagens do Púlpito e as letras das músicas de exemplo vêm desta Bíblia. As explicações, orações, comentários e o restante dos textos do Púlpito foram escritos pela equipe do Lumen.</p>
+    <div class="label">Arquivo de origem</div>
+    <p>Texto obtido do repositório público <b>damarals/biblias</b> no GitHub (arquivo BLIVRE.json).</p>
+    <div class="label">Ajustes feitos</div>
+    <ul><li>Correção de espaços, pontuação e erros de digitação da origem, como no Salmo 34:18 e em Provérbios 3:6.</li>
+     <li>Salmo 46: separação dos versículos 2 e 3, que vieram unidos.</li>
+     <li>Salmo 119: retirada dos nomes das letras hebraicas no início dos versículos.</li>
+     <li>15 versículos ausentes no arquivo de origem, como Mateus 17:21 e Atos 8:37, foram completados com a Almeida de 1911 (domínio público), com ortografia atualizada.</li>
+     <li>No feed, a primeira letra fica maiúscula e a pontuação final é ajustada, porque o versículo aparece sozinho na tela.</li></ul>
+    <p class="fine" style="text-align:left">Encontrou algum erro no texto? Avise pela página do app na loja.</p></div>`,"Sobre a Bíblia")}
 
 /* ---------- Navegação inferior ---------- */
 const bnav=document.getElementById("bnav");
@@ -1062,30 +1085,30 @@ const ALBUMS=[
 const P1=[[0,7,12,16],[-3,4,9,12],[-7,0,5,9],[-5,2,7,11]],P2=[[0,7,12,15],[-4,3,8,12],[3,10,15,19],[-2,5,10,14]],
       P3=[[0,7,11,16],[5,12,16,21]],P4=[[0,7,14,16],[-5,2,9,11],[-3,4,11,12],[-7,0,7,9]];
 const TR=[
- {id:"t1",t:"Novas cada manhã",al:"manha",key:50,bpm:78,prog:P1,step:.5,dur:186,ly:["As misericórdias do Senhor","são a causa de não sermos consumidos","as suas misericórdias não têm fim","novas são cada manhã","grande é a tua fidelidade"]},
- {id:"t2",t:"Este é o dia",al:"manha",key:55,bpm:84,prog:P4,step:.5,dur:174,ly:["Este é o dia que fez o Senhor","regozijemo-nos","e alegremo-nos nele","dai graças ao Senhor","porque ele é bom"]},
- {id:"t3",t:"Lâmpada",al:"manha",key:52,bpm:72,prog:P3,step:1,dur:198,ly:["Lâmpada para os meus pés","é a tua palavra","e luz para o meu caminho","guia os meus passos","Senhor"]},
- {id:"t4",t:"Aquietai-vos",al:"quietude",key:48,bpm:60,prog:P3,step:1,dur:204,ly:["Aquietai-vos","e sabei que eu sou Deus","serei exaltado entre as nações","serei exaltado sobre a terra","o Senhor está conosco"]},
- {id:"t5",t:"Águas tranquilas",al:"quietude",key:53,bpm:64,prog:P1,step:1,dur:192,ly:["O Senhor é o meu pastor","nada me faltará","deitar-me faz em verdes pastos","guia-me mansamente","a águas tranquilas"]},
- {id:"t6",t:"Vinde a mim",al:"quietude",key:51,bpm:62,prog:P4,step:1,dur:186,ly:["Vinde a mim","todos os que estais cansados","e eu vos aliviarei","aprendei de mim","e encontrareis descanso"]},
- {id:"t7",t:"Asas como águias",al:"coragem",key:50,bpm:90,prog:P2,step:.5,dur:180,ly:["Os que esperam no Senhor","renovarão as suas forças","subirão com asas como águias","correrão e não se cansarão","caminharão e não se fatigarão"]},
- {id:"t8",t:"Não temas",al:"coragem",key:45,bpm:86,prog:P2,step:.5,dur:192,ly:["Não temas","porque eu sou contigo","não te assombres","porque eu sou teu Deus","eu te fortaleço"]},
- {id:"t9",t:"Refúgio",al:"coragem",key:47,bpm:80,prog:P1,step:.5,dur:180,ly:["Deus é o nosso refúgio","e fortaleza","socorro bem presente","na angústia","pelo que não temeremos"]},
- {id:"t10",t:"À sombra do Altíssimo",al:"noite",key:43,bpm:54,prog:P3,step:2,dur:240,ly:["Aquele que habita","no esconderijo do Altíssimo","à sombra do Onipotente","descansará","ele é o meu refúgio"]},
- {id:"t11",t:"Em paz me deito",al:"noite",key:46,bpm:52,prog:P4,step:2,dur:228,ly:["Em paz também","me deitarei e dormirei","porque só tu, Senhor","me fazes habitar","em segurança"]},
- {id:"t12",t:"Noite serena",al:"noite",key:44,bpm:50,prog:P1,step:2,dur:234,ly:["O Senhor te guardará","de todo o mal","guardará a tua alma","a tua entrada e a tua saída","desde agora e para sempre"]},
- {id:"t13",t:"Elevo os olhos",al:"salmos",key:49,bpm:66,prog:P1,step:1,dur:196,ly:["Elevo os meus olhos para os montes","de onde me vem o socorro?","O meu socorro vem do Senhor","que fez o céu e a terra"]},
- {id:"t14",t:"Bendize, ó minha alma",al:"salmos",key:52,bpm:74,prog:P4,step:.5,dur:182,ly:["Bendize, ó minha alma, ao Senhor","e tudo o que há em mim","bendiga o seu santo nome","e não te esqueças de nenhum de seus benefícios"]},
- {id:"t15",t:"Como o cervo",al:"salmos",key:47,bpm:58,prog:P3,step:1,dur:210,ly:["Como o cervo brama","pelas correntes das águas","assim suspira a minha alma","por ti, ó Deus"]},
- {id:"t16",t:"Tu és o meu escudo",al:"salmos",key:45,bpm:82,prog:P2,step:.5,dur:176,ly:["Mas tu, Senhor","és um escudo para mim","a minha glória","e o que exalta a minha cabeça"]},
- {id:"t17",t:"Os céus declaram",al:"salmos",key:54,bpm:70,prog:P1,step:.5,dur:188,ly:["Os céus declaram a glória de Deus","e o firmamento anuncia","a obra das suas mãos","um dia faz declaração a outro dia"]},
- {id:"t18",t:"Ensina-nos a contar",al:"salmos",key:48,bpm:56,prog:P4,step:1,dur:214,ly:["Ensina-nos a contar os nossos dias","de tal maneira","que alcancemos","corações sábios"]},
- {id:"t19",t:"Ele é bom",al:"gratidao",key:55,bpm:88,prog:P1,step:.5,dur:172,ly:["Louvai ao Senhor","porque ele é bom","porque a sua benignidade","dura para sempre"]},
- {id:"t20",t:"Em tudo",al:"gratidao",key:50,bpm:80,prog:P4,step:.5,dur:178,ly:["Em tudo dai graças","porque esta é a vontade de Deus","em Cristo Jesus","para convosco"]},
- {id:"t21",t:"Alegrai-vos",al:"gratidao",key:57,bpm:92,prog:P2,step:.5,dur:168,ly:["Regozijai-vos sempre no Senhor","outra vez digo","regozijai-vos","perto está o Senhor"]},
- {id:"t22",t:"Toda boa dádiva",al:"gratidao",key:53,bpm:76,prog:P3,step:.5,dur:190,ly:["Toda a boa dádiva","e todo o dom perfeito","vem do alto","descendo do Pai das luzes"]},
- {id:"t23",t:"Cântico novo",al:"gratidao",key:52,bpm:86,prog:P1,step:.5,dur:176,ly:["Cantai ao Senhor","um cântico novo","cantai ao Senhor","todos os moradores da terra"]},
- {id:"t24",t:"Mesa preparada",al:"gratidao",key:48,bpm:72,prog:P4,step:1,dur:186,ly:["Preparas uma mesa perante mim","unges a minha cabeça com óleo","o meu cálice transborda"]}];
+ {id:"t1",t:"Novas a cada manhã",al:"manha",key:50,bpm:78,prog:P1,step:.5,dur:186,ref:"Lamentações 3:22-23",ly:["É pelas bondades do SENHOR que não somos consumidos", "porque suas misericórdias não têm fim.", "Elas são novas a cada manhã", "grande é a tua fidelidade."]},
+ {id:"t2",t:"Este é o dia",al:"manha",key:55,bpm:84,prog:P4,step:.5,dur:174,ref:"Salmos 118:24",ly:["Este é o dia em que o SENHOR agiu", "alegremos e enchamos de alegria nele."]},
+ {id:"t3",t:"Lâmpada",al:"manha",key:52,bpm:72,prog:P3,step:1,dur:198,ref:"Salmos 119:105",ly:["Tua palavra é lâmpada para meus pés e luz para meu caminho."]},
+ {id:"t4",t:"Ficai quietos",al:"quietude",key:48,bpm:60,prog:P3,step:1,dur:204,ref:"Salmos 46:10",ly:["Ficai quietos", "e sabei que eu sou Deus", "eu serei exaltado entre as nações", "serei exaltado sobre a terra."]},
+ {id:"t5",t:"Águas quietas",al:"quietude",key:53,bpm:64,prog:P1,step:1,dur:192,ref:"Salmos 23:1-2",ly:["O SENHOR é meu pastor", "nada me faltará.", "Ele me faz deitar em pastos verdes", "e me leva a águas quietas."]},
+ {id:"t6",t:"Vinde a mim",al:"quietude",key:51,bpm:62,prog:P4,step:1,dur:186,ref:"Mateus 11:28-29",ly:["Vinde a mim todos vós que estais cansados e sobrecarregados", "e eu vos farei descansar.", "Tomai sobre vós o meu jugo e aprendei de mim", "porque sou manso e humilde de coração", "e encontrareis descanso para as vossas almas."]},
+ {id:"t7",t:"Asas como águias",al:"coragem",key:50,bpm:90,prog:P2,step:.5,dur:180,ref:"Isaías 40:31",ly:["Mas os que confiam no SENHOR renovarão as forças", "subirão com asas como águias", "correrão", "e não se cansarão", "caminharão", "e não se fatigarão."]},
+ {id:"t8",t:"Não temas",al:"coragem",key:45,bpm:86,prog:P2,step:.5,dur:192,ref:"Isaías 41:10",ly:["Não temas", "porque eu estou contigo", "não te assombres", "porque eu sou teu Deus.", "Eu te fortaleço", "te ajudo", "e te sustento com a minha mão direita de justiça."]},
+ {id:"t9",t:"Refúgio",al:"coragem",key:47,bpm:80,prog:P1,step:.5,dur:180,ref:"Salmos 46:1-2",ly:["Deus é nosso refúgio e força", "socorro oportuno nas angústias.", "Por isso não temeremos", "ainda que a terra se mova", "e ainda que as montanhas passem ao interior dos mares"]},
+ {id:"t10",t:"À sombra do Todo-Poderoso",al:"noite",key:43,bpm:54,prog:P3,step:2,dur:240,ref:"Salmos 91:1-2",ly:["Aquele que mora no esconderijo do Altíssimo", "à sombra do Todo-Poderoso habitará.", "Direi ao SENHOR", "Tu és meu refúgio e minha fortaleza", "Deus meu", "em quem confio."]},
+ {id:"t11",t:"Dormirei em paz",al:"noite",key:46,bpm:52,prog:P4,step:2,dur:228,ref:"Salmos 4:8",ly:["Eu deitarei", "e dormirei em paz", "porque só tu", "SENHOR", "me fazes descansar seguro."]},
+ {id:"t12",t:"O Senhor te guardará",al:"noite",key:44,bpm:50,prog:P1,step:2,dur:234,ref:"Salmos 121:7-8",ly:["O SENHOR te guardará de todo mal", "ele guardará a tua alma.", "O SENHOR guardará tua saída e tua entrada", "desde agora e para sempre."]},
+ {id:"t13",t:"Levanto meus olhos",al:"salmos",key:49,bpm:66,prog:P1,step:1,dur:196,ref:"Salmos 121:1-2",ly:["Levanto meus olhos aos montes.", "De onde virá meu socorro?", "Meu socorro vem do SENHOR", "que fez os céus e a terra."]},
+ {id:"t14",t:"Louva, ó minha alma",al:"salmos",key:52,bpm:74,prog:P4,step:.5,dur:182,ref:"Salmos 103:1-2",ly:["Louva ao SENHOR", "ó minha alma", "e que todo o meu interior louve ao seu santo nome.", "Louva ao SENHOR", "ó minha alma", "e não te esqueças de nenhum dos benefícios dele"]},
+ {id:"t15",t:"Como a corça",al:"salmos",key:47,bpm:58,prog:P3,step:1,dur:210,ref:"Salmos 42:1",ly:["Assim como a corça geme de desejo pelas correntes de águas", "assim também minha alma geme de desejo por ti", "Deus."]},
+ {id:"t16",t:"Tu és escudo",al:"salmos",key:45,bpm:82,prog:P2,step:.5,dur:176,ref:"Salmos 3:3",ly:["Porém tu", "SENHOR", "és escudo para mim", "minha glória", "e o que levanta minha cabeça."]},
+ {id:"t17",t:"Os céus declaram",al:"salmos",key:54,bpm:70,prog:P1,step:.5,dur:188,ref:"Salmos 19:1-2",ly:["Os céus declaram a glória de Deus", "e o firmamento anuncia a obra de suas mãos.", "Dia após dia ele fala", "e noite após noite ele mostra sabedoria."]},
+ {id:"t18",t:"Ensina-nos a contar",al:"salmos",key:48,bpm:56,prog:P4,step:1,dur:214,ref:"Salmos 90:12",ly:["Ensina-nos a contar nossos dias de tal maneira que alcancemos um coração sábio."]},
+ {id:"t19",t:"Ele é bom",al:"gratidao",key:55,bpm:88,prog:P1,step:.5,dur:172,ref:"Salmos 136:1",ly:["Agradecei ao SENHOR", "porque ele é bom", "porque sua bondade dura para sempre."]},
+ {id:"t20",t:"Em tudo",al:"gratidao",key:50,bpm:80,prog:P4,step:.5,dur:178,ref:"1 Tessalonicenses 5:18",ly:["Agradecei em tudo", "pois essa é a vontade de Deus em Cristo Jesus para vós mesmos."]},
+ {id:"t21",t:"Alegrai-vos",al:"gratidao",key:57,bpm:92,prog:P2,step:.5,dur:168,ref:"Filipenses 4:4-5",ly:["Alegrai-vos sempre no Senhor.", "Volto a dizer", "alegrai-vos.", "A vossa bondade seja conhecida por todas as pessoas.", "Perto está o Senhor."]},
+ {id:"t22",t:"Toda boa dádiva",al:"gratidao",key:53,bpm:76,prog:P3,step:.5,dur:190,ref:"Tiago 1:17",ly:["Toda boa dádiva e todo dom perfeito vem do alto", "e desce do Pai das luzes", "em quem não há mudança nem sombra de variação."]},
+ {id:"t23",t:"Uma nova canção",al:"gratidao",key:52,bpm:86,prog:P1,step:.5,dur:176,ref:"Salmos 96:1",ly:["Cantai ao SENHOR uma nova canção", "cantai ao SENHOR toda a terra."]},
+ {id:"t24",t:"Mesa preparada",al:"gratidao",key:48,bpm:72,prog:P4,step:1,dur:186,ref:"Salmos 23:5",ly:["Tu preparas uma mesa diante de mim à vista de meus adversários", "unges a minha cabeça com azeite", "meu cálice transborda."]}];
 const albumOf=tr=>ALBUMS.find(a=>a.id===tr.al);
 function trackFor(v){const al=ALBUMS.find(a=>a.tags.includes(v.t[0]))||ALBUMS[1],l=TR.filter(t=>t.al===al.id);
   return l[[...v.r].reduce((s,c)=>s+c.charCodeAt(0),0)%l.length]}
@@ -1302,7 +1325,7 @@ function renderNP(){if(!npOpen)return;const tr=P.tr;if(!tr)return;const al=album
   document.getElementById("npSrc").textContent=Q.src?"Tocando de "+Q.src:"Tocando agora";
   npPage.innerHTML=`<div class="now">
     <div class="cover lg cur" style="${coverStyle(al)}"><small>Lumen Originals</small>${al.name}</div>
-    <div class="ttlrow"><div class="ttl"><h3>${tr.t}</h3><p>${al.name} · faixa de exemplo</p></div><button class="hb big ${lk?"on":""}" data-h="${tr.id}" id="npLike" aria-label="Curtir música">${IC("heart")}</button></div>
+    <div class="ttlrow"><div class="ttl"><h3>${tr.t}</h3><p>${al.name} · ${tr.ref}</p></div><button class="hb big ${lk?"on":""}" data-h="${tr.id}" id="npLike" aria-label="Curtir música">${IC("heart")}</button></div>
     <div class="bar" id="pBar"><i></i></div><div class="t2"><span id="pE">0:00</span><span id="pD">${mmss(tr.dur)}</span></div>
     <div class="ctrls"><button id="pShuf" class="tog ${Q.shuffle?"on":""}" aria-label="Aleatório" aria-pressed="${Q.shuffle}"><svg viewBox="0 0 24 24"><path d="M4 7h3.5c4 0 5 10 9 10H20M4 17h3.5c1.6 0 2.6-1.6 3.5-3.4M13 10.4c.9-1.8 1.9-3.4 3.5-3.4H20M17.5 4.5 20 7l-2.5 2.5M17.5 14.5 20 17l-2.5 2.5"/></svg></button>
      <button id="pPrev" aria-label="Anterior">${I.prev}</button><button class="pp" id="pPP" aria-label="Tocar ou pausar">${P.playing?I.pause:I.play}</button><button id="pNext" aria-label="Próxima">${I.next}</button>

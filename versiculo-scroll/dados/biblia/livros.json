@@ -5,7 +5,7 @@
  "licenca": "Creative Commons Atribuição 4.0 Brasil",
  "credito": "Bíblia Livre (BLIVRE), © Diego Santos, Mario Sérgio e Marco Teles, 2018. CC BY 4.0 Brasil.",
  "fonte": "https://github.com/damarals/biblias (release BLIVRE.json); original em sites.google.com/site/biblialivre",
- "alteracoes": "Espaços e pontuação normalizados; títulos acrósticos hebraicos removidos do Salmo 119; Salmo 46: versículos 2 e 3, unidos na origem, separados; erros de digitação corrigidos em Salmos 34:18 (sava → salva) e Provérbios 3:6 (todas → todos); 15 versículos vazios no arquivo de origem completados a partir da Almeida 1911 (domínio público), com ortografia atualizada: Mt 17:21, Mt 18:11, Mt 23:14, Mc 7:16, Mc 9:44, Mc 9:46, Mc 11:26, Mc 15:28, Lc 17:36, Lc 23:17, At 8:37, At 15:34, At 24:7, At 28:29, Rm 16:24.",
+ "alteracoes": "Espaços e pontuação normalizados (inclusive 87 pronomes separados por espaço, como \"Ensina -nos\"); títulos acrósticos hebraicos removidos do Salmo 119; Salmo 46: versículos 2 e 3, unidos na origem, separados; erros de digitação corrigidos em Salmos 34:18 (sava → salva) e Provérbios 3:6 (todas → todos); 15 versículos vazios no arquivo de origem completados a partir da Almeida 1911 (domínio público), com ortografia atualizada: Mt 17:21, Mt 18:11, Mt 23:14, Mc 7:16, Mc 9:44, Mc 9:46, Mc 11:26, Mc 15:28, Lc 17:36, Lc 23:17, At 8:37, At 15:34, At 24:7, At 28:29, Rm 16:24.",
  "livros": [
   {
    "abrev": "Gn",
