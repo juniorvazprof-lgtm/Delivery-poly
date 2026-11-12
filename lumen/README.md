@@ -11,7 +11,9 @@ npm install
 npm run dev            # servidor local com recarregamento automático
 npm run typecheck      # confere os tipos (TypeScript)
 npm run build          # gera dist/index.html (arquivo único, com CSP) + dist/biblia
-npm run test:security  # build + testes de segurança (Playwright)
+npm test               # tipagem + build + roteiro de telas + segurança (Playwright)
+npm run test:flows     # build + roteiro por todas as telas
+npm run test:security  # build + testes de segurança
 npm run build:preview  # build + dist-preview/lumen.html, a página usada na prévia publicada
 ```
 
@@ -63,16 +65,16 @@ src/
 - **Estado compartilhado só em `core/state.ts`.** Os módulos leem e alteram `store.<chave>`. O que precisa durar entre sessões é gravado com `S.set` (`services/storage.ts`), sempre com o prefixo `lumen.`.
 - **Funções ainda não prontas** aparecem como "Em breve" e são ligadas em `config/features.ts`.
 - **Textos bíblicos só da Bíblia Livre.** Nada de versículo escrito de memória. Para mudar o feed, edite `data/versiculos-feed.json` com textos tirados de `public/biblia`.
-- **Segurança:** dados de fora entram no HTML só pelo template `html``` (`utils/html.ts`), e tudo o que é lido do aparelho passa por `security/validate.ts`. Regras completas em [SECURITY.md](SECURITY.md).
+- **Segurança:** todo HTML é montado com o template `html``` e inserido com `setHTML()`, sem atributo `style` (use `data-style`) (`utils/html.ts`), e tudo o que é lido do aparelho passa por `security/validate.ts`. Regras completas em [SECURITY.md](SECURITY.md).
 - **IDs únicos.** Cada botão tem um `id` exclusivo no app inteiro. Telas diferentes não reaproveitam o mesmo `id`.
 
-## Situação da tipagem
+## Tipagem
 
-Já são TypeScript estrito: `types.ts`, `core/state.ts`, `config/features.ts`, `data/verses.ts`, `services/storage.ts`, `services/bible.ts`, `security/*`, `utils/html.ts`, `utils/text.ts`, `utils/format.ts` e `utils/clipboard.ts`. Os módulos migrados do protótipo começam com `// @ts-nocheck` e serão tipados aos poucos, um por vez, retirando essa linha e corrigindo o que o `npm run typecheck` apontar.
+Todo o código é TypeScript estrito (`strict: true`), sem `@ts-nocheck`. `npm run typecheck` precisa passar sem erros antes de qualquer commit. O DOM é acessado por `byId`, `q` e `qa` (`utils/dom.ts`), que avisam com clareza quando um elemento obrigatório não existe; para elementos opcionais existem `byIdMaybe` e `qMaybe`.
 
 ## Próximas etapas
 
 1. ~~Segurança~~ (feito: ver SECURITY.md).
 2. **Offline e desempenho:** service worker, carregamento sob demanda de Ouvir e Púlpito, feed com quantidade limitada de cards na memória.
-3. **Testes:** Vitest para referências, recomendação, fila e formatação; Playwright para os fluxos principais; teste que confere os versículos do feed contra a Bíblia.
+3. **Testes:** já existem o roteiro de telas e os testes de segurança (Playwright). Faltam testes unitários (Vitest) para referências, recomendação, fila e formatação, e um teste que confere os versículos do feed contra a Bíblia.
 4. **Android:** Capacitor, ajustes de segurança do Android e geração do pacote para a Play Store.

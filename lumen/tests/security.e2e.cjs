@@ -62,6 +62,16 @@ async function main() {
       await page.evaluate(() => { const s = document.createElement("script"); s.textContent = "window.__injected = 1"; document.body.append(s); });
       await page.waitForTimeout(300);
       ok(!(await page.evaluate(() => window.__injected)), "script injetado na página é bloqueado pela CSP");
+      const csp = await page.$eval("meta[http-equiv='Content-Security-Policy']", m => m.content);
+      ok(!/unsafe-inline|unsafe-eval/.test(csp), "CSP sem 'unsafe-inline' nem 'unsafe-eval'");
+      // Simula um estilo injetado por atributo: a CSP precisa bloquear.
+      await page.evaluate(() => { const d = document.createElement("div"); d.id = "evilStyle"; d.innerHTML = '<span style="display:block;width:123px">x</span>'; document.body.append(d); });
+      ok((await page.$eval("#evilStyle span", s => getComputedStyle(s).width)) !== "123px", "atributo style injetado é bloqueado pela CSP");
+      const applied = await page.evaluate(() => {
+        const bq = document.querySelector(".card blockquote"), disc = document.querySelector(".card .disc");
+        return { font: bq ? parseFloat(getComputedStyle(bq).fontSize) : 0, cover: disc ? getComputedStyle(disc).getPropertyValue("--c1").trim() : "" };
+      });
+      ok(applied.font > 20 && /^#[0-9a-f]{6}$/i.test(applied.cover), `estilos dinâmicos aplicados por código mesmo sem 'unsafe-inline' (letra ${applied.font}px, capa ${applied.cover})`);
       const legit = problems.slice(0, before);
       ok(legit.length === 0, "nenhuma violação de CSP nem erro no uso normal" + (legit.length ? `: ${legit.join(" | ")}` : ""));
       await ctx.close();

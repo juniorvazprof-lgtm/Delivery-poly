@@ -1,4 +1,3 @@
-// @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* TOPO */
 import { store } from "./state";
 import { S } from "../services/storage";

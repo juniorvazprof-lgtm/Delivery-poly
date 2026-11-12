@@ -1,3 +1,5 @@
+import { applyDataStyles } from "./dom";
+
 /**
  * HTML seguro por padrão.
  *
@@ -37,7 +39,12 @@ export function html(strings: TemplateStringsArray, ...values: unknown[]): SafeH
   return new SafeHtml(out);
 }
 
-/** Insere html seguro em um elemento. Aceita só SafeHtml, para o compilador barrar strings soltas. */
+/**
+ * Insere html seguro em um elemento. Aceita só SafeHtml, para o compilador barrar strings soltas.
+ * Depois aplica os estilos marcados com data-style (a CSP do app não permite o atributo style).
+ */
 export function setHTML(el: Element | null, content: SafeHtml): void {
-  if (el) el.innerHTML = content.value;
+  if (!el) return;
+  el.innerHTML = content.value;
+  applyDataStyles(el);
 }

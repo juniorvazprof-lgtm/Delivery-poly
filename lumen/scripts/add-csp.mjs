@@ -10,11 +10,16 @@ const hashes = [...html.matchAll(/(<script\b[^>]*>)([\s\S]*?)<\/script>/g)]
   .filter(m => !/\bsrc=/.test(m[1]))
   .map(m => `'sha256-${crypto.createHash("sha256").update(m[2], "utf8").digest("base64")}'`);
 if (!hashes.length) throw new Error("nenhum script embutido encontrado no build");
+const sha = t => `'sha256-${crypto.createHash("sha256").update(t, "utf8").digest("base64")}'`;
+// Estilos: só o CSS embutido pelo build (por hash). O atributo style não é permitido;
+// estilos dinâmicos são aplicados por código (CSSOM), o que a CSP permite.
+const styleHashes = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map(m => sha(m[1]));
+if (/\sstyle="/.test(html.replace(/<script\b[\s\S]*?<\/script>/g, ""))) throw new Error("index.html tem atributo style, que a CSP bloqueia");
 
 const csp = [
   "default-src 'self'",
   `script-src 'self' ${hashes.join(" ")}`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // estilos inline são usados para cores dinâmicas
+  `style-src 'self' ${styleHashes.join(" ")} https://fonts.googleapis.com`,
   "font-src https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
   "media-src 'self' blob:",
@@ -28,4 +33,4 @@ const csp = [
 html = html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>\n?/, "");
 html = html.replace(/(<meta charset="utf-8">)/, `$1\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<meta name="referrer" content="no-referrer">`);
 fs.writeFileSync(file, html);
-console.log(`CSP adicionada (${hashes.length} script${hashes.length > 1 ? "s" : ""} permitido${hashes.length > 1 ? "s" : ""})`);
+console.log(`CSP adicionada: ${hashes.length} script(s) e ${styleHashes.length} folha(s) de estilo permitidos, sem 'unsafe-inline'`);

@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "build:preview": "npm run build && node scripts/preview-page.mjs",
-    "test:security": "npm run build && node tests/security.e2e.cjs"
+    "test:security": "npm run build && node tests/security.e2e.cjs",
+    "test:flows": "npm run build && node tests/flows.e2e.cjs",
+    "test": "npm run typecheck && npm run build && node tests/flows.e2e.cjs && node tests/security.e2e.cjs"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

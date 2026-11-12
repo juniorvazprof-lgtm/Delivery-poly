@@ -1,8 +1,8 @@
-// @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
+import { html, raw } from "../utils/html";
 /* Ícones Lumen: traço fino e um ponto de luz dourado */
 
 export const HEART="M13 21.5s-8.5-5.1-8.5-11.1A4.6 4.6 0 0 1 13 7.7a4.6 4.6 0 0 1 8.5 2.7c0 6-8.5 11.1-8.5 11.1z";
-export const IP={
+export const IP: Record<string, string> = {
  heart:'<path d="M12 20s-7-4.3-7-9.6A4 4 0 0 1 12 7.6a4 4 0 0 1 7 2.8C19 15.7 12 20 12 20z"/><circle class="lx" cx="19.6" cy="4.6" r="1.4"/>',
  save:'<path d="M7 4h10v16l-5-3.6L7 20z"/><circle class="lx" cx="12" cy="9" r="1.4"/>',
  send:'<path d="M3.5 12h12M11.5 7l5 5-5 5"/><circle class="lx" cx="20" cy="12" r="1.5"/>',
@@ -38,5 +38,6 @@ export const IP={
  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
  mood:'<circle cx="12" cy="12" r="8"/><path d="M8.8 14.2c1.8 1.9 4.6 1.9 6.4 0"/><circle cx="9.3" cy="10" r=".9" fill="currentColor" stroke="none"/><circle class="lx" cx="14.7" cy="10" r="1.2"/>'
 };
-export const IC=(n,c="")=>`<svg class="ico ${c}" viewBox="0 0 24 24" aria-hidden="true">${IP[n]}</svg>`;
+/** Ícone pelo nome (ver IP). */
+export const IC=(n:string,c="")=>html`<svg class="ico ${c}" viewBox="0 0 24 24" aria-hidden="true">${raw(IP[n])}</svg>`;
 export const ICON={heart:IC("heart"),save:IC("save"),send:IC("send"),more:IC("more"),book:IC("book"),copy:IC("copy"),ear:IC("phones"),tag:IC("tag"),less:IC("less")};

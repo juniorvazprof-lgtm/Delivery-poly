@@ -3,20 +3,21 @@ import { S } from "../services/storage";
 import { V } from "../data/verses";
 import { TR } from "../features/music/catalog";
 import * as valid from "../security/validate";
+import type { Store } from "../types";
 
 /** Conjuntos conhecidos, usados para descartar ids inválidos lidos do aparelho. */
 const REFS = new Set(V.map(v => v.r));
-const TRACKS = new Set<string>(TR.map((t: { id: string }) => t.id));
+const TRACKS = new Set<string>(TR.map(t => t.id));
 const THEMES = new Set(V.flatMap(v => v.t));
 
 /** Estado mutável compartilhado do app. Cada chave é lida e alterada pelos módulos como store.<chave>. */
-export const store: any = {
+export const store: Store = {
   taste: valid.numberMap(S.get("lumen.taste", {}), THEMES, -5, 40),
   liked: new Set(valid.idList(S.get("lumen.liked", []), REFS, valid.LIMITS.saved)),
   saved: valid.idList(S.get("lumen.saved2", []), REFS, valid.LIMITS.saved),
   announced: new Set(valid.idList(S.get("lumen.ann", []), THEMES, 20)),
   filterTag: null,
-  tt: null,
+  tt: undefined,
   onClose: null,
   streak: valid.streak(S.get("lumen.streak", {})),
   remind: valid.time(S.get("lumen.remind", null)),
@@ -34,7 +35,7 @@ export const store: any = {
   plays: valid.numberMap(S.get("lumen.plays", {}), TRACKS, 0, 1e6),
   recentS: valid.idList(S.get("lumen.recentS", []), TRACKS, valid.LIMITS.recent),
   playerOpen: false,
-  LV: {tab:"home",det:null,range:"week"},
+  LV: { tab: "home", det: null, range: "week" },
   npOpen: false,
   ctx: {},
   plan: "anual",

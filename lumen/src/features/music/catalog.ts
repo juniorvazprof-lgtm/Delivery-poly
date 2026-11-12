@@ -1,7 +1,7 @@
-// @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Música: catálogo de exemplo */
+import type { Album, Track, Verse } from "../../types";
 
-export const ALBUMS=[
+export const ALBUMS: Album[]=[
  {id:"manha",name:"Manhã",colors:["#F7D9A0","#E58FA6"],tags:["gratidão","alegria","esperança"]},
  {id:"quietude",name:"Quietude",colors:["#9EC5E8","#B49AE0"],tags:["paz","descanso","ansiedade","cuidado"]},
  {id:"coragem",name:"Coragem",colors:["#F2B879","#D9676F"],tags:["coragem","força","confiança"]},
@@ -10,7 +10,7 @@ export const ALBUMS=[
  {id:"gratidao",name:"Gratidão",colors:["#F7C9A0","#C97B5A"],tags:["gratidão","alegria"]}];
 export const P1=[[0,7,12,16],[-3,4,9,12],[-7,0,5,9],[-5,2,7,11]],P2=[[0,7,12,15],[-4,3,8,12],[3,10,15,19],[-2,5,10,14]],
       P3=[[0,7,11,16],[5,12,16,21]],P4=[[0,7,14,16],[-5,2,9,11],[-3,4,11,12],[-7,0,7,9]];
-export const TR=[
+export const TR: Track[]=[
  {id:"t1",t:"Novas a cada manhã",al:"manha",key:50,bpm:78,prog:P1,step:.5,dur:186,ref:"Lamentações 3:22-23",ly:["É pelas bondades do SENHOR que não somos consumidos", "porque suas misericórdias não têm fim.", "Elas são novas a cada manhã", "grande é a tua fidelidade."]},
  {id:"t2",t:"Este é o dia",al:"manha",key:55,bpm:84,prog:P4,step:.5,dur:174,ref:"Salmos 118:24",ly:["Este é o dia em que o SENHOR agiu", "alegremos e enchamos de alegria nele."]},
  {id:"t3",t:"Lâmpada",al:"manha",key:52,bpm:72,prog:P3,step:1,dur:198,ref:"Salmos 119:105",ly:["Tua palavra é lâmpada para meus pés e luz para meu caminho."]},
@@ -35,7 +35,7 @@ export const TR=[
  {id:"t22",t:"Toda boa dádiva",al:"gratidao",key:53,bpm:76,prog:P3,step:.5,dur:190,ref:"Tiago 1:17",ly:["Toda boa dádiva e todo dom perfeito vem do alto", "e desce do Pai das luzes", "em quem não há mudança nem sombra de variação."]},
  {id:"t23",t:"Uma nova canção",al:"gratidao",key:52,bpm:86,prog:P1,step:.5,dur:176,ref:"Salmos 96:1",ly:["Cantai ao SENHOR uma nova canção", "cantai ao SENHOR toda a terra."]},
  {id:"t24",t:"Mesa preparada",al:"gratidao",key:48,bpm:72,prog:P4,step:1,dur:186,ref:"Salmos 23:5",ly:["Tu preparas uma mesa diante de mim à vista de meus adversários", "unges a minha cabeça com azeite", "meu cálice transborda."]}];
-export const albumOf=tr=>ALBUMS.find(a=>a.id===tr.al);
-export function trackFor(v){const al=ALBUMS.find(a=>a.tags.includes(v.t[0]))||ALBUMS[1],l=TR.filter(t=>t.al===al.id);
+export const albumOf=(tr:Track):Album=>ALBUMS.find(a=>a.id===tr.al)||ALBUMS[0];
+export function trackFor(v:Verse):Track{const al=ALBUMS.find(a=>a.tags.includes(v.t[0]))||ALBUMS[1],l=TR.filter(t=>t.al===al.id);
   return l[[...v.r].reduce((s,c)=>s+c.charCodeAt(0),0)%l.length]}
-export const coverStyle=al=>`--c1:${al.colors[0]};--c2:${al.colors[1]}`;
+export const coverStyle=(al:{colors:[string,string]})=>`--c1:${al.colors[0]};--c2:${al.colors[1]}`;

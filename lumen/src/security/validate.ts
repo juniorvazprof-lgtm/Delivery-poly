@@ -28,7 +28,8 @@ export function numberMap(v: unknown, known: ReadonlySet<string>, min: number, m
   return out;
 }
 
-export interface Playlist { id: string; name: string; c: [string, string]; ids: string[]; }
+import type { Playlist } from "../types";
+export type { Playlist };
 
 export function playlists(v: unknown, trackIds: ReadonlySet<string>): Playlist[] {
   if (!Array.isArray(v)) return [];

@@ -1,4 +1,3 @@
-// @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Exemplo pronto, escrito para ser lido em voz alta */
 
 export const EXAMPLE={titulo:"Quando parece que não tem saída",ideia_central:"Deus não esquece de você, mesmo nos dias difíceis. Ele dá força nova todos os dias.",

@@ -1,9 +1,9 @@
-// @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
 /* Aba Você */
+import { html } from "../../utils/html";
 import { openSheet } from "../../ui/sheet";
 
 export function openAboutBible(){
-  openSheet(`<h2>Sobre a Bíblia</h2><p class="sub">De onde vêm os textos bíblicos do Lumen.</p>
+  openSheet(html`<h2>Sobre a Bíblia</h2><p class="sub">De onde vêm os textos bíblicos do Lumen.</p>
    <div class="about-b"><div class="label">Bíblia utilizada</div>
     <p><b>Bíblia Livre (BLIVRE)</b>, edição de 2018. Atualização para o português do Brasil da tradução de João Ferreira de Almeida de 1819, a partir do Textus Receptus.</p>
     <p>© Diego Santos, Mario Sérgio e Marco Teles. Licença Creative Commons Atribuição 4.0 Brasil, que permite o uso com o devido crédito.</p>
@@ -17,4 +17,4 @@ export function openAboutBible(){
      <li>Salmo 119: retirada dos nomes das letras hebraicas no início dos versículos.</li>
      <li>15 versículos ausentes no arquivo de origem, como Mateus 17:21 e Atos 8:37, foram completados com a Almeida de 1911 (domínio público), com ortografia atualizada.</li>
      <li>No feed, a primeira letra fica maiúscula e a pontuação final é ajustada, porque o versículo aparece sozinho na tela.</li></ul>
-    <p class="fine" style="text-align:left">Encontrou algum erro no texto? Avise pela página do app na loja.</p></div>`,"Sobre a Bíblia")}
+    <p class="fine" data-style="text-align:left">Encontrou algum erro no texto? Avise pela página do app na loja.</p></div>`,"Sobre a Bíblia")}
