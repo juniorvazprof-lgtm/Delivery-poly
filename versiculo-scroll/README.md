@@ -1,3 +1,5 @@
+> **O código do app agora fica em [`../lumen`](../lumen)**, organizado em módulos (Vite + TypeScript). Esta pasta guarda o protótipo original (`prototipo.html`), a primeira versão simples e os dados da Bíblia, só como referência.
+
 # Versículo Scroll 📖
 
 App web estilo "feed vertical" (como TikTok/Reels) para o público brasileiro — mas em vez de vídeos, você desliza **versículos da Bíblia**.

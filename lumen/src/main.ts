@@ -1,0 +1,64 @@
+// @ts-nocheck  (migrado do protótipo; tipagem gradual nas próximas etapas)
+/* Ponto de entrada: inicializa as telas e liga os eventos, na mesma ordem do protótipo. */
+import "./styles/index.css";
+import { bnav, goTab } from "./app/navigation";
+import { store } from "./core/state";
+import { closeReader } from "./features/bible/reader";
+import { dailyVerse, dayKey } from "./features/daily/daily";
+import { makeCard } from "./features/feed/card";
+import { feed, io, more, recent } from "./features/feed/feed";
+import { fBtn, setFilter } from "./features/feed/filter";
+import { adv } from "./features/monetization/rewarded-ad";
+import { tick } from "./features/music/clock";
+import { Q, closeNP, openNP, renderLib } from "./features/music/library";
+import { updateMini } from "./features/music/mini-player";
+import { P, feedSound, pause, resume, snd, updateBody } from "./features/music/playback";
+import { onboarding } from "./features/onboarding/onboarding";
+import { closePray } from "./features/prayer/prayer";
+import { closePreach, goPart } from "./features/pulpit/preach";
+import { smEl } from "./features/pulpit/pulpit";
+import { S } from "./services/storage";
+import { setLight, toast, vibrate } from "./ui/effects";
+import { IC, IP } from "./ui/icons";
+import { closeSheet, veil } from "./ui/sheet";
+import { soon } from "./ui/soon";
+
+fBtn.onclick=()=>{setFilter(null);toast("Voltando ao seu feed")};
+veil.onclick=closeSheet;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+(function(){const t=dayKey(new Date()),y=dayKey(new Date(Date.now()-864e5));
+  if(store.streak.last!==t){store.streak.n=store.streak.last===y?store.streak.n+1:1;store.streak.last=t;S.set("lumen.streak",store.streak)}})();
+document.getElementById("rClose").onclick=closeReader;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeReader()});
+bnav.querySelectorAll("button").forEach(b=>b.onclick=()=>{vibrate(4);goTab(b.dataset.tab)});
+{const deepIds=["reader","pray","serm","np"],mo=new MutationObserver(()=>document.body.classList.toggle("deep",deepIds.some(id=>document.getElementById(id).classList.contains("open"))));
+  deepIds.forEach(id=>mo.observe(document.getElementById(id),{attributes:true,attributeFilter:["class"]}))}
+snd.onclick=()=>{store.soundOn=!store.soundOn;S.set("lumen.sound",store.soundOn);S.set("lumen.sndUsed",1);
+  if(store.soundOn){if(P.mode==="player"&&P.tr)resume();else feedSound(store.active);toast("Trilha de demonstração · <em>louvores originais em breve</em>")}else pause();updateBody()};
+document.addEventListener("pointerdown",()=>{if(store.soundOn&&!P.playing&&P.mode!=="player")feedSound(store.active)},{once:true});
+document.getElementById("pPrem").onclick=()=>goTab("premium");
+document.getElementById("npClose").onclick=closeNP;
+document.getElementById("mInfo").onclick=()=>openNP();
+document.getElementById("mPP").onclick=()=>{P.playing?pause():resume()};
+document.getElementById("mX").onclick=()=>{pause();P.mode=null;P.tr=null;Q.ids=[];updateMini();if(store.playerOpen)renderLib();if(store.soundOn)feedSound(store.active)};
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||adv.classList.contains("open"))return;
+  });
+document.getElementById("pyClose").onclick=closePray;
+document.getElementById("pyBell").onclick=()=>soon("Lembretes");
+window.claude?.use?.("sample").then(s=>{store.SAMPLE=s}).catch(()=>{});
+document.getElementById("smClose").onclick=()=>{store.smCtl?.abort();smEl.classList.remove("open")};
+document.addEventListener("keydown",e=>{if(!store.PR)return;if(e.key==="ArrowRight")goPart(1);else if(e.key==="ArrowLeft")goPart(-1);else if(e.key==="Escape")closePreach()});
+document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;closePray();smEl.classList.remove("open")});
+{const d=dailyVerse();recent.push(d.r);const c=makeCard(d,true,true);feed.appendChild(c);io.observe(c)}
+more(4);
+requestAnimationFrame(()=>{const f=feed.firstElementChild;f.classList.add("active");store.active=f;store.since=Date.now();setLight(f._v)});
+if(!S.get("lumen.onb",0))setTimeout(onboarding,900);
+updateBody();
+setInterval(tick,500);
+(function(){const pref=S.get("lumen.navpos",null);if(pref==="top")document.body.classList.add("navtop");
+  const check=()=>{if(S.get("lumen.navpos",null))return;const r=bnav.getBoundingClientRect(),vh=window.visualViewport?.height||innerHeight;
+    if(r.height===0||r.bottom>vh+2)document.body.classList.add("navtop")};
+  setTimeout(check,600);window.visualViewport?.addEventListener("resize",check);addEventListener("resize",check)})();
+document.querySelectorAll("[data-i]").forEach(el=>el.outerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${IP[el.dataset.i]}</svg>`);
+[["rClose","back"],["pyClose","back"],["smClose","back"],["pyBell","bell"],["mX","close"],["npClose","back"]].forEach(([id,n])=>document.getElementById(id).innerHTML=`<svg viewBox="0 0 24 24">${IP[n]}</svg>`);
+document.getElementById("pPrem").insertAdjacentHTML("afterbegin",IC("star"));

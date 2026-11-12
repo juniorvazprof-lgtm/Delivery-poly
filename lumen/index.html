@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E0D14">
+<meta name="description" content="Versículos da Bíblia em um feed para deslizar, com oração guiada e pregação.">
+<title>Lumen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Manrope:wght@400;500;600;700&display=swap">
+</head>
+<body>
+<div id="light"><i></i><i></i></div>
+<div id="grain"></div>
+<header>
+  <div class="brand">lu<b>m</b>en</div>
+  <button id="snd" aria-label="Ligar trilha sonora"></button>
+</header>
+<button id="filter" aria-label="Remover filtro de tema"><span></span><i data-i="close"></i></button>
+<main id="feed" aria-label="Versículos"></main>
+<nav id="bnav" aria-label="Navegação principal"><button data-tab="feed" class="on" aria-current="page"><span class="ni" data-i="home"></span>Início</button><button data-tab="listen"><span class="ni" data-i="disc"></span>Ouvir</button><button data-tab="premium" class="bprem"><span class="ni" data-i="star"></span>Premium</button><button data-tab="you"><span class="ni" data-i="user"></span>Você</button></nav>
+<div id="toast" role="status" aria-live="polite"></div>
+<div class="veil" id="veil"></div>
+<section class="sheet" id="sheet" role="dialog" aria-modal="true"></section>
+<section id="reader" role="dialog" aria-modal="true" aria-label="Leitura do capítulo">
+  <header><button class="x" id="rClose" aria-label="Voltar"></button><h2 id="rTitle"></h2><span></span></header>
+  <div class="page" id="rPage"></div>
+</section>
+<section id="player" role="dialog" aria-modal="true" aria-label="Ouvir louvores">
+  <header><h2>Ouvir</h2><div class="hbtn"><button class="pchip" id="pPrem">Premium</button></div></header>
+  <div class="page" id="pPage"></div>
+</section>
+<section id="prem" role="dialog" aria-modal="true" aria-label="Lumen Premium">
+  <header><h2>Premium</h2></header>
+  <div class="page" id="prPage"></div>
+</section>
+<section id="np" role="dialog" aria-modal="true" aria-label="Tocando agora"><header><button class="x" id="npClose" aria-label="Fechar"></button><h2 id="npSrc">Tocando agora</h2><span></span></header><div class="page" id="npPage"></div></section>
+<section id="you" role="dialog" aria-label="Você"><header><h2>Você</h2></header><div class="page" id="yPage"></div></section>
+<div id="mini" aria-label="Tocando agora"><span class="cover" id="mCov"></span><div id="mInfo"><b id="mT"></b><small id="mA"></small></div>
+  <button id="mPP" aria-label="Tocar ou pausar"></button><button id="mX" aria-label="Fechar player"></button><span class="mbar"><i id="mBar"></i></span></div>
+<section id="pray" role="dialog" aria-modal="true" aria-label="Oração do dia"><header><button class="x" id="pyClose" aria-label="Voltar"></button><h2>Oração do dia</h2><button class="x" id="pyBell" aria-label="Horário da oração"></button></header><div class="page" id="pyPage"></div></section>
+<section id="serm" role="dialog" aria-modal="true" aria-label="Púlpito"><header><button class="x" id="smClose" aria-label="Voltar"></button><h2>Púlpito</h2><span></span></header><div class="page" id="smPage"></div></section>
+<section id="preach" role="dialog" aria-modal="true" aria-label="Modo pregar"></section>
+<div id="adv" role="dialog" aria-modal="true" aria-label="Anúncio"><div class="advtop"><span>Anúncio · exemplo</span><span class="cd" id="cd"></span></div>
+  <div class="advbody" id="advBody"></div><div class="advfoot" id="advFoot"></div></div>
+<script type="module" src="./src/main.ts"></script>
+</body>
+</html>

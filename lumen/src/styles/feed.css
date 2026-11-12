@@ -1,0 +1,47 @@
+/* Feed */
+#feed{position:relative;height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}
+#feed::-webkit-scrollbar{display:none}
+.card{height:100%;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;align-items:center;
+  padding:72px calc(max(16px,env(safe-area-inset-right,0px)) + 78px) 72px max(28px,env(safe-area-inset-left,0px))}
+.inner{max-width:30rem;transform:scale(.95) translateY(16px);opacity:.25;transition:transform .9s var(--spring),opacity .7s var(--ease)}
+.card.active .inner{transform:none;opacity:1}
+.theme{display:inline-flex;align-items:center;gap:10px;margin:0 0 22px;padding:6px 0;border:0;background:none;cursor:pointer;
+  font:700 .68rem var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.theme::before{content:"";width:18px;height:1px;background:currentColor}
+.theme::after{content:"→";letter-spacing:0;opacity:0;transform:translateX(-4px);transition:.4s var(--ease)}
+.card.active .theme::after{opacity:.7;transform:none;transition-delay:1.4s}
+blockquote{margin:0;font-family:var(--serif);font-weight:350;line-height:1.3;letter-spacing:-.012em;font-variation-settings:"opsz" 96;text-wrap:pretty}
+blockquote .w{display:inline-block;opacity:.14;filter:blur(5px);transform:translateY(6px);transition:opacity .7s var(--ease),filter .8s var(--ease),transform .8s var(--ease)}
+.card.active blockquote .w{opacity:1;filter:none;transform:none;transition-delay:calc(var(--i) * 34ms + 100ms)}
+cite{display:flex;align-items:center;gap:8px;margin-top:26px;font:500 .9rem var(--sans);font-style:normal;color:var(--muted);opacity:0;transform:translateX(-8px);transition:.8s var(--ease)}
+.card.active cite{opacity:1;transform:none;transition-delay:calc(var(--n) * 34ms + 320ms)}
+cite b{color:var(--ink);font-weight:700}
+
+/* Trilho de ações */
+.rail{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 13%);display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 4px;border-radius:32px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  opacity:0;transform:translateX(16px);transition:opacity .6s var(--ease),transform .7s var(--spring)}
+.card.active .rail{opacity:1;transform:none;transition-delay:.2s}
+.act{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--ink);cursor:pointer;
+  width:56px;padding:8px 0;font:700 .64rem var(--sans);letter-spacing:.03em}
+.act svg{width:27px;height:27px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .5s var(--spring)}
+.act:active svg{transform:scale(.8)}
+.act:focus-visible{outline:2px solid var(--gold);outline-offset:-2px;border-radius:16px}
+.act span{color:var(--muted);transition:color .3s}
+.heart path{transition:fill .25s var(--ease),stroke .25s}
+.heart.on{color:var(--heart)} .heart.on path{fill:var(--heart)} .heart.on span{color:var(--heart)}
+.heart.pop svg{animation:pop .55s var(--spring)}
+@keyframes pop{0%{transform:scale(.6)}45%{transform:scale(1.28)}100%{transform:scale(1)}}
+.spark{position:absolute;left:50%;top:21px;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:var(--heart);pointer-events:none;animation:spark .6s var(--ease) forwards}
+@keyframes spark{to{transform:rotate(var(--a)) translateY(-22px) scale(.2);opacity:0}}
+.save.on{color:var(--gold)} .save.on path{fill:var(--gold)} .save.on span{color:var(--gold)}
+.sep{width:22px;height:1px;background:var(--line);margin:4px 0}
+
+/* Toque duplo: coração que sobe com halo */
+.big{position:fixed;z-index:8;pointer-events:none;width:96px;height:96px;margin:-48px 0 0 -48px;animation:big 1s var(--ease) forwards}
+.big svg{width:100%;height:100%;fill:var(--heart);filter:drop-shadow(0 8px 24px rgba(217,58,86,.4))}
+@keyframes big{0%{transform:scale(.2) rotate(var(--r));opacity:0}18%{transform:scale(1.15) rotate(var(--r));opacity:1}32%{transform:scale(.95) rotate(var(--r))}
+  70%{transform:scale(1) rotate(var(--r)) translateY(-10px);opacity:1}100%{transform:scale(.8) rotate(var(--r)) translateY(-90px);opacity:0}}
+.halo{position:fixed;z-index:7;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,var(--heart) 0%,transparent 70%);animation:halo .9s var(--ease) forwards}
+@keyframes halo{0%{transform:scale(.4);opacity:.45}100%{transform:scale(14);opacity:0}}
