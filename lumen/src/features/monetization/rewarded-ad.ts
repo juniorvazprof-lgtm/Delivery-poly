@@ -28,3 +28,15 @@ export function watchAd(){if(rewardsLeft()<=0)return;closeSheet();const was=P.pl
       if(P.tr&&P.mode==="player")play(P.tr,"player",P.offset);else if(was)resume();
       if(!(P.mode==="player"&&P.tr))playQueue(TR.filter(t=>t.al==="quietude").map(t=>t.id),0,"Quietude");else renderPlayer();openNP();
       toast(html`Louvor liberado <em>sem interrupções</em>`)}},100)}
+
+/** Anúncio com recompensa genérico (ex.: +1 busca, +1 compartilhamento). Chama onDone ao terminar. */
+export function watchRewardAd(reward:string,onDone:()=>void){closeSheet();
+  const D=6,t0=Date.now();adv.classList.add("open");
+  setHTML(byId("advBody"), html`<div class="advmedia">Conferência Exemplo 2027</div><p>Três dias de louvor e palavra em São Paulo. Anúncio de exemplo.</p>`);
+  setHTML(byId("advFoot"), html`<div class="rbar"><i id="rb"></i></div><div class="rlabel">Sua recompensa: ${reward}</div>`);
+  const cd=byId("cd");
+  const iv=setInterval(()=>{const p=Math.min(1,(Date.now()-t0)/(D*1000));byId("rb").style.width=p*100+"%";cd.textContent=String(Math.ceil(D*(1-p))||"✓");
+    if(p<1)return;clearInterval(iv);vibrate(15);
+    setHTML(byId("advBody"), html`<div class="done"><div class="ok">✓</div><h3>Você ganhou ${reward}</h3><p>Obrigado por apoiar o Lumen.</p></div>`);
+    setHTML(byId("advFoot"), html`<button class="primary" id="advGo">Continuar</button>`);
+    byId("advGo").onclick=()=>{adv.classList.remove("open");onDone()}},100)}

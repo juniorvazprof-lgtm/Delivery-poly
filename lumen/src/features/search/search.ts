@@ -103,7 +103,7 @@ function mark(x: string): SafeHtml {
 async function submit(): Promise<void> {
   const q = input.value.trim().slice(0, 60);
   if (!q) return;
-  if (!useSearch()) { renderHome(); return; }
+  if (!useSearch(() => { void submit(); })) { renderHome(); return; }
   input.blur();
   const my = ++token, ref = parseQuery(q);
   hits = []; words = [];
