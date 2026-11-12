@@ -479,6 +479,20 @@ body.deep .page{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 48px)}
 .about-b p,.about-b li{font-size:.9rem;line-height:1.6;margin:0 0 10px}
 .about-b ul{padding-left:18px;margin:0 0 12px}
 .about-b .label{margin-top:16px}
+.soonb{display:inline-flex;align-items:center;font:800 .58rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);border-radius:99px;padding:3px 8px;white-space:nowrap;vertical-align:middle;flex:none}
+.soonb.big{font-size:.64rem;padding:5px 10px}
+.pchip[hidden]{display:none!important}
+.primary .soonb,.go-preach .soonb{border-color:currentColor;color:inherit;opacity:.8;margin-right:6px}
+.opt .soonb{margin-left:auto}
+.soonpage{text-align:center;padding-top:10px}
+.soonpage .albums{justify-content:center;overflow:visible;margin-bottom:22px;gap:0}
+.soonpage .albums .cover{width:110px;flex:0 0 110px;border-radius:18px;font-size:.9rem;box-shadow:0 14px 30px rgba(0,0,0,.18)}
+.soonpage .albums .cover:nth-child(1){transform:rotate(-8deg) translateX(18px)}
+.soonpage .albums .cover:nth-child(2){z-index:1;transform:translateY(-8px)}
+.soonpage .albums .cover:nth-child(3){transform:rotate(8deg) translateX(-18px)}
+.soonpage h3{font:450 1.8rem var(--serif);margin:10px 0 8px}
+.soonpage .lead{color:var(--muted);line-height:1.55;margin:0 auto 20px;max-width:24rem}
+.prevbar{display:flex;align-items:center;gap:8px;font:600 .76rem var(--sans);color:var(--muted);margin:-4px 0 14px}
 /* Púlpito: preparar */
 .newsm{margin-top:26px;border-top:1px solid var(--line);padding-top:6px}
 .newsm summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:14px 2px;font:700 .95rem var(--sans)}
@@ -912,7 +926,7 @@ function openMenu(v){
   openSheet(`<h2>${v.r}</h2><p class="sub">${v.t.join(" · ")}</p>
    <button class="opt" data-a="ler">${ICON.book}<div>Ler o capítulo inteiro<small>Veja o versículo no contexto</small></div></button>
    <button class="opt" data-a="tema">${ICON.tag}<div>Ver mais sobre ${v.t[0]}<small>Filtra o feed por este tema</small></div></button>
-   <button class="opt" data-a="ouvir">${ICON.ear}<div>Ouvir em voz alta</div></button>
+   <button class="opt" data-a="ouvir">${ICON.ear}<div>Ouvir em voz alta</div>${SB}</button>
    <button class="opt" data-a="copiar">${ICON.copy}<div>Copiar texto</div></button>
    <button class="opt" data-a="foco">${IC("lens")}<div>Modo foco<small>Esconde tudo e deixa só o versículo. Toque para sair.</small></div></button>
    <button class="opt" data-a="menos">${ICON.less}<div>Mostrar menos assim<small>Diminui este tema no seu feed</small></div></button>`,"Opções do versículo");
@@ -921,7 +935,7 @@ function openMenu(v){
     else if(a==="foco"){setTimeout(()=>document.body.classList.add("focus"),300)}
     else if(a==="menos"){v.t.forEach(t=>taste[t]=Math.min(taste[t]||0,0)-3);persist();toast(`Vamos mostrar menos sobre <em>${v.t[0]}</em>`)}
     else if(a==="ler")setTimeout(()=>openReader(v),250);
-    else toast("O áudio chega na próxima versão")});
+    else setTimeout(()=>soon("Ouvir em voz alta"),280)});
 }
 
 /* ---------- Versículo do dia ---------- */
@@ -1009,8 +1023,8 @@ function renderYou(){
    <div class="stats"><div><b>${streak.n}</b><small>${streak.n===1?"dia":"dias seguidos"}</small></div><div><b>${S.get("lumen.prayCount",0)}</b><small>orações</small></div><div><b>${list.length}</b><small>salvos</small></div></div>
    <div class="group"><div class="label">Rotina</div>
     <button class="ri" data-a="pray">${IC("candle")}Orar agora<span class="v">${IC("chev")}</span></button>
-    <button class="ri" data-a="prayAt">${IC("bell")}Horário da oração<span class="v">${prayAt||"Desligado"}${IC("chev")}</span></button>
-    <button class="ri" data-a="remind">${IC("book")}Versículo do dia<span class="v">${remind||"Desligado"}${IC("chev")}</span></button>
+    <button class="ri" data-a="prayAt">${IC("bell")}Horário da oração<span class="v">${SB}</span></button>
+    <button class="ri" data-a="remind">${IC("book")}Lembrete do versículo do dia<span class="v">${SB}</span></button>
     <button class="ri" data-a="nav">${IC("home")}Barra de navegação<span class="v">${document.body.classList.contains("navtop")?"Em cima":"Embaixo"}${IC("chev")}</span></button>
     <button class="ri" data-a="mood">${IC("mood")}Como estou me sentindo<span class="v">${IC("chev")}</span></button></div>
    ${top.length?`<div class="group"><div class="label">O que tem tocado você</div><div class="taste">${top.map(([t,s])=>`<div>${t}<span><i style="width:${Math.max(8,s/max*100)}%"></i></span></div>`).join("")}</div></div>`:""}
@@ -1022,7 +1036,7 @@ function renderYou(){
    <button class="link about" id="aboutBible">${IC("book")}Sobre a Bíblia e as fontes</button></div>`;
   document.getElementById("aboutBible").onclick=openAboutBible;
   yPage.querySelectorAll(".ri").forEach(b=>b.onclick=()=>{const a=b.dataset.a;
-    if(a==="nav"){const top=!document.body.classList.contains("navtop");document.body.classList.toggle("navtop",top);S.set("lumen.navpos",top?"top":"bottom");renderYou();toast(top?"Barra em cima":"Barra embaixo")}else if(a==="pray")openPray();else if(a==="prayAt")openPrayTime();else if(a==="remind")openRemind();else if(a==="mood")onboarding();else goTab("premium")});
+    if(a==="nav"){const top=!document.body.classList.contains("navtop");document.body.classList.toggle("navtop",top);S.set("lumen.navpos",top?"top":"bottom");renderYou();toast(top?"Barra em cima":"Barra embaixo")}else if(a==="pray")openPray();else if(a==="prayAt"||a==="remind")soon("Lembretes");else if(a==="mood")onboarding();else goTab("premium")});
   yPage.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{saved=saved.filter(r=>r!==b.dataset.r);persist();syncCards();
     const it=b.closest(".saved-item");it.style.transition=".35s";it.style.opacity="0";it.style.transform="translateX(30px)";setTimeout(renderYou,300)});
 }
@@ -1043,6 +1057,20 @@ function openAboutBible(){
      <li>15 versículos ausentes no arquivo de origem, como Mateus 17:21 e Atos 8:37, foram completados com a Almeida de 1911 (domínio público), com ortografia atualizada.</li>
      <li>No feed, a primeira letra fica maiúscula e a pontuação final é ajustada, porque o versículo aparece sozinho na tela.</li></ul>
     <p class="fine" style="text-align:left">Encontrou algum erro no texto? Avise pela página do app na loja.</p></div>`,"Sobre a Bíblia")}
+
+const SB='<span class="soonb">Em breve</span>';
+const SOONS={
+ "Louvores":"Louvores originais para ouvir no feed e no player, com playlists e ranking. Por enquanto você pode ver uma prévia com faixas de demonstração.",
+ "Lumen Premium":"Pregação com IA, louvores sem limite e app sem anúncios. As assinaturas ainda não estão abertas.",
+ "Pregação com IA":"Escolha o tema e o Púlpito escreve uma pregação completa, com passagens e contexto. Enquanto isso, use o exemplo pronto e o modo Pregar.",
+ "Ouvir em voz alta":"Os versículos lidos em voz calma, para ouvir no ônibus ou antes de dormir.",
+ "Lembretes":"Notificações no horário que você escolher, com o versículo do dia e o convite para orar."};
+function soon(name){const w=S.get("lumen.notify",[]),on=w.includes(name);
+  openSheet(`<div style="margin:2px 0 10px"><span class="soonb big">Em breve</span></div><h2>${name}</h2><p class="sub">${SOONS[name]||""}</p>
+   <button class="primary" id="ntf" ${on?"disabled":""}>${on?"Você será avisado":"Me avise quando chegar"}</button>
+   ${name==="Louvores"?'<button class="ghost" id="prev">Ver prévia do player</button>':""}`,"Em breve");
+  document.getElementById("ntf").onclick=()=>{S.set("lumen.notify",[...new Set([...w,name])]);closeSheet();toast("Combinado. <em>Vamos te avisar</em>")};
+  const pv=document.getElementById("prev");if(pv)pv.onclick=()=>{closeSheet();musicPreview=true;renderLib()}}
 
 /* ---------- Navegação inferior ---------- */
 const bnav=document.getElementById("bnav");
@@ -1139,9 +1167,10 @@ function startVoice(tr,offset){const c=ac(),bus=c.createGain(),lp=c.createBiquad
 function stopVoice(st,f=.8){if(!st)return;clearInterval(st.timer);const g=st.bus.gain,n=AC.currentTime;g.cancelScheduledValues(n);g.setValueAtTime(g.value,n);g.linearRampToValueAtTime(0,n+f);setTimeout(()=>st.bus.disconnect(),f*1000+2500)}
 
 /* ---------- Estado de reprodução, Premium e recompensas ---------- */
-let premium=S.get("lumen.prem",false),soundOn=S.get("lumen.sound",false),rewardUntil=S.get("lumen.rwu",0),rw=S.get("lumen.rw",{day:null,n:0}),warned=false;
+let premium=false,musicPreview=false,soundOn=S.get("lumen.sound",false),rewardUntil=S.get("lumen.rwu",0),rw=S.get("lumen.rw",{day:null,n:0}),warned=false;
 const MAX_REWARDS=3,REWARD_MIN=15,PREVIEW=30;
-const canFull=()=>premium||Date.now()<rewardUntil;
+const canFull=()=>premium||musicPreview||Date.now()<rewardUntil;
+const ADS_ON=false;
 function rewardsLeft(){const d=dayKey(new Date());if(rw.day!==d)rw={day:d,n:0};return MAX_REWARDS-rw.n}
 const P={tr:null,mode:null,voice:null,start:0,offset:0,playing:false,gated:false};
 const elapsed=()=>P.playing?P.offset+(Date.now()-P.start)/1000:P.offset;
@@ -1160,7 +1189,7 @@ function feedSound(card){if(!soundOn||P.mode==="player")return;
   if(!card||!card._v){if(P.playing)pause();return}
   const tr=trackFor(card._v);if(P.playing&&P.tr===tr)return;play(tr,"feed",Math.random()*60)}
 snd.onclick=()=>{soundOn=!soundOn;S.set("lumen.sound",soundOn);S.set("lumen.sndUsed",1);
-  if(soundOn){if(P.mode==="player"&&P.tr)resume();else feedSound(active);toast("Trilha ligada · <em>faixas de exemplo</em>")}else pause();updateBody()};
+  if(soundOn){if(P.mode==="player"&&P.tr)resume();else feedSound(active);toast("Trilha de demonstração · <em>louvores originais em breve</em>")}else pause();updateBody()};
 document.addEventListener("pointerdown",()=>{if(soundOn&&!P.playing&&P.mode!=="player")feedSound(active)},{once:true});
 
 /* ---------- Ouvir: biblioteca, ranking, playlists e fila ---------- */
@@ -1201,7 +1230,7 @@ function toggleSongLike(id,btn){const on=!songLikes.includes(id);songLikes=on?[i
 
 /* Abrir e fechar */
 function openPlayer(tr,autoplay){premEl.classList.remove("open");closeYou();playerOpen=true;setTab("listen");document.body.classList.remove("focus");
-  if(tr&&autoplay){const l=TR.filter(t=>t.al===tr.al);playQueue(l.map(t=>t.id),l.indexOf(tr),albumOf(tr).name);openNP()}
+  if(tr&&autoplay&&musicPreview){const l=TR.filter(t=>t.al===tr.al);playQueue(l.map(t=>t.id),l.indexOf(tr),albumOf(tr).name);openNP()}
   renderLib();playerEl.classList.add("open");updateMini()}
 function closePlayer(){if(!playerOpen)return;playerOpen=false;playerEl.classList.remove("open");setTab("feed");updateMini()}
 document.getElementById("pPrem").onclick=()=>goTab("premium");
@@ -1227,7 +1256,12 @@ function bindLists(root){
     L.querySelectorAll(".mb").forEach(b=>b.onclick=()=>songMenu(b.dataset.m,c))})}
 
 /* Telas da aba Ouvir */
-function renderLib(){ctx={};document.getElementById("pPrem").hidden=premium;
+function renderLib(){ctx={};document.getElementById("pPrem").hidden=true;
+  if(!musicPreview){pPage.innerHTML=`<div class="sw soonpage"><div class="albums" aria-hidden="true">${ALBUMS.slice(0,3).map(a=>`<span class="cover" style="${coverStyle(a)}">${a.name}</span>`).join("")}</div>
+    ${SB}<h3>Louvores originais</h3><p class="lead">${SOONS.Louvores}</p>
+    <button class="primary" id="ntfM">${S.get("lumen.notify",[]).includes("Louvores")?"Você será avisado":"Me avise quando chegar"}</button><button class="ghost" id="prevM">Ver prévia do player</button></div>`;
+    document.getElementById("ntfM").onclick=()=>{S.set("lumen.notify",[...new Set([...S.get("lumen.notify",[]),"Louvores"])]);toast("Combinado. <em>Vamos te avisar</em>");renderLib()};
+    document.getElementById("prevM").onclick=()=>{musicPreview=true;renderLib()};return}
   let h="";const d=LV.det;
   if(d){const back=`<button class="backrow" id="libBack">${IC("back")}Voltar</button>`;
     if(d.type==="album"){const al=ALBUMS.find(a=>a.id===d.id),ids=TR.filter(t=>t.al===al.id).map(t=>t.id);
@@ -1251,7 +1285,7 @@ function renderLib(){ctx={};document.getElementById("pPrem").hidden=premium;
        ${pls.map(p=>`<button class="librow" data-pl="${p.id}">${cov({colors:p.c},"sm")}<span class="tt"><b>${esc(p.name)}</b><small>Playlist · ${p.ids.length}</small></span>${IC("chev")}</button>`).join("")}
        <button class="librow add" id="newPl"><span class="cover sm addc">+</span><span class="tt"><b>Nova playlist</b><small>Dê um nome e adicione músicas</small></span></button>
        ${recentS.length?`<div class="label" style="margin-top:24px">Ouvidas recentemente</div>`+list(recentS.slice(0,8),"rec","Recentes"):""}`}}
-  pPage.innerHTML=`<div class="sw ouvir">${h}</div>`;bindLists(pPage);
+  pPage.innerHTML=`<div class="sw ouvir"><div class="prevbar">${SB} Prévia com faixas de demonstração</div>${h}</div>`;bindLists(pPage);
   const $=id=>document.getElementById(id);
   pPage.querySelectorAll(".mtabs button").forEach(b=>b.onclick=()=>{LV.tab=b.dataset.v;vibrate(4);renderLib()});
   pPage.querySelectorAll(".albums button").forEach(b=>b.onclick=()=>{LV.det={type:"album",id:b.dataset.a};renderLib();pPage.scrollTop=0});
@@ -1357,7 +1391,7 @@ function refreshPlayer(){
       const li=Math.min(tr.ly.length-1,Math.floor(e/(tr.dur/tr.ly.length)));
       document.getElementById("ly").style.transform=`translateY(${(1-li)*2.2}em)`;
       document.querySelectorAll("#ly p").forEach((p,k)=>p.classList.toggle("on",k===li));
-      document.getElementById("pill").innerHTML=premium?"Premium · <b>ouça sem limites</b>":canFull()?`Grátis por mais <b>${mmss((rewardUntil-Date.now())/1000)}</b>${rewardsLeft()>0?" · <b>+15 min ›</b>":""}`:`Prévias de 30 s · <b>Ouvir 15 min grátis ›</b>`}}}
+      document.getElementById("pill").innerHTML=musicPreview?"Prévia · <b>louvores originais em breve</b>":premium?"Premium · <b>ouça sem limites</b>":canFull()?`Grátis por mais <b>${mmss((rewardUntil-Date.now())/1000)}</b>${rewardsLeft()>0?" · <b>+15 min ›</b>":""}`:`Prévias de 30 s · <b>Ouvir 15 min grátis ›</b>`}}}
 
 /* Mini player */
 const mini=document.getElementById("mini");
@@ -1422,12 +1456,12 @@ const PERKS=[["Louvores completos, sem limite","Todos os álbuns, offline e com 
 let plan="anual";
 function openPremium(){closeSheet();closeYou();if(playerOpen){playerOpen=false;playerEl.classList.remove("open");updateMini()}renderPremium();premEl.classList.add("open");setTab("premium")}
 function closePremium(){if(!premEl.classList.contains("open"))return;premEl.classList.remove("open");setTab(playerOpen?"listen":"feed")}
-const TOOLS=[{id:"pulpito",ic:"pulpit",n:"Púlpito",d:"Pregação pronta para ler no celular, com o contexto de cada passagem.",go:()=>openSerm()},
- {id:"louvor",ic:"note",n:"Louvores sem limite",d:"Todos os álbuns completos, sem anúncio.",go:()=>goTab("listen")},
- {id:"semads",ic:"noads",n:"Sem anúncios",d:"O feed fica só com a Palavra."}];
+const TOOLS=[{id:"pulpito",ic:"pulpit",n:"Púlpito",d:"Exemplo pronto e modo Pregar já disponíveis. Pregação com IA em breve.",go:()=>openSerm()},
+ {id:"louvor",ic:"note",n:"Louvores sem limite",d:"Todos os álbuns completos, sem anúncio.",soon:"Louvores"},
+ {id:"semads",ic:"noads",n:"Sem anúncios",d:"O feed fica só com a Palavra.",soon:"Lumen Premium"}];
 const SOON="Em breve: Bíblia narrada, planos de leitura e novos temas visuais.";
 function renderPremium(){const sel=PLANS.find(p=>p.id===plan);
-  const tool=t=>`<button class="tool2" data-t="${t.id}">${IC(t.ic)}<div><b>${t.n}</b><small>${t.d}</small></div>${premium?(t.go?IC("chev"):'<span class="st">Ativo</span>'):IC("lock")}</button>`;
+  const tool=t=>`<button class="tool2" data-t="${t.id}">${IC(t.ic)}<div><b>${t.n}</b><small>${t.d}</small></div>${t.soon?'<span class="soonb">Em breve</span>':IC("chev")}</button>`;
   prPage.innerHTML=premium?`<div class="pw">
     <button class="tool2 hero" data-t="pulpito">${IC("pulpit")}<b>Preparar uma pregação</b><small>Texto pronto para ler, uma parte por tela, com o contexto de cada passagem.</small><span class="primary" style="display:block;text-align:center">Abrir o Púlpito</span></button>
     <div class="tools2">${TOOLS.slice(1).map(tool).join("")}</div><p class="soonline">${SOON}</p>
@@ -1435,11 +1469,11 @@ function renderPremium(){const sel=PLANS.find(p=>p.id===plan);
    :`<div class="pw"><div class="crown">${IC("star")}</div><h3>Lumen Premium</h3><p class="lead">Vá mais fundo na Palavra, sem interrupções.</p>
     <div class="tools2">${TOOLS.map(tool).join("")}</div><p class="soonline">${SOON}</p>
     <div class="seg">${PLANS.map(p=>`<button class="${p.id===plan?"on":""}" data-p="${p.id}" aria-pressed="${p.id===plan}">${p.id==="anual"?"<em>-50%</em>":""}<span>${p.n}</span><strong>${p.p}</strong><small>${p.u}</small></button>`).join("")}</div>
-    <button class="primary" id="prGo">Testar 7 dias grátis</button>
-    <p class="fine">${sel.d}. Depois do teste, ${sel.p} ${sel.u}.<br>Demonstração: nada é cobrado.</p></div>`;
-  prPage.querySelectorAll(".tool2").forEach(b=>b.onclick=()=>{const t=TOOLS.find(x=>x.id===b.dataset.t);if(t&&t.go)t.go();else if(t)toast(premium?"Sem anúncios está ativo":"Ative o Premium para tirar os anúncios")});
+    <button class="primary" id="prGo">${SB} Me avise quando abrir</button>
+    <p class="fine">Assinaturas em breve. Preços previstos, com 7 dias grátis para testar.</p></div>`;
+  prPage.querySelectorAll(".tool2").forEach(b=>b.onclick=()=>{const t=TOOLS.find(x=>x.id===b.dataset.t);if(t&&t.go)t.go();else if(t)soon(t.soon)});
   prPage.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{plan=b.dataset.p;vibrate(5);renderPremium()});
-  const go=document.getElementById("prGo");if(go)go.onclick=()=>setPremium(true);
+  const go=document.getElementById("prGo");if(go)go.onclick=()=>soon("Lumen Premium");
   const off=document.getElementById("prOff");if(off)off.onclick=()=>setPremium(false)}
 function setPremium(on){premium=on;S.set("lumen.prem",on);renderPremium();if(smEl.classList.contains("open"))renderSerm();
   if(youEl.classList.contains("open"))renderYou();
@@ -1482,14 +1516,14 @@ function renderPray(){const n=pSteps.length+2,mine=V.some(v=>liked.has(v.r));
   else{const c=S.get("lumen.prayCount",0)+1;S.set("lumen.prayCount",c);
     body=`<div class="step" style="text-align:center;align-items:center"><div class="crown heartc">${IC("heart")}</div><h3>Amém</h3>
      <p class="prompt">Esta foi sua ${c}ª oração no Lumen.${prayAt?` Amanhã às ${prayAt} tem mais.`:""}</p>
-     ${prayAt?"":`<button class="sec" id="pyTime" style="width:100%">Lembrar todo dia</button>`}<button class="primary" id="pyDone" style="width:100%">Voltar ao feed</button></div>`;
+     <button class="sec" id="pyTime" style="width:100%">${SB} Lembrar todo dia</button><button class="primary" id="pyDone" style="width:100%">Voltar ao feed</button></div>`;
     setTimeout(()=>heartAt(innerWidth/2,innerHeight*.35),300)}
   pyPage.innerHTML=`<div class="dots">${Array.from({length:n},(_,i)=>`<i class="${i<=pStep?"on":""}"></i>`).join("")}</div>${body}`;
   const nx=document.getElementById("pyNext");if(nx)nx.onclick=()=>{pStep++;vibrate(6);renderPray()};
   const dn=document.getElementById("pyDone");if(dn)dn.onclick=closePray;
-  const tm=document.getElementById("pyTime");if(tm)tm.onclick=openPrayTime}
+  const tm=document.getElementById("pyTime");if(tm)tm.onclick=()=>soon("Lembretes")}
 function closePray(){prayEl.classList.remove("open")}
-document.getElementById("pyClose").onclick=closePray;document.getElementById("pyBell").onclick=openPrayTime;
+document.getElementById("pyClose").onclick=closePray;document.getElementById("pyBell").onclick=()=>soon("Lembretes");
 function openPrayTime(){const T=["06:00","07:00","12:00","18:00","21:00","22:00"];let pick=prayAt||"07:00";
   const v=V.find(x=>liked.has(x.r))||V[0];
   openSheet(`<h2>Hora da sua oração</h2><p class="sub">Todo dia, no horário escolhido, você recebe um convite para orar com um versículo que você curtiu.</p>
@@ -1553,7 +1587,7 @@ function renderSerm(){
    <div class="label">Passagem principal <span style="text-transform:none;letter-spacing:0;font-weight:500">(opcional)</span></div>
    <input id="smRef" class="field" placeholder="Ex.: Salmos 23 ou João 15:1-5" value="${esc(SM.ref)}" autocomplete="off">
    ${chipRow("ocasiao","Para quem",OCAS)}${chipRow("dur","Duração",[15,30,45],d=>d+" min")}
-   <button class="primary" id="smGo">${premium?"Gerar pregação com IA":"Gerar com IA · Premium"}</button></details></div>`;
+   <button class="primary" id="smGo">${premium?"Gerar pregação com IA":SB+" Gerar com IA"}</button></details></div>`;
   smPage.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const k=b.dataset.k;SM[k]=k==="dur"?+b.dataset.v:b.dataset.v;
     smPage.querySelectorAll(`.chip[data-k="${k}"]`).forEach(x=>x.classList.toggle("on",x===b))});
   document.getElementById("smRef").oninput=e=>SM.ref=e.target.value.slice(0,60);
@@ -1579,7 +1613,7 @@ Para cada passagem, explique como um professor conversando com uma criança de 1
 Responda SOMENTE com um objeto JSON neste formato:
 {"titulo":"","ideia_central":"uma frase","passagens":[{"ref":"Livro 1:2","texto":"","quem":"","para_quem":"","quando":"","explicacao":"","palavras":[{"p":"","s":""}],"lembrar":""}],"partes":[{"nome":"","min":2,"ref":"Livro 1:2 ou vazio","fala":""}]}`}
 async function generate(){
-  if(!premium){goTab("premium");toast("O Púlpito com IA faz parte do Premium");return}
+  if(!premium){soon("Pregação com IA");return}
   const out=document.getElementById("smOut");document.querySelector(".newsm").open=false;smPage.scrollTo({top:0,behavior:"smooth"});
   if(!SAMPLE){out.innerHTML=`<p class="disclaim">A geração com IA funciona com o protótipo aberto no Claude. Abaixo está o exemplo pronto.</p>`+sermonHTML(EXAMPLE);sermon=EXAMPLE;bindSermon();return}
   smCtl?.abort();smCtl=new AbortController();const btn=document.getElementById("smGo");btn.disabled=true;
@@ -1684,7 +1718,7 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{
 }),{root:feed,threshold:[.6]});
 let made=1,sinceAd=0,adsShown=0;
 function more(n){for(let i=0;i<n;i++){
-  if(!premium&&made>=10&&sinceAd>=8&&adsShown<6){const a=makeAd();feed.appendChild(a);io.observe(a);sinceAd=0;adsShown++;continue}
+  if(ADS_ON&&!premium&&made>=10&&sinceAd>=8&&adsShown<6){const a=makeAd();feed.appendChild(a);io.observe(a);sinceAd=0;adsShown++;continue}
   const c=makeCard(pick(),!feed.children.length);feed.appendChild(c);io.observe(c);made++;sinceAd++}}
 {const d=dailyVerse();recent.push(d.r);const c=makeCard(d,true,true);feed.appendChild(c);io.observe(c)}
 more(4);
