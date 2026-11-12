@@ -1,0 +1,57 @@
+# Publica a página do Lumen (site/) e o app (lumen/) no GitHub Pages.
+#   Página: https://<usuário>.github.io/<repositório>/
+#   App:    https://<usuário>.github.io/<repositório>/app/
+# Para ativar: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+name: Publicar página e app
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "lumen/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: lumen/package-lock.json
+      - name: Instalar e checar o app
+        working-directory: lumen
+        run: |
+          npm ci
+          npm run typecheck
+          npm audit --audit-level=high
+          npm run build
+      - name: Montar a página com o app em /app
+        run: |
+          mkdir -p public
+          cp -r site/index.html site/privacidade.html site/img public/
+          cp -r lumen/dist public/app
+          touch public/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

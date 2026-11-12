@@ -19,3 +19,12 @@ export const FEATURES = {
 } as const;
 
 export const ADS_ON = FEATURES.ads;
+
+/**
+ * Rodapé das imagens de compartilhar (marca d'água).
+ * Quando a página do app estiver no ar, preencha `site` (ex.: "lumen.app.br") para ele aparecer na imagem.
+ */
+export const SHARE_FOOTER = {
+  tagline: "Em breve nas lojas de aplicativos",
+  site: "",
+} as const;
