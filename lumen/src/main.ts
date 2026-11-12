@@ -24,6 +24,7 @@ import { setLight, toast, vibrate } from "./ui/effects";
 import { IC, IP } from "./ui/icons";
 import { closeSheet, veil } from "./ui/sheet";
 import { soon } from "./ui/soon";
+import "./features/search/search";
 
 fBtn.onclick=()=>{setFilter(null);toast("Voltando ao seu feed")};
 veil.onclick=closeSheet;
@@ -33,7 +34,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
 byId("rClose").onclick=closeReader;
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeReader()});
 qa(bnav, "button").forEach(b=>b.onclick=()=>{vibrate(4);goTab(b.dataset.tab||"feed")});
-{const deepIds=["reader","pray","serm","np"],mo=new MutationObserver(()=>document.body.classList.toggle("deep",deepIds.some(id=>byId(id).classList.contains("open"))));
+{const deepIds=["search","reader","pray","serm","np"],mo=new MutationObserver(()=>document.body.classList.toggle("deep",deepIds.some(id=>byId(id).classList.contains("open"))));
   deepIds.forEach(id=>mo.observe(byId(id),{attributes:true,attributeFilter:["class"]}))}
 snd.onclick=()=>{store.soundOn=!store.soundOn;S.set("lumen.sound",store.soundOn);S.set("lumen.sndUsed",1);
   if(store.soundOn){if(P.mode==="player"&&P.tr)resume();else feedSound(store.active);toast(html`Trilha de demonstração · <em>louvores originais em breve</em>`)}else pause();updateBody()};
@@ -63,5 +64,5 @@ setInterval(tick,500);
     if(r.height===0||r.bottom>vh+2)document.body.classList.add("navtop")};
   setTimeout(check,600);window.visualViewport?.addEventListener("resize",check);addEventListener("resize",check)})();
 qa(document, "[data-i]").forEach(el=>el.outerHTML=html`<svg viewBox="0 0 24 24" aria-hidden="true">${raw(IP[el.dataset.i||""]||"")}</svg>`.value);
-[["rClose","back"],["pyClose","back"],["smClose","back"],["pyBell","bell"],["mX","close"],["npClose","back"]].forEach(([id,n])=>setHTML(byId(id), html`<svg viewBox="0 0 24 24">${raw(IP[n])}</svg>`));
+[["fClose","back"],["rClose","back"],["pyClose","back"],["smClose","back"],["pyBell","bell"],["mX","close"],["npClose","back"]].forEach(([id,n])=>setHTML(byId(id), html`<svg viewBox="0 0 24 24">${raw(IP[n])}</svg>`));
 byId("pPrem").insertAdjacentHTML("afterbegin",IC("star").value);

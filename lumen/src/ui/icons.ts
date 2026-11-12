@@ -27,6 +27,7 @@ export const IP: Record<string, string> = {
  hourglass:'<path d="M6.5 3.5h11M6.5 20.5h11M8 3.5c0 4.5 8 4.5 8 8.5s-8 4-8 8.5M16 3.5c0 4.5-8 4.5-8 8.5s8 4 8 8.5"/><circle class="lx" cx="12" cy="17.6" r="1.3"/>',
  lens:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.3 15.3 20 20"/><circle class="lx" cx="10.5" cy="10.5" r="1.5"/>',
  sprout:'<path d="M12 20.5v-8M12 12.5C12 8.5 9 6 4.5 6c0 4.2 3 6.5 7.5 6.5zM12 14.5c0-3.2 2.5-5.5 6.5-5.5 0 3.3-2.5 5.5-6.5 5.5z"/><circle class="lx" cx="12" cy="4" r="1.4"/>',
+ search:'<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/><circle class="lx" cx="10.5" cy="10.5" r="1.3"/>',
  close:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
  back:'<path d="M14.5 5.5 8 12l6.5 6.5"/>',
  chev:'<path d="M9.5 5.5 16 12l-6.5 6.5"/>',
