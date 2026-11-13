@@ -12,6 +12,12 @@ const failed = (e: unknown) => {
   throw e;
 };
 
+let guided: Promise<typeof import("../features/guided/guided")> | null = null;
+export function loadGuided() {
+  guided ??= import("../features/guided/guided").catch(e => { guided = null; return failed(e); });
+  return guided;
+}
+
 export function loadPulpit() {
   // Se falhar (sem internet na primeira vez), a próxima tentativa baixa de novo.
   pulpit ??= import("../features/pulpit/pulpit").catch(e => { pulpit = null; return failed(e); });

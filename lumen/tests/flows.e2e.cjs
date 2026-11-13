@@ -65,6 +65,13 @@ async function main() {
     const r = await p.textContent("#fPage"); if (!/João 3:16/.test(r) || /acabaram/.test(r)) throw new Error("busca por referência deveria ser livre");
     await tap("#fClose").catch(() => p.keyboard.press("Escape")); await wait(400);
   });
+  await step("pregação guiada: avança sozinha, pausa e fecha", async () => {
+    await tap("#bnav [data-tab=guide]"); await wait(1500);
+    const t1 = await p.textContent("#gStage"); await wait(4200); const t2 = await p.textContent("#gStage");
+    if (t1 === t2) throw new Error("não avançou sozinha");
+    await tap("#gPlay"); await wait(300); if (!(await p.$eval("#guide", e => e.classList.contains("paused")))) throw new Error("não pausou");
+    await tap("#gNext"); await wait(600); await tap("#gX"); await wait(1000);
+  });
   await step("premium e púlpito", async () => { await tap("#bnav [data-tab=premium]"); await wait(700); await tap(".tool2[data-t=pulpito]"); await wait(800); });
   await step("modo pregar", async () => {
     await tap("#goPreach"); await wait(700); await tap("#prNext"); await wait(500); await tap("#prX"); await wait(400);
