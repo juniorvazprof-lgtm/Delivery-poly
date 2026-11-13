@@ -96,3 +96,11 @@ body.rezando #bnav{transform:translateY(130%);opacity:0;pointer-events:none}
 #bnav svg .lx{opacity:0}#bnav button.on svg .lx{opacity:1}
 #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 92px)}
 @media (prefers-reduced-motion:reduce){.reza-corpo,.reza .w,.hint{animation:none!important;opacity:1!important;filter:none!important}}
+.preceito{margin:0;padding:10px 14px;border-radius:14px;background:color-mix(in srgb,var(--gold) 16%,transparent);font:700 .84rem var(--sans);color:var(--ink)}
+.santo b+b{margin-top:2px}
+.card blockquote.ev{font-size:clamp(1.1rem,4.8vw,1.35rem);color:var(--ink)}
+.prev{text-align:left;margin:0}
+.evangelho sup{font:700 .62rem var(--sans);color:var(--gold);margin-right:4px;vertical-align:.45em}
+.antiga{margin-top:16px;border-top:1px solid var(--line);padding-top:6px}
+.antiga summary{cursor:pointer;padding:12px 0;font:700 .84rem var(--sans);color:var(--gold);list-style:none}
+.antiga p{font:400 1.02rem/1.6 var(--serif);color:var(--muted);margin:0 0 10px;user-select:text;-webkit-user-select:text}

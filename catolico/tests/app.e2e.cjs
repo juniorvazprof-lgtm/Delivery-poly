@@ -11,6 +11,11 @@ const server = http.createServer((q, r) => { const f = path.join(ROOT, decodeURI
   let falhas = 0; const ok = (c, n) => { console.log((c ? "✓ " : "✗ ") + n); if (!c) falhas++; };
   await p.goto("http://localhost:4620/"); await p.waitForTimeout(1000);
   ok(/semana|Natal|Páscoa|Advento|Quaresma|Santo|Domingo|Pentecostes|Cinzas/.test(await p.textContent("#app")), "Hoje mostra o dia litúrgico");
+  await p.waitForTimeout(800);
+  const ev = await p.$("#evTxt"); ok(!!ev && (await ev.textContent()).length > 40, "Evangelho do dia carregado no cartão");
+  if (ev) { await p.evaluate(() => document.getElementById("evLer").click()); await p.waitForTimeout(500);
+    ok((await p.$$("#sheet .evangelho p")).length > 3, "Evangelho completo abre com os versículos");
+    await p.evaluate(() => document.getElementById("veil").click()); await p.waitForTimeout(400); }
   await p.tap("#rezei"); ok((await p.textContent("#toast")).includes("Amém"), "oração do dia registra");
   await p.tap("#bnav [data-tab=terco]"); await p.tap("#comecar"); let n = 0;
   while (await p.$("#corpo") && n < 100) { await p.tap("#corpo"); n++; }
@@ -18,6 +23,8 @@ const server = http.createServer((q, r) => { const f = path.join(ROOT, decodeURI
   ok((await p.textContent("#app")).includes("Amém"), "tela final do terço");
   await p.tap("#bnav [data-tab=oracoes]"); await p.tap("[data-o=avemaria]"); await p.waitForTimeout(500);
   ok((await p.textContent("#sheet")).includes("cheia de graça"), "oração abre e mostra o texto");
+  await p.evaluate(() => document.querySelector("#sheet .antiga summary").click()); await p.waitForTimeout(200);
+  ok((await p.textContent("#sheet .antiga")).includes("1778"), "forma antiga da oração com a fonte");
   await p.tap("#amem"); await p.tap("#bnav [data-tab=voce]"); await p.waitForTimeout(300);
   ok(/1\s*terços?/.test(await p.textContent(".stats")), "Você mostra o terço rezado");
   ok(errs.length === 0, "sem erros de script" + (errs.length ? ": " + errs.join(" | ") : ""));

@@ -4,7 +4,8 @@ import { html, raw, setHTML } from "./utils/html";
 import { byId, qa } from "./utils/dom";
 import { IP } from "./ui/icons";
 import { closeSheet, setLight, vibrate } from "./ui/ui";
-import { diaLiturgico, LUZ } from "./core/liturgia";
+import { LUZ } from "./core/liturgia";
+import { infoDoDia } from "./core/dia";
 import { renderHoje } from "./features/hoje";
 import { renderTerco, sairDoTerco } from "./features/terco";
 import { renderOracoes } from "./features/oracoes";
@@ -26,7 +27,7 @@ addEventListener("cat:fechar", closeSheet);
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
 
 // a luz de fundo segue a cor litúrgica do dia
-setLight(LUZ[diaLiturgico(new Date()).cor]);
+setLight(LUZ[infoDoDia(new Date()).cor]);
 qa(document, "[data-i]").forEach(el => el.outerHTML = html`<svg viewBox="0 0 24 24" aria-hidden="true">${raw(IP[el.dataset.i || ""] || "")}</svg>`.value);
 setHTML(app, html``);
 ir("hoje");
