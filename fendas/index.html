@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#07060c">
+<title>Fendas — protótipo bullet heaven</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="view"></canvas>
+<canvas id="fx"></canvas>
+<canvas id="over"></canvas>
+
+<div id="hud">
+  <div id="xpbar"><div id="xpfill"></div></div>
+  <div id="top">
+    <div class="l"><span id="lvl">NV 1</span><span class="coin"><i></i><span id="coins">0</span></span></div>
+    <div id="time">00:00</div>
+    <div class="r"><span class="skull">☠</span><span id="kills">0</span></div>
+  </div>
+  <div id="row2">
+    <div id="loadout"></div>
+    <div id="combo" hidden><b>x0</b><small>COMBO</small></div>
+  </div>
+  <div id="buffs"></div>
+  <div id="hpbar"><div id="hpfill"></div></div>
+  <div id="bossbar" hidden><span id="bossname"></span><div class="track"><div id="bossfill"></div></div></div>
+  <div id="banner" hidden><b></b><small></small></div>
+  <button id="btn-pause" aria-label="Pausa">II</button>
+  <div id="fps" hidden></div>
+</div>
+
+<div id="touch"><div id="stick"><div id="knob"></div></div></div>
+
+<section id="startscreen" class="screen menu">
+  <div class="panel">
+    <div class="goldbar"><i></i><b id="menu-gold">0</b></div>
+    <h1><span>FEN</span><span>DAS</span></h1>
+    <p>Arraste o dedo para mover o Mago. Os feitiços saem sozinhos. Sobreviva 8 minutos e derrote o Guardião.</p>
+    <button id="btn-start" class="btn primary">JOGAR</button>
+    <button id="btn-arsenal" class="btn">ARSENAL</button>
+    <button id="btn-missions" class="btn">MISSÕES <em hidden></em></button>
+    <button id="btn-stats" class="btn">ESTATÍSTICAS</button>
+  </div>
+</section>
+
+<section id="arsenal" class="screen menu" hidden>
+  <div class="panel wide">
+    <div class="mhead"><button class="btn-back">‹</button><h2>ARSENAL</h2><div class="goldbar"><i></i><b class="gold-now">0</b></div></div>
+    <div class="tabs"><button data-tab="feiticos">FEITIÇOS</button><button data-tab="melhorias">MELHORIAS</button><button data-tab="herois">HERÓIS</button></div>
+    <div id="ars-list" class="mlist"></div>
+  </div>
+</section>
+
+<section id="missions" class="screen menu" hidden>
+  <div class="panel wide">
+    <div class="mhead"><button class="btn-back">‹</button><h2>MISSÕES</h2><div class="goldbar"><i></i><b class="gold-now">0</b></div></div>
+    <div id="mis-list" class="mlist"></div>
+  </div>
+</section>
+
+<section id="stats" class="screen menu" hidden>
+  <div class="panel wide">
+    <div class="mhead"><button class="btn-back">‹</button><h2>ESTATÍSTICAS</h2><span></span></div>
+    <dl id="st-list"></dl>
+  </div>
+</section>
+
+<section id="levelup" class="screen" hidden>
+  <div class="panel wide">
+    <h2 id="lv-title">SUBIU DE NÍVEL!</h2>
+    <p class="sub" id="lv-sub">Escolha uma melhoria</p>
+    <div id="choices"></div>
+    <div id="lv-tools"><button id="btn-reroll" class="tool">↻ REROLAR <b id="n-reroll">2</b></button><button id="btn-ban" class="tool">⊘ BANIR <b id="n-ban">2</b></button></div>
+    <p id="ban-hint" class="sub" hidden>Toque na carta que nunca mais deve aparecer nesta partida</p>
+  </div>
+</section>
+
+<section id="slot" class="screen" hidden>
+  <div class="panel wide">
+    <h2 id="slot-title">BAÚ DA FENDA</h2>
+    <p class="sub" id="slot-sub">Role o caça-níquel</p>
+    <div id="reels"></div>
+    <div id="slot-res"></div>
+    <button id="btn-slot" class="btn primary">ROLAR</button>
+  </div>
+</section>
+
+<section id="pause" class="screen" hidden>
+  <div class="panel">
+    <h2>PAUSA</h2>
+    <button id="btn-resume" class="btn primary">CONTINUAR</button>
+    <button id="snd-toggle" class="btn">SOM: SIM</button>
+    <button id="fps-toggle" class="btn">MOSTRAR FPS: NÃO</button>
+    <button id="btn-quit" class="btn ghost">DESISTIR</button>
+  </div>
+</section>
+
+<section id="result" class="screen" hidden>
+  <div class="panel wide">
+    <h2 id="res-title">DERROTADO</h2>
+    <dl id="res-stats"></dl>
+    <p class="sub">Feitiços desta partida</p>
+    <div id="res-build" class="build"></div>
+    <div id="res-dmg"></div>
+    <p id="res-next" class="sub" hidden></p>
+    <div id="res-gold" class="goldbar big"><i></i><b>+0</b></div>
+    <button id="btn-again" class="btn primary">JOGAR DE NOVO</button>
+    <button id="btn-menu" class="btn">MENU</button>
+  </div>
+</section>
+
+<script type="module" src="js/game/main.js"></script>
+</body>
+</html>
