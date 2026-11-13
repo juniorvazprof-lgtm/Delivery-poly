@@ -38,3 +38,14 @@ Informe ao usuário:
 - Estimativa de tokens consumidos pelo DeepSeek (use o relatório de uso devolvido pela ferramenta,
   se houver; senão estime ~4 caracteres/token de entrada+saída) e custo aproximado em US$
   pelos preços atuais do DeepSeek V4.1 Flash.
+
+## Paralelismo e eficiência
+- O servidor só roda **uma execução DeepSeek por vez neste repositório** (trava por workspace).
+  Não tente disparar dois jobs simultâneos aqui.
+- Para tarefas longas use `start_deepseek` (assíncrono): enquanto o job roda, planeje a próxima
+  especificação ou revise o resultado anterior **sem editar os mesmos arquivos**; depois
+  `get_deepseek_status` / `get_deepseek_result`. Corrija o rumo com `send_deepseek_message`.
+- Agrupe várias subtarefas pequenas e parecidas numa única especificação (menos turnos, menos tokens).
+- Para leitura/resumo use sempre `delegate_to_deepseek_readonly` (sem risco de edição).
+- Paralelismo real = várias sessões em nuvem (cada uma com seu contêiner e seu DeepSeek), cada
+  uma num branch próprio; esta sessão orquestra e revisa os diffs no fim.

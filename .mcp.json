@@ -2,8 +2,8 @@
   "mcpServers": {
     "deepseek": {
       "type": "stdio",
-      "command": "/opt/deepseek-mcp/venv/bin/deepseek-mcp",
-      "args": [],
+      "command": "bash",
+      "args": ["scripts/deepseek-mcp.sh"],
       "env": {
         "DEEPSEEK_API_KEY": "${DEEPSEEK_API_KEY:-proxy-injected}"
       }

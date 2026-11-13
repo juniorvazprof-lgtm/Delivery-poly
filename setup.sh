@@ -12,7 +12,8 @@ if [ -x "$PREFIX/venv/bin/deepseek-mcp" ] && [ -f "$MARKER" ]; then
   echo "deepseek-mcp $PINNED_COMMIT já instalado"; exit 0
 fi
 
-command -v uv >/dev/null 2>&1 || pip install -q uv
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+if ! command -v uv >/dev/null 2>&1; then python3 -m pip install -q --root-user-action=ignore uv; fi
 mkdir -p "$PREFIX"
 if [ ! -d "$PREFIX/src/.git" ]; then
   git clone -q --filter=blob:none "$REPO_URL" "$PREFIX/src"

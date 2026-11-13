@@ -8,6 +8,7 @@ através do servidor MCP open source [deepseek-as-subagent](https://github.com/P
 |---|---|
 | `.mcp.json` | Registra o servidor `deepseek`; a chave vem de `DEEPSEEK_API_KEY` |
 | `setup.sh` | Instala o servidor em `/opt/deepseek-mcp` (idempotente, ~3 s) |
+| `scripts/deepseek-mcp.sh` | Inicia o servidor e roda o `setup.sh` sozinho se faltar a instalação |
 | `CLAUDE.md` | Regras do que delegar e do que nunca enviar |
 
 ## Configurar o ambiente em nuvem pelo app do Claude
@@ -23,7 +24,8 @@ através do servidor MCP open source [deepseek-as-subagent](https://github.com/P
      seguro; a chave fica salva como *network secret* de `api.deepseek.com` e o proxy a injeta
      (já libera o host; o `.mcp.json` usa um valor fictício quando a variável não existe).
    - Ou em **Environment variables**: `DEEPSEEK_API_KEY=sk-sua-chave-aqui`.
-5. **Setup script** → cole o conteúdo inteiro de [`setup.sh`](setup.sh).
+5. **Setup script** (opcional) → cole o conteúdo de [`setup.sh`](setup.sh). Sem ele funciona igual:
+   o `scripts/deepseek-mcp.sh` instala na primeira vez que o servidor sobe (~3 s a mais).
 6. Salve e **inicie uma sessão nova** neste repositório (o setup e as variáveis só valem em sessões novas).
 
 ## Testar se a delegação funciona
