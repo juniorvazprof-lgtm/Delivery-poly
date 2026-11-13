@@ -120,15 +120,15 @@ export const CFG = {
     investida: { model: 'volteiro', scale: 0.59, hp: 16, speed: 1.6, radius: 0.39, dmg: 10, xp: 3, tint: 0.75, dash: { every: 3.2, speed: 8, time: 0.45, windup: 0.5 } },
     brutamonte: { model: 'cascalco', scale: 0.90, hp: 60, speed: 1.15, radius: 0.61, dmg: 14, xp: 8, tint: 0.75, heavy: true },
     cuspidor: { model: 'fanaluz', scale: 0.76, hp: 20, speed: 1.4, radius: 0.43, dmg: 8, xp: 5, tint: 0.75, ranged: { keep: 4.5, every: 2.6, speed: 3.6, dmg: 9 } },
-    minichefe: { model: 'ferfogo', scale: 1.40, hp: 900, speed: 1.35, radius: 0.98, dmg: 20, xp: 60, tint: 0.85, heavy: true, boss: 'mini' },
+    minichefe: { model: 'ferfogo', scale: 1.40, hp: 3200, speed: 1.35, radius: 0.98, dmg: 20, xp: 60, tint: 0.85, heavy: true, boss: 'mini' },
     minerio: { model: null, scale: 1.1, hp: 40, speed: 0, radius: 0.6, dmg: 0, xp: 0, tint: 1, heavy: true, ore: true },
     guardiao: { model: 'arborion', scale: 2.5, hp: 4200, speed: 1.15, radius: 1.6, dmg: 22, xp: 0, tint: 0.80, heavy: true, boss: 'final' },
   },
-  elite: { chanceFrom: 150, chance: 0.04, hp: 7, scale: 1.45, r: 1.3, xp: 30, speed: 1.1, dmg: 1.5, reels: 1 },
+  elite: { chanceFrom: 150, chance: 0.04, hp: 16, scale: 1.45, r: 1.3, xp: 30, speed: 1.1, dmg: 1.5, reels: 1 },
   // campeão: elite gigante e resistente; o baú dele rola 3 melhorias
   // elites do baú: poucas, em momentos fixos, bem resistentes e lentas. As elites comuns não soltam baú.
   chestElites: [{ at: 120, reels: 1 }, { at: 180, reels: 1 }, { at: 300, reels: 3 }, { at: 400, reels: 3 }],
-  champion: { hpFlat: 320, scale: 2.2, r: 1.9, xp: 120, speed: 0.6, dmg: 1.5 },
+  champion: { hpFlat: 900, scale: 2.2, r: 1.9, xp: 120, speed: 0.6, dmg: 1.5 },
 
   // ---- diretor: o que nasce em cada minuto (pesos) e quantos por segundo ----
   waves: [
@@ -156,7 +156,7 @@ export const CFG = {
   },
   combo: { window: 1.6 },
   // minério: rochas que os feitiços quebram, soltam cristais e às vezes ouro
-  ore: { chance: 0.55, perZone: { cristal: 3, ruinas: 1, bosque: 1, clareira: 1 }, gems: 4, gemValue: 3, coin: 0.4 },
+  ore: { chance: 0.55, perZone: { cidade: 2 }, gems: 4, gemValue: 3, coin: 0.4 },
   // santuários: fique dentro do círculo até ele fechar e ganhe uma bênção temporária
   shrines: { chance: 0.4, radius: 1.5, charge: 3.5, decay: 0.35,
     buffs: {

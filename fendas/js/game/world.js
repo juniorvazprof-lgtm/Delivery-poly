@@ -15,40 +15,16 @@ export const MAGE = { parts: [
   [3.5, 0, 0.6, 0.6, 9.4, 0.6, '#4a3a2a'], [3.2, 9.4, 0.3, 1.2, 1.7, 1.2, 'glowC'],
 ] };
 
-// ---------- cenário de fantasia das Fendas ----------
-// zonas: bosque encantado, ruínas antigas, campo de cristal, clareira. Cada uma tem chão e objetos próprios.
-const tree = (rnd, leaf, leaf2) => { const h = 4 + rnd() * 3; return { parts: [[-0.9, 0, -0.9, 1.8, h, 1.8, '#3a2a22'], [0.8, h * 0.55, -0.4, 2.2, 0.7, 0.8, '#3a2a22'],
-  [-3.6, h, -3.6, 7.2, 3.2, 7.2, leaf], [-2.4, h + 3.2, -2.4, 4.8, 1.8, 4.8, leaf2], [1.6, h + 1, 3.62, 0.8, 0.8, 0.1, 'glowP'], [-2.8, h + 1.8, 3.62, 0.6, 0.6, 0.1, 'glowC']] }; };
-const ZONES = {
-  bosque: { floor: ['#1f2a24', '#26332b'], props: [
-    rnd => tree(rnd, '#3b2a5a', '#5a3d8a'), rnd => tree(rnd, '#21443a', '#2f6a55'), rnd => tree(rnd, '#3b2a5a', '#7a4fb0'),
-    rnd => ({ parts: [[-0.4, 0, -0.4, 0.8, 1.8, 0.8, '#d8cfe0'], [-1.6, 1.8, -1.6, 3.2, 1, 3.2, 'glowV'], [1.6, 0, 1, 0.5, 1, 0.5, '#d8cfe0'], [1.1, 1, 0.5, 1.5, 0.6, 1.5, 'glowP']] }),   // cogumelos brilhantes
-    rnd => ({ parts: [[-2.4, 0, -2.4, 4.8, 1.6, 4.8, '#21443a'], [-1.6, 1.6, -1.6, 3.2, 1, 3.2, '#2f6a55'], [0.6, 1.2, 2.42, 0.6, 0.6, 0.1, 'glowAcid']] }),   // arbusto
-  ], density: [5, 8] },
-  ruinas: { floor: ['#2a2733', '#33303e'], props: [
-    rnd => { const h = 4 + rnd() * 5; return { parts: [[-1.6, 0, -1.6, 3.2, 1, 3.2, '#5a5668'], [-1.2, 1, -1.2, 2.4, h, 2.4, '#7a7590'], [-1.6, h + 1, -1.6, 3.2, 0.8, 3.2, '#5a5668']] }; },   // coluna
-    rnd => ({ parts: [[-4, 0, -0.8, 1.6, 7, 1.6, '#7a7590'], [2.4, 0, -0.8, 1.6, 7, 1.6, '#7a7590'], [-4, 7, -0.8, 8, 1.4, 1.6, '#5a5668'], [-0.5, 7.2, 0.82, 1, 1, 0.1, 'glowC']] }),   // arco
-    rnd => ({ parts: [[-1.4, 0, -0.6, 2.8, 5, 1.2, '#4a4658'], [-0.5, 1.4, 0.62, 1, 2.4, 0.1, 'glowV'], [-0.9, 3.2, 0.62, 1.8, 0.4, 0.1, 'glowV']] }),   // pedra rúnica
-    rnd => ({ parts: [[-3, 0, -2, 3, 1.4, 2.4, '#5a5668'], [0.4, 0, -0.4, 2.2, 0.9, 2, '#4a4658'], [-1.2, 0, 1.4, 1.6, 0.7, 1.4, '#7a7590']] }),   // escombros de pedra
-  ], density: [3, 5] },
-  cristal: { floor: ['#251d38', '#2e2445'], props: [
-    rnd => ({ parts: [[-2, 0, -2, 4, 1.4, 4, '#2a1f45'], [-1.2, 1.4, -1.2, 2.4, 4 + rnd() * 3, 2.4, 'glowV'], [1, 1, 0, 1.4, 2.6, 1.4, 'glowC'], [-2.4, 1, 0.6, 1.2, 2, 1.2, 'glowV']] }),
-    rnd => ({ parts: [[-1, 0, -1, 2, 6, 2, 'glowOreQz'], [1.2, 0, 0.4, 1.2, 3, 1.2, 'glowOreQz'], [-2.2, 0, 0.6, 1.2, 2.2, 1.2, 'glowC']] }),
-    rnd => ({ parts: [[-2.6, 0, -2, 5.2, 1.2, 4, '#3a2f55'], [-1.6, 1.2, -1.2, 3.2, 1, 2.4, '#4a3d6a']] }),
-  ], density: [3, 5] },
-  clareira: { floor: ['#23281f', '#2b3226'], props: [
-    rnd => ({ parts: [[-0.3, 0, -0.3, 0.6, 1.4, 0.6, '#3f6b38'], [-1.4, 0, 0.6, 0.5, 1, 0.5, '#3f6b38'], [-0.6, 1.4, -0.6, 1.2, 0.6, 1.2, 'glowP'], [-1.7, 1, 0.3, 1.1, 0.5, 1.1, 'glowY']] }),   // flores
-    rnd => ({ parts: [[-1.8, 0, -1.4, 3.6, 1.2, 2.8, '#5a5668'], [-1, 1.2, -0.8, 2, 0.8, 1.6, '#6a6678']] }),   // pedra
-    rnd => ({ parts: [[-0.4, 0, -0.4, 0.8, 1.6, 0.8, '#3f6b38'], [0.8, 0, 0.2, 0.6, 1.2, 0.6, '#2f5a2a'], [-1.2, 0, 0.6, 0.6, 1.0, 0.6, '#4a7a3a']] }),   // capim alto
-  ], density: [2, 4] },
-};
-const ZKEYS = Object.keys(ZONES);
-// zona estável pela posição (ruído de baixa frequência)
-export function zoneAt(x, z) {
-  const v = Math.sin(x * 0.045 + 1.3) + Math.cos(z * 0.038 - 0.7) + Math.sin((x + z) * 0.027) * 0.8;
-  const w = Math.sin(x * 0.031 - z * 0.022 + 2.1);
-  return v > 0.9 ? 'bosque' : v < -0.9 ? 'cristal' : w > 0.25 ? 'ruinas' : 'clareira';
-}
+const DECOR = [
+  rnd => ({ parts: [[-4, 0, -3, 7, 2, 6, '#2c3038'], [-2, 2, -2, 4, 1.4, 3, '#383d47'], [1, 0, 1.8, 3, 1.4, 2.4, '#22252c'], [-3, 1.8, 0.5, 2, 0.5, 3.5, '#5a3428']] }),   // entulho
+  rnd => ({ parts: [[-2, 0, -2, 4, 1.4, 4, '#1e1830'], [-1.2, 1.4, -1.2, 2.4, 4 + rnd() * 3, 2.4, 'glowV'], [1, 1, 0, 1.4, 2.6, 1.4, 'glowP'], [-2.4, 1, 0.6, 1.2, 2, 1.2, 'glowV']] }),   // cristais de mana
+  rnd => ({ parts: [[-0.4, 0, -0.4, 0.8, 9, 0.8, '#2a2d35'], [-0.4, 9, -0.4, 3.2, 0.5, 0.8, '#2a2d35'], [2.2, 8.2, -0.3, 0.8, 0.8, 0.6, rnd() < 0.5 ? 'glowM' : '#3a3f4a']] }),   // poste de neon
+  rnd => ({ parts: [[-3, 0, -0.6, 6, 0.4, 1.2, '#3a3f4a'], [-3, 0.4, -0.6, 0.6, 2.4, 1.2, '#2c3038'], [2.4, 0.4, -0.6, 0.6, 1.4, 1.2, '#2c3038'], [-1, 0.4, -0.2, 3, 0.3, 0.4, 'glowM']] }),   // barreira quebrada
+  rnd => ({ parts: [[-1.6, 0, -1.6, 3.2, 0.6, 3.2, '#1b2a1e'], [-1.2, 0.6, -1.2, 2.4, 2.2, 2.4, '#2b4a2c'], [-0.8, 2.8, -0.8, 1.6, 1.4, 1.6, '#3f6b38']] }),   // mato da Fenda
+];
+// cenário anterior: uma só "zona", chão roxo escuro e objetos espalhados
+const ZONES = { cidade: { floor: ['#2a2638', '#322d44'], props: DECOR, density: [2, 4] } };
+export function zoneAt() { return 'cidade'; }
 const CHUNK = 12;
 
 export class World {
@@ -86,12 +62,11 @@ export class World {
     const cx = i * CHUNK + CHUNK / 2, cz = j * CHUNK + CHUNK / 2, Z = ZONES[zoneAt(cx, cz)];
     const k = Z.density[0] + Math.floor(rnd() * (Z.density[1] - Z.density[0] + 1));
     // objetos agrupados em volta de 1 ou 2 centros (bosques e ruínas em manchas, não espalhados)
-    const hubs = [[i * CHUNK + 2 + rnd() * 8, j * CHUNK + 2 + rnd() * 8], [i * CHUNK + 2 + rnd() * 8, j * CHUNK + 2 + rnd() * 8]];
     for (let q = 0; q < k; q++) {
-      const hb = hubs[q % 2], a = rnd() * 6.28, r = rnd() * 3.5, x = hb[0] + Math.cos(a) * r, z = hb[1] + Math.sin(a) * r;
+      const x = i * CHUNK + rnd() * CHUNK, z = j * CHUNK + rnd() * CHUNK;
       if (Math.abs(x) < 2.5 && Math.abs(z) < 2.5) continue;   // nada em cima do Mago no início
       const props = ZONES[zoneAt(x, z)].props, def = props[Math.floor(rnd() * props.length)](rnd);
-      batch.add({ ...def, scale: 0.11 * (0.85 + rnd() * 0.4) / 0.1 }, x, z, rnd() * 6);
+      batch.add({ ...def, scale: 0.9 + rnd() * 0.4 }, x, z, rnd() * 6);
     }
     batch.build(g); this.scene.add(g);
     this.onChunk?.(i + ',' + j, { i, j, rnd, x0: i * CHUNK, z0: j * CHUNK, size: CHUNK, zone: zoneAt(cx, cz) });
