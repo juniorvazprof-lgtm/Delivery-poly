@@ -30,7 +30,7 @@ const CHUNK = 12;
 export class World {
   constructor(scene, onChunk) {
     this.scene = scene; this.onChunk = onChunk;
-    this.tiles = new CubePool(scene, 900, { basic: false, size: [1, 0.2, 1] });
+    this.tiles = new CubePool(scene, 2400, { basic: false, size: [1, 0.2, 1] })   // 900 não cobria telas altas (faltava a coluna da direita);
     this.chunks = new Map();
     this.c = new T.Color(); this.cols = {};
     for (const [k, z] of Object.entries(ZONES)) this.cols[k] = z.floor.map(c => new T.Color(c));
