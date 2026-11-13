@@ -23,4 +23,6 @@ Projeto paralelo ao `rz-acao` (que continua intacto). Valida a diversão e o equ
 - Cenário sem verde, para os inimigos (verdes) se destacarem.
 - Atmosfera: a luz puxa para a cor da zona, a tela escurece e a vinheta fecha até o Guardião; aura fraca sob o Mago.
 - `?debug` na URL expõe `window.__G` para testes.
+- Paleta chamativa: chão saturado por zona, inimigos verde ácido sem escurecer, Mago marfim e ouro.
+- Partículas de ambiente por zona (`js/game/ambient.js`): neon, cintilância de cristal, brasas subindo, faíscas do abismo.
 - Prévia: `zonas-preview.png`.
