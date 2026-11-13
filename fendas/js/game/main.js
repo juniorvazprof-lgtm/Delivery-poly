@@ -8,6 +8,7 @@ import { ModelBatch, CubePool, GlowPool } from './instanced.js';
 import { World, MAGE, ZONES, zoneAt, setRift } from './world.js';
 import { initRun, openRiftMap, fill } from './run.js';
 import { CONTRACT_KINDS } from '../data/contracts.js';
+import { gearMods, rollItem, settleRaid, itemName, statLine, RARITIES, openGear } from './gear.js';
 import { drawAmbient } from './ambient.js';
 // rocha de minério e santuário (voxel)
 const ORE = { parts: [[-3, 0, -2.6, 6, 2.6, 5.2, '#4a4658'], [-2.2, 2.6, -1.8, 4.2, 1.6, 3.6, '#5a5668'], [-1.6, 2.2, 0.8, 1.2, 3.2, 1.2, 'glowOreAm'],
@@ -92,9 +93,12 @@ function recalc() {
   G.mods = { dmg: (1 + P.poder.per * p('poder')) * mm.dmg, cd: Math.max(0.45, (1 - P.pressa.per * p('pressa')) * mm.cd), area: 1 + P.alcance.per * p('alcance'),
     magnet: CFG.mage.magnet * (1 + P.ima.per * p('ima')) * mm.magnet * (G.run?.risk.magnet || 1), regen: P.vigor.regen * p('vigor'), speed: CFG.mage.speed * (1 + P.passo.per * p('passo')) * mm.speed,
     count: Math.floor((p('quantidade') + 1) / 2), dur: 1 + P.duracao.per * p('duracao'), crit: CFG.drops.critBase + P.sorte.crit * p('sorte'), luck: 1 + P.sorte.drop * p('sorte') };
+  const g = G.gear || {};   // equipamento
+  G.mods.dmg *= 1 + (g.dmg || 0); G.mods.cd *= 1 - (g.cd || 0); G.mods.area += g.area || 0; G.mods.speed *= 1 + (g.speed || 0);
+  G.mods.magnet *= 1 + (g.magnet || 0); G.mods.crit += g.crit || 0; G.mods.regen += g.regen || 0;
   const B = CFG.shrines.buffs, on = k => (G.buffs?.[k] || 0) > 0;
   if (on('furia')) G.mods.dmg *= B.furia.dmg; if (on('vento')) G.mods.speed *= B.vento.speed; if (on('fluxo')) G.mods.cd *= B.fluxo.cd;
-  const old = mage.maxHp; mage.maxHp = CFG.mage.hp + mm.hp + P.vigor.hp * p('vigor'); mage.hp += Math.max(0, mage.maxHp - old);
+  const old = mage.maxHp; mage.maxHp = CFG.mage.hp + mm.hp + P.vigor.hp * p('vigor') + (G.gear?.hp || 0); mage.hp += Math.max(0, mage.maxHp - old);
 }
 
 // ---------- grade espacial (vizinhos, alvos) ----------
@@ -185,7 +189,8 @@ function kill(e) {
   if (G.splats.length > 300) G.splats.shift();
   G.splats.push({ x: e.x, z: e.z, s: e.r * rand(1.2, 1.8) * (e.elite ? 1.4 : 1), ry: Math.random() * 6, t: 0, c: Math.random() < 0.5 ? '#3a1630' : '#24163a' });
   if (e.cfg.boss === 'mini') G.gems.push({ x: e.x, z: e.z, v: 0, chest: 3, t: 0, pull: true });
-  if (e.cfg.boss === 'final') { G.bossDone = true; setTimeout(() => finish(true), 1200); }
+  if (e.elite && !e.reels && Math.random() < 0.05) dropGear(0);
+  if (e.cfg.boss === 'final') { dropGear(3); dropGear(3); G.bossDone = true; setTimeout(() => finish(true), 1200); }
   if (e === G.boss) { G.boss = null; $('bossbar').hidden = true; }
 }
 // o inimigo se desfaz em cubos que voam, quicam e encolhem
@@ -200,6 +205,11 @@ function progress(n, abs) {
   const c = G.contract; if (!c || c.done) return;
   c.prog = abs ? n : c.prog + n;
   if (c.prog >= c.goal) { c.prog = c.goal; c.done = true; banner('CONTRATO CUMPRIDO', `${c.name} · pagamento garantido ao sair`, '#ffd34d'); sfx.bless(); }
+}
+// equipamento cai na mochila da raid; só é seu se você sair vivo
+function dropGear(tier) {
+  const it = rollItem(tier); G.loot.push(it); const R = RARITIES[it.rarity];
+  banner(R.name.toUpperCase() + ': ' + itemName(it), statLine(it), R.color); sfx.evo();
 }
 function openPortal() {
   const a = Math.random() * 6.283, X = CFG.extract;
@@ -492,7 +502,7 @@ function step(dt) {
     if (d < 0.35) { g.done = true;
       if (g.coin) { G.coins++; sfx.coin(); }
       else if (g.heart) { sfx.heart(); mage.hp = Math.min(mage.maxHp, mage.hp + CFG.drops.heal); fxApi.burst(mage.x, mage.z, '#ff5a6a', 10, 2.5); G.numbers.push({ x: mage.x, z: mage.z, v: '+' + CFG.drops.heal, t: 0, label: '#ff7a8a' }); }
-      else if (g.chest) G.slots.push(g.chest);
+      else if (g.chest) { G.slots.push(g.chest); dropGear(g.chest >= 3 ? 2 : 1); }
       else { addXp(g.v); sfx.gem(G.combo); if (G.contract?.kind === 'extracao') progress(1); } }
   }
   G.gems = G.gems.filter(g => !g.done);
@@ -673,7 +683,7 @@ function hud() {
   const cb = $('combo'); cb.hidden = G.combo < 5; cb.querySelector('b').textContent = 'x' + G.combo;
   const C = G.contract, ch = $('contract-hud');
   if (C) { ch.hidden = false; ch.classList.toggle('done', !!C.done); ch.style.setProperty('--c', CONTRACT_KINDS[C.kind].color);
-    ch.textContent = `${CONTRACT_KINDS[C.kind].glyph} ${C.done ? 'CUMPRIDO' : `${C.kind === 'sobrevivencia' ? fmtTime(C.prog) + ' / ' + fmtTime(C.goal) : C.prog.toLocaleString('pt-BR') + ' / ' + C.goal.toLocaleString('pt-BR')}`}`; } else ch.hidden = true;
+    ch.textContent = (G.loot.length ? `🎒${G.loot.length}  ` : '') + `${CONTRACT_KINDS[C.kind].glyph} ${C.done ? 'CUMPRIDO' : `${C.kind === 'sobrevivencia' ? fmtTime(C.prog) + ' / ' + fmtTime(C.goal) : C.prog.toLocaleString('pt-BR') + ' / ' + C.goal.toLocaleString('pt-BR')}`}`; } else ch.hidden = true;
   if (G.boss) $('bossfill').style.width = Math.max(0, G.boss.hp / G.boss.maxHp * 100) + '%';
   const bl = Object.entries(G.buffs).filter(([, v]) => v > 0);
   $('buffs').innerHTML = bl.map(([k, v]) => `<i style="--c:${CFG.shrines.buffs[k].color}">${CFG.shrines.buffs[k].name} <b>${Math.ceil(v)}s</b></i>`).join('');
@@ -697,12 +707,12 @@ try { Object.assign(settings, JSON.parse(localStorage.getItem('fendas_settings_v
 function start(run) {
   if (run && run.rift) G.run = run;
   setRift(G.run?.R.zone || null);
-  G.meta = metaMods();
+  G.meta = metaMods(); G.gear = gearMods();
   world.reset();
   Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], debris: [], splats: [], numbers: [],
     spells: [], passives: {}, blasts: [], found: new Set(), dmgBy: {}, shrines: [], buffs: {}, usedShrines: new Set(), broken: new Set(), slots: [], nextChamp: 0, banned: new Set(), rerolls: CFG.mage.rerolls + G.meta.rerolls, bans: CFG.mage.bans + G.meta.bans, chests: 0, revives: G.meta.revive, evolutions: 0, opened: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
     miniDone: false, bossDone: false, bossSpawned: false, queue: 0, portal: null, atmo: null,
-    contract: G.run ? { ...G.run.contract, prog: 0, done: false } : null });
+    loot: [], contract: G.run ? { ...G.run.contract, prog: 0, done: false } : null });
   Object.assign(mage, { x: 0, z: 0, face: Math.PI, inv: 0 });
   recalc(); mage.hp = mage.maxHp;
   G.spells.push(new Spell('fogo', G));   // o Mago começa com Bola de fogo
@@ -721,13 +731,19 @@ function finish(won) {
   $('res-stats').innerHTML = [['TEMPO', fmtTime(G.t)], ['NÍVEL', G.level], ['ABATES', G.kills.toLocaleString('pt-BR')], ['MAIOR COMBO', 'x' + G.bestCombo]]
     .map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   $('res-build').innerHTML = $('loadout').innerHTML;
-  const gold = endRun({ won, mult: R?.R.gold || 1, pay: paid, lost: !safe && R ? CFG.extract.deathLoss : 0, time: G.t, level: G.level, kills: G.kills, coins: G.coins, evolutions: G.evolutions, chests: G.opened, combos: [...G.found], spells: G.spells.map(s => s.key) });
+  const st = settleRaid(safe, G.loot);
+  const gold = endRun({ won, mult: (R?.R.gold || 1) * (1 + (G.gear.gold || 0)) , pay: paid, lost: !safe && R ? CFG.extract.deathLoss : 0, time: G.t, level: G.level, kills: G.kills, coins: G.coins, evolutions: G.evolutions, chests: G.opened, combos: [...G.found], spells: G.spells.map(s => s.key) });
   if (!won) sfx.over();
   const tot = Object.values(G.dmgBy).reduce((a, b) => a + b, 0) || 1, rows = Object.entries(G.dmgBy).sort((a, b) => b[1] - a[1]).slice(0, 5);
   $('res-dmg').innerHTML = rows.map(([k, v]) => { const m = G.spells.find(s => s.key === k)?.meta || CFG.spells[k] || CFG.fusions[k] || { glyph: '·', color: '#9a92c0', name: 'Queimadura e explosões' };
     return `<div style="--c:${m.color}"><i>${m.glyph}</i><div class="bar"><b style="width:${v / rows[0][1] * 100}%"></b></div><span>${Math.round(v / tot * 100)}%</span></div>`; }).join('');
   const rc = $('res-contract'); rc.hidden = !C;
   if (C) rc.textContent = C.done ? (safe ? `Contrato cumprido: +${paid} de ouro` : 'Contrato cumprido, mas você não saiu da Fenda: pagamento perdido e metade do saque') : `Contrato não cumprido (${fill(C, C.goal)})${safe ? '' : ' · metade do saque perdida'}`;
+  const rg = $('res-gear'), grows = [...st.kept.map(it => [it, 'NO COFRE']), ...st.broken.map(it => [it, 'QUEBROU']), ...st.lost.map(it => [it, 'PERDIDO'])];
+  const lostLoot = !safe && G.loot.length ? `<p class="lost">${G.loot.length} ${G.loot.length > 1 ? 'itens' : 'item'} da mochila ${G.loot.length > 1 ? 'ficaram' : 'ficou'} na Fenda</p>` : '';
+  rg.hidden = !grows.length && !lostLoot;
+  rg.innerHTML = lostLoot + grows.map(([it, tag]) => `<div class="gitem" style="--c:${RARITIES[it.rarity].color}"><span class="ico">${tag === 'NO COFRE' ? '✓' : '✕'}</span><span class="txt"><b>${esc(itemName(it))}</b><em>${RARITIES[it.rarity].name} · ${tag}</em></span></div>`).join('')
+    + (st.sold ? `<p class="sub">Cofre cheio: itens vendidos por ${st.sold} de ouro</p>` : '');
   const ng = nextGoal(); $('res-next').hidden = !ng; $('res-next').textContent = ng;
   $('res-gold').querySelector('b').textContent = '+' + gold.toLocaleString('pt-BR') + ' de ouro';
   setTimeout(() => { $('result').hidden = false; }, won ? 400 : 700);
@@ -740,7 +756,7 @@ $('snd-toggle').onclick = () => { $('snd-toggle').textContent = 'SOM: ' + (sfx.t
 $('snd-toggle').textContent = 'SOM: ' + (sfx.on ? 'SIM' : 'NÃO');
 $('btn-reroll').onclick = () => { if (G.rerolls > 0 && G.mode === 'levelup') { G.rerolls--; openLevelUp(); } };
 $('btn-ban').onclick = () => { if (G.bans <= 0) return; G.banning = !G.banning; $('choices').classList.toggle('banning', G.banning); $('ban-hint').hidden = !G.banning; $('btn-ban').classList.toggle('on', G.banning); };
-initMenu(openRiftMap); initRun(start); $('btn-again').onclick = () => start(); $('btn-menu').onclick = showMenu; $('btn-pause').onclick = togglePause; $('btn-resume').onclick = togglePause;
+initMenu(openRiftMap); $('btn-gear').onclick = openGear; initRun(start); $('btn-again').onclick = () => start(); $('btn-menu').onclick = showMenu; $('btn-pause').onclick = togglePause; $('btn-resume').onclick = togglePause;
 $('btn-quit').onclick = () => { $('pause').hidden = true; finish(false); };
 $('fps-toggle').onclick = () => { settings.fps = !settings.fps; $('fps').hidden = !settings.fps; try { localStorage.setItem('fendas_settings_v1', JSON.stringify(settings)); } catch { /* ignorar */ } $('fps-toggle').textContent = 'MOSTRAR FPS: ' + (settings.fps ? 'SIM' : 'NÃO'); };
 addEventListener('blur', () => { if (G.mode === 'play') togglePause(); });

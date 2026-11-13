@@ -42,6 +42,7 @@
     <h1><span>FEN</span><span>DAS</span></h1>
     <p>Arraste o dedo para mover o Mago. Os feitiços saem sozinhos. Sobreviva 8 minutos e derrote o Guardião.</p>
     <button id="btn-start" class="btn primary">JOGAR</button>
+    <button id="btn-gear" class="btn">EQUIPAMENTO</button>
     <button id="btn-arsenal" class="btn">ARSENAL</button>
     <button id="btn-missions" class="btn">MISSÕES <em hidden></em></button>
     <button id="btn-stats" class="btn">ESTATÍSTICAS</button>
@@ -59,6 +60,17 @@
       <div id="clause-list"></div>
       <button id="btn-enter" class="btn primary" disabled>ESCOLHA UM CONTRATO</button>
     </div>
+  </div>
+</section>
+
+<section id="gear" class="screen menu" hidden>
+  <div class="panel wide">
+    <div class="mhead"><button class="btn-back">‹</button><h2>EQUIPAMENTO</h2><div class="goldbar"><i></i><b class="gold-now">0</b></div></div>
+    <div id="gear-slots" class="ggrid"></div>
+    <p id="gear-total" class="sub gtotal"></p>
+    <div id="gear-actions" class="gact"></div>
+    <p class="sub">Cofre <b id="gear-count"></b></p>
+    <div id="gear-stash" class="mlist"></div>
   </div>
 </section>
 
@@ -122,6 +134,7 @@
     <div id="res-build" class="build"></div>
     <div id="res-dmg"></div>
     <p id="res-contract" class="sub" hidden></p>
+    <div id="res-gear" class="mlist" hidden></div>
     <p id="res-next" class="sub" hidden></p>
     <div id="res-gold" class="goldbar big"><i></i><b>+0</b></div>
     <button id="btn-again" class="btn primary">JOGAR DE NOVO</button>

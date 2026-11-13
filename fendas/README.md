@@ -35,3 +35,10 @@ Projeto paralelo ao `rz-acao` (que continua intacto). Valida a diversão e o equ
 - **Cláusulas de risco**: modificadores opcionais (vida, velocidade, ritmo, dano recebido, sem corações, sem santuários, ímã menor) que aumentam o pagamento.
 - **Portal de extração** aos 5:00: ficar 2,5 s dentro encerra a partida com o saque. O contrato só é pago se você extrair ou vencer o Guardião; morrer perde metade do saque.
 - Fluxo da tela: `js/game/run.js`.
+
+## Equipamento (estilo extração)
+- 4 espaços (Cajado, Manto, Amuleto, Anel), 4 raridades (Comum, Raro, Épico, Lendário) com afixos extras. Dados em `js/data/items.js`, regras em `js/game/gear.js`.
+- Itens caem dos baús de campeão e minichefe, do Guardião (2 itens) e raramente de elites. Vão para a **mochila da raid**.
+- **Extrair**: a mochila vai para o cofre (16 vagas) e cada item equipado perde 1 de durabilidade; com zero, quebra.
+- **Morrer**: perde tudo o que estava equipado e a mochila.
+- Tela EQUIPAMENTO: equipar, consertar com ouro e vender. Kit inicial: Cajado e Manto comuns.

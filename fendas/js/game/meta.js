@@ -91,7 +91,7 @@ export const missionsReady = () => MISSIONS.filter(m => !M.claimed.includes(m.id
 // ---------- interface ----------
 let tab = 'feiticos';
 export function showMenu() {
-  for (const id of ['arsenal', 'missions', 'stats', 'result', 'riftmap']) $(id).hidden = true;
+  for (const id of ['arsenal', 'missions', 'stats', 'result', 'riftmap', 'gear']) $(id).hidden = true;
   $('startscreen').hidden = false;
   $('menu-gold').textContent = M.gold.toLocaleString('pt-BR');
   const n = missionsReady(); $('btn-missions').querySelector('em').textContent = n ? n : ''; $('btn-missions').querySelector('em').hidden = !n;

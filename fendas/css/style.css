@@ -175,3 +175,18 @@ body.landscape #hud, body.landscape .screen { max-width: 520px; margin: 0 auto; 
 #contract-hud.done { color: var(--gold); border-color: var(--gold); }
 #res-contract { color: var(--ink) !important; }
 @media (max-width: 360px) { #clause-list { grid-template-columns: 1fr; } }
+
+/* equipamento */
+.ggrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.gitem { display: flex; gap: 8px; align-items: center; text-align: left; padding: 7px 8px; background: var(--panel); border: 2px solid color-mix(in srgb, var(--c, #3a2f5a) 60%, var(--line)); font: inherit; color: inherit; width: 100%; }
+.gitem.empty { opacity: .5; border-style: dashed; }
+.gitem.on { box-shadow: 0 0 0 2px var(--c), 0 0 12px color-mix(in srgb, var(--c) 50%, transparent); }
+.gitem.worn .durbar i { background: var(--red); }
+.gitem .ico { flex: none; width: 34px; height: 34px; display: grid; place-items: center; font-size: 18px; color: var(--c, var(--muted)); border: 2px solid var(--c, var(--line)); background: #07060c; }
+.gitem .txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gitem b { font: 700 11px var(--pix); color: var(--c, var(--ink)); } .gitem .d { font-size: 12px; color: var(--ink); } .gitem em { font: 9px var(--pix); font-style: normal; color: var(--muted); }
+.durbar { height: 4px; background: #1a1530; } .durbar i { display: block; height: 100%; background: var(--green); }
+.gtotal { color: var(--gold) !important; }
+.gact { display: flex; gap: 6px; flex-wrap: wrap; } .gact .btn { flex: 1; min-height: 44px; font-size: 13px; } .gact .btn:disabled { opacity: .4; } .gact p { width: 100%; }
+#res-gear { gap: 6px; } #res-gear .gitem { pointer-events: none; }
+#res-gear .lost { font: 700 11px var(--pix); color: var(--red); text-align: center; }
