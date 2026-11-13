@@ -1,0 +1,22 @@
+{
+  "name": "lumen-catolico",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Lumen Católico: terço guiado, santo do dia e oração do dia.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/add-csp.mjs && node scripts/build-sw.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "build:preview": "vite build --mode preview && node scripts/preview-page.mjs",
+    "test:unit": "vitest run",
+    "test": "npm run typecheck && vitest run && npm run build && node tests/app.e2e.cjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^7.3.8",
+    "vite-plugin-singlefile": "^2.3.4",
+    "vitest": "^3.2.4"
+  }
+}
