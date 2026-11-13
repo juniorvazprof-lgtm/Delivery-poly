@@ -190,3 +190,33 @@ body.landscape #hud, body.landscape .screen { max-width: 520px; margin: 0 auto; 
 .gact { display: flex; gap: 6px; flex-wrap: wrap; } .gact .btn { flex: 1; min-height: 44px; font-size: 13px; } .gact .btn:disabled { opacity: .4; } .gact p { width: 100%; }
 #res-gear { gap: 6px; } #res-gear .gitem { pointer-events: none; }
 #res-gear .lost { font: 700 11px var(--pix); color: var(--red); text-align: center; }
+
+/* hub do menu inicial (vertical): perfil e ouro no topo, Mago 3D no centro, atalhos nas laterais, botão grande embaixo */
+.screen.hub { display: block; padding: 0; background: radial-gradient(ellipse 90% 55% at 50% 45%, #2c1d55 0%, #120c26 55%, #07060c 100%); overflow: hidden; }
+.screen.hub[hidden] { display: none; }
+#hero { position: absolute; left: 0; right: 0; top: 14%; height: 52%; width: 100%; }
+.hub-top { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: calc(10px + var(--st)) max(12px, var(--sr)) 0 max(12px, var(--sl)); }
+.hub-profile { display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; background: #120f1fdd; border: 2px solid var(--line); min-width: 0; }
+.hub-ava { width: 38px; height: 38px; display: grid; place-items: center; font-size: 20px; color: var(--violet); background: #07060c; border: 2px solid var(--violet); flex: none; }
+.hub-profile b { display: block; font: 700 11px var(--pix); color: var(--ink); } .hub-profile small { font: 9px var(--pix); color: var(--muted); }
+.hub-logo { position: absolute; left: 0; right: 0; top: calc(66px + var(--st)); text-align: center; font: 700 34px/1 var(--pix); letter-spacing: 4px; text-shadow: 3px 3px 0 #000; }
+.hub-logo span:first-child { color: var(--violet); } .hub-logo span:last-child { color: var(--pink); }
+.hub-col { position: absolute; top: 24%; display: flex; flex-direction: column; gap: 12px; }
+.hub-col.l { left: max(10px, var(--sl)); } .hub-col.r { right: max(10px, var(--sr)); }
+.hbtn { position: relative; width: 74px; height: 74px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 22%, #120f1f), #0c0a18); border: 2px solid var(--c); box-shadow: 0 4px 0 color-mix(in srgb, var(--c) 45%, #000); }
+.hbtn i { font-style: normal; font-size: 26px; color: var(--c); line-height: 1; } .hbtn span { font: 700 9px var(--pix); color: var(--ink); }
+.hbtn:active { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--c) 45%, #000); }
+.hbtn em { position: absolute; top: -8px; right: -8px; min-width: 22px; height: 22px; padding: 0 5px; display: grid; place-items: center; font: 700 11px var(--pix); font-style: normal; color: #fff; background: var(--red); border: 2px solid #07060c; border-radius: 11px; }
+.hbtn em[hidden] { display: none; }
+.hub-slots { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(150px + var(--sb)); display: grid; grid-template-columns: repeat(4, 54px); gap: 8px; }
+.hslot { height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: #0c0a18cc; border: 2px solid var(--c, #3a2f5a); padding: 0; }
+.hslot.empty { border-style: dashed; opacity: .55; } .hslot i { font-style: normal; font-size: 20px; color: var(--c, var(--muted)); line-height: 1; }
+.hslot .durbar { width: 38px; }
+.hub-bottom { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 8px; padding: 0 max(14px, var(--sr)) calc(14px + var(--sb)) max(14px, var(--sl)); }
+.hub-rift { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #120f1fdd; border: 2px solid var(--c, var(--line)); text-align: left; }
+.hub-rift small { font: 9px var(--pix); color: var(--muted); } .hub-rift b { flex: 1; font: 700 12px var(--pix); color: var(--c, var(--ink)); }
+.hub-play { min-height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: linear-gradient(180deg, #ffe066, #ffb020); border: 3px solid #07060c; box-shadow: 0 5px 0 #8a5a10, 0 0 24px #ffb02055; }
+.hub-play b { font: 700 clamp(15px, 5.4vw, 22px) var(--pix); white-space: nowrap; color: #1a1006; letter-spacing: 1px; } .hub-play small { font: 9px var(--pix); color: #5a3a08; }
+.hub-play:active { transform: translateY(4px); box-shadow: 0 1px 0 #8a5a10; }
+@media (max-height: 640px) { .hub-logo { display: none; } .hub-col { top: 16%; } .hbtn { width: 64px; height: 64px; } }

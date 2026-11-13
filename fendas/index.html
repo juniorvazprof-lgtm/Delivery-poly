@@ -36,17 +36,26 @@
 
 <div id="touch"><div id="stick"><div id="knob"></div></div></div>
 
-<section id="startscreen" class="screen menu">
-  <div class="panel">
+<section id="startscreen" class="screen hub">
+  <canvas id="hero"></canvas>
+  <header class="hub-top">
+    <div class="hub-profile"><span class="hub-ava">✹</span><span><b>MAGO DA FENDA</b><small id="hub-rec">0 partidas</small></span></div>
     <div class="goldbar"><i></i><b id="menu-gold">0</b></div>
-    <h1><span>FEN</span><span>DAS</span></h1>
-    <p>Arraste o dedo para mover o Mago. Os feitiços saem sozinhos. Sobreviva 8 minutos e derrote o Guardião.</p>
-    <button id="btn-start" class="btn primary">JOGAR</button>
-    <button id="btn-gear" class="btn">EQUIPAMENTO</button>
-    <button id="btn-arsenal" class="btn">ARSENAL</button>
-    <button id="btn-missions" class="btn">MISSÕES <em hidden></em></button>
-    <button id="btn-stats" class="btn">ESTATÍSTICAS</button>
-  </div>
+  </header>
+  <div class="hub-logo"><span>FEN</span><span>DAS</span></div>
+  <nav class="hub-col l">
+    <button id="btn-gear" class="hbtn" style="--c:#ffb020"><i>⚚</i><span>EQUIPAR</span><em id="hub-gear-badge" hidden></em></button>
+    <button id="btn-arsenal" class="hbtn" style="--c:#c58bff"><i>✦</i><span>ARSENAL</span></button>
+  </nav>
+  <nav class="hub-col r">
+    <button id="btn-missions" class="hbtn" style="--c:#5dff9a"><i>✓</i><span>MISSÕES</span><em hidden></em></button>
+    <button id="btn-stats" class="hbtn" style="--c:#5ff2ff"><i>▤</i><span>RECORDES</span></button>
+  </nav>
+  <div id="hub-slots" class="hub-slots"></div>
+  <footer class="hub-bottom">
+    <button id="hub-rift" class="hub-rift"><small>ÚLTIMA FENDA</small><b>Escolha no mapa</b><span class="danger"></span></button>
+    <button id="btn-start" class="hub-play"><b>ENTRAR NA FENDA</b><small>contratos · extração</small></button>
+  </footer>
 </section>
 
 <section id="riftmap" class="screen menu" hidden>

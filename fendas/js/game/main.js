@@ -8,6 +8,8 @@ import { ModelBatch, CubePool, GlowPool } from './instanced.js';
 import { World, MAGE, ZONES, zoneAt, setRift } from './world.js';
 import { initRun, openRiftMap, fill } from './run.js';
 import { CONTRACT_KINDS } from '../data/contracts.js';
+import { refreshHub } from './hub.js';
+import { onMenu } from './meta.js';
 import { gearMods, rollItem, settleRaid, itemName, statLine, RARITIES, openGear } from './gear.js';
 import { drawAmbient } from './ambient.js';
 // rocha de minério e santuário (voxel)
@@ -756,7 +758,7 @@ $('snd-toggle').onclick = () => { $('snd-toggle').textContent = 'SOM: ' + (sfx.t
 $('snd-toggle').textContent = 'SOM: ' + (sfx.on ? 'SIM' : 'NÃO');
 $('btn-reroll').onclick = () => { if (G.rerolls > 0 && G.mode === 'levelup') { G.rerolls--; openLevelUp(); } };
 $('btn-ban').onclick = () => { if (G.bans <= 0) return; G.banning = !G.banning; $('choices').classList.toggle('banning', G.banning); $('ban-hint').hidden = !G.banning; $('btn-ban').classList.toggle('on', G.banning); };
-initMenu(openRiftMap); $('btn-gear').onclick = openGear; initRun(start); $('btn-again').onclick = () => start(); $('btn-menu').onclick = showMenu; $('btn-pause').onclick = togglePause; $('btn-resume').onclick = togglePause;
+onMenu(refreshHub); initMenu(openRiftMap); $('btn-gear').onclick = openGear; $('hub-rift').onclick = () => openRiftMap(M.lastRift); initRun(start); $('btn-again').onclick = () => start(); $('btn-menu').onclick = showMenu; $('btn-pause').onclick = togglePause; $('btn-resume').onclick = togglePause;
 $('btn-quit').onclick = () => { $('pause').hidden = true; finish(false); };
 $('fps-toggle').onclick = () => { settings.fps = !settings.fps; $('fps').hidden = !settings.fps; try { localStorage.setItem('fendas_settings_v1', JSON.stringify(settings)); } catch { /* ignorar */ } $('fps-toggle').textContent = 'MOSTRAR FPS: ' + (settings.fps ? 'SIM' : 'NÃO'); };
 addEventListener('blur', () => { if (G.mode === 'play') togglePause(); });

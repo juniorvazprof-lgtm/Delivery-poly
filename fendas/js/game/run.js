@@ -2,6 +2,7 @@
 // Monta a escolha da partida (G.run) e calcula os modificadores das cláusulas.
 import { RIFTS } from '../data/rifts.js';
 import { CONTRACTS, CONTRACT_KINDS, CLAUSES } from '../data/contracts.js';
+import { M, save } from './meta.js';
 
 const $ = id => document.getElementById(id);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -19,14 +20,14 @@ export function riskMods(clauses) {
 let sel = null, onEnter = null, offer = [];
 export function initRun(enter) {
   onEnter = enter;
-  $('btn-enter').onclick = () => { if (sel?.contract) { $('riftmap').hidden = true; onEnter(build()); } };
+  $('btn-enter').onclick = () => { if (sel?.contract) { M.lastRift = sel.rift; save(); $('riftmap').hidden = true; onEnter(build()); } };
   $('btn-rift-back').onclick = () => { if (sel?.rift && !$('board').hidden) showMap(); else { $('riftmap').hidden = true; $('startscreen').hidden = false; } };
 }
 function build() {
   const clauses = CLAUSES.filter(c => sel.clauses.has(c.id));
   return { rift: sel.rift, R: RIFTS[sel.rift], contract: sel.contract, clauses, risk: riskMods(clauses) };
 }
-export function openRiftMap() { sel = { rift: null, contract: null, clauses: new Set() }; $('startscreen').hidden = true; $('riftmap').hidden = false; showMap(); }
+export function openRiftMap(rift) { sel = { rift: null, contract: null, clauses: new Set() }; $('startscreen').hidden = true; $('riftmap').hidden = false; if (typeof rift === 'string') showBoard(rift); else showMap(); }
 
 function showMap() {
   $('rift-title').textContent = 'FENDAS'; $('board').hidden = true; $('rift-list').hidden = false;
