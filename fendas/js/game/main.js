@@ -68,13 +68,17 @@ const fxApi2 = { glow: (...a) => glow.add(...a), cube: (...a) => fxCubes.add(...
 const shadowMesh = new T.InstancedMesh(new T.CircleGeometry(0.5, 14).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.55, depthWrite: false }), 450);
 shadowMesh.frustumCulled = false; shadowMesh.count = 0; shadowMesh.renderOrder = 1; scene.add(shadowMesh);
 const _sm = new T.Matrix4();
+const debrisPool = new CubePool(scene, 700, { basic: false });   // pedaços voxel de inimigos mortos
+// cor principal de cada inimigo para os pedaços
+const DEBRIS = { rastejante: ['#5fcf2e', '#2f8a1e', '#c4ff5a'], espectro: ['#d8dde8', '#8a90a8'], investida: ['#3e4a6a', '#262d44', '#ffe066'], brutamonte: ['#6b6f78', '#3d4048', '#9a5a3a'],
+  cuspidor: ['#6b5a7a', '#3f3450', '#fff6dc'], minichefe: ['#3a2a2a', '#b0803a', '#ffc04d'], guardiao: ['#5a4030', '#3f7a36', '#6b6f66'], minerio: ['#4a4658', '#9dff4a', '#7fd8ff'] };
 const splatPool = new CubePool(scene, 320, { opacity: 0.32, depthWrite: false, size: [1, 0.02, 1] });
 const mageRoot = new T.Group(), mageBody = buildModel({ ...MAGE, scale: 1.3 });
 mageRoot.add(mageBody, blobShadow(0.5)); scene.add(mageRoot);
 
 // ---------- estado ----------
 const G = {
-  mode: 'start', t: 0, enemies: [], projectiles: [], gems: [], fx: [], particles: [], splats: [], numbers: [],
+  mode: 'start', t: 0, enemies: [], projectiles: [], gems: [], fx: [], particles: [], debris: [], splats: [], numbers: [],
   spells: [], passives: {}, mods: {}, shrines: [], buffs: {}, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0,
   spawnAcc: 0, nextEvent: 0, event: null, eventT: 0, boss: null, miniDone: false, bossDone: false, queue: 0,
 };
@@ -164,9 +168,9 @@ function kill(e) {
     e.dead = true; G.broken.add(e.oid); const O = CFG.ore;
     for (let i = 0; i < O.gems; i++) dropGem(e.x + rand(-0.4, 0.4), e.z + rand(-0.4, 0.4), O.gemValue);
     if (Math.random() < O.coin * G.mods.luck) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, coin: true, t: 0 });
-    fxApi.burst(e.x, e.z, '#9dff4a', 14, 3); fxApi.burst(e.x, e.z, '#7fd8ff', 10, 3); G.shake(0.08); return;
+    fxApi.burst(e.x, e.z, '#9dff4a', 14, 3); fxApi.burst(e.x, e.z, '#7fd8ff', 10, 3); shatter(e); G.shake(0.08); return;
   }
-  e.dead = true; G.kills++; sfx.kill();
+  e.dead = true; G.kills++; sfx.kill(); shatter(e);
   if (e.corruptT > 0 && G.blasts.length < 60) G.blasts.push({ x: e.x, z: e.z, dmg: Math.min(50, ST.corruptDmg * G.mods.dmg + e.maxHp * ST.corruptHp) });
   if (Math.random() < (e.elite ? CFG.drops.heartElite : CFG.drops.heart) * G.mods.luck) G.gems.push({ x: e.x - 0.2, z: e.z, v: 0, heart: true, t: 0 });
   if (e.reels) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, chest: e.reels, t: 0 });
@@ -180,6 +184,13 @@ function kill(e) {
   if (e.cfg.boss === 'mini') G.gems.push({ x: e.x, z: e.z, v: 0, chest: 3, t: 0, pull: true });
   if (e.cfg.boss === 'final') { G.bossDone = true; setTimeout(() => finish(true), 1200); }
   if (e === G.boss) { G.boss = null; $('bossbar').hidden = true; }
+}
+// o inimigo se desfaz em cubos que voam, quicam e encolhem
+function shatter(e) {
+  const cols = DEBRIS[e.type] || DEBRIS.rastejante, big = e.cfg.boss ? 3 : e.elite ? 1.8 : 1, n = Math.round((e.cfg.boss ? 40 : 7) * Math.min(big, 1.5));
+  for (let i = 0; i < n && G.debris.length < 650; i++) { const a = Math.random() * 6.283, sp = rand(1.2, 3.4) * Math.sqrt(big);
+    G.debris.push({ x: e.x + rand(-0.2, 0.2), y: rand(0.2, 0.6) * big, z: e.z + rand(-0.2, 0.2), vx: Math.cos(a) * sp, vy: rand(2.5, 5.5), vz: Math.sin(a) * sp,
+      s: rand(0.13, 0.24) * Math.sqrt(big), c: cols[i % cols.length], rx: Math.random() * 6, ry: Math.random() * 6, t: 0, dur: rand(0.9, 1.4) }); }
 }
 function bless(type, s) {
   sfx.bless();
@@ -268,14 +279,19 @@ function updateEnemy(e, dt) {
 function bossAct(e, dt, d, dx, dz) {
   e.st -= dt;
   if (e.st > 0) return;
-  if (e.cfg.boss === 'mini') { e.st = 3.6; e.flash = 0.2; ringShots(e.x, e.z, 12, 3.4, 10); }
+  if (e.tele) { const n = e.tele; e.tele = 0; ringShots(e.x, e.z, n, e.rage ? 3.6 : 3.2, e.cfg.boss === 'mini' ? 10 : 12); e.st = e.rest; return; }
+  if (e.cfg.boss === 'mini') { telegraph(e, 12, 3.0); }
   else {
-    const r = Math.random(); e.st = 2.8;
-    if (r < 0.45) { e.flash = 0.2; ringShots(e.x, e.z, 18, 3.2, 12); }
+    // fase 2: abaixo de metade da vida o Guardião se enfurece
+    if (!e.rage && e.hp < e.maxHp * 0.5) { e.rage = true; e.speed *= 1.35; banner('GUARDIÃO ENFURECIDO', 'Ataques mais rápidos e densos', '#ff4f6a'); G.shake(0.4); sfx.warn(); }
+    const r = Math.random(); e.st = e.rage ? 1.9 : 2.8;
+    if (r < 0.45) { telegraph(e, e.rage ? 26 : 18, e.st - 0.7); }
     else if (r < 0.75) { e.kx += dx / d * 9; e.kz += dz / d * 9; e.flash = 0.2; }   // investida curta
     else { for (let i = 0; i < 6; i++) { const a = i / 6 * 6.28; spawn('espectro', e.x + Math.sin(a) * 1.6, e.z + Math.cos(a) * 1.6); } }
   }
 }
+// aviso antes do anel de tiros: o chefe brilha e um círculo pulsa por 0,7 s
+function telegraph(e, n, rest) { e.tele = n; e.rest = Math.max(0.6, rest); e.st = 0.7; e.flash = 0.7; fxApi.ring(e.x, e.z, e.r + 1.6, '#ff4f6a', 0.7, false); }
 function enemyShot(x, z, dx, dz, sp, dmg) { G.projectiles.push({ kind: 'inimigo', enemy: true, x, z, vx: dx * sp, vz: dz * sp, life: 4, r: 0.16, dmg }); }
 function ringShots(x, z, n, sp, dmg) { const o = Math.random(); for (let i = 0; i < n; i++) { const a = (i + o) / n * Math.PI * 2; enemyShot(x, z, Math.sin(a), Math.cos(a), sp, dmg); } }
 function separate() {
@@ -486,6 +502,9 @@ function step(dt) {
   G.fx = G.fx.filter(f => f.t < f.dur); Object.assign(G.fx, fxApi);
   for (const p of G.particles) { p.t += dt; p.vy -= 12 * dt; p.x += p.vx * dt; p.y = Math.max(0.03, p.y + p.vy * dt); p.z += p.vz * dt; }
   G.particles = G.particles.filter(p => p.t < p.dur);
+  for (const d of G.debris) { d.t += dt; d.vy -= 14 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.z += d.vz * dt; d.rx += d.vx * dt * 3; d.ry += d.vz * dt * 3;
+    if (d.y < d.s / 2) { d.y = d.s / 2; d.vy = -d.vy * 0.35; d.vx *= 0.6; d.vz *= 0.6; } }
+  G.debris = G.debris.filter(d => d.t < d.dur);
   for (const n of G.numbers) n.t += dt;
   G.numbers = G.numbers.filter(n => n.t < 0.7);
   if (G.numbers.length > 18) G.numbers.splice(0, G.numbers.length - 18);
@@ -521,7 +540,7 @@ function draw(now) {
   for (const b of Object.values(batches)) b.begin();
   for (const e of G.enemies) {
     const b = batches[e.type], y = e.cfg.float ? 0.15 + Math.sin(t * 3 + e.ph) * 0.06 : Math.abs(Math.sin(t * 9 + e.ph)) * 0.04;
-    const sq = e.state === 'wind' ? 0.75 : 1, c = e.freezeT > 0 ? SC.gelo : e.burnT > 0 ? SC.fogo : e.shockT > 0 ? SC.raio : e.corruptT > 0 ? SC.arcano : e.exposeT > 0 ? SC.luz : e.soakT > 0 ? SC.agua : SC.none;
+    const sq = e.state === 'wind' ? 0.75 : e.flash > 0 ? 0.78 : 1, c = e.freezeT > 0 ? SC.gelo : e.burnT > 0 ? SC.fogo : e.shockT > 0 ? SC.raio : e.corruptT > 0 ? SC.arcano : e.exposeT > 0 ? SC.luz : e.soakT > 0 ? SC.agua : SC.none;
     b.add(e.x, y, e.z, e.face, e.elite ? e.elite.scale : 1, e.flash > 0 || e.state === 'wind' && Math.floor(t * 16) % 2 ? 1 : 0, sq, 1, c);
   }
   for (const b of Object.values(batches)) b.end();
@@ -581,6 +600,9 @@ function draw(now) {
     else if (e.corruptT > 0) { sg++; glow.add(e.x, 0.15, e.z, 0.7, '#8a2aff', 0.4); } }
   for (const q of G.particles) { const k = 1 - q.t / q.dur; glow.add(q.x, q.y, q.z, q.size * 3.2, q.color, k); }
   glow.end(); fxCubes.end();
+  debrisPool.begin();
+  for (const d of G.debris) { const k = Math.min(1, (d.dur - d.t) / 0.35), sz = d.s * k; debrisPool.add(d.x, d.y, d.z, sz, sz, sz, d.c, d.rx, d.ry, 0); }
+  debrisPool.end();
   // manchas no chão
   splatPool.begin();
   for (const s of G.splats) splatPool.add(s.x, 0.012, s.z, s.s, 1, s.s * 0.8, s.c, 0, s.ry, 0);
@@ -644,7 +666,7 @@ try { Object.assign(settings, JSON.parse(localStorage.getItem('fendas_settings_v
 function start() {
   G.meta = metaMods();
   world.reset();
-  Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], splats: [], numbers: [],
+  Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], debris: [], splats: [], numbers: [],
     spells: [], passives: {}, blasts: [], found: new Set(), dmgBy: {}, shrines: [], buffs: {}, usedShrines: new Set(), broken: new Set(), slots: [], nextChamp: 0, banned: new Set(), rerolls: CFG.mage.rerolls + G.meta.rerolls, bans: CFG.mage.bans + G.meta.bans, chests: 0, revives: G.meta.revive, evolutions: 0, opened: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
     miniDone: false, bossDone: false, bossSpawned: false, queue: 0 });
   Object.assign(mage, { x: 0, z: 0, face: Math.PI, inv: 0 });

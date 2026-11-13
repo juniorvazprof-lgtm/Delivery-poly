@@ -122,7 +122,7 @@ export const CFG = {
     cuspidor: { model: 'fanaluz', scale: 0.76, hp: 20, speed: 1.4, radius: 0.43, dmg: 8, xp: 5, tint: 1, ranged: { keep: 4.5, every: 2.6, speed: 3.6, dmg: 9 } },
     minichefe: { model: 'ferfogo', scale: 1.40, hp: 3200, speed: 1.35, radius: 0.98, dmg: 20, xp: 60, tint: 1, heavy: true, boss: 'mini' },
     minerio: { model: null, scale: 1.1, hp: 40, speed: 0, radius: 0.6, dmg: 0, xp: 0, tint: 1, heavy: true, ore: true },
-    guardiao: { model: 'arborion', scale: 2.5, hp: 4200, speed: 1.15, radius: 1.6, dmg: 22, xp: 0, tint: 1, heavy: true, boss: 'final' },
+    guardiao: { model: 'arborion', scale: 2.5, hp: 12000, speed: 1.15, radius: 1.6, dmg: 22, xp: 0, tint: 1, heavy: true, boss: 'final' },
   },
   elite: { chanceFrom: 150, chance: 0.04, hp: 16, scale: 1.45, r: 1.3, xp: 30, speed: 1.1, dmg: 1.5, reels: 1 },
   // campeão: elite gigante e resistente; o baú dele rola 3 melhorias
