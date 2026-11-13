@@ -5,7 +5,7 @@
       "command": "/opt/deepseek-mcp/venv/bin/deepseek-mcp",
       "args": [],
       "env": {
-        "DEEPSEEK_API_KEY": "${DEEPSEEK_API_KEY}"
+        "DEEPSEEK_API_KEY": "${DEEPSEEK_API_KEY:-proxy-injected}"
       }
     }
   }

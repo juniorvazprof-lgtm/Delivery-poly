@@ -18,10 +18,11 @@ através do servidor MCP open source [deepseek-as-subagent](https://github.com/P
 3. **Network access** → escolha **Custom**.
    - Mantenha marcada a opção de incluir a **lista padrão** (registries de pacotes, GitHub etc.).
    - Em hosts permitidos adicione: `api.deepseek.com`
-4. **Environment variables** → adicione a linha:
-   ```
-   DEEPSEEK_API_KEY=sk-sua-chave-aqui
-   ```
+4. **Chave** — escolha um jeito:
+   - **Mais fácil (sem PC):** peça ao Claude na sessão "peça a chave do DeepSeek". Abre um formulário
+     seguro; a chave fica salva como *network secret* de `api.deepseek.com` e o proxy a injeta
+     (já libera o host; o `.mcp.json` usa um valor fictício quando a variável não existe).
+   - Ou em **Environment variables**: `DEEPSEEK_API_KEY=sk-sua-chave-aqui`.
 5. **Setup script** → cole o conteúdo inteiro de [`setup.sh`](setup.sh).
 6. Salve e **inicie uma sessão nova** neste repositório (o setup e as variáveis só valem em sessões novas).
 
