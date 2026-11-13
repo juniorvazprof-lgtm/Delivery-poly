@@ -115,14 +115,14 @@ export const CFG = {
 
   // ---- inimigos (Ressonas sombrias); tint escurece as cores, os olhos brilhantes ficam ----
   enemies: {
-    rastejante: { model: 'brogume', scale: 0.68, hp: 7, speed: 1.9, radius: 0.35, dmg: 6, xp: 1, tint: 0.80 },
-    espectro: { model: 'velamen', scale: 0.72, hp: 13, speed: 2.25, radius: 0.39, dmg: 8, xp: 2, tint: 0.70, float: true },
-    investida: { model: 'volteiro', scale: 0.59, hp: 16, speed: 1.6, radius: 0.39, dmg: 10, xp: 3, tint: 0.75, dash: { every: 3.2, speed: 8, time: 0.45, windup: 0.5 } },
-    brutamonte: { model: 'cascalco', scale: 0.90, hp: 60, speed: 1.15, radius: 0.61, dmg: 14, xp: 8, tint: 0.75, heavy: true },
-    cuspidor: { model: 'fanaluz', scale: 0.76, hp: 20, speed: 1.4, radius: 0.43, dmg: 8, xp: 5, tint: 0.75, ranged: { keep: 4.5, every: 2.6, speed: 3.6, dmg: 9 } },
-    minichefe: { model: 'ferfogo', scale: 1.40, hp: 3200, speed: 1.35, radius: 0.98, dmg: 20, xp: 60, tint: 0.85, heavy: true, boss: 'mini' },
+    rastejante: { model: 'brogume', scale: 0.68, hp: 7, speed: 1.9, radius: 0.35, dmg: 6, xp: 1, tint: 1 },
+    espectro: { model: 'velamen', scale: 0.72, hp: 13, speed: 2.25, radius: 0.39, dmg: 8, xp: 2, tint: 1, float: true },
+    investida: { model: 'volteiro', scale: 0.59, hp: 16, speed: 1.6, radius: 0.39, dmg: 10, xp: 3, tint: 1, dash: { every: 3.2, speed: 8, time: 0.45, windup: 0.5 } },
+    brutamonte: { model: 'cascalco', scale: 0.90, hp: 60, speed: 1.15, radius: 0.61, dmg: 14, xp: 8, tint: 1, heavy: true },
+    cuspidor: { model: 'fanaluz', scale: 0.76, hp: 20, speed: 1.4, radius: 0.43, dmg: 8, xp: 5, tint: 1, ranged: { keep: 4.5, every: 2.6, speed: 3.6, dmg: 9 } },
+    minichefe: { model: 'ferfogo', scale: 1.40, hp: 3200, speed: 1.35, radius: 0.98, dmg: 20, xp: 60, tint: 1, heavy: true, boss: 'mini' },
     minerio: { model: null, scale: 1.1, hp: 40, speed: 0, radius: 0.6, dmg: 0, xp: 0, tint: 1, heavy: true, ore: true },
-    guardiao: { model: 'arborion', scale: 2.5, hp: 4200, speed: 1.15, radius: 1.6, dmg: 22, xp: 0, tint: 0.80, heavy: true, boss: 'final' },
+    guardiao: { model: 'arborion', scale: 2.5, hp: 4200, speed: 1.15, radius: 1.6, dmg: 22, xp: 0, tint: 1, heavy: true, boss: 'final' },
   },
   elite: { chanceFrom: 150, chance: 0.04, hp: 16, scale: 1.45, r: 1.3, xp: 30, speed: 1.1, dmg: 1.5, reels: 1 },
   // campeão: elite gigante e resistente; o baú dele rola 3 melhorias

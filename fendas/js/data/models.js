@@ -18,7 +18,7 @@ export const COLORS = {
   ice: '#bfe6f2', iceD: '#6fa8c0', deep: '#2c5f7a', ray: '#5a7fa8', rayD: '#2e4a6e', belly: '#c8dcef', bark: '#5a4030', stoneG: '#6b6f66', canopy: '#3f7a36',
   sheet: '#d8dde8', sheetD: '#8a90a8', hollow: '#14121c', suit: '#15141c', skinP: '#d9d6cf', slug: '#6b5a7a', slugD: '#3f3450', post: '#4a4f5c',
   spk: '#4a4458', spkD: '#2a2634', cone: '#8a8298', deerW: '#d8d2c4', deerD: '#8a8070', hoof: '#4a4038', fox: '#b8502e', foxD: '#6e2a1c', cream: '#e8d2b0', axo: '#3a8fb0', axoL: '#9fd6e6', axoD: '#1f5570',
-  beet: '#3f6b38', beetD: '#24401f', leaf: '#8fd06a', pomb: '#8a97ab', pombD: '#4f5a6e', mem: '#c9c4dc', memD: '#6b5f8a', anc: '#5a5f6e', ancD: '#2e3240', pigeon: '#6f7c94', pigeonD: '#4a5468', glowAcid: '#b6ff3a', white2: '#e8f0f4', glowR: '#ff4f6a', alfaA: '#4a2a2a', alfaB: '#2e1a1c', alfaC: '#262a36', alfaD: '#2a1a2e',
+  beet: '#5fcf2e', beetD: '#2f8a1e', leaf: '#c4ff5a', pomb: '#8a97ab', pombD: '#4f5a6e', mem: '#c9c4dc', memD: '#6b5f8a', anc: '#5a5f6e', ancD: '#2e3240', pigeon: '#6f7c94', pigeonD: '#4a5468', glowAcid: '#d8ff3a', white2: '#e8f0f4', glowR: '#ff4f6a', alfaA: '#4a2a2a', alfaB: '#2e1a1c', alfaC: '#262a36', alfaD: '#2a1a2e',
   // v11: Fenda Estática, formas evoluídas e corpos de expedição
   volt: '#3e4a6a', voltD: '#262d44', mag: '#6a6458', magD: '#3e3a33', magR: '#b8423a', storm: '#2c3450', stormD: '#1a2036', stormL: '#5a6488',
   foxE: '#a8361e', foxED: '#5e1c12', axoE: '#2a6f9a', axoED: '#174866', beetE: '#335c2d', pombE: '#6d7a92', spkE: '#3a3448', spkED: '#221e2c',

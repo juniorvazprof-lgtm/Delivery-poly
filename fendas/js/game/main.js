@@ -537,7 +537,7 @@ function draw(now) {
   gemsPool.end();
   // projéteis e efeitos (camada em resolução normal)
   glow.begin(cam); fxCubes.begin();
-  glow.add(mage.x, 0.05, mage.z, 0.9, '#5ff2ff', 0.22);   // aura fraca: o Mago não some em zonas roxas
+  glow.add(mage.x, 0.05, mage.z, 1.0, '#5ff2ff', 0.3);   // aura fraca: o Mago não some em zonas roxas
   for (const p of G.projectiles) {
     if (p.kind === 'fogo') { if (p.big) glow.add(p.x, 0.45, p.z, 2.0, '#ff2a10', 0.7); glow.add(p.x, 0.45, p.z, 1.2, '#ff5a10', 0.9); glow.add(p.x, 0.45, p.z, 0.5, '#fff2a8', 1); glow.add(p.x - p.vx * 0.03, 0.45, p.z - p.vz * 0.03, 0.7, '#ff8a3d', 0.5); }
     else if (p.kind === 'vento') { const a = Math.atan2(p.vx, p.vz) + Math.PI / 2; fxCubes.add(p.x, 0.4, p.z, 0.6, 0.04, 0.1, '#ffffff', 0, a, 0); glow.add(p.x, 0.4, p.z, 0.8, '#7fe8ff', 0.6); glow.add(p.x - p.vx * 0.03, 0.4, p.z - p.vz * 0.03, 0.5, '#bff4ff', 0.4); }
