@@ -15,16 +15,22 @@ export const MAGE = { parts: [
   [3.5, 0, 0.6, 0.6, 9.4, 0.6, '#4a3a2a'], [3.2, 9.4, 0.3, 1.2, 1.7, 1.2, 'glowC'],
 ] };
 
-const DECOR = [
-  rnd => ({ parts: [[-4, 0, -3, 7, 2, 6, '#2c3038'], [-2, 2, -2, 4, 1.4, 3, '#383d47'], [1, 0, 1.8, 3, 1.4, 2.4, '#22252c'], [-3, 1.8, 0.5, 2, 0.5, 3.5, '#5a3428']] }),   // entulho
-  rnd => ({ parts: [[-2, 0, -2, 4, 1.4, 4, '#1e1830'], [-1.2, 1.4, -1.2, 2.4, 4 + rnd() * 3, 2.4, 'glowV'], [1, 1, 0, 1.4, 2.6, 1.4, 'glowP'], [-2.4, 1, 0.6, 1.2, 2, 1.2, 'glowV']] }),   // cristais de mana
-  rnd => ({ parts: [[-0.4, 0, -0.4, 0.8, 9, 0.8, '#2a2d35'], [-0.4, 9, -0.4, 3.2, 0.5, 0.8, '#2a2d35'], [2.2, 8.2, -0.3, 0.8, 0.8, 0.6, rnd() < 0.5 ? 'glowM' : '#3a3f4a']] }),   // poste de neon
-  rnd => ({ parts: [[-3, 0, -0.6, 6, 0.4, 1.2, '#3a3f4a'], [-3, 0.4, -0.6, 0.6, 2.4, 1.2, '#2c3038'], [2.4, 0.4, -0.6, 0.6, 1.4, 1.2, '#2c3038'], [-1, 0.4, -0.2, 3, 0.3, 0.4, 'glowM']] }),   // barreira quebrada
-  rnd => ({ parts: [[-1.6, 0, -1.6, 3.2, 0.6, 3.2, '#1b2a1e'], [-1.2, 0.6, -1.2, 2.4, 2.2, 2.4, '#2b4a2c'], [-0.8, 2.8, -0.8, 1.6, 1.4, 1.6, '#3f6b38']] }),   // mato da Fenda
-];
-// cenário anterior: uma só "zona", chão roxo escuro e objetos espalhados
-const ZONES = { cidade: { floor: ['#2a2638', '#322d44'], props: DECOR, density: [2, 4] } };
-export function zoneAt() { return 'cidade'; }
+// zonas do cenário: cada arquivo em data/zones/ exporta { floor, crack, props, density }
+import cidade from '../data/zones/cidade.js';
+import cristal from '../data/zones/cristal.js';
+import cinzas from '../data/zones/cinzas.js';
+import abismo from '../data/zones/abismo.js';
+export const ZONES = { cidade, cristal, cinzas, abismo };
+const ZK = ['cristal', 'cinzas', 'abismo'];
+// zonas em manchas grandes (~50 u) por ruído suave; o começo é sempre a cidade
+export function zoneAt(x, z) {
+  const d = Math.hypot(x, z);
+  if (d < 18) return 'cidade';
+  const a = Math.sin(x * 0.045 + Math.cos(z * 0.031) * 1.7) + Math.cos(z * 0.052 - x * 0.013) + Math.sin((x + z) * 0.021) * 0.6;
+  const b = Math.cos(x * 0.038 - 1.3) * Math.sin(z * 0.041 + 0.7) + Math.sin((x - z) * 0.027) * 0.8;
+  if (a > 0.9) return 'cidade';
+  return ZK[(a < -0.6 ? 2 : b > 0.1 ? 0 : 1)];
+}
 const CHUNK = 12;
 
 export class World {
@@ -34,7 +40,7 @@ export class World {
     this.chunks = new Map();
     this.c = new T.Color(); this.cols = {};
     for (const [k, z] of Object.entries(ZONES)) this.cols[k] = z.floor.map(c => new T.Color(c));
-    this.crack = new T.Color('#3d2c55');
+    this.cracks = {}; for (const [k, z] of Object.entries(ZONES)) this.cracks[k] = new T.Color(z.crack);
   }
   update(cx, cz, viewW, viewH) {
     // chão: ladrilhos em volta da câmera, cor estável pela posição
@@ -42,8 +48,8 @@ export class World {
     const x0 = Math.floor(cx - viewW / 2 - 2), x1 = Math.ceil(cx + viewW / 2 + 2), z0 = Math.floor(cz - viewH * 0.75 - 3), z1 = Math.ceil(cz + viewH * 0.75 + 3);
     for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) {
       const h = hash(x, z) * 0.6 + (Math.sin(x * 0.35) + Math.cos(z * 0.3)) * 0.2 + 0.2, crack = hash(x * 3 + 7, z * 5 - 2) > 0.985;
-      const zc = this.cols[zoneAt(x, z)]; this.c.copy(zc[0]).lerp(zc[1], h);
-      if (crack) this.c.copy(this.crack);
+      const zk = zoneAt(x, z), zc = this.cols[zk]; this.c.copy(zc[0]).lerp(zc[1], h);
+      if (crack) this.c.copy(this.cracks[zk]);
       t.add(x + 0.5, -0.1, z + 0.5, 1.001, 1, 1.001, this.c);
     }
     t.end();

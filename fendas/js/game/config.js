@@ -156,7 +156,7 @@ export const CFG = {
   },
   combo: { window: 1.6 },
   // minério: rochas que os feitiços quebram, soltam cristais e às vezes ouro
-  ore: { chance: 0.55, perZone: { cidade: 2 }, gems: 4, gemValue: 3, coin: 0.4 },
+  ore: { chance: 0.55, perZone: { cidade: 2, cristal: 3, cinzas: 1, abismo: 2 }, gems: 4, gemValue: 3, coin: 0.4 },
   // santuários: fique dentro do círculo até ele fechar e ganhe uma bênção temporária
   shrines: { chance: 0.4, radius: 1.5, charge: 3.5, decay: 0.35,
     buffs: {
