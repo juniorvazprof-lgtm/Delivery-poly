@@ -158,3 +158,20 @@ body.landscape #hud, body.landscape .screen { max-width: 520px; margin: 0 auto; 
 #res-dmg span { font: 10px var(--pix); color: var(--muted); }
 #res-next { color: var(--gold) !important; }
 .card.evohint { border-color: var(--gold); box-shadow: 0 0 10px #ffd34d55; }
+
+/* Fase 2: mapa das Fendas, contratos, cláusulas, portal */
+.btn-back-x { width: 44px; height: 44px; background: var(--panel); border: 2px solid var(--line); font: 700 24px var(--pix); }
+.mcard.rift, .mcard.contract { width: 100%; text-align: left; font: inherit; color: inherit; }
+.mcard.contract.on { box-shadow: 0 0 0 2px var(--c), 0 0 14px color-mix(in srgb, var(--c) 50%, transparent); }
+.mcard .lv em { font: 10px var(--pix); font-style: normal; color: var(--muted); }
+.danger { font: 700 12px var(--pix); color: var(--c); letter-spacing: 2px; }
+#board { display: flex; flex-direction: column; gap: 10px; } #board[hidden], #rift-list[hidden], #contract-hud[hidden] { display: none; }
+#clause-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.clause { display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 8px; background: var(--panel); border: 2px solid var(--line); }
+.clause b { font: 700 11px var(--pix); color: var(--ink); } .clause span { font-size: 12px; color: var(--muted); } .clause em { font: 700 11px var(--pix); font-style: normal; color: var(--gold); }
+.clause.on { border-color: var(--red); background: #2a0f18; } .clause.on b { color: var(--red); }
+#btn-enter:disabled { opacity: .45; }
+#contract-hud { margin-top: 6px; display: inline-block; font: 700 11px var(--pix); color: var(--c, var(--cyan)); background: #07060ccc; border: 1px solid var(--c, var(--cyan)); padding: 3px 8px; }
+#contract-hud.done { color: var(--gold); border-color: var(--gold); }
+#res-contract { color: var(--ink) !important; }
+@media (max-width: 360px) { #clause-list { grid-template-columns: 1fr; } }

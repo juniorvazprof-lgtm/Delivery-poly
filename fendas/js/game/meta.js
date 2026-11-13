@@ -64,7 +64,10 @@ export function metaMods() {
 
 // fim de partida: calcula o ouro e atualiza estatísticas
 export function endRun(r) {
-  const gold = Math.round((r.coins * 5 + Math.floor(r.kills / 20) + Math.floor(r.time / 10) + (r.won ? 150 : 0)) * metaMods().gold);
+  // saque × multiplicador da Fenda; o pagamento do contrato vem à parte; morrer perde uma fração do saque
+  let gold = Math.round((r.coins * 5 + Math.floor(r.kills / 20) + Math.floor(r.time / 10) + (r.won ? 150 : 0)) * metaMods().gold * (r.mult || 1));
+  if (r.lost) gold = Math.round(gold * (1 - r.lost));
+  gold += r.pay || 0;
   const s = M.stats;
   M.gold += gold; s.goldTotal += gold; s.runs++; s.kills += r.kills; s.wins += r.won ? 1 : 0;
   s.bestTime = Math.max(s.bestTime, r.time); s.bestLevel = Math.max(s.bestLevel, r.level);
@@ -88,7 +91,7 @@ export const missionsReady = () => MISSIONS.filter(m => !M.claimed.includes(m.id
 // ---------- interface ----------
 let tab = 'feiticos';
 export function showMenu() {
-  for (const id of ['arsenal', 'missions', 'stats', 'result']) $(id).hidden = true;
+  for (const id of ['arsenal', 'missions', 'stats', 'result', 'riftmap']) $(id).hidden = true;
   $('startscreen').hidden = false;
   $('menu-gold').textContent = M.gold.toLocaleString('pt-BR');
   const n = missionsReady(); $('btn-missions').querySelector('em').textContent = n ? n : ''; $('btn-missions').querySelector('em').hidden = !n;

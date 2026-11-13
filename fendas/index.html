@@ -25,6 +25,7 @@
     <div id="loadout"></div>
     <div id="combo" hidden><b>x0</b><small>COMBO</small></div>
   </div>
+  <div id="contract-hud" hidden></div>
   <div id="buffs"></div>
   <div id="hpbar"><div id="hpfill"></div></div>
   <div id="bossbar" hidden><span id="bossname"></span><div class="track"><div id="bossfill"></div></div></div>
@@ -44,6 +45,20 @@
     <button id="btn-arsenal" class="btn">ARSENAL</button>
     <button id="btn-missions" class="btn">MISSÕES <em hidden></em></button>
     <button id="btn-stats" class="btn">ESTATÍSTICAS</button>
+  </div>
+</section>
+
+<section id="riftmap" class="screen menu" hidden>
+  <div class="panel wide">
+    <div class="mhead"><button id="btn-rift-back" class="btn-back-x">‹</button><h2 id="rift-title">FENDAS</h2><span></span></div>
+    <div id="rift-list" class="mlist"></div>
+    <div id="board" hidden>
+      <p class="sub">Contratos disponíveis</p>
+      <div id="contract-list" class="mlist"></div>
+      <p class="sub">Cláusulas de risco · opcionais, aumentam o pagamento</p>
+      <div id="clause-list"></div>
+      <button id="btn-enter" class="btn primary" disabled>ESCOLHA UM CONTRATO</button>
+    </div>
   </div>
 </section>
 
@@ -106,6 +121,7 @@
     <p class="sub">Feitiços desta partida</p>
     <div id="res-build" class="build"></div>
     <div id="res-dmg"></div>
+    <p id="res-contract" class="sub" hidden></p>
     <p id="res-next" class="sub" hidden></p>
     <div id="res-gold" class="goldbar big"><i></i><b>+0</b></div>
     <button id="btn-again" class="btn primary">JOGAR DE NOVO</button>

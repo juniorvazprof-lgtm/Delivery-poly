@@ -155,6 +155,8 @@ export const CFG = {
     horda: { name: 'HORDA', sub: 'O triplo de inimigos', color: '#ffb15a', dur: 15 },
   },
   combo: { window: 1.6 },
+  // portal de extração: aparece aos 5:00; ficar dentro dele até carregar encerra a partida com o saque
+  extract: { at: 300, dist: 7, radius: 1.4, charge: 2.5, deathLoss: 0.5 },
   // minério: rochas que os feitiços quebram, soltam cristais e às vezes ouro
   ore: { chance: 0.55, perZone: { cidade: 2, cristal: 3, cinzas: 1, abismo: 2 }, gems: 4, gemValue: 3, coin: 0.4 },
   // santuários: fique dentro do círculo até ele fechar e ganhe uma bênção temporária

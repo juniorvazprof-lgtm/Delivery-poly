@@ -23,7 +23,11 @@ import abismo from '../data/zones/abismo.js';
 export const ZONES = { cidade, cristal, cinzas, abismo };
 const ZK = ['cristal', 'cinzas', 'abismo'];
 // zonas em manchas grandes (~50 u) por ruído suave; o começo é sempre a cidade
+// Fenda escolhida no mapa: com ela definida, o mapa todo usa um só bioma
+let FIXED = null;
+export function setRift(zone) { FIXED = zone; }
 export function zoneAt(x, z) {
+  if (FIXED) return FIXED;
   const d = Math.hypot(x, z);
   if (d < 18) return 'cidade';
   const a = Math.sin(x * 0.045 + Math.cos(z * 0.031) * 1.7) + Math.cos(z * 0.052 - x * 0.013) + Math.sin((x + z) * 0.021) * 0.6;

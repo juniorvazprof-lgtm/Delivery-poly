@@ -26,3 +26,12 @@ Projeto paralelo ao `rz-acao` (que continua intacto). Valida a diversão e o equ
 - Paleta chamativa: chão saturado por zona, inimigos verde ácido sem escurecer, Mago marfim e ouro.
 - Partículas de ambiente por zona (`js/game/ambient.js`): neon, cintilância de cristal, brasas subindo, faíscas do abismo.
 - Prévia: `zonas-preview.png`.
+
+## Fase 1.5 e Fase 2 (nov/2026)
+- Guardião: 12.000 de vida, fase enfurecida abaixo de 50% e aviso (brilho e círculo) antes de cada anel de tiros. Minichefe também avisa.
+- Inimigos se desfazem em pedaços voxel ao morrer e se achatam ao levar dano.
+- **Mapa das Fendas** (`js/data/rifts.js`): 4 Fendas, cada uma com um bioma, perigo, vida dos inimigos e ouro próprios.
+- **Contratos** (`js/data/contracts.js`): 3 ofertas por Fenda (caçada, contenção, extração, sobrevivência), com meta, contratante e pagamento.
+- **Cláusulas de risco**: modificadores opcionais (vida, velocidade, ritmo, dano recebido, sem corações, sem santuários, ímã menor) que aumentam o pagamento.
+- **Portal de extração** aos 5:00: ficar 2,5 s dentro encerra a partida com o saque. O contrato só é pago se você extrair ou vencer o Guardião; morrer perde metade do saque.
+- Fluxo da tela: `js/game/run.js`.
