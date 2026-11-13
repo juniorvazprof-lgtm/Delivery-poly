@@ -31,11 +31,11 @@ export const CFG = {
       cd: [1.7, 1.6, 1.5, 1.4, 1.0], strikes: [1, 1, 2, 2, 3], chains: [1, 2, 2, 3, 3], dmg: [22, 24, 27, 35, 39], range: 6.5, soakMul: 1.8 },
     terra: { name: 'Espinhos de terra', glyph: '▲', color: '#c9a36b', el: 'terra',
       desc: ['Espinhos brotam do chão perto do Mago, ferem e prendem por um instante.', '+1 espinho', '+dano', '+2 espinhos', 'Espinhos maiores e mais frequentes'],
-      cd: [2.2, 2.1, 2.0, 1.9, 1.5], count: [2, 3, 3, 5, 5], dmg: [17, 18, 25, 27, 34], radius: [0.8, 0.8, 0.85, 0.9, 1.15], root: 0.6 },
+      cd: [2.2, 2.1, 2.0, 1.9, 1.5], count: [2, 2, 3, 3, 4], dmg: [17, 18, 25, 27, 34], radius: [0.8, 0.8, 0.85, 0.9, 1.15], root: 0.25 },
     // ---- poderes "absurdos": grandes, raros e com recarga longa ----
     anel: { name: 'Anel de fogo', glyph: '◯', color: '#ff5a1f', el: 'fogo', big: true,
       desc: ['Um pequeno anel de fogo gira em volta do Mago e queima quem toca nele.', 'Anel maior', '+dano', 'Anel maior e queima mais rápido', 'Anel enorme: a cada 5 s solta uma onda de fogo'],
-      radius: [1.1, 1.5, 1.6, 2.1, 2.6], band: 0.45, dmg: [4, 5, 7, 9, 12], tick: [0.45, 0.42, 0.38, 0.32, 0.26], waveEvery: 5, wave: 60 },
+      radius: [1.1, 1.5, 1.6, 2.1, 2.6], band: 0.45, dmg: [4, 5, 6, 8, 11], tick: [0.5, 0.48, 0.44, 0.38, 0.32], waveEvery: 5, wave: 60 },
     meteoro: { name: 'Chuva de meteoros', glyph: '☄', color: '#ffb15a', el: 'fogo', big: true,
       desc: ['Um meteoro cai sobre o maior grupo de inimigos. A sombra mostra onde.', '+dano', '+1 meteoro', 'Cratera maior e recarga menor', '+1 meteoro e dano enorme'],
       cd: [6.5, 6.0, 5.6, 4.8, 4.2], count: [1, 1, 2, 2, 3], dmg: [80, 105, 115, 140, 210], radius: [2.0, 2.1, 2.2, 2.7, 3.0], fall: 0.85 },
@@ -51,7 +51,7 @@ export const CFG = {
       count: [1, 1, 2, 2, 3], length: [3.4, 4.2, 4.3, 4.6, 5.4], width: 0.32, dmg: [8, 10, 11, 15, 18], tick: 0.2, spin: [1.5, 1.5, 1.6, 2.0, 2.1] },
     orbes: { name: 'Fagulhas caçadoras', glyph: '∴', color: '#d78bff', el: 'arcano',
       desc: ['Pequenos orbes perseguem os inimigos e os corrompem: corrompidos explodem ao morrer.', '+1 orbe', '+dano', '+1 orbe e recarga menor', '+1 orbe e +dano'],
-      cd: [1.5, 1.4, 1.35, 1.15, 1.0], count: [2, 3, 3, 4, 5], dmg: [11, 13, 17, 18, 24], speed: 6.5, life: 1.3 },
+      cd: [1.7, 1.6, 1.5, 1.35, 1.2], count: [1, 2, 2, 3, 3], dmg: [9, 10, 13, 14, 18], speed: 6.5, life: 1.3 },
     runa: { name: 'Lâmina rúnica', glyph: '◈', color: '#7ff0ff', el: 'arcano',
       desc: ['Uma lâmina de runas ricocheteia nas bordas da tela cortando tudo no caminho.', '+dura mais', '+1 lâmina', '+dano', '+1 lâmina e mais rápida'],
       cd: [3.4, 3.2, 3.0, 2.9, 2.6], count: [1, 1, 2, 2, 3], dmg: [14, 17, 18, 24, 27], life: [3.0, 3.8, 3.8, 4.2, 4.5], speed: [7, 7, 7.2, 7.5, 8.5], rehit: 0.35 },
@@ -139,8 +139,8 @@ export const CFG = {
     { from: 250, mix: { rastejante: 2, espectro: 2, investida: 2, brutamonte: 1, cuspidor: 1 } },
     { from: 360, mix: { espectro: 3, investida: 2, brutamonte: 2, cuspidor: 2 } },
   ],
-  spawnRate: t => Math.min(11, 0.8 + t / 38 + Math.pow(t / 200, 2)),   // inimigos por segundo
-  hpScale: t => 1 + t / 120 + Math.pow(t / 250, 2),
+  spawnRate: t => Math.min(11, 1.1 + t / 38 + Math.pow(t / 200, 2)),   // inimigos por segundo
+  hpScale: t => 1.2 + t / 120 + Math.pow(t / 250, 2),
   drops: { heart: 0.012, heartElite: 0.4, heal: 20, critBase: 0.03 },
   maxAlive: 220,
   miniboss: 240,
