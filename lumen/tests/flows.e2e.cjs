@@ -56,13 +56,15 @@ async function main() {
     for (let i = 0; i < 4; i++) { await tap("#pyNext"); await wait(450); }
     await tap("#pyDone"); await wait(500);
   });
-  await step("ouvir: prévia, ranking, tocando agora e fila", async () => {
-    await tap("#bnav [data-tab=listen]"); await wait(700); await tap("#prevM"); await wait(400);
-    await tap(".mtabs [data-v=rank]"); await wait(300); await tap("#playTop"); await wait(800);
-    await tap("#mInfo"); await wait(800); await tap("#qBtn"); await wait(500);
-    await p.evaluate(() => document.getElementById("veil").click()); await wait(400); await tap("#npClose"); await wait(400);
+  // sem louvores reais (FEATURES.music = false): a música some e a aba Buscar entra no lugar de Ouvir
+  await step("música escondida e aba Buscar", async () => {
+    const vis = await p.evaluate(() => ["#snd", "#mini", ".card.active .disc"].map(s => { const e = document.querySelector(s); return !!e && e.getBoundingClientRect().width > 0; }));
+    if (vis.some(Boolean)) throw new Error("elemento de música visível: " + vis);
+    await tap("#bnav [data-tab=search]"); await wait(600);
+    for (let i = 0; i < 5; i++) { await p.fill("#fq", "jo 3 16"); await p.press("#fq", "Enter"); await wait(500); }
+    const r = await p.textContent("#fPage"); if (!/João 3:16/.test(r) || /acabaram/.test(r)) throw new Error("busca por referência deveria ser livre");
+    await tap("#fClose").catch(() => p.keyboard.press("Escape")); await wait(400);
   });
-  await step("criar playlist", async () => { await tap(".mtabs [data-v=lib]"); await wait(300); await tap("#newPl"); await wait(500); await tap('[data-n="Domingo"]'); await tap("#plOk"); await wait(700); });
   await step("premium e púlpito", async () => { await tap("#bnav [data-tab=premium]"); await wait(700); await tap(".tool2[data-t=pulpito]"); await wait(800); });
   await step("modo pregar", async () => {
     await tap("#goPreach"); await wait(700); await tap("#prNext"); await wait(500); await tap("#prX"); await wait(400);

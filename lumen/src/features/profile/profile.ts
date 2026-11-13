@@ -36,7 +36,6 @@ export function renderYou(){
     <button class="ri" data-a="pray">${IC("candle")}Orar agora<span class="v">${IC("chev")}</span></button>
     <button class="ri" data-a="prayAt">${IC("bell")}Horário da oração<span class="v">${SB}</span></button>
     <button class="ri" data-a="remind">${IC("book")}Lembrete do versículo do dia<span class="v">${SB}</span></button>
-    <button class="ri" data-a="nav">${IC("home")}Barra de navegação<span class="v">${document.body.classList.contains("navtop")?"Em cima":"Embaixo"}${IC("chev")}</span></button>
     ${canWorkOffline()?html`<button class="ri" data-a="offline" id="offRow">${IC("book")}Bíblia sem internet<span class="v" id="offVal">…</span></button>`:""}
     <button class="ri" data-a="mood">${IC("mood")}Como estou me sentindo<span class="v">${IC("chev")}</span></button></div>
    ${top.length?html`<div class="group"><div class="label">O que tem tocado você</div><div class="taste">${top.map(([t,s])=>html`<div>${t}<span><i data-style="width:${Math.max(8,s/max*100)}%"></i></span></div>`)}</div></div>`:""}
@@ -47,7 +46,7 @@ export function renderYou(){
   if(canWorkOffline())refreshOfflineRow();
   qa(yPage, ".ri").forEach(b=>b.onclick=()=>{const a=b.dataset.a;
     if(a==="offline"){startBibleDownload();return}
-    if(a==="nav"){const top=!document.body.classList.contains("navtop");document.body.classList.toggle("navtop",top);S.set("lumen.navpos",top?"top":"bottom");renderYou();toast(top?"Barra em cima":"Barra embaixo")}else if(a==="pray")openPray();else if(a==="prayAt"||a==="remind")soon("Lembretes");else if(a==="mood")onboarding();else goTab("premium")});
+    if(a==="pray")openPray();else if(a==="prayAt"||a==="remind")soon("Lembretes");else if(a==="mood")onboarding();else goTab("premium")});
   qa(yPage, "[data-mt]").forEach(b=>b.onclick=()=>{myTab=b.dataset.mt==="liked"?"liked":"saved";showAll=false;renderYou();byIdMaybe("myVerses")?.scrollIntoView({behavior:"smooth",block:"start"})});
   byIdMaybe("moreMine")?.addEventListener("click",()=>{showAll=true;renderYou()});
   qa(yPage, ".rm").forEach(b=>b.onclick=()=>{const r=b.dataset.r||"";

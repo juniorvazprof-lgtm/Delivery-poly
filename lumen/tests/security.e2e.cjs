@@ -84,17 +84,21 @@ async function main() {
       await page.goto("http://localhost:4600/");
       await page.waitForTimeout(1200);
       await page.tap("#skip");
-      await page.tap("#bnav [data-tab=listen]");
-      await page.waitForTimeout(600);
-      await page.tap("#prevM");
-      await page.tap(".mtabs [data-v=lib]");
-      await page.tap("#newPl");
-      await page.waitForTimeout(500);
-      await page.fill("#plName", EVIL);
-      await page.tap("#plOk");
-      await page.waitForTimeout(800);
-      ok(!(await page.evaluate(() => window.__pwned)), "nome de playlist com <img onerror> não executa código");
-      ok((await page.$$("#pPage img")).length === 0, "nome de playlist aparece como texto, sem criar elementos");
+      // com a música desligada (FEATURES.music = false) a tela de playlists não é alcançável; o teste volta a rodar ao religar
+      if (!(await page.$("#bnav [data-tab=listen]"))) console.log("- playlists: pulado (música desligada no app)");
+      else {
+        await page.tap("#bnav [data-tab=listen]");
+        await page.waitForTimeout(600);
+        await page.tap("#prevM");
+        await page.tap(".mtabs [data-v=lib]");
+        await page.tap("#newPl");
+        await page.waitForTimeout(500);
+        await page.fill("#plName", EVIL);
+        await page.tap("#plOk");
+        await page.waitForTimeout(800);
+        ok(!(await page.evaluate(() => window.__pwned)), "nome de playlist com <img onerror> não executa código");
+        ok((await page.$$("#pPage img")).length === 0, "nome de playlist aparece como texto, sem criar elementos");
+      }
       await ctx.close();
     }
 
@@ -117,14 +121,17 @@ async function main() {
       page.on("pageerror", e => errors.push(e.message));
       await page.goto("http://localhost:4600/");
       await page.waitForTimeout(1500);
-      await page.tap("#bnav [data-tab=listen]");
-      await page.waitForTimeout(500);
-      await page.tap("#prevM");
-      await page.tap(".mtabs [data-v=lib]");
-      await page.waitForTimeout(500);
-      const rows = await page.$$eval("#pPage [data-pl]", n => n.map(x => ({ id: x.dataset.pl, style: x.querySelector(".cover") ? x.querySelector(".cover").getAttribute("style") : "" })));
-      ok(rows.length === 1 && rows[0].id === "pl1", "playlist com id inválido descartada");
-      ok(!!rows[0] && !/red|url|onmouseover/.test(rows[0].style), "cores adulteradas trocadas por cores padrão");
+      if (!(await page.$("#bnav [data-tab=listen]"))) console.log("- playlists adulteradas: pulado (música desligada no app)");
+      else {
+        await page.tap("#bnav [data-tab=listen]");
+        await page.waitForTimeout(500);
+        await page.tap("#prevM");
+        await page.tap(".mtabs [data-v=lib]");
+        await page.waitForTimeout(500);
+        const rows = await page.$$eval("#pPage [data-pl]", n => n.map(x => ({ id: x.dataset.pl, style: x.querySelector(".cover") ? x.querySelector(".cover").getAttribute("style") : "" })));
+        ok(rows.length === 1 && rows[0].id === "pl1", "playlist com id inválido descartada");
+        ok(!!rows[0] && !/red|url|onmouseover/.test(rows[0].style), "cores adulteradas trocadas por cores padrão");
+      }
       await page.tap("#bnav [data-tab=you]");
       await page.waitForTimeout(600);
       await page.tap("#yPage .stats [data-mt=saved]"); await page.waitForTimeout(300);

@@ -1,4 +1,5 @@
 /* Folhas */
+import { FEATURES } from "../../config/features";
 import type { Verse } from "../../types";
 import { qa } from "../../utils/dom";
 import { html } from "../../utils/html";
@@ -16,7 +17,7 @@ export function openMenu(v:Verse){
   openSheet(html`<h2>${v.r}</h2><p class="sub">${v.t.join(" · ")}</p>
    <button class="opt" data-a="ler">${ICON.book}<div>Ler o capítulo inteiro<small>Veja o versículo no contexto</small></div></button>
    <button class="opt" data-a="tema">${ICON.tag}<div>Ver mais sobre ${v.t[0]}<small>Filtra o feed por este tema</small></div></button>
-   <button class="opt" data-a="ouvir">${ICON.ear}<div>Ouvir em voz alta</div>${SB}</button>
+   ${FEATURES.tts?html`<button class="opt" data-a="ouvir">${ICON.ear}<div>Ouvir em voz alta</div>${SB}</button>`:""}
    <button class="opt" data-a="copiar">${ICON.copy}<div>Copiar texto</div></button>
    <button class="opt" data-a="foco">${IC("lens")}<div>Modo foco<small>Esconde tudo e deixa só o versículo. Toque para sair.</small></div></button>
    <button class="opt" data-a="menos">${ICON.less}<div>Mostrar menos assim<small>Diminui este tema no seu feed</small></div></button>`,"Opções do versículo");

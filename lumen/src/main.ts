@@ -1,4 +1,5 @@
 /* Ponto de entrada: inicializa as telas e liga os eventos, na mesma ordem do protótipo. */
+import { FEATURES } from "./config/features";
 import { startOffline } from "./services/offline";
 import type { FeedCard, SampleFn } from "./types";
 import { raw, setHTML } from "./utils/html";
@@ -59,10 +60,9 @@ if(!S.get<number>("lumen.onb",0))setTimeout(onboarding,900);
 updateBody();
 startOffline();
 setInterval(tick,500);
-(function(){const pref=S.get("lumen.navpos",null);if(pref==="top")document.body.classList.add("navtop");
-  const check=()=>{if(S.get("lumen.navpos",null))return;const r=bnav.getBoundingClientRect(),vh=window.visualViewport?.height||innerHeight;
-    if(r.height===0||r.bottom>vh+2)document.body.classList.add("navtop")};
-  setTimeout(check,600);window.visualViewport?.addEventListener("resize",check);addEventListener("resize",check)})();
+// sem louvores reais ainda: esconde a música e põe a aba Buscar no lugar de Ouvir
+if(!FEATURES.music){document.body.classList.add("nomusic");const b=bnav.querySelector<HTMLButtonElement>('[data-tab="listen"]');
+  if(b){b.dataset.tab="search";setHTML(b,html`<span class="ni" data-i="search"></span>Buscar`);b.onclick=()=>{vibrate(4);byId("findBtn").click()}}}
 qa(document, "[data-i]").forEach(el=>el.outerHTML=html`<svg viewBox="0 0 24 24" aria-hidden="true">${raw(IP[el.dataset.i||""]||"")}</svg>`.value);
 [["fClose","back"],["rClose","back"],["pyClose","back"],["smClose","back"],["pyBell","bell"],["mX","close"],["npClose","back"]].forEach(([id,n])=>setHTML(byId(id), html`<svg viewBox="0 0 24 24">${raw(IP[n])}</svg>`));
 byId("pPrem").insertAdjacentHTML("afterbegin",IC("star").value);

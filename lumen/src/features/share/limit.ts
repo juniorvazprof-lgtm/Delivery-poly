@@ -13,8 +13,8 @@ import { toast } from "../../ui/effects";
 export const AD_BONUS_PER_DAY = 3;
 
 /** Quantos versículos o plano grátis pode compartilhar por dia. */
-export const FREE_SHARES_PER_DAY = 3;
-/** Quantas buscas o plano grátis pode fazer por dia. */
+export const FREE_SHARES_PER_DAY = 10;   // cada imagem compartilhada é divulgação grátis
+/** Quantas buscas por palavra o plano grátis pode fazer por dia (busca por referência é livre). */
 export const FREE_SEARCHES_PER_DAY = 3;
 
 interface Limit { key: string; max: number; title: string; text: string; reward: string; done: string }
@@ -22,8 +22,8 @@ const SHARE: Limit = { key: "lumen.shares", max: FREE_SHARES_PER_DAY,
   title: `Você já compartilhou ${FREE_SHARES_PER_DAY} versículos hoje`,
   text: `No plano grátis são ${FREE_SHARES_PER_DAY} por dia. Amanhã você pode compartilhar de novo, ou assine o Premium para compartilhar sem limite.`, reward: "+1 compartilhamento", done: "Mais 1 compartilhamento liberado" };
 const SEARCH: Limit = { key: "lumen.searches", max: FREE_SEARCHES_PER_DAY,
-  title: `Você já fez ${FREE_SEARCHES_PER_DAY} buscas hoje`,
-  text: `No plano grátis são ${FREE_SEARCHES_PER_DAY} buscas por dia. Amanhã você pode buscar de novo, ou assine o Premium para buscar na Bíblia sem limite.`, reward: "+1 busca", done: "Mais 1 busca liberada" };
+  title: `Você já fez ${FREE_SEARCHES_PER_DAY} buscas por palavra hoje`,
+  text: `No plano grátis são ${FREE_SEARCHES_PER_DAY} buscas por palavra por dia. Buscar por referência (ex.: João 3:16) continua livre. Amanhã você pode buscar de novo, ou assine o Premium para buscar na Bíblia sem limite.`, reward: "+1 busca", done: "Mais 1 busca liberada" };
 
 interface Day { day: string; n: number; ads: number }
 const int = (v: unknown, max: number): number => (typeof v === "number" && v >= 0 ? Math.min(Math.floor(v), max) : 0);

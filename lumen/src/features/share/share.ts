@@ -36,6 +36,8 @@ export async function renderShot(v:Verse):Promise<HTMLCanvasElement>{
   x.fillRect(L,top-120,44,3);
   x.fillStyle="#F1ECE2";x.font=`400 ${fs}px "Fraunces", Georgia, serif`;lines.forEach((l,i)=>x.fillText(l,L,top+i*lh+fs));
   x.fillStyle="rgba(241,236,226,.72)";x.font='600 40px "Manrope", sans-serif';x.fillText(v.r,L,top+lines.length*lh+fs*.4+70);
+  // crédito da tradução (CC BY 4.0 pede atribuição onde o texto circula)
+  x.fillStyle="rgba(241,236,226,.42)";x.font='500 24px "Manrope", sans-serif';x.fillText("Bíblia Livre (BLIVRE) · CC BY 4.0",L,top+lines.length*lh+fs*.4+116);
   drawFooter(x,W,H);
   return cv;
 }
