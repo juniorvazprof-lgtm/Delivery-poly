@@ -66,16 +66,17 @@ Músicas, anúncios, assinatura, a IA do Púlpito fora da prévia e os lembretes
 ## Próximos passos
 
 ### 1. Conteúdo e limpeza (1–2 semanas)
-- [ ] **Ampliar o feed de 88 para 500–1.000 versículos.**
+- [x] **Ampliar o feed de 88 para 500–1.000 versículos.**
   - Todos tirados da BLIVRE e conferidos automaticamente com os arquivos da Bíblia.
   - É o item mais urgente: hoje a pessoa vê tudo em poucos dias.
-- [ ] **Revisar os limites do plano grátis.**
+  - Feito: **779 versículos** (15 temas, de 47 a 71 cada), montados por `npm run feed` (`feed/montar-feed.mjs`), que copia o texto da BLIVRE e recusa referências inválidas; exclusões da revisão em `feed/excluir.txt`.
+- [x] **Revisar os limites do plano grátis.**
   - Compartilhamento: liberar ou subir para ~10 por dia, porque cada imagem compartilhada é propaganda grátis.
   - Busca: liberar a busca por referência e limitar só a busca por palavra.
-- [ ] **Esconder a aba Ouvir** até haver louvores reais. Enquanto isso, a barra fica com Início · Buscar · Premium · Você.
-- [ ] **Reduzir os "Em breve"** para no máximo um ou dois.
-- [ ] **Remover a opção "barra em cima/embaixo"**, mantendo só embaixo.
-- [ ] **Testes unitários com Vitest:**
+- [x] **Esconder a aba Ouvir** até haver louvores reais. Enquanto isso, a barra fica com Início · Buscar · Premium · Você.
+- [ ] **Reduzir os "Em breve"** para no máximo um ou dois. (Parcial: "Ouvir em voz alta" saiu do menu; faltam Lembretes e ferramentas do Premium.)
+- [x] **Remover a opção "barra em cima/embaixo"**, mantendo só embaixo.
+- [x] **Testes unitários com Vitest:**
   - referências bíblicas;
   - validações de segurança;
   - recomendação do feed;

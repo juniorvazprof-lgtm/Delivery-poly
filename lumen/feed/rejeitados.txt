@@ -1,0 +1,474 @@
+alegria.json Sl 16:11: repetido
+alegria.json Sl 30:5: repetido
+alegria.json Sl 37:4: repetido
+alegria.json Sl 118:24: repetido
+alegria.json 1Sm 2:1: excluído na revisão
+alegria.json Sf 3:17: repetido
+alegria.json Rm 12:12: repetido
+alegria.json Rm 15:13: repetido
+alegria.json Fp 4:4: repetido
+amor.json Dt 7:7-8: longo demais (306 caracteres)
+amor.json Dt 10:18-19: excluído na revisão
+amor.json Rt 1:16-17: longo demais (337 caracteres)
+amor.json 1Sm 18:1: excluído na revisão
+amor.json Ct 8:6-7: longo demais (355 caracteres)
+amor.json Is 54:10: repetido
+amor.json Lm 3:22-23: repetido
+amor.json Jo 3:16: repetido
+amor.json Rm 5:8: repetido
+amor.json Rm 8:38-39: repetido
+amor.json 1Co 13:4-5: repetido
+amor.json 1Co 13:13: repetido
+amor.json Gl 5:22-23: repetido
+amor.json Ef 3:17-19: longo demais (320 caracteres)
+amor.json Cl 3:12-14: longo demais (354 caracteres)
+amor.json 1Jo 4:18-19: repetido
+ansiedade.json Fp 4:6-7: repetido
+ansiedade.json 1Pe 5:7: repetido
+ansiedade.json Mt 6:34: repetido
+ansiedade.json Mt 11:28: repetido
+ansiedade.json Sl 23:1: repetido
+ansiedade.json Sl 46:1: repetido
+ansiedade.json Sl 55:22: repetido
+ansiedade.json Sl 56:3: repetido
+ansiedade.json Sl 121:1-2: repetido
+ansiedade.json Is 41:10: repetido
+ansiedade.json Is 43:2: repetido
+ansiedade.json Is 26:3: repetido
+ansiedade.json Jr 29:11: repetido
+ansiedade.json Pv 3:5-6: repetido
+ansiedade.json Pv 18:10: repetido
+ansiedade.json Js 1:9: repetido
+ansiedade.json Ne 8:10: repetido
+ansiedade.json Sl 27:1: repetido
+ansiedade.json Sl 37:5: repetido
+ansiedade.json Sl 62:1-2: repetido
+ansiedade.json Sl 91:1-2: repetido
+ansiedade.json Is 40:31: repetido
+ansiedade.json Mt 6:25-27: longo demais (475 caracteres)
+ansiedade.json Jo 14:1: repetido
+ansiedade.json Jo 14:27: repetido
+ansiedade.json Jo 16:33: repetido
+ansiedade.json Rm 15:13: repetido
+ansiedade.json 2Co 12:9: repetido
+ansiedade.json 2Tm 1:7: repetido
+ansiedade.json Hb 4:16: repetido
+ansiedade.json 1Jo 4:18: repetido
+confianca.json Sl 23:1: repetido
+confianca.json Sl 37:5: repetido
+confianca.json Sl 46:1: repetido
+confianca.json Sl 56:3: repetido
+confianca.json Sl 121:1-2: repetido
+confianca.json Pv 3:5-6: repetido
+confianca.json Pv 18:10: repetido
+confianca.json Is 26:3-4: repetido
+confianca.json Is 40:31: repetido
+confianca.json Is 41:10: repetido
+confianca.json Is 43:2: repetido
+confianca.json Jr 29:11: repetido
+confianca.json Lm 3:22-23: repetido
+confianca.json Sf 3:17: repetido
+confianca.json Dt 31:6: repetido
+confianca.json Js 1:9: repetido
+confianca.json Mt 6:34: repetido
+confianca.json Mt 11:28: repetido
+confianca.json Mt 28:20: repetido
+confianca.json Lc 12:32: repetido
+confianca.json Jo 14:1: repetido
+confianca.json Jo 14:27: repetido
+confianca.json Jo 16:33: repetido
+confianca.json Rm 8:28: repetido
+confianca.json Rm 8:38-39: repetido
+confianca.json Rm 15:13: repetido
+confianca.json Fp 4:6-7: repetido
+confianca.json Fp 4:13: repetido
+confianca.json 1Pe 5:7: repetido
+confianca.json 2Tm 1:7: repetido
+confianca.json 1Jo 4:18: repetido
+coragem.json Js 1:9: repetido
+coragem.json Dt 31:6: repetido
+coragem.json Ne 8:10: repetido
+coragem.json Sl 27:1: repetido
+coragem.json Sl 46:1: repetido
+coragem.json Sl 56:3: repetido
+coragem.json Sl 118:6: repetido
+coragem.json Pv 3:5-6: repetido
+coragem.json Is 40:31: repetido
+coragem.json Is 41:10: repetido
+coragem.json Is 41:13: repetido
+coragem.json Is 43:2: repetido
+coragem.json Lm 3:22-23: repetido
+coragem.json Hc 3:19: repetido
+coragem.json Sf 3:17: repetido
+coragem.json Mc 5:36: excluído na revisão
+coragem.json Jo 14:27: repetido
+coragem.json Jo 16:33: repetido
+coragem.json Rm 8:31: repetido
+coragem.json 2Co 4:16: repetido
+coragem.json 2Co 5:7: repetido
+coragem.json Ef 6:10: repetido
+coragem.json Fp 4:13: repetido
+coragem.json Fp 4:6-7: repetido
+coragem.json 2Tm 1:7: repetido
+coragem.json 1Pe 5:7: repetido
+coragem.json Ap 21:4: repetido
+cuidado.json Sl 23:1: repetido
+cuidado.json Sl 23:4: repetido
+cuidado.json Sl 27:1: repetido
+cuidado.json Sl 34:4: repetido
+cuidado.json Sl 37:5: repetido
+cuidado.json Sl 46:1: repetido
+cuidado.json Sl 55:22: repetido
+cuidado.json Sl 56:3: repetido
+cuidado.json Sl 91:1: repetido
+cuidado.json Sl 94:19: repetido
+cuidado.json Sl 121:1-2: repetido
+cuidado.json Sl 147:3: repetido
+cuidado.json Pv 3:5-6: repetido
+cuidado.json Pv 18:10: repetido
+cuidado.json Is 41:10: repetido
+cuidado.json Jr 29:11: repetido
+cuidado.json Mt 6:34: repetido
+cuidado.json Mt 11:28: repetido
+cuidado.json Lc 12:32: repetido
+cuidado.json Jo 14:1: repetido
+cuidado.json Jo 14:27: repetido
+cuidado.json Jo 16:33: repetido
+cuidado.json Rm 8:28: repetido
+cuidado.json Rm 8:38-39: repetido
+cuidado.json Rm 12:12: repetido
+cuidado.json 1Co 10:13: repetido
+cuidado.json 2Co 1:3-4: longo demais (282 caracteres)
+cuidado.json 2Co 12:9: repetido
+cuidado.json Fp 4:6-7: repetido
+cuidado.json Fp 4:13: repetido
+cuidado.json 2Tm 1:7: repetido
+cuidado.json Hb 13:5: repetido
+cuidado.json 1Pe 5:7: repetido
+descanso.json Sl 4:8: repetido
+descanso.json Sl 46:10: repetido
+descanso.json Sl 62:1: repetido
+descanso.json Sl 91:1: repetido
+descanso.json Is 26:3: repetido
+descanso.json Is 40:31: repetido
+descanso.json Sf 3:17: repetido
+descanso.json Mt 11:28: repetido
+descanso.json Mt 11:29: repetido
+descanso.json Jo 14:27: repetido
+descanso.json Jo 16:33: repetido
+descanso.json Rm 15:13: repetido
+descanso.json Fp 4:6-7: repetido
+descanso.json Cl 3:15: repetido
+descanso.json 2Ts 3:16: repetido
+descanso.json 1Pe 5:7: repetido
+descanso.json Ap 21:4: repetido
+descanso.json Jo 14:1: repetido
+descanso.json Sl 55:22: repetido
+esperanca.json Sl 23:1: repetido
+esperanca.json Sl 27:14: repetido
+esperanca.json Sl 31:24: repetido
+esperanca.json Sl 119:114: repetido
+esperanca.json Sl 130:5: repetido
+esperanca.json Lm 3:21-23: repetido
+esperanca.json Jr 17:7: repetido
+esperanca.json Jr 29:11: repetido
+esperanca.json Mq 7:7: repetido
+esperanca.json Na 1:7: repetido
+esperanca.json Is 40:31: repetido
+esperanca.json Is 41:10: repetido
+esperanca.json Is 26:3: repetido
+esperanca.json Mt 11:28: repetido
+esperanca.json Jo 14:1: repetido
+esperanca.json Jo 14:27: repetido
+esperanca.json Jo 16:33: repetido
+esperanca.json Rm 5:3-5: repetido
+esperanca.json Rm 12:12: repetido
+esperanca.json Rm 15:13: repetido
+esperanca.json 1Co 13:13: repetido
+esperanca.json 2Co 4:16-18: repetido
+esperanca.json Fp 4:6-7: repetido
+esperanca.json Tt 2:13: excluído na revisão
+esperanca.json Ap 21:4: repetido
+fe.json Êx 14:31: excluído na revisão
+fe.json Js 1:9: repetido
+fe.json 2Cr 20:20: excluído na revisão
+fe.json Jó 19:25: repetido
+fe.json Sl 37:5: repetido
+fe.json Sl 56:3: repetido
+fe.json Sl 118:8: repetido
+fe.json Pv 3:5-6: repetido
+fe.json Is 26:3: repetido
+fe.json Is 40:31: repetido
+fe.json Is 41:10: repetido
+fe.json Jr 17:7: repetido
+fe.json Mc 5:36: excluído na revisão
+fe.json Jo 14:1: repetido
+fe.json At 27:25: excluído na revisão
+fe.json Rm 5:1: repetido
+fe.json Rm 15:13: repetido
+fe.json 1Co 16:13: repetido
+fe.json 2Co 5:7: repetido
+fe.json Ef 2:8: repetido
+fe.json 1Ts 5:8: repetido
+fe.json Hb 11:1: repetido
+fe.json Hb 12:2: repetido
+fe.json Tg 1:6: excluído na revisão
+fe.json 1Pe 1:7: excluído na revisão
+fe.json Ap 2:10: excluído na revisão
+forca.json Êx 15:2: repetido
+forca.json Dt 31:6: repetido
+forca.json Js 1:9: repetido
+forca.json Ne 8:10: repetido
+forca.json Sl 27:1: repetido
+forca.json Sl 29:11: repetido
+forca.json Sl 46:1: repetido
+forca.json Sl 73:26: repetido
+forca.json Sl 138:3: repetido
+forca.json Is 40:29: repetido
+forca.json Is 40:31: repetido
+forca.json Is 41:10: repetido
+forca.json Is 41:13: repetido
+forca.json Is 43:2: repetido
+forca.json Hc 3:19: repetido
+forca.json Zc 4:6: repetido
+forca.json At 1:8: repetido
+forca.json Rm 8:31: repetido
+forca.json Rm 8:37: repetido
+forca.json 1Co 16:13: repetido
+forca.json 2Co 12:9: repetido
+forca.json Gl 6:9: repetido
+forca.json Ef 6:10: repetido
+forca.json Fp 1:6: repetido
+forca.json Fp 4:13: repetido
+forca.json Cl 1:11: excluído na revisão
+forca.json 1Ts 3:13: excluído na revisão
+forca.json 2Tm 1:7: repetido
+forca.json Hb 4:16: repetido
+forca.json Hb 11:34: excluído na revisão
+forca.json Tg 1:2-4: repetido
+graca.json Êx 33:19: excluído na revisão
+graca.json Nm 6:24-26: repetido
+graca.json Sl 30:5: repetido
+graca.json Sl 34:8: repetido
+graca.json Sl 103:8: repetido
+graca.json Sl 103:10-12: longo demais (326 caracteres)
+graca.json Lm 3:22-23: repetido
+graca.json Jo 3:16: repetido
+graca.json 2Co 12:9: repetido
+graca.json Ef 2:8-9: repetido
+graca.json Fp 1:6: repetido
+graca.json Cl 1:6: excluído na revisão
+graca.json 2Ts 2:16-17: repetido
+graca.json 2Tm 2:1: repetido
+graca.json Hb 4:16: repetido
+gratidao.json Sl 100:4: repetido
+gratidao.json Sl 103:2: repetido
+gratidao.json Sl 136:1: repetido
+gratidao.json Sl 118:24: repetido
+gratidao.json 1Cr 16:34: repetido
+gratidao.json Êx 15:2: repetido
+gratidao.json Lm 3:22-23: repetido
+gratidao.json Sf 3:17: repetido
+gratidao.json Hc 3:17-18: repetido
+gratidao.json Jr 33:11: longo demais (305 caracteres)
+gratidao.json 1Ts 5:18: repetido
+gratidao.json Fp 4:6: repetido
+gratidao.json Rm 6:17: excluído na revisão
+gratidao.json Lc 17:15-16: excluído na revisão
+gratidao.json At 27:35: excluído na revisão
+gratidao.json Ap 7:12: excluído na revisão
+gratidao.json Ap 11:17: excluído na revisão
+gratidao.json 1Pe 1:3: repetido
+oracao.json Sl 62:8: repetido
+oracao.json Dn 6:10: longo demais (255 caracteres)
+oracao.json 1Sm 1:15: excluído na revisão
+oracao.json 2Rs 20:5: excluído na revisão
+oracao.json Mt 7:7: repetido
+oracao.json Mc 11:24: repetido
+oracao.json Jo 16:24: repetido
+oracao.json At 1:14: excluído na revisão
+oracao.json At 4:31: repetido
+oracao.json At 12:5: excluído na revisão
+oracao.json Rm 12:12: repetido
+oracao.json Fp 4:6-7: repetido
+oracao.json Cl 4:2: repetido
+oracao.json 1Ts 5:17: repetido
+oracao.json Hb 4:16: repetido
+paz.json Sl 4:8: repetido
+paz.json Sl 23:1: repetido
+paz.json Sl 29:11: repetido
+paz.json Sl 46:10: repetido
+paz.json Is 26:3: repetido
+paz.json Is 54:10: repetido
+paz.json Jr 29:11: repetido
+paz.json Nm 6:24-26: repetido
+paz.json Mq 5:5: excluído na revisão
+paz.json Zc 8:19: excluído na revisão
+paz.json Mt 11:28: repetido
+paz.json Mc 4:39: repetido
+paz.json Jo 14:27: repetido
+paz.json Jo 16:33: repetido
+paz.json Rm 5:1: repetido
+paz.json Rm 15:13: repetido
+paz.json Gl 5:22: repetido
+paz.json Ef 2:14: repetido
+paz.json Fp 4:6-7: repetido
+paz.json Cl 3:15: repetido
+paz.json 2Ts 3:16: repetido
+paz.json Hb 13:20: excluído na revisão
+proposito.json Js 1:9: repetido
+proposito.json Sl 37:4: repetido
+proposito.json Pv 3:5-6: repetido
+proposito.json Pv 16:3: repetido
+proposito.json Ec 3:1: repetido
+proposito.json Jr 29:11: repetido
+proposito.json Mq 6:8: repetido
+proposito.json Sf 3:17: repetido
+proposito.json Mt 5:16: repetido
+proposito.json Mt 6:33: repetido
+proposito.json Mt 22:37-39: repetido
+proposito.json Mt 28:19-20: repetido
+proposito.json Jo 10:10: repetido
+proposito.json At 1:8: repetido
+proposito.json Rm 8:28: repetido
+proposito.json 2Co 5:17: repetido
+proposito.json Gl 2:20: repetido
+proposito.json Fp 1:6: repetido
+proposito.json Cl 3:23: repetido
+proposito.json 2Tm 1:9: repetido
+proposito.json Hb 12:1-2: repetido
+r2-alegria.json Lc 1:14: excluído na revisão
+r2-alegria.json At 5:41: excluído na revisão
+r2-alegria.json 2Co 8:2: excluído na revisão
+r2-alegria.json Jd 1:24: excluído na revisão
+r2-amor.json Is 49:15-16: longo demais (305 caracteres)
+r2-amor.json Ml 1:2: excluído na revisão
+r2-amor.json Lc 7:47: excluído na revisão
+r2-amor.json Cl 2:2: excluído na revisão
+r2-ansiedade.json Pv 12:25: repetido
+r2-ansiedade.json Is 41:14: excluído na revisão
+r2-ansiedade.json Mt 6:32: excluído na revisão
+r2-ansiedade.json Jo 20:19: excluído na revisão
+r2-ansiedade.json At 23:11: excluído na revisão
+r2-confianca.json Pv 14:26: repetido
+r2-confianca.json 1Sm 30:6: repetido
+r2-confianca.json 2Cr 14:11: longo demais (294 caracteres)
+r2-confianca.json Mt 21:22: repetido
+r2-confianca.json Lc 8:50: repetido
+r2-confianca.json Rm 4:21: repetido
+r2-confianca.json Ef 3:12: repetido
+r2-confianca.json 1Pe 5:9: excluído na revisão
+r2-confianca.json Rm 15:4: repetido
+r2-confianca.json Hb 6:18: excluído na revisão
+r2-coragem.json Dt 20:3-4: longo demais (283 caracteres)
+r2-coragem.json 2Cr 32:7-8: longo demais (328 caracteres)
+r2-coragem.json Ne 4:14: excluído na revisão
+r2-coragem.json Sl 112:7-8: repetido
+r2-coragem.json Is 41:14: excluído na revisão
+r2-coragem.json Is 43:1: repetido
+r2-coragem.json Jr 17:8: repetido
+r2-coragem.json Mq 7:8: repetido
+r2-coragem.json Ag 2:4: excluído na revisão
+r2-coragem.json Mt 17:7: repetido
+r2-coragem.json Mc 6:50: repetido
+r2-coragem.json At 4:29: excluído na revisão
+r2-coragem.json At 23:11: excluído na revisão
+r2-coragem.json 1Co 15:58: repetido
+r2-coragem.json 2Co 5:6: excluído na revisão
+r2-coragem.json Ef 3:12: repetido
+r2-coragem.json Hb 10:35: repetido
+r2-cuidado.json Gn 28:15: repetido
+r2-cuidado.json Sl 61:2: repetido
+r2-cuidado.json Sl 145:9: repetido
+r2-cuidado.json Pv 2:8: excluído na revisão
+r2-cuidado.json Pv 12:25: repetido
+r2-cuidado.json Jr 30:17: repetido
+r2-cuidado.json Mt 6:8: excluído na revisão
+r2-cuidado.json Mt 12:20: repetido
+r2-cuidado.json Jo 13:1: repetido
+r2-cuidado.json Jo 17:11: excluído na revisão
+r2-cuidado.json 1Co 12:25-26: repetido
+r2-cuidado.json 1Tm 5:8: excluído na revisão
+r2-descanso.json Js 21:44: excluído na revisão
+r2-descanso.json 1Cr 22:9: excluído na revisão
+r2-descanso.json Is 28:12: excluído na revisão
+r2-descanso.json Is 66:12-13: longo demais (307 caracteres)
+r2-descanso.json Lc 10:41-42: repetido
+r2-descanso.json Rm 8:6: repetido
+r2-descanso.json 1Co 14:33: repetido
+r2-descanso.json Hb 4:3: excluído na revisão
+r2-esperanca.json Jr 14:8: excluído na revisão
+r2-esperanca.json Lm 3:25: repetido
+r2-esperanca.json Is 49:23: excluído na revisão
+r2-esperanca.json Jo 11:25: repetido
+r2-esperanca.json At 23:11: excluído na revisão
+r2-esperanca.json At 26:6: excluído na revisão
+r2-esperanca.json Rm 15:4: repetido
+r2-esperanca.json 1Co 15:58: repetido
+r2-esperanca.json Fp 1:20: repetido
+r2-esperanca.json 1Ts 2:19: repetido
+r2-fe.json Hb 10:35: repetido
+r2-fe.json Hb 11:33: excluído na revisão
+r2-fe.json Mc 11:22: repetido
+r2-fe.json At 3:16: excluído na revisão
+r2-fe.json Rm 5:2: repetido
+r2-fe.json Ef 3:12: repetido
+r2-fe.json 1Tm 6:11: excluído na revisão
+r2-fe.json 1Co 2:5: repetido
+r2-fe.json Sl 20:7: repetido
+r2-fe.json Sl 56:4: repetido
+r2-fe.json Is 50:10: repetido
+r2-forca.json Is 43:1: repetido
+r2-forca.json Is 50:7: repetido
+r2-forca.json Jr 17:8: repetido
+r2-forca.json 1Sm 30:6: repetido
+r2-forca.json 2Rs 6:16: repetido
+r2-forca.json 2Cr 32:7: excluído na revisão
+r2-forca.json 2Tm 4:17: repetido
+r2-forca.json At 23:11: excluído na revisão
+r2-forca.json Ef 6:11: repetido
+r2-forca.json Hb 10:35: repetido
+r2-forca.json Rm 16:25: excluído na revisão
+r2-graca.json 1Rs 8:23: excluído na revisão
+r2-graca.json Ne 9:17: longo demais (321 caracteres)
+r2-graca.json Sl 25:6: repetido
+r2-graca.json Sl 32:10: repetido
+r2-graca.json Sl 86:5: repetido
+r2-graca.json Sl 103:4: repetido
+r2-graca.json Sl 145:9: repetido
+r2-graca.json Jr 3:12: excluído na revisão
+r2-graca.json Os 2:19: repetido
+r2-graca.json At 11:23: excluído na revisão
+r2-graca.json Rm 5:2: repetido
+r2-graca.json Tt 3:7: repetido
+r2-gratidao.json Sl 68:19: repetido
+r2-gratidao.json Sl 138:1: excluído na revisão
+r2-gratidao.json At 2:46-47: longo demais (280 caracteres)
+r2-gratidao.json At 16:25: repetido
+r2-gratidao.json Rm 7:25: excluído na revisão
+r2-gratidao.json Rm 15:6: excluído na revisão
+r2-gratidao.json 2Co 1:11: excluído na revisão
+r2-gratidao.json 2Co 9:11: excluído na revisão
+r2-oracao.json Sl 40:1: repetido
+r2-oracao.json Sl 50:15: repetido
+r2-oracao.json Sl 61:1-2: repetido
+r2-oracao.json Ne 1:4: excluído na revisão
+r2-oracao.json Gn 24:12: excluído na revisão
+r2-oracao.json Mt 21:22: repetido
+r2-oracao.json Lc 18:13: repetido
+r2-oracao.json At 16:25: repetido
+r2-oracao.json Ef 1:16: repetido
+r2-oracao.json 1Jo 5:15: repetido
+r2-paz.json Sl 122:7: excluído na revisão
+r2-paz.json Sl 72:7: excluído na revisão
+r2-paz.json Na 1:15: excluído na revisão
+r2-paz.json Lc 19:38: excluído na revisão
+r2-paz.json Jo 20:19: excluído na revisão
+r2-paz.json 1Co 7:15: excluído na revisão
+r2-paz.json 1Co 14:33: repetido
+r2-paz.json Fp 4:9: repetido
+r2-paz.json Cl 1:20: excluído na revisão
+r2-proposito.json Js 22:5: longo demais (296 caracteres)
+r2-proposito.json Gl 1:15-16: excluído na revisão
+r2-proposito.json Ef 4:12: excluído na revisão
+r2-proposito.json Cl 1:10: excluído na revisão

@@ -50,6 +50,7 @@ const marca = (abrev, cap, de, ate) => { for (let v = de; v <= ate; v++) usados.
 const colide = (abrev, cap, de, ate) => { for (let v = de; v <= ate; v++) if (usados.has(`${abrev}|${cap}|${v}`)) return true; return false; };
 for (const v of atual.versiculos) marca(v.abrev, v.cap, v.de, v.ate);
 
+const excluir = new Set(fs.readFileSync(path.join(ROOT, "feed/excluir.txt"), "utf8").split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#")));
 const novos = [], rejeitados = [];
 for (const f of fs.readdirSync(CAND).filter(f => f.endsWith(".json")).sort()) {
   let lista; try { lista = JSON.parse(fs.readFileSync(path.join(CAND, f), "utf8")); } catch (e) { rejeitados.push(`${f}: JSON inválido (${e.message})`); continue; }
@@ -58,6 +59,7 @@ for (const f of fs.readdirSync(CAND).filter(f => f.endsWith(".json")).sort()) {
     if (p.erro) { rejeitados.push(`${f} ${c.ref}: ${p.erro}`); continue; }
     const temas = (Array.isArray(c.temas) ? c.temas : []).filter(t => TEMAS.includes(t)).slice(0, 2);
     if (!temas.length) { rejeitados.push(`${f} ${c.ref}: sem tema válido`); continue; }
+    if (excluir.has(p.ref)) { rejeitados.push(`${f} ${c.ref}: excluído na revisão`); continue; }
     if (colide(p.l.abrev, p.cap, p.de, p.ate)) { rejeitados.push(`${f} ${c.ref}: repetido`); continue; }
     const ex = exibir(p.texto);
     if (ex.length > MAX_CHARS) { rejeitados.push(`${f} ${c.ref}: longo demais (${ex.length} caracteres)`); continue; }

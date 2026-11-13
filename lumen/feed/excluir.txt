@@ -1,0 +1,82 @@
+# Referências tiradas do feed na revisão de curadoria (precisam de contexto, ficam incompletas ou pesam demais lidas sozinhas).
+# Uma por linha, no formato do campo ref. O montador nunca inclui estas.
+1 Coríntios 7:15
+1 Crônicas 22:9
+1 Pedro 1:7
+1 Pedro 5:9
+1 Reis 8:23
+1 Samuel 18:1
+1 Samuel 1:15
+1 Samuel 2:1
+1 Tessalonicenses 3:13
+1 Timóteo 5:8
+1 Timóteo 6:11
+2 Coríntios 1:11
+2 Coríntios 5:6
+2 Coríntios 8:2
+2 Coríntios 9:11
+2 Crônicas 20:20
+2 Crônicas 32:7
+2 Reis 20:5
+Ageu 2:4
+Apocalipse 11:17
+Apocalipse 2:10
+Apocalipse 7:12
+Atos 11:23
+Atos 12:5
+Atos 1:14
+Atos 23:11
+Atos 26:6
+Atos 27:25
+Atos 27:35
+Atos 3:16
+Atos 4:29
+Atos 5:41
+Colossenses 1:10
+Colossenses 1:11
+Colossenses 1:20
+Colossenses 1:6
+Colossenses 2:2
+Deuteronômio 10:18-19
+Efésios 4:12
+Gálatas 1:15-16
+Gênesis 24:12
+Hebreus 11:33
+Hebreus 11:34
+Hebreus 13:20
+Hebreus 4:3
+Hebreus 6:18
+Isaías 28:12
+Isaías 41:14
+Isaías 49:23
+Jeremias 14:8
+Jeremias 3:12
+Josué 21:44
+João 17:11
+João 20:19
+Judas 1:24
+Lucas 17:15-16
+Lucas 19:38
+Lucas 1:14
+Lucas 7:47
+Malaquias 1:2
+Marcos 5:36
+Mateus 6:32
+Mateus 6:8
+Miqueias 5:5
+Naum 1:15
+Neemias 1:4
+Neemias 4:14
+Provérbios 2:8
+Romanos 15:6
+Romanos 16:25
+Romanos 6:17
+Romanos 7:25
+Salmos 122:7
+Salmos 138:1
+Salmos 72:7
+Tiago 1:6
+Tito 2:13
+Zacarias 8:19
+Êxodo 14:31
+Êxodo 33:19
