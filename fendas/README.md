@@ -17,3 +17,10 @@ Projeto paralelo ao `rz-acao` (que continua intacto). Valida a diversão e o equ
 ## Efeitos em resolução normal e poderes absurdos
 - O cenário e os personagens continuam pixelados; os poderes são desenhados numa segunda camada em resolução normal, com brilho aditivo (`GlowPool` em `instanced.js`).
 - Poderes grandes (ocupam um dos 5 espaços): Anel de fogo (cresce sem parar e explode no máximo), Chuva de meteoros (sombra de aviso, cratera), Buraco negro (suga e explode ao fechar), Trovoada (raios do céu por alguns segundos). Tremor de câmera nos impactos grandes.
+
+## Cenário em 4 zonas (nov/2026)
+- Zonas em manchas grandes pelo mapa: **Cidade em ruínas** (início), **Campos de cristal**, **Terra em cinzas** e **Beira do abismo**. Dados de cada uma em `js/data/zones/*.js` (chão, rachaduras, densidade e 7–8 objetos, com marcos grandes).
+- Cenário sem verde, para os inimigos (verdes) se destacarem.
+- Atmosfera: a luz puxa para a cor da zona, a tela escurece e a vinheta fecha até o Guardião; aura fraca sob o Mago.
+- `?debug` na URL expõe `window.__G` para testes.
+- Prévia: `zonas-preview.png`.

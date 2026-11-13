@@ -49,7 +49,7 @@ export class World {
     for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) {
       const h = hash(x, z) * 0.6 + (Math.sin(x * 0.35) + Math.cos(z * 0.3)) * 0.2 + 0.2, crack = hash(x * 3 + 7, z * 5 - 2) > 0.985;
       const zk = zoneAt(x, z), zc = this.cols[zk]; this.c.copy(zc[0]).lerp(zc[1], h);
-      if (crack) this.c.copy(this.cracks[zk]);
+      if (crack) this.c.lerp(this.cracks[zk], 0.5);   // rachadura discreta, misturada ao chão
       t.add(x + 0.5, -0.1, z + 0.5, 1.001, 1, 1.001, this.c);
     }
     t.end();

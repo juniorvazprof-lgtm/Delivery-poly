@@ -49,3 +49,6 @@ Informe ao usuário:
 - Para leitura/resumo use sempre `delegate_to_deepseek_readonly` (sem risco de edição).
 - Paralelismo real = várias sessões em nuvem (cada uma com seu contêiner e seu DeepSeek), cada
   uma num branch próprio; esta sessão orquestra e revisa os diffs no fim.
+- Uma resposta do DeepSeek não pode gerar um arquivo grande inteiro (corta por limite de saída):
+  peça um arquivo pequeno por chamada de ferramenta. Tarefas com muitos turnos custam caro (cada
+  turno reenvia o contexto): prefira especificações fechadas que terminem em ~10 turnos.

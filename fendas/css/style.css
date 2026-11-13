@@ -13,6 +13,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); c
 #over { image-rendering: pixelated; }
 #fx { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; z-index: 1; }
 #over { pointer-events: none; z-index: 1; }
+/* vinheta: bordas escuras que fecham conforme a partida avança (--dusk vem do main.js) */
+body::before { content: ""; position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 75% 60% at 50% 50%, transparent 55%, rgba(4, 3, 10, var(--dusk, .35)) 100%); }
 button { font: inherit; color: inherit; cursor: pointer; }
 
 /* HUD */

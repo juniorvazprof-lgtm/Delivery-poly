@@ -5,7 +5,7 @@ import { buildModel, blobShadow, hash } from '../engine/voxel.js';
 import { MODELS } from '../data/models.js';
 import { CFG } from './config.js';
 import { ModelBatch, CubePool, GlowPool } from './instanced.js';
-import { World, MAGE } from './world.js';
+import { World, MAGE, ZONES, zoneAt } from './world.js';
 // rocha de minério e santuário (voxel)
 const ORE = { parts: [[-3, 0, -2.6, 6, 2.6, 5.2, '#4a4658'], [-2.2, 2.6, -1.8, 4.2, 1.6, 3.6, '#5a5668'], [-1.6, 2.2, 0.8, 1.2, 3.2, 1.2, 'glowOreAm'],
   [0.8, 3, -1, 1.2, 2.6, 1.2, 'glowOreQz'], [1.6, 1.4, 1.8, 1, 1.8, 1, 'glowOreAm'], [-2.8, 1.6, -1.4, 0.9, 1.6, 0.9, 'glowOreQz']] };
@@ -25,7 +25,7 @@ const canvas = $('view'), over = $('over'), ctx = over.getContext('2d');
 const renderer = new T.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(1);
 const scene = new T.Scene(); scene.background = new T.Color('#07060c');
-scene.add(new T.HemisphereLight('#c9b8ff', '#1a1028', 1.5));
+const hemi = new T.HemisphereLight('#c9b8ff', '#1a1028', 1.5); scene.add(hemi);
 const sun = new T.DirectionalLight('#ffe8d0', 2.0); sun.position.set(-5, 10, 4); scene.add(sun);
 // efeitos dos poderes: segunda camada em resolução normal (sem pixelar), com brilho aditivo
 const fxCanvas = $('fx'), fxRenderer = new T.WebGLRenderer({ canvas: fxCanvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
@@ -78,6 +78,7 @@ const G = {
   spawnAcc: 0, nextEvent: 0, event: null, eventT: 0, boss: null, miniDone: false, bossDone: false, queue: 0,
 };
 const mage = G.mage = { x: 0, z: 0, face: Math.PI, hp: 100, maxHp: 100, inv: 0, mx: 0, mz: 0 };
+if (/[?&]debug/.test(location.search)) window.__G = G;   // inspeção em testes (?debug)
 
 function recalc() {
   const p = k => G.passives[k] || 0, P = CFG.passives, mm = G.meta || metaMods();
@@ -504,6 +505,11 @@ function draw(now) {
   cam.position.copy(camAt).add(camOff); cam.lookAt(camAt);
   if (G.shakeT > 0) { G.shakeT = Math.max(0, G.shakeT - 0.016); const k = G.shakeT * 0.6; cam.position.x += (Math.random() - 0.5) * k; cam.position.z += (Math.random() - 0.5) * k; }
   world.update(camAt.x, camAt.z, viewW, viewH);
+  // atmosfera: a luz puxa para a cor da zona e escurece aos poucos até o Guardião
+  const zk = zoneAt(mage.x, mage.z), dk = Math.min(1, G.t / CFG.runTime);
+  if (!G.atmo || G.atmo.k !== zk) G.atmo = { k: zk, sky: new T.Color('#ffffff').lerp(new T.Color(ZONES[zk].crack), 0.35) };
+  hemi.color.lerp(G.atmo.sky, 0.02); hemi.intensity = 1.5 - 0.45 * dk; sun.intensity = 2.0 - 0.8 * dk;
+  document.body.style.setProperty('--dusk', (0.35 + 0.35 * dk).toFixed(3));
   const hz = viewH / 2 / Math.sin(Math.atan2(camOff.y, camOff.z)) - 0.6;
   G.view = { x0: camAt.x - viewW / 2 + 0.4, x1: camAt.x + viewW / 2 - 0.4, z0: camAt.z - hz, z1: camAt.z + hz - 0.6 };
   // Mago
@@ -531,6 +537,7 @@ function draw(now) {
   gemsPool.end();
   // projéteis e efeitos (camada em resolução normal)
   glow.begin(cam); fxCubes.begin();
+  glow.add(mage.x, 0.05, mage.z, 0.9, '#5ff2ff', 0.22);   // aura fraca: o Mago não some em zonas roxas
   for (const p of G.projectiles) {
     if (p.kind === 'fogo') { if (p.big) glow.add(p.x, 0.45, p.z, 2.0, '#ff2a10', 0.7); glow.add(p.x, 0.45, p.z, 1.2, '#ff5a10', 0.9); glow.add(p.x, 0.45, p.z, 0.5, '#fff2a8', 1); glow.add(p.x - p.vx * 0.03, 0.45, p.z - p.vz * 0.03, 0.7, '#ff8a3d', 0.5); }
     else if (p.kind === 'vento') { const a = Math.atan2(p.vx, p.vz) + Math.PI / 2; fxCubes.add(p.x, 0.4, p.z, 0.6, 0.04, 0.1, '#ffffff', 0, a, 0); glow.add(p.x, 0.4, p.z, 0.8, '#7fe8ff', 0.6); glow.add(p.x - p.vx * 0.03, 0.4, p.z - p.vz * 0.03, 0.5, '#bff4ff', 0.4); }
