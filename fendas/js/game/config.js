@@ -10,7 +10,7 @@ export const CFG = {
   mage: { hp: 100, speed: 3.3, radius: 0.32, iframes: 0.45, magnet: 2.6, slots: 4, passiveSlots: 4, rerolls: 2, bans: 2 },
 
   // XP para o próximo nível
-  xpFor: lvl => Math.floor(6 + lvl * 3 + Math.pow(lvl, 1.6)),   // cada nível pede mais cristais
+  xpFor: lvl => Math.floor(4 + lvl * 2.6 + Math.pow(lvl, 1.62)),   // cada nível pede mais cristais
 
   // ---- feitiços (nível 1 a 5); cada linha lista os valores por nível ----
   spells: {
@@ -133,8 +133,8 @@ export const CFG = {
   // ---- diretor: o que nasce em cada minuto (pesos) e quantos por segundo ----
   waves: [
     { from: 0, mix: { rastejante: 1 } },
-    { from: 50, mix: { rastejante: 3, espectro: 1 } },
-    { from: 110, mix: { rastejante: 3, espectro: 2, investida: 1, cuspidor: 1 } },
+    { from: 50, mix: { rastejante: 3, espectro: 1, investida: 0.5 } },
+    { from: 110, mix: { rastejante: 3, espectro: 2, investida: 1, cuspidor: 0.4 } },
     { from: 170, mix: { rastejante: 2, espectro: 2, investida: 1, brutamonte: 1 } },
     { from: 250, mix: { rastejante: 2, espectro: 2, investida: 2, brutamonte: 1, cuspidor: 1 } },
     { from: 360, mix: { espectro: 3, investida: 2, brutamonte: 2, cuspidor: 2 } },

@@ -149,3 +149,10 @@ body.landscape #hud, body.landscape .screen { max-width: 520px; margin: 0 auto; 
 #buffs { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; align-items: flex-start; }
 #buffs i { font: 700 10px var(--pix); font-style: normal; color: var(--c); background: #07060ccc; border: 1px solid var(--c); padding: 2px 6px; }
 #buffs b { color: var(--ink); }
+#res-dmg { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+#res-dmg > div { display: grid; grid-template-columns: 22px 1fr auto; gap: 6px; align-items: center; font-size: 13px; }
+#res-dmg i { font-style: normal; color: var(--c); text-align: center; }
+#res-dmg .bar { height: 8px; background: #1a1530; } #res-dmg .bar b { display: block; height: 100%; background: var(--c); }
+#res-dmg span { font: 10px var(--pix); color: var(--muted); }
+#res-next { color: var(--gold) !important; }
+.card.evohint { border-color: var(--gold); box-shadow: 0 0 10px #ffd34d55; }

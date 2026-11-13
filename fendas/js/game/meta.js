@@ -74,6 +74,15 @@ export function endRun(r) {
   save();
   return gold;
 }
+// próximo objetivo: a compra mais barata que falta
+export function nextGoal() {
+  const opts = [];
+  for (const [k, c] of Object.entries(SPELL_COST)) if (!M.spells.includes(k)) opts.push({ c, name: CFG.spells[k].name });
+  for (const [k, u] of Object.entries(UPGRADES)) if (lvlOf(k) < u.max) opts.push({ c: costOf(k), name: u.name });
+  opts.sort((a, b) => a.c - b.c);
+  const g = opts[0]; if (!g) return '';
+  return M.gold >= g.c ? `Você já pode comprar ${g.name} no Arsenal!` : `Faltam ${g.c - M.gold} de ouro para ${g.name}`;
+}
 export const missionsReady = () => MISSIONS.filter(m => !M.claimed.includes(m.id) && m.val(M.stats) >= m.goal).length;
 
 // ---------- interface ----------

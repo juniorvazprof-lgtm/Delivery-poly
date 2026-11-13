@@ -12,7 +12,8 @@ const ORE = { parts: [[-3, 0, -2.6, 6, 2.6, 5.2, '#4a4658'], [-2.2, 2.6, -1.8, 4
 const SHRINE = { parts: [[-4, 0, -4, 8, 0.8, 8, '#4a4658'], [-3, 0.8, -3, 6, 0.8, 6, '#5a5668'], [-3.2, 1.6, -3.2, 1.2, 5, 1.2, '#7a7590'], [2, 1.6, -3.2, 1.2, 5, 1.2, '#7a7590'],
   [-3.2, 1.6, 2, 1.2, 5, 1.2, '#7a7590'], [2, 1.6, 2, 1.2, 5, 1.2, '#7a7590'], [-1.2, 1.6, -1.2, 2.4, 2.4, 2.4, '#3a3648']] };
 import { Spell, nextDesc } from './spells.js';
-import { M, metaMods, endRun, initMenu, showMenu } from './meta.js';
+import { M, metaMods, endRun, initMenu, showMenu, nextGoal } from './meta.js';
+import { sfx } from './sfx.js';
 
 const $ = id => document.getElementById(id);
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -110,13 +111,13 @@ G.nearest = (x, z, n, maxR) => { const f = G.foes(x, z, maxR); return (f.length 
 G.fx = [];
 const fxApi = {
   ring: (x, z, r, color, dur, fill) => G.fx.push({ k: 'ring', x, z, r, color, dur, t: 0, fill }),
-  bolt: (x1, z1, x2, z2, color) => G.fx.push({ k: 'bolt', x1, z1, x2, z2, color, dur: 0.14, t: 0, seed: Math.random() * 99 }),
+  bolt: (x1, z1, x2, z2, color) => sfx.zap() || G.fx.push({ k: 'bolt', x1, z1, x2, z2, color, dur: 0.14, t: 0, seed: Math.random() * 99 }),
   spikes: (x, z, r) => G.fx.push({ k: 'spikes', x, z, r, dur: 0.5, t: 0, seed: Math.random() * 99 }),
   cloud: (x, z, r) => G.fx.push({ k: 'cloud', x, z, r, dur: 0.45, t: 0, seed: Math.random() * 99 }),
   sky: (x, z) => G.fx.push({ k: 'sky', x, z, dur: 0.22, t: 0, seed: Math.random() * 99 }),
   burst: (x, z, color, n = 8, sp = 3) => { for (let i = 0; i < n && G.particles.length < 800; i++) { const a = Math.random() * 6.3, s = sp * rand(0.4, 1); G.particles.push({ x, y: 0.4, z, vx: Math.cos(a) * s, vy: rand(1.5, 4), vz: Math.sin(a) * s, t: 0, dur: rand(0.3, 0.55), color, size: rand(0.07, 0.13) }); } },
 };
-G.shake = k => { G.shakeT = Math.max(G.shakeT || 0, k); };
+G.shake = k => { G.shakeT = Math.max(G.shakeT || 0, k); if (k >= 0.25) sfx.boom(); };
 G.scorch = (x, z, r) => { G.splats.push({ x, z, s: r * 1.6, ry: Math.random() * 6, t: 0, c: '#120a08' }); };
 Object.assign(G.fx, fxApi); G.fx.ring = fxApi.ring; G.fx.bolt = fxApi.bolt; G.fx.spikes = fxApi.spikes; G.fx.cloud = fxApi.cloud; G.fx.burst = fxApi.burst;
 
@@ -139,7 +140,7 @@ G.damage = (e, dmg, o = {}) => {
     if (o.burn && e.freezeT > 0) { dmg = dmg * ST.thermal + ST.thermalBonus * G.mods.dmg; e.freezeT = 0; e.stunT = 0; combo('termico', e); }
     if (o.shock && e.soakT > 0) { dmg *= ST.soakShockMul; if (Math.random() < 0.3) combo('condutor', e); }
     let crit = false; if (!o.noProc && Math.random() < G.mods.crit) { dmg *= 2; crit = true; }
-    e.hp -= dmg; e.flash = 0.07;
+    e.hp -= dmg; e.flash = 0.07; G.dmgBy[G.src || 'outros'] = (G.dmgBy[G.src || 'outros'] || 0) + Math.min(dmg, Math.max(0, e.hp + dmg)); if (!o.quiet) sfx.hit();
     if (!o.shock && !o.noProc && e.shockT > 0) { e.shockT = 0; discharge(e); }
     // números de dano: só alguns, para não virar uma nuvem ilegível (golpes fortes sempre aparecem)
     const big = dmg >= 30 || crit, crowd = G.numbers.length;
@@ -163,7 +164,7 @@ function kill(e) {
     if (Math.random() < O.coin * G.mods.luck) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, coin: true, t: 0 });
     fxApi.burst(e.x, e.z, '#9dff4a', 14, 3); fxApi.burst(e.x, e.z, '#7fd8ff', 10, 3); G.shake(0.08); return;
   }
-  e.dead = true; G.kills++;
+  e.dead = true; G.kills++; sfx.kill();
   if (e.corruptT > 0 && G.blasts.length < 60) G.blasts.push({ x: e.x, z: e.z, dmg: Math.min(50, ST.corruptDmg * G.mods.dmg + e.maxHp * ST.corruptHp) });
   if (Math.random() < (e.elite ? CFG.drops.heartElite : CFG.drops.heart) * G.mods.luck) G.gems.push({ x: e.x - 0.2, z: e.z, v: 0, heart: true, t: 0 });
   if (e.reels) G.gems.push({ x: e.x, z: e.z + 0.3, v: 0, chest: e.reels, t: 0 });
@@ -179,6 +180,7 @@ function kill(e) {
   if (e === G.boss) { G.boss = null; $('bossbar').hidden = true; }
 }
 function bless(type, s) {
+  sfx.bless();
   const b = CFG.shrines.buffs[type];
   banner(b.name, b.sub, b.color); G.shake(0.2); fxApi.ring(s.x, s.z, CFG.shrines.radius * 1.6, b.glow, 0.5, true); fxApi.burst(mage.x, mage.z, b.glow, 20, 4);
   if (b.dur) { G.buffs[type] = b.dur; recalc(); }
@@ -198,7 +200,8 @@ function spawn(type, x, z, opts = {}) {
   G.enemies.push(e); return e;
 }
 function spawnRing(type, n, dist) {
-  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; spawn(type, mage.x + Math.sin(a) * dist, mage.z + Math.cos(a) * dist); }
+  const gap = Math.floor(Math.random() * n);   // brecha de fuga no cerco
+  for (let i = 0; i < n; i++) { if ((i - gap + n) % n < Math.ceil(n / 7)) continue; const a = i / n * Math.PI * 2; spawn(type, mage.x + Math.sin(a) * dist, mage.z + Math.cos(a) * dist); }
 }
 function spawnPoint() {
   const a = Math.random() * Math.PI * 2, d = Math.hypot(viewW / 2, viewH * 0.6) + rand(0.8, 2.5);
@@ -222,13 +225,13 @@ function director(dt) {
     spawn(pickType(), x, z, { elite });
   }
   const ce = CFG.chestElites[G.nextChamp];
-  if (ce && G.t >= ce.at) { G.nextChamp++; const [x, z] = spawnPoint(); const e = spawn(Math.random() < 0.5 ? 'brutamonte' : pickType(), x, z, { elite: CFG.champion }); e.reels = ce.reels; banner('CAMPEÃO DA FENDA', `Carrega um baú de ${ce.reels} ${ce.reels > 1 ? 'rolos' : 'rolo'}`, '#ffc96b'); }
+  if (ce && G.t >= ce.at) { G.nextChamp++; const [x, z] = spawnPoint(); const e = spawn(Math.random() < 0.5 ? 'brutamonte' : pickType(), x, z, { elite: CFG.champion }); e.reels = ce.reels; sfx.warn(); banner('CAMPEÃO DA FENDA', `Carrega um baú de ${ce.reels} ${ce.reels > 1 ? 'rolos' : 'rolo'}`, '#ffc96b'); }
   // eventos
   const ev = CFG.events[G.nextEvent];
   if (ev && G.t >= ev.at) {
     G.nextEvent++; const info = CFG.eventInfo[ev.kind];
     G.event = { kind: ev.kind }; G.eventT = info.dur; banner(info.name, info.sub, info.color);
-    if (ev.kind === 'cercado') spawnRing(G.t > 300 ? 'espectro' : 'rastejante', 34, 4.2);
+    if (ev.kind === 'cercado') spawnRing(G.t > 300 ? 'espectro' : 'rastejante', 26, 5.5);
   }
   if (G.event && (G.eventT -= dt) <= 0) G.event = null;
   // minichefe e Guardião
@@ -285,7 +288,7 @@ function separate() {
 // ---------- Mago ----------
 function hurtMage(dmg) {
   if (mage.inv > 0 || G.mode !== 'play' || G.buffs.egide > 0) return;
-  mage.hp -= dmg; mage.inv = CFG.mage.iframes;
+  mage.hp -= dmg; mage.inv = CFG.mage.iframes; sfx.hurt();
   document.body.classList.remove('hurt'); void document.body.offsetWidth; document.body.classList.add('hurt');
   try { navigator.vibrate?.(30); } catch { /* ignorar */ }
   if (mage.hp <= 0 && G.revives > 0) {
@@ -315,6 +318,8 @@ function options() {
     for (; i < opts.length; i++) if ((r -= opts[i].w) <= 0) break;
     out.push(opts.splice(Math.min(i, opts.length - 1), 1)[0]);
   }
+  const atk = o => o.kind === 'new' || o.kind === 'up' || o.kind === 'evo' || o.kind === 'fusion';
+  if (G.spells.length < 3 && out.length && !out.some(atk)) { const a = opts.filter(atk); if (a.length) out[out.length - 1] = a[Math.floor(Math.random() * a.length)]; }
   if (!out.length) out.push({ kind: 'heal', key: 'heal' });
   return out;
 }
@@ -326,20 +331,26 @@ function openLevelUp(keep) {
   $('lv-sub').textContent = `Ataques ${G.spells.length}/${CFG.mage.slots} · Passivas ${Object.keys(G.passives).length}/${CFG.mage.passiveSlots}`;
   $('n-reroll').textContent = G.rerolls; $('n-ban').textContent = G.bans;
   $('btn-reroll').disabled = G.rerolls <= 0; $('btn-ban').disabled = G.bans <= 0;
+  if (!keep) sfx.levelup();
   G.offer = keep || options();
   for (const o of G.offer) {
     const s = o.kind === 'evo' ? CFG.evolutions[o.key] : o.kind === 'pnew' || o.kind === 'pup' ? CFG.passives[o.key] : CFG.spells[o.key] || CFG.fusions[o.key];
     const cur = o.kind === 'up' ? G.spells.find(x => x.key === o.key).level : o.kind === 'pup' ? G.passives[o.key] : 0;
     const tag = o.kind === 'evo' ? 'EVOLUÇÃO' : o.kind === 'fusion' ? 'FUSÃO' : o.kind === 'new' || o.kind === 'pnew' ? 'NOVO' : o.kind === 'heal' ? '' : `NV ${cur} → ${cur + 1}`;
     const name = o.kind === 'heal' ? 'Poção de mana' : s.name, color = o.kind === 'heal' ? '#ff5a6a' : s.color, glyph = o.kind === 'heal' ? '♥' : s.glyph;
-    const desc = o.kind === 'heal' ? 'Recupera 30 de vida.' : o.kind === 'pnew' || o.kind === 'pup' ? s.desc : o.kind === 'evo' ? `${CFG.spells[o.key].name} + ${CFG.passives[s.need].name}: ${s.desc}` : o.kind === 'fusion' ? `${CFG.spells[s.from[0]].name} + ${CFG.spells[s.from[1]].name}: ${s.desc}` : nextDesc(o.key, cur);
-    const b = document.createElement('button'); b.className = 'card' + (o.kind === 'fusion' || o.kind === 'evo' ? ' fusion' : ''); b.style.setProperty('--c', color);
+    // dica de evolução: o feitiço mostra a passiva que o evolui; a passiva avisa se completa uma evolução
+    const ev = CFG.evolutions[o.key], evoFor = (o.kind === 'pnew' || o.kind === 'pup') ? G.spells.find(x => !x.evo && CFG.evolutions[x.key]?.need === o.key) : null;
+    let hint = (o.kind === 'new' || o.kind === 'up') && ev ? ` ✦ Evolui com ${CFG.passives[ev.need].name}${G.passives[ev.need] ? ' (você já tem)' : ''}.` : '';
+    if (evoFor) hint = ` ✦ Evolui ${evoFor.meta.name}${evoFor.level >= 5 ? ' (pronto!)' : ` no nível 5`}.`;
+    const desc = (o.kind === 'heal' ? 'Recupera 30 de vida.' : o.kind === 'pnew' || o.kind === 'pup' ? s.desc : o.kind === 'evo' ? `${CFG.spells[o.key].name} + ${CFG.passives[s.need].name}: ${s.desc}` : o.kind === 'fusion' ? `${CFG.spells[s.from[0]].name} + ${CFG.spells[s.from[1]].name}: ${s.desc}` : nextDesc(o.key, cur)) + hint;
+    const b = document.createElement('button'); b.className = 'card' + (o.kind === 'fusion' || o.kind === 'evo' ? ' fusion' : evoFor ? ' evohint' : ''); b.style.setProperty('--c', color);
     b.innerHTML = `<span class="ico">${glyph}</span><span class="txt"><span class="row"><b>${esc(name)}</b><em>${esc(tag)}</em></span><span class="d">${esc(desc)}</span></span>`;
     b.onclick = () => { if (G.banning && o.kind !== 'heal') { G.bans--; G.banned.add(o.key); openLevelUp(G.offer.filter(x => x !== o).concat(options().filter(x => !G.offer.some(y => y.key === x.key)).slice(0, 1))); } else choose(o); }; box.appendChild(b);
   }
   $('levelup').hidden = false;
 }
 function choose(o) {
+  sfx.pick();
   apply(o);
   G.queue--; if (G.chests > 0) G.chests--; $('levelup').hidden = true; renderLoadout();
   if (G.queue > 0) openLevelUp(); else { G.mode = 'play'; input.clear(); }
@@ -347,7 +358,7 @@ function choose(o) {
 function apply(o) {
   if (o.kind === 'new') G.spells.push(new Spell(o.key, G));
   if (o.kind === 'up') G.spells.find(s => s.key === o.key).level++;
-  if (o.kind === 'evo') { G.evolutions++; G.spells.find(s => s.key === o.key).evo = true; banner('EVOLUÇÃO', CFG.evolutions[o.key].name, CFG.evolutions[o.key].color); G.shake(0.25); }
+  if (o.kind === 'evo') { G.evolutions++; sfx.evo(); G.spells.find(s => s.key === o.key).evo = true; banner('EVOLUÇÃO', CFG.evolutions[o.key].name, CFG.evolutions[o.key].color); G.shake(0.25); }
   if (o.kind === 'fusion') { G.spells = G.spells.filter(s => !CFG.fusions[o.key].from.includes(s.key)); G.spells.push(new Spell(o.key, G)); banner('FUSÃO', CFG.fusions[o.key].name, CFG.fusions[o.key].color); }
   if (o.kind === 'pnew' || o.kind === 'pup') { G.passives[o.key] = (G.passives[o.key] || 0) + 1; recalc(); }
   if (o.kind === 'heal') mage.hp = Math.min(mage.maxHp, mage.hp + 30);
@@ -374,9 +385,9 @@ function openSlot(n) {
     // sorteia em sequência, aplicando cada uma (a próxima já considera a anterior)
     const got = []; for (let i = 0; i < n; i++) { const o = options()[0]; got.push(o); apply(o); }
     renderLoadout();
-    const timers = els.map((d, i) => { d.classList.add('spin'); return setInterval(() => { const r = pool[Math.floor(Math.random() * pool.length)]; d.style.setProperty('--c', r.color); d.firstChild.textContent = r.glyph; }, 70); });
+    const timers = els.map((d, i) => { d.classList.add('spin'); return setInterval(() => { sfx.spin(); const r = pool[Math.floor(Math.random() * pool.length)]; d.style.setProperty('--c', r.color); d.firstChild.textContent = r.glyph; }, 70); });
     els.forEach((d, i) => setTimeout(() => {
-      clearInterval(timers[i]); const { s, tag } = cardInfo(got[i]);
+      clearInterval(timers[i]); sfx.stop(); const { s, tag } = cardInfo(got[i]);
       d.classList.remove('spin'); d.classList.add('stop'); d.style.setProperty('--c', s.color); d.firstChild.textContent = s.glyph;
       const c = document.createElement('div'); c.className = 'card' + (tag === 'EVOLUÇÃO' || tag === 'FUSÃO' ? ' fusion' : ''); c.style.setProperty('--c', s.color);
       c.innerHTML = `<span class="ico">${s.glyph}</span><span class="txt"><span class="row"><b>${esc(s.name)}</b><em>${esc(tag)}</em></span></span>`; res.appendChild(c);
@@ -420,9 +431,11 @@ function step(dt) {
   G.enemies = G.enemies.filter(e => !e.dead);
   rebuildGrid();
   // feitiços
-  for (const s of G.spells) s.update(dt);
+  for (const s of G.spells) { const n0 = G.projectiles.length; G.src = s.key; s.update(dt); for (let i = n0; i < G.projectiles.length; i++) G.projectiles[i].src = s.key; }
+  G.src = null;
   // projéteis
   for (const p of G.projectiles) {
+    G.src = p.src;
     if (p.home && (p.retarget -= dt) <= 0) { p.retarget = 0.15; p.tg = G.nearest(p.x, p.z, 1, 7)[0]; }
     if (p.home && p.tg && !p.tg.dead) { const dx = p.tg.x - p.x, dz = p.tg.z - p.z, l = Math.hypot(dx, dz) || 1, k = Math.min(1, 7 * dt);
       p.vx += (dx / l * p.sp - p.vx) * k; p.vz += (dz / l * p.sp - p.vz) * k; }
@@ -437,6 +450,7 @@ function step(dt) {
       p.onHit(p, e); if (p.pierce-- <= 0) { p.life = 0; break; }
     }
   }
+  G.src = null;
   G.projectiles = G.projectiles.filter(p => p.life > 0);
   // cristais
   const mag = G.mods.magnet;
@@ -444,10 +458,10 @@ function step(dt) {
     g.t += dt; const dx = mage.x - g.x, dz = mage.z - g.z, d = Math.hypot(dx, dz);
     if (d < mag || g.pull) { g.pull = true; const sp = 4 + g.t * 10; g.x += dx / d * Math.min(d, sp * dt); g.z += dz / d * Math.min(d, sp * dt); }
     if (d < 0.35) { g.done = true;
-      if (g.coin) G.coins++;
-      else if (g.heart) { mage.hp = Math.min(mage.maxHp, mage.hp + CFG.drops.heal); fxApi.burst(mage.x, mage.z, '#ff5a6a', 10, 2.5); G.numbers.push({ x: mage.x, z: mage.z, v: '+' + CFG.drops.heal, t: 0, label: '#ff7a8a' }); }
+      if (g.coin) { G.coins++; sfx.coin(); }
+      else if (g.heart) { sfx.heart(); mage.hp = Math.min(mage.maxHp, mage.hp + CFG.drops.heal); fxApi.burst(mage.x, mage.z, '#ff5a6a', 10, 2.5); G.numbers.push({ x: mage.x, z: mage.z, v: '+' + CFG.drops.heal, t: 0, label: '#ff7a8a' }); }
       else if (g.chest) G.slots.push(g.chest);
-      else addXp(g.v); }
+      else { addXp(g.v); sfx.gem(G.combo); } }
   }
   G.gems = G.gems.filter(g => !g.done);
   // santuários e bênçãos
@@ -622,7 +636,7 @@ function start() {
   G.meta = metaMods();
   world.reset();
   Object.assign(G, { mode: 'play', t: 0, enemies: [], projectiles: [], gems: [], fx: Object.assign([], fxApi), particles: [], splats: [], numbers: [],
-    spells: [], passives: {}, blasts: [], found: new Set(), shrines: [], buffs: {}, usedShrines: new Set(), broken: new Set(), slots: [], nextChamp: 0, banned: new Set(), rerolls: CFG.mage.rerolls + G.meta.rerolls, bans: CFG.mage.bans + G.meta.bans, chests: 0, revives: G.meta.revive, evolutions: 0, opened: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
+    spells: [], passives: {}, blasts: [], found: new Set(), dmgBy: {}, shrines: [], buffs: {}, usedShrines: new Set(), broken: new Set(), slots: [], nextChamp: 0, banned: new Set(), rerolls: CFG.mage.rerolls + G.meta.rerolls, bans: CFG.mage.bans + G.meta.bans, chests: 0, revives: G.meta.revive, evolutions: 0, opened: 0, xp: 0, level: 1, kills: 0, coins: 0, combo: 0, comboT: 0, bestCombo: 0, spawnAcc: 0, nextEvent: 0, event: null, boss: null,
     miniDone: false, bossDone: false, bossSpawned: false, queue: 0 });
   Object.assign(mage, { x: 0, z: 0, face: Math.PI, inv: 0 });
   recalc(); mage.hp = mage.maxHp;
@@ -640,6 +654,11 @@ function finish(won) {
     .map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   $('res-build').innerHTML = $('loadout').innerHTML;
   const gold = endRun({ won, time: G.t, level: G.level, kills: G.kills, coins: G.coins, evolutions: G.evolutions, chests: G.opened, combos: [...G.found], spells: G.spells.map(s => s.key) });
+  if (!won) sfx.over();
+  const tot = Object.values(G.dmgBy).reduce((a, b) => a + b, 0) || 1, rows = Object.entries(G.dmgBy).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  $('res-dmg').innerHTML = rows.map(([k, v]) => { const m = G.spells.find(s => s.key === k)?.meta || CFG.spells[k] || CFG.fusions[k] || { glyph: '·', color: '#9a92c0', name: 'Queimadura e explosões' };
+    return `<div style="--c:${m.color}"><i>${m.glyph}</i><div class="bar"><b style="width:${v / rows[0][1] * 100}%"></b></div><span>${Math.round(v / tot * 100)}%</span></div>`; }).join('');
+  const ng = nextGoal(); $('res-next').hidden = !ng; $('res-next').textContent = ng;
   $('res-gold').querySelector('b').textContent = '+' + gold.toLocaleString('pt-BR') + ' de ouro';
   setTimeout(() => { $('result').hidden = false; }, won ? 400 : 700);
 }
@@ -647,6 +666,8 @@ function togglePause() {
   if (G.mode === 'play') { G.mode = 'paused'; input.clear(); $('pause').hidden = false; $('fps-toggle').textContent = 'MOSTRAR FPS: ' + (settings.fps ? 'SIM' : 'NÃO'); }
   else if (G.mode === 'paused') { G.mode = 'play'; $('pause').hidden = true; }
 }
+$('snd-toggle').onclick = () => { $('snd-toggle').textContent = 'SOM: ' + (sfx.toggle() ? 'SIM' : 'NÃO'); };
+$('snd-toggle').textContent = 'SOM: ' + (sfx.on ? 'SIM' : 'NÃO');
 $('btn-reroll').onclick = () => { if (G.rerolls > 0 && G.mode === 'levelup') { G.rerolls--; openLevelUp(); } };
 $('btn-ban').onclick = () => { if (G.bans <= 0) return; G.banning = !G.banning; $('choices').classList.toggle('banning', G.banning); $('ban-hint').hidden = !G.banning; $('btn-ban').classList.toggle('on', G.banning); };
 initMenu(start); $('btn-again').onclick = start; $('btn-menu').onclick = showMenu; $('btn-pause').onclick = togglePause; $('btn-resume').onclick = togglePause;
