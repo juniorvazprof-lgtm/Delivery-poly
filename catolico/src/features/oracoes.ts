@@ -1,14 +1,31 @@
-/* Aba Orações: as orações tradicionais em grupos; toque para rezar. */
+/* Aba Orações: cartões agrupados pelo momento do dia, com favoritas no topo; toque para rezar. */
 import { html, setHTML } from "../utils/html";
 import { IC } from "../ui/icons";
+import { simbolo, type Simbolo } from "../ui/simbolos";
 import { ORACOES } from "../data/oracoes";
+import { favoritas, salvar } from "../core/estado";
+import { vibrate } from "../ui/ui";
 import { lerOracao } from "./hoje";
 
+const MOMENTOS: { nome: string; ids: string[] }[] = [
+  { nome: "Essenciais", ids: ["sinal", "painosso", "avemaria", "gloria", "credo"] },
+  { nome: "Ao longo do dia", ids: ["angelus", "reginacaeli", "anjo", "miguel"] },
+  { nome: "Com Nossa Senhora", ids: ["salve", "lembrai", "fatima"] },
+  { nome: "À noite", ids: ["contricao"] },
+];
+const SIMB: Record<string, Simbolo> = { sinal: "cruz", credo: "luz", painosso: "pomba", avemaria: "maria", gloria: "estrela", fatima: "maria", contricao: "coracao",
+  salve: "maria", angelus: "vela", reginacaeli: "maria", lembrai: "lirio", anjo: "asas", miguel: "asas" };
+
 export function renderOracoes(el: HTMLElement): void {
-  const grupos = [...new Set(ORACOES.map(o => o.grupo))];
+  const cartao = (id: string) => { const o = ORACOES.find(x => x.id === id); if (!o) return "";
+    return html`<div class="ocard-w"><button class="ocard" data-o="${o.id}">${simbolo(SIMB[o.id] || "vela")}<b>${o.nome}</b></button>
+      <button class="fav ${favoritas.has(o.id) ? "on" : ""}" data-f="${o.id}" aria-label="Favoritar ${o.nome}">${IC("star")}</button></div>`; };
+  const favs = [...favoritas].filter(id => ORACOES.some(o => o.id === id));
   setHTML(el, html`<div class="pagina"><div class="kicker">Orações</div><h1>Para rezar</h1>
-    ${grupos.map(g => html`<div class="label">${g}</div><div class="lista">${ORACOES.filter(o => o.grupo === g).map(o =>
-      html`<button class="item" data-o="${o.id}">${IC("candle")}<span><b>${o.nome}</b><small>${o.texto.replace(/\n/g, " ").slice(0, 64)}…</small></span>${IC("chev")}</button>`)}</div>`)}
-    <p class="fine">Textos provisórios, em revisão.</p></div>`);
+    ${favs.length ? html`<div class="label">Suas favoritas</div><div class="ocards">${favs.map(cartao)}</div>` : ""}
+    ${MOMENTOS.map(m => html`<div class="label">${m.nome}</div><div class="ocards">${m.ids.map(cartao)}</div>`)}
+    <p class="fine">Toque na estrela para guardar uma oração no topo. Textos provisórios, em revisão.</p></div>`);
   el.querySelectorAll<HTMLButtonElement>("[data-o]").forEach(b => b.onclick = () => lerOracao(b.dataset.o || ""));
+  el.querySelectorAll<HTMLButtonElement>("[data-f]").forEach(b => b.onclick = () => {
+    const id = b.dataset.f || ""; favoritas.has(id) ? favoritas.delete(id) : favoritas.add(id); salvar(); vibrate(6); renderOracoes(el); });
 }

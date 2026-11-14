@@ -27,6 +27,25 @@ const server = http.createServer((q, r) => { const f = path.join(ROOT, decodeURI
   ok((await p.textContent("#sheet .antiga")).includes("1778"), "forma antiga da oração com a fonte");
   await p.tap("#amem"); await p.tap("#bnav [data-tab=voce]"); await p.waitForTimeout(300);
   ok(/1\s*terços?/.test(await p.textContent(".stats")), "Você mostra o terço rezado");
+  // feed misturado, trilho, compartilhar, salvos, favoritas e intenções
+  await p.tap("#bnav [data-tab=hoje]"); await p.waitForTimeout(500);
+  ok(await p.$(".card.onb") !== null, "primeira visita pergunta o que a pessoa busca");
+  await p.evaluate(() => { document.querySelector(".chip").click(); document.getElementById("onbOk").click(); });
+  const n0 = (await p.$$("#feed [data-card]")).length; ok(n0 >= 10, `feed com cartões misturados (${n0})`);
+  await p.evaluate(() => { const f = document.getElementById("feed"); f.scrollTop = f.scrollHeight; }); await p.waitForTimeout(700);
+  const n1 = (await p.$$("#feed [data-card]")).length; ok(n1 > n0, `feed infinito carrega mais (${n0}→${n1})`);
+  const mix = await p.evaluate(() => [...document.querySelectorAll("#feed [data-card]")].filter(c => /^(jac|sab|mis|san|ora):/.test(c.dataset.card)).length);
+  ok(mix >= 6, "cartões de vários tipos no feed");
+  await p.evaluate(() => document.querySelector('#feed .t-sabia [data-a=salvar], #feed .t-jac [data-a=salvar], #feed .t-sant [data-a=salvar]').click());
+  await p.evaluate(() => document.querySelector('#feed [data-card^="dia:"] [data-a=amem]').click());
+  ok(await p.$('#feed [data-card^="dia:"] [data-a=amem].on') !== null, "Amém marca o cartão");
+  await p.evaluate(() => document.querySelector('#feed [data-card^="dia:"] [data-a=enviar]').click()); await p.waitForTimeout(1500);
+  const img = await p.$eval("#sheet .shot img", i => i.naturalWidth).catch(() => 0); ok(img === 1080, "imagem para compartilhar 1080×1920");
+  await p.evaluate(() => document.getElementById("veil").click());
+  await p.tap("#bnav [data-tab=oracoes]"); await p.tap("[data-f=salve]"); ok((await p.$$(".ocards")).length === 5, "favorita aparece no topo das orações");
+  await p.tap("#bnav [data-tab=voce]"); await p.fill("#intTxt", "Pela saúde da família"); await p.tap("#intForm button");
+  ok((await p.textContent(".intencoes")).includes("saúde"), "intenção de oração guardada");
+  ok((await p.$$(".salvo")).length === 1, "cartão salvo aparece em Você");
   ok(errs.length === 0, "sem erros de script" + (errs.length ? ": " + errs.join(" | ") : ""));
   await b.close(); server.close(); if (falhas) process.exit(1); console.log("\nTudo certo");
 })();

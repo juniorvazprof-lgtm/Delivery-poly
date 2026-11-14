@@ -8,26 +8,30 @@ import { CONJUNTOS, conjuntoDoDia, passosDoTerco, type Conjunto, type Passo } fr
 import { oracao } from "../data/oracoes";
 import { irPara } from "./hoje";
 
+import { S } from "../services/storage";
+let auto = false, timer = 0;
 let conj: Conjunto = conjuntoDoDia(new Date()), passos: Passo[] = [], i = -1, tela: HTMLElement | null = null;
 const words = (t: string) => t.split(" ").map((w, k) => html`<span class="w" data-style="--i:${k}">${w}</span> `);
 
-export function sairDoTerco(): void { document.body.classList.remove("rezando"); tela = null; }
+export function sairDoTerco(): void { clearTimeout(timer); document.body.classList.remove("rezando"); tela = null; }
 
 export function renderTerco(el: HTMLElement): void {
-  tela = el; i = -1; document.body.classList.remove("rezando");
+  clearTimeout(timer); auto = S.get<boolean>("cat.auto", false) === true; tela = el; i = -1; document.body.classList.remove("rezando");
   setHTML(el, html`<div class="pagina">
     <div class="kicker">Terço guiado</div><h1>Rezar o terço</h1>
     <p class="lead">Toque na tela para passar para a próxima oração, no seu ritmo. As contas mostram onde você está.</p>
     <div class="conjs">${CONJUNTOS.map(c => html`<button class="conj ${c.id === conj.id ? "on" : ""}" data-c="${c.id}"><b>${c.nome}</b>
       <small>${c.id === conjuntoDoDia(new Date()).id ? "Os de hoje" : c.misterios.map(m => m.titulo.split(" ").slice(0, 3).join(" ")).join(" · ")}</small></button>`)}</div>
+    <label class="auto"><span>Avançar sozinho<br><small class="fine">No ritmo de uma oração falada; toque para pausar</small></span><input type="checkbox" id="auto" ${auto ? "checked" : ""}></label>
     <button class="primary" id="comecar">${raw(`<svg viewBox="0 0 24 24" class="ico">${IP.rosary}</svg>`)}Começar</button>
     <p class="fine">Mistérios com a referência bíblica. O texto da Bíblia entra quando tivermos uma tradução católica em domínio público.</p></div>`);
   el.querySelectorAll<HTMLButtonElement>("[data-c]").forEach(b => b.onclick = () => { conj = CONJUNTOS.find(c => c.id === b.dataset.c) || conj; vibrate(5); renderTerco(el); });
+  byId<HTMLInputElement>("auto").onchange = e => { auto = (e.target as HTMLInputElement).checked; S.set("cat.auto", auto); };
   byId("comecar").onclick = () => { passos = passosDoTerco(conj); document.body.classList.add("rezando"); mostrar(0); };
 }
 
 function mostrar(n: number): void {
-  if (!tela) return;
+  clearTimeout(timer); if (!tela) return;
   i = Math.max(0, Math.min(n, passos.length));
   if (i === passos.length) { fim(); return; }
   const p = passos[i], dezena = "dezena" in p ? p.dezena : undefined;
@@ -45,12 +49,16 @@ function mostrar(n: number): void {
       <span class="passo">${i + 1}/${passos.length}</span></div>
     <div class="reza-corpo" id="corpo">${corpo}</div>
     ${contas.length ? html`<div class="contas">${contas}</div>` : html`<div class="contas vazia"></div>`}
-    <p class="toque">toque para continuar</p></div>`);
+    <p class="toque">${auto ? "avançando sozinho · toque para pausar" : "toque para continuar"}</p></div>`);
+  const agendar = () => { const t = p.tipo === "misterio" ? p.misterio.titulo + p.misterio.fruto : oracao(p.id).texto;
+    timer = window.setTimeout(() => mostrar(i + 1), Math.max(3500, t.split(" ").length * 430)); };
+  if (auto) agendar();
   byId("sair").onclick = e => { e.stopPropagation(); renderTerco(tela!); };
   let x0: number | null = null;
   const r = byId("reza");
   r.onpointerdown = e => { x0 = e.clientX; };
   r.onpointerup = e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if ((e.target as Element).closest("#sair")) return;
+    if (auto && Math.abs(dx) <= 60) { auto = false; clearTimeout(timer); toast("Pausado. Toque para seguir no seu ritmo"); return; }
     vibrate(p.tipo === "oracao" && p.id === "avemaria" ? 6 : 14); mostrar(dx > 60 ? i - 1 : i + 1); };
 }
 

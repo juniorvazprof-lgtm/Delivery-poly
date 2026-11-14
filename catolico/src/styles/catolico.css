@@ -48,7 +48,7 @@
 .item .ico:last-child{width:16px;height:16px;color:var(--muted)}.item .ico:last-child .lx{display:none}
 .item.off{cursor:default;opacity:.7}.item.off small{white-space:normal}
 .oracao p{margin:0 0 10px;font:400 1.15rem/1.6 var(--serif);user-select:text;-webkit-user-select:text}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 4px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 4px}
 .stats div{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:14px 8px;text-align:center}
 .stats b{display:block;font:500 1.7rem var(--serif)}.stats small{color:var(--muted);font-size:.74rem;font-weight:600}
 .link.sobre{align-self:center;color:var(--muted)}
@@ -104,3 +104,65 @@ body.rezando #bnav{transform:translateY(130%);opacity:0;pointer-events:none}
 .antiga{margin-top:16px;border-top:1px solid var(--line);padding-top:6px}
 .antiga summary{cursor:pointer;padding:12px 0;font:700 .84rem var(--sans);color:var(--gold);list-style:none}
 .antiga p{font:400 1.02rem/1.6 var(--serif);color:var(--muted);margin:0 0 10px;user-select:text;-webkit-user-select:text}
+
+/* Símbolos em traço dourado */
+.simb{fill:none;stroke:var(--gold);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.simb .f{fill:var(--gold);stroke:none}
+.simb.grande{width:56px;height:56px;opacity:.9;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--gold) 35%,transparent))}
+.card>.simb.grande{animation:respira 6s ease-in-out infinite}
+@keyframes respira{50%{opacity:.6;transform:translateY(-2px)}}
+
+/* Trilho de ações (Amém, Salvar, Enviar) */
+.trilho{position:absolute;right:max(10px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 132px);display:flex;flex-direction:column;gap:14px}
+.trilho button{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;color:var(--ink);opacity:.82;padding:4px;cursor:pointer}
+.trilho button .ico{width:28px;height:28px;filter:drop-shadow(0 1px 6px rgba(0,0,0,.4))}
+.trilho small{font:600 .62rem var(--sans);letter-spacing:.04em}
+.trilho button.on{color:var(--gold);opacity:1}
+.trilho button.on .ico{fill:currentColor}
+.trilho button:active{transform:scale(.88)}
+.card{padding-right:max(72px,env(safe-area-inset-right,0px))}
+.amem-voo{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.amem-voo .simb{width:120px;height:120px;stroke-width:1.2;animation:voo .9s ease-out forwards}
+@keyframes voo{0%{transform:scale(.4);opacity:0}30%{transform:scale(1.1);opacity:1}100%{transform:scale(1.25) translateY(-30px);opacity:0}}
+
+/* Visual por tipo de cartão */
+.card.t-jac blockquote{font-size:clamp(1.8rem,7.8vw,2.5rem);line-height:1.28}
+.card.t-sabia .kicker{color:#9FC6E8}.card.t-sabia h2{font-size:clamp(1.6rem,7vw,2.1rem)}
+.card.t-sant h2{font-style:italic}
+.card.t-mist .kicker,.card.t-mist .simb{color:#C9A9F2}
+.card .lead.txt{font:400 clamp(1.08rem,4.6vw,1.28rem)/1.55 var(--serif);color:color-mix(in srgb,var(--ink) 88%,transparent)}
+.link.mais{align-self:flex-start;background:none;border:0;color:var(--gold);font:600 .85rem var(--sans);padding:0;text-decoration:underline;text-underline-offset:3px}
+.sentinela{height:1px}
+
+/* Primeira visita */
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:1px solid color-mix(in srgb,var(--ink) 25%,transparent);background:transparent;color:var(--ink);border-radius:99px;padding:10px 16px;font:600 .9rem var(--sans)}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#1a140a}
+.chips.feito{opacity:.5;pointer-events:none}
+
+/* Compartilhar */
+.shot{display:grid;place-items:center;margin:8px 0 16px}
+.shot img,.shot .skel{width:min(62vw,260px);aspect-ratio:9/16;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.shot .skel{background:linear-gradient(110deg,#1b1a24 30%,#2a2836 50%,#1b1a24 70%);background-size:200% 100%;animation:sk 1.2s linear infinite}
+@keyframes sk{to{background-position:-200% 0}}
+.ghost{width:100%;margin-top:8px;background:transparent;border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);color:var(--ink);border-radius:14px;padding:13px;font:600 .95rem var(--sans)}
+
+/* Você: salvos e intenções · Orações: favoritas */
+.salvo{display:block;text-align:left;width:100%;background:color-mix(in srgb,var(--ink) 5%,transparent);border:0;border-radius:14px;padding:14px;color:var(--ink);margin-bottom:8px}
+.salvo small{display:block;color:var(--gold);font:700 .62rem var(--sans);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px}
+.salvo span{font:400 1rem/1.4 var(--serif)}
+.intencao-form{display:flex;gap:8px;margin-bottom:10px}
+.intencao-form input{flex:1;min-width:0;background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid color-mix(in srgb,var(--ink) 15%,transparent);border-radius:12px;padding:12px;color:var(--ink);font:400 1rem var(--sans)}
+.intencao{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--ink) 8%,transparent)}
+.intencao span{flex:1}.intencao.ok span{text-decoration:line-through;opacity:.6}
+.intencao button{background:none;border:0;color:var(--muted);font:600 .78rem var(--sans)}
+.ocards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ocard{position:relative;text-align:left;background:color-mix(in srgb,var(--ink) 5%,transparent);border:1px solid color-mix(in srgb,var(--ink) 8%,transparent);border-radius:18px;padding:16px 14px;color:var(--ink);min-height:118px;display:flex;flex-direction:column;gap:8px}
+.ocard .simb{width:30px;height:30px}
+.ocard b{font:450 1.02rem/1.2 var(--serif)}
+.ocard-w{position:relative}.ocard-w .ocard{width:100%;height:100%}
+.fav{position:absolute;top:8px;right:8px;padding:6px}
+.fav{background:none;border:0;color:var(--muted)}.fav.on{color:var(--gold)}.fav.on .ico{fill:currentColor}
+.auto{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 14px;font:500 .92rem var(--sans)}
+.auto input{width:22px;height:22px;accent-color:var(--gold)}
+@media (prefers-reduced-motion:reduce){.card>.simb.grande,.amem-voo .simb{animation:none}}
