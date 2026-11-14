@@ -1,4 +1,5 @@
 /* Peças de interface compartilhadas: aviso rápido, folha que sobe de baixo, luz de fundo e progresso salvo. */
+import { abaixar } from "./musica";
 import { html, raw, setHTML, type SafeHtml } from "../utils/html";
 import { byId, qMaybe } from "../utils/dom";
 import { S } from "../services/storage";
@@ -14,10 +15,13 @@ const veil = () => byId("veil"), sheet = () => byId("sheet");
 export function openSheet(content: SafeHtml, label: string): void {
   setHTML(sheet(), html`${raw('<div class="grab" aria-hidden="true"></div>')}${content}`);
   sheet().setAttribute("aria-label", label); sheet().scrollTop = 0;
-  veil().classList.add("open"); sheet().classList.add("open");
+  veil().classList.add("open"); sheet().classList.add("open"); abaixar(.35);
   setTimeout(() => qMaybe(sheet(), "button")?.focus({ preventScroll: true }), 300);
 }
-export function closeSheet(): void { veil().classList.remove("open"); sheet().classList.remove("open"); }
+export function closeSheet(): void {
+  if (sheet().classList.contains("open")) abaixar(document.body.classList.contains("rezando") ? .55 : 1);
+  veil().classList.remove("open"); sheet().classList.remove("open");
+}
 
 /** Cores da luz difusa do fundo (seguem a cor litúrgica do dia). */
 export function setLight(h: [string, string]): void {

@@ -10,6 +10,7 @@ import { renderHoje } from "./features/hoje";
 import { renderTerco, sairDoTerco } from "./features/terco";
 import { renderOracoes } from "./features/oracoes";
 import { renderVoce } from "./features/voce";
+import { alternarSom, climaDoTempo, estaTocando, prepararMusica } from "./ui/musica";
 
 export type Aba = "hoje" | "terco" | "oracoes" | "voce";
 const app = byId("app"), nav = byId("bnav");
@@ -25,6 +26,14 @@ byId("veil").onclick = closeSheet;
 addEventListener("cat:ir", e => ir((e as CustomEvent<Aba>).detail));
 addEventListener("cat:fechar", closeSheet);
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+
+// música ambiente: clima do tempo litúrgico, começa no primeiro toque; botão de som no topo
+const somBtn = document.createElement("button"); somBtn.id = "som"; somBtn.setAttribute("aria-label", "Música ambiente");
+const desenharSom = () => { const on = estaTocando(); somBtn.classList.toggle("on", on); somBtn.setAttribute("aria-pressed", String(on));
+  setHTML(somBtn, html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/>${on ? raw('<path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 6.8a7.5 7.5 0 0 1 0 10.4"/>') : raw('<path d="M16 10l4 4M20 10l-4 4"/>')}</svg>`); };
+somBtn.onclick = e => { e.stopPropagation(); alternarSom(); desenharSom(); };
+document.body.appendChild(somBtn); desenharSom(); addEventListener("cat:som", desenharSom);
+climaDoTempo(infoDoDia(new Date()).lit.tempo); prepararMusica();
 
 // a luz de fundo segue a cor litúrgica do dia
 setLight(LUZ[infoDoDia(new Date()).cor]);

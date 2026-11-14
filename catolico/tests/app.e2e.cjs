@@ -17,7 +17,10 @@ const server = http.createServer((q, r) => { const f = path.join(ROOT, decodeURI
     ok((await p.$$("#sheet .evangelho p")).length > 3, "Evangelho completo abre com os versículos");
     await p.evaluate(() => document.getElementById("veil").click()); await p.waitForTimeout(400); }
   await p.tap("#rezei"); ok((await p.textContent("#toast")).includes("Amém"), "oração do dia registra");
-  await p.tap("#bnav [data-tab=terco]"); await p.tap("#comecar"); let n = 0;
+  ok(await p.$("#som") !== null, "botão de música ambiente");
+  await p.tap("#bnav [data-tab=terco]"); await p.tap("#comecar"); await p.waitForTimeout(1500);
+  ok(await p.$("#t3d canvas") !== null || await p.$(".reza3d.sem3d") !== null, "terço em 3D (ou alternativa sem 3D)");
+  ok((await p.textContent("#nome")).includes("Sinal da Cruz"), "terço mostra só o nome da oração"); let n = 0;
   while (await p.$("#corpo") && n < 100) { await p.tap("#corpo"); n++; }
   ok(n === 78, `terço completo em 78 passos (${n})`);
   ok((await p.textContent("#app")).includes("Amém"), "tela final do terço");
@@ -34,7 +37,7 @@ const server = http.createServer((q, r) => { const f = path.join(ROOT, decodeURI
   const n0 = (await p.$$("#feed [data-card]")).length; ok(n0 >= 10, `feed com cartões misturados (${n0})`);
   await p.evaluate(() => { const f = document.getElementById("feed"); f.scrollTop = f.scrollHeight; }); await p.waitForTimeout(700);
   const n1 = (await p.$$("#feed [data-card]")).length; ok(n1 > n0, `feed infinito carrega mais (${n0}→${n1})`);
-  const mix = await p.evaluate(() => [...document.querySelectorAll("#feed [data-card]")].filter(c => /^(jac|sab|mis|san|ora|cat):/.test(c.dataset.card)).length);
+  const mix = await p.evaluate(() => [...document.querySelectorAll("#feed [data-card]")].filter(c => /^(fr|jac|sab|mis|san|ora|cat|qz|ex):/.test(c.dataset.card)).length);
   ok(mix >= 6, "cartões de vários tipos no feed");
   await p.evaluate(() => document.querySelector('#feed .t-sabia [data-a=salvar], #feed .t-jac [data-a=salvar], #feed .t-sant [data-a=salvar]').click());
   await p.evaluate(() => document.querySelector('#feed [data-card^="dia:"] [data-a=amem]').click());

@@ -9,7 +9,7 @@ import { infoDoDia, textoDe, type Ref } from "../core/dia";
 import { S } from "../services/storage";
 import { dayKey } from "../ui/ui";
 import { simbolo, simboloDoSanto } from "../ui/simbolos";
-import { POOL, type Cartao } from "../data/cartoes";
+import { POOL, familia, type Cartao, type Familia } from "../data/cartoes";
 import { alternarSalvo, curtidos, gosto, marcarGosto, salvar, salvos } from "../core/estado";
 import { compartilhar } from "./compartilhar";
 import { chipsCIC } from "../ui/chips";
@@ -35,20 +35,33 @@ export function lerOracao(id: string): void {
   byId("amem").onclick = () => { registrarOracao(); vibrate(10); toast("Amém"); dispatchEvent(new CustomEvent("cat:fechar")); };
 }
 
-const ESTILO: Record<string, string> = { jaculatoria: "jac", sabia: "sabia", misterio: "mist", santo: "sant", oracao: "ora", catecismo: "cat", quiz: "quiz", explica: "expl" };
+const ESTILO: Record<string, string> = { frase: "frase", jaculatoria: "jac", sabia: "sabia", misterio: "mist", santo: "sant", oracao: "ora", catecismo: "cat", quiz: "quiz", explica: "expl" };
 const curto = (t: string, n = 220) => t.length > n ? t.slice(0, t.lastIndexOf(" ", n)) + "…" : t;
 let mapa = new Map<string, Cartao>();
 
-/** Escolhe o próximo cartão do conjunto misturado: sem repetir na sessão, com peso pelo gosto de cada tema. */
+/** O feed é infinito, em ciclos de 6 cartões com lugar fixo para cada família:
+    Palavra · Aprender · Palavra · Interação · Palavra · Rezar. O conteúdo de cada lugar varia pelo gosto da pessoa. */
+const CICLO: Familia[] = ["palavra", "aprender", "palavra", "interacao", "palavra", "rezar"];
 const vistos = new Set<string>();
-function proximo(): Cartao {
-  let livres = POOL.filter(c => !vistos.has(c.id));
-  if (!livres.length) { vistos.clear(); livres = POOL; }
-  const peso = (c: Cartao) => Math.max(.3, 1 + (gosto[c.tema] || 0) / 4) * (c.tipo === "santo" ? .35 : c.tipo === "catecismo" ? .2 : 1);
-  let r = Math.random() * livres.reduce((a, c) => a + peso(c), 0);
-  for (const c of livres) { r -= peso(c); if (r <= 0) { vistos.add(c.id); return c; } }
-  const c = livres[0]; vistos.add(c.id); return c;
+let pos = 0, aprenderN = 0, acertos = 0;
+function sortear(lista: Cartao[]): Cartao {
+  const peso = (c: Cartao) => Math.max(.3, 1 + (gosto[c.tema] || 0) / 4) * (c.tipo === "santo" ? .5 : c.tipo === "catecismo" ? .5 : 1);
+  let r = Math.random() * lista.reduce((x, c) => x + peso(c), 0);
+  for (const c of lista) { r -= peso(c); if (r <= 0) return c; }
+  return lista[0];
 }
+function proximo(): Cartao {
+  const fam = CICLO[pos++ % CICLO.length];
+  // série: a cada dois "Aprender", o próximo cartão da série dos sacramentos, em ordem
+  if (fam === "aprender" && aprenderN++ % 2 === 0) {
+    const serie = POOL.filter(c => c.tipo === "explica"), prox = serie.find(c => !vistos.has(c.id));
+    if (prox) { vistos.add(prox.id); const k = serie.indexOf(prox) + 1; return { ...prox, rotulo: `Série · Os 7 sacramentos · ${k} de ${serie.length}` }; }
+  }
+  let livres = POOL.filter(c => familia(c) === fam && !vistos.has(c.id));
+  if (!livres.length) { POOL.filter(c => familia(c) === fam).forEach(c => vistos.delete(c.id)); livres = POOL.filter(c => familia(c) === fam); }
+  const c = sortear(livres); vistos.add(c.id); return c;
+}
+const COM_TRILHO = new Set<Familia>(["palavra", "aprender"]);
 const trilho = (c: Cartao) => html`<div class="trilho" data-id="${c.id}">
   <button data-a="amem" class="${curtidos.has(c.id) ? "on" : ""}" aria-label="Amém">${IC("heart")}<small>Amém</small></button>
   <button data-a="salvar" class="${salvos.some(s => s.id === c.id) ? "on" : ""}" aria-label="Salvar">${IC("save")}<small>Salvar</small></button>
@@ -56,25 +69,44 @@ const trilho = (c: Cartao) => html`<div class="trilho" data-id="${c.id}">
 function cartaoMisto(c: Cartao) {
   mapa.set(c.id, c);
   const longo = c.texto.length > 230;
-  return html`<section class="card t-${ESTILO[c.tipo] || "x"}" data-card="${c.id}">
+  const fam = familia(c);
+  if (fam === "palavra") return html`<section class="card f-palavra t-${ESTILO[c.tipo] || "x"}" data-card="${c.id}">
+    ${simbolo(c.simbolo, "grande")}<div class="kicker">${c.rotulo}</div>
+    <blockquote>${c.texto}</blockquote>${c.tipo === "jaculatoria" ? html`<cite>${c.de}</cite>` : ""}
+    ${trilho(c)}</section>`;
+  return html`<section class="card f-${fam} t-${ESTILO[c.tipo] || "x"}" data-card="${c.id}">
     ${simbolo(c.simbolo, "grande")}
     <div class="kicker">${c.rotulo}</div>
     ${c.titulo ? html`<h2>${c.titulo}</h2>` : ""}
-    ${c.tipo === "jaculatoria" ? html`<blockquote>${c.texto}</blockquote><cite>${c.de}</cite>`
+    ${fam === "rezar" && c.tipo === "oracao" ? html`<p class="lead txt">${curto(c.texto, 150)}</p>`
+      : c.tipo === "jaculatoria" ? html`<blockquote>${c.texto}</blockquote><cite>${c.de}</cite>`
       : c.quiz ? html`<div class="opcoes">${c.quiz.op.map((o, i) => html`<button class="op" data-op="${i}" data-q="${c.id}">${o}</button>`)}</div>
           <div class="feedback" hidden><p class="lead txt">${c.quiz.exp}</p>${chipsCIC(c.cic || [])}</div>`
       : c.tipo === "explica" ? html`<p class="lead txt">${c.texto}</p>${chipsCIC(c.cic || [])}`
       : c.tipo === "catecismo" ? html`<button class="revelar" data-rev="${c.id}">Toque para ver a resposta</button><p class="lead txt resp-cat" hidden>${c.texto}</p><p class="fine" hidden>${c.de}</p>`
       : html`<p class="lead txt">${curto(c.texto)}</p>`}
-    ${longo && c.tipo !== "catecismo" ? html`<button class="link mais" data-mais="${c.id}">Ler tudo</button>` : ""}
+    ${longo && fam === "aprender" ? html`<button class="link mais" data-mais="${c.id}">Ler tudo</button>` : ""}
     ${c.tipo === "misterio" ? html`<p class="fine">${c.de}</p>` : ""}
-    ${c.acao?.aba ? html`<button class="pill" data-ir="${c.acao.aba}">${IC("rosary")}${c.acao.rotulo}</button>` : ""}
-    ${trilho(c)}</section>`;
+    ${c.acao?.aba ? html`<button class="primary" data-ir="${c.acao.aba}">${IC("rosary")}${c.acao.rotulo}</button>` : ""}
+    ${c.acao?.oracao ? html`<button class="primary" data-ora="${c.acao.oracao}">${IC("candle")}${c.acao.rotulo}</button>` : ""}
+    ${COM_TRILHO.has(fam) ? trilho(c) : ""}</section>`;
 }
 function maisCartoes(feed: HTMLElement, n: number): void {
   const tmp = document.createElement("div"); setHTML(tmp, html`${Array.from({ length: n }, () => cartaoMisto(proximo()))}`);
   const sentinela = feed.querySelector(".sentinela");
   [...tmp.children].forEach(ch => feed.insertBefore(ch, sentinela));
+  aSeguir(feed);
+}
+/** Rodapé "A seguir": uma prévia do próximo cartão, para dar vontade de continuar. */
+const PREVIA: Record<Familia, string> = { palavra: "uma palavra para meditar", aprender: "", interacao: "", rezar: "um minuto de oração" };
+function aSeguir(feed: HTMLElement): void {
+  const cs = [...feed.querySelectorAll<HTMLElement>("[data-card]")];
+  cs.forEach((el, i) => {
+    const prox = cs[i + 1]; if (!prox || el.querySelector(".aseguir")) return;
+    const c = mapa.get(prox.dataset.card || ""); if (!c) return;
+    const fam = familia(c), txt = c.tipo === "quiz" ? "um desafio rápido" : c.tipo === "catecismo" ? "uma pergunta da fé" : PREVIA[fam] || (c.titulo || c.rotulo);
+    const d = document.createElement("div"); d.className = "aseguir"; d.textContent = `A seguir: ${txt} ↓`; el.appendChild(d);
+  });
 }
 
 /** Onboarding: na primeira visita, pergunta o que a pessoa busca e dá um peso inicial aos temas. */
@@ -111,7 +143,7 @@ function acao(c: Cartao, a: string, btn: HTMLElement | null): void {
 export function renderHoje(el: HTMLElement): void {
   const d = new Date(), I = infoDoDia(d), L = I.lit, santo = I.sobre, dev = DEVOCOES[d.getDay()], terco = conjuntoDoDia(d);
   const pascal = L.tempo === "Páscoa", hoje = dayKey(d);
-  mapa = new Map(); vistos.clear();
+  mapa = new Map(); vistos.clear(); pos = 0; aprenderN = 0;
   const cDia: Cartao = { id: `dia:${hoje}`, tipo: "dia", tema: "santos", simbolo: simboloDoSanto(I.titulo, I.cor), rotulo: hojeLabel(d), titulo: I.titulo,
     texto: santo ? santo.sobre : `${L.tempo} · cor ${NOME_COR[I.cor].toLowerCase()}`, de: "Lumen Católico" };
   const cOra: Cartao = { id: `od:${d.getDay()}`, tipo: "oracaodia", tema: "oracoes", simbolo: "vela", rotulo: "Oração do dia", titulo: dev.tema, texto: dev.oracao, de: "Lumen Católico" };
@@ -121,7 +153,7 @@ export function renderHoje(el: HTMLElement): void {
   const cEv: Cartao | null = I.evangelho ? { id: `ev:${hoje}`, tipo: "evangelho", tema: "biblia", simbolo: "livro", rotulo: "Evangelho do dia", titulo: I.evangelho.texto, texto: "", de: I.evangelho.texto } : null;
   [cDia, cOra, cTer, cAng, ...(cEv ? [cEv] : [])].forEach(c => mapa.set(c.id, c));
   setHTML(el, html`<div class="feed" id="feed">
-   <section class="card hoje" data-card="${cDia.id}">
+   <section class="card f-aprender hoje" data-card="${cDia.id}">
      ${simbolo(cDia.simbolo, "grande")}
      <div class="kicker"><i class="cor ${I.cor}"></i>${hojeLabel(d)}</div>
      <h1>${I.titulo}</h1>
@@ -133,7 +165,7 @@ export function renderHoje(el: HTMLElement): void {
      ${trilho(cDia)}
      <div class="hint">deslize ↑</div>
    </section>
-   ${cEv && I.evangelho ? html`<section class="card t-ev" data-card="${cEv.id}">
+   ${cEv && I.evangelho ? html`<section class="card f-palavra hero t-ev" data-card="${cEv.id}">
      ${simbolo("livro", "grande")}
      <div class="kicker">Evangelho do dia</div>
      <h2>${I.evangelho.texto}</h2>
@@ -142,29 +174,26 @@ export function renderHoje(el: HTMLElement): void {
      <p class="fine prev">Prévia: texto da Bíblia do Pe. Figueiredo (ed. 1950) até concluirmos a revisão da edição de 1891.</p>
      ${trilho(cEv)}
    </section>` : ""}
-   <section class="card t-ora" data-card="${cOra.id}">
+   <section class="card f-rezar t-ora" data-card="${cOra.id}">
      ${simbolo("vela", "grande")}
      <div class="kicker">Oração do dia</div>
      <h2>${dev.tema}</h2>
      <blockquote>${dev.oracao}</blockquote>
      <button class="pill" id="rezei">${IC("candle")}Rezei esta oração</button>
-     ${trilho(cOra)}
    </section>
-   <section class="card t-mist" data-card="${cTer.id}">
+   <section class="card f-rezar t-mist" data-card="${cTer.id}">
      ${simbolo("terco", "grande")}
      <div class="kicker">Terço de hoje</div>
      <h2>${terco.nome}</h2>
      <ol class="mist">${terco.misterios.map(m => html`<li>${m.titulo}</li>`)}</ol>
      <button class="primary" id="rezarTerco">${IC("rosary")}Rezar o terço</button>
-     ${trilho(cTer)}
    </section>
-   <section class="card t-ora" data-card="${cAng.id}">
+   <section class="card f-rezar t-ora" data-card="${cAng.id}">
      ${simbolo("maria", "grande")}
      <div class="kicker">${cAng.rotulo}</div>
      <h2>${cAng.titulo}</h2>
      <p class="lead">${pascal ? "No tempo da Páscoa, a Igreja saúda Maria com a alegria da ressurreição." : "Três vezes ao dia, a Igreja para um instante e lembra que Deus se fez homem."}</p>
      <button class="pill" id="angelus">${IC("candle")}Rezar agora</button>
-     ${trilho(cAng)}
    </section>
    <div class="sentinela"></div>
   </div>`);
@@ -175,7 +204,7 @@ export function renderHoje(el: HTMLElement): void {
     const q = perguntaDoDia(C, d, L, I.titulo), c = cartaoCatecismo(C, q, "Pergunta do dia"), ter = feed.querySelector(`[data-card="${cTer.id}"]`);
     c.id = `pd:${q.n}`; vistos.add(`cat:${q.n}`);
     const tmp = document.createElement("div"); setHTML(tmp, cartaoMisto(c)); tmp.firstElementChild?.classList.add("pdia");
-    if (ter && document.body.contains(ter)) ter.after(tmp.firstElementChild!);
+    if (ter && document.body.contains(ter)) { ter.querySelector(".aseguir")?.remove(); ter.after(tmp.firstElementChild!); aSeguir(feed); }
   });
   byId("rezei").onclick = () => { registrarOracao(); vibrate(10); toast("Amém. Bom dia com Deus"); };
   byId("rezarTerco").onclick = () => irPara("terco");
@@ -191,7 +220,9 @@ export function renderHoje(el: HTMLElement): void {
       const i = Number(op.dataset.op), certo = i === c.quiz.certa; sec.classList.add("respondido");
       sec.querySelectorAll<HTMLElement>("[data-op]").forEach(b => { const k = Number(b.dataset.op); b.classList.toggle("certa", k === c.quiz!.certa); b.classList.toggle("errada", k === i && !certo); });
       const fb = sec.querySelector<HTMLElement>(".feedback"); if (fb) { fb.hidden = false; fb.querySelector("p")?.insertAdjacentText("afterbegin", certo ? "Isso! " : "Quase. "); }
-      vibrate(certo ? 12 : 30); if (certo) marcarGosto(c.tema, 2); return; }
+      vibrate(certo ? 12 : 30); if (certo) marcarGosto(c.tema, 2);
+      acertos = certo ? acertos + 1 : 0; if (acertos >= 3) toast(`${acertos} seguidas! ✨`); return; }
+    const or = t.closest<HTMLElement>("[data-ora]"); if (or) { lerOracao(or.dataset.ora || ""); return; }
     const rv = t.closest<HTMLElement>("[data-rev]");
     if (rv) { rv.parentElement?.querySelectorAll<HTMLElement>("[hidden]").forEach(x => x.hidden = false); rv.remove(); vibrate(5);
       const n = Number((rv.dataset.rev || "").split(":")[1]); if (n) marcarLida(n); return; }

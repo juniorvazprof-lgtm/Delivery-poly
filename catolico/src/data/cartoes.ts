@@ -7,8 +7,9 @@ import { CONJUNTOS } from "./terco";
 import { SANTOS } from "./santos";
 import sabia from "./sabia.json";
 import quiz from "./quiz-sacramentos.json";
+import frases from "./frases.json";
 
-export type Tipo = "jaculatoria" | "sabia" | "misterio" | "santo" | "oracao" | "catecismo" | "quiz" | "explica" | "evangelho" | "dia" | "oracaodia";
+export type Tipo = "frase" | "jaculatoria" | "sabia" | "misterio" | "santo" | "oracao" | "catecismo" | "quiz" | "explica" | "evangelho" | "dia" | "oracaodia";
 export interface Cartao { id: string; tipo: Tipo; tema: string; simbolo: Simbolo; rotulo: string; titulo?: string; texto: string; de: string; acao?: { rotulo: string; aba?: string; oracao?: string }; cic?: number[]; quiz?: { op: string[]; certa: number; exp: string } }
 
 const SIMB_SABIA: Record<string, Simbolo> = { liturgia: "luz", missa: "calice", sacramentos: "pomba", terco: "terco", maria: "maria", santos: "luz", biblia: "livro", ano: "estrela", simbolos: "cruz", oracoes: "vela" };
@@ -24,7 +25,17 @@ function embaralhar(q: QuizItem, i: number): { op: string[]; certa: number; exp:
 }
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
+/** As quatro famílias do feed: cada uma com um visual e um lugar fixo no ciclo. */
+export type Familia = "palavra" | "aprender" | "interacao" | "rezar";
+export const familia = (c: Cartao): Familia =>
+  c.tipo === "frase" || c.tipo === "jaculatoria" || c.tipo === "evangelho" ? "palavra"
+  : c.tipo === "quiz" || c.tipo === "catecismo" ? "interacao"
+  : c.tipo === "oracao" || c.tipo === "misterio" || c.tipo === "oracaodia" ? "rezar" : "aprender";
+const SIMB_FRASE: Record<string, Simbolo> = { maria: "maria", jesus: "cruz", oracao: "vela", paz: "pomba", esperanca: "luz", amor: "coracao", perdao: "coracao", confianca: "luz", gratidao: "estrela", proximo: "coracao" };
+
 export const POOL: Cartao[] = [
+  ...(frases as { frases: { t: string; tema: string }[] }).frases.map((f, i): Cartao => ({ id: `fr:${i}`, tipo: "frase", tema: "jaculatoria", simbolo: SIMB_FRASE[f.tema] || "luz",
+    rotulo: "Para meditar", texto: f.t, de: "Lumen Católico" })),
   ...JACULATORIAS.map((j, i): Cartao => ({ id: `jac:${i}`, tipo: "jaculatoria", tema: "jaculatoria", simbolo: SIMB_JAC(j.texto), rotulo: "Jaculatória", texto: j.texto, de: j.de })),
   ...(sabia as { itens: { titulo: string; texto: string; tema: string }[] }).itens.map((s, i): Cartao => ({
     id: `sab:${i}`, tipo: "sabia", tema: s.tema, simbolo: SIMB_SABIA[s.tema] || "luz", rotulo: "Você sabia?", titulo: s.titulo, texto: s.texto, de: "Lumen Católico" })),
@@ -38,11 +49,12 @@ export const POOL: Cartao[] = [
   }),
   ...["anjo", "contricao", "gloria", "fatima", "miguel"].map((id): Cartao => {
     const o = oracao(id);
-    return { id: `ora:${id}`, tipo: "oracao", tema: "oracoes", simbolo: id === "anjo" || id === "miguel" ? "asas" : "vela", rotulo: "Oração", titulo: o.nome, texto: o.texto.replace(/\n/g, " "), de: "Oração tradicional" };
+    return { id: `ora:${id}`, tipo: "oracao", tema: "oracoes", simbolo: id === "anjo" || id === "miguel" ? "asas" : "vela", rotulo: "Um minuto com Deus", titulo: o.nome, texto: o.texto.replace(/\n/g, " "), de: "Oração tradicional",
+      acao: { rotulo: "Rezar agora", oracao: id } };
   }),
   ...QZ.quiz.map((q, i): Cartao => ({ id: `qz:${i}`, tipo: "quiz", tema: q.sac === "eucaristia" ? "missa" : "sacramentos", simbolo: SAC[q.sac][1],
     rotulo: `Quiz · ${SAC[q.sac][0]}`, titulo: q.p, texto: `${q.op[q.certa]}. ${q.exp}`, de: "Lumen Católico", cic: q.cic, quiz: embaralhar(q, i) })),
   ...QZ.explica.map((e, i): Cartao => ({ id: `ex:${i}`, tipo: "explica", tema: e.sac === "eucaristia" ? "missa" : "sacramentos", simbolo: SAC[e.sac][1],
-    rotulo: SAC[e.sac][0], titulo: e.titulo, texto: e.texto, de: "Lumen Católico", cic: e.cic })),
+    rotulo: `Os sacramentos · ${SAC[e.sac][0]}`, titulo: e.titulo, texto: e.texto, de: "Lumen Católico", cic: e.cic })),
 ];
 export const ROTULO_TEMA: Record<string, string> = { jaculatoria: "Jaculatórias", liturgia: "Liturgia", missa: "Missa", sacramentos: "Sacramentos", terco: "Terço", maria: "Nossa Senhora", santos: "Santos", biblia: "Bíblia", ano: "Ano litúrgico", simbolos: "Símbolos", oracoes: "Orações", catequese: "Catecismo" };
