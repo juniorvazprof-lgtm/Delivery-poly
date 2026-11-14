@@ -12,6 +12,7 @@ import { simbolo, simboloDoSanto } from "../ui/simbolos";
 import { POOL, type Cartao } from "../data/cartoes";
 import { alternarSalvo, curtidos, gosto, marcarGosto, salvar, salvos } from "../core/estado";
 import { compartilhar } from "./compartilhar";
+import { carregarCatecismo, cartaoCatecismo, marcarLida, perguntaDoDia, perguntasDoFeed } from "./catecismo";
 import { DEVOCOES } from "../data/santos";
 import { conjuntoDoDia } from "../data/terco";
 import { oracao } from "../data/oracoes";
@@ -33,7 +34,7 @@ export function lerOracao(id: string): void {
   byId("amem").onclick = () => { registrarOracao(); vibrate(10); toast("Amém"); dispatchEvent(new CustomEvent("cat:fechar")); };
 }
 
-const ESTILO: Record<string, string> = { jaculatoria: "jac", sabia: "sabia", misterio: "mist", santo: "sant", oracao: "ora" };
+const ESTILO: Record<string, string> = { jaculatoria: "jac", sabia: "sabia", misterio: "mist", santo: "sant", oracao: "ora", catecismo: "cat" };
 const curto = (t: string, n = 220) => t.length > n ? t.slice(0, t.lastIndexOf(" ", n)) + "…" : t;
 let mapa = new Map<string, Cartao>();
 
@@ -42,7 +43,7 @@ const vistos = new Set<string>();
 function proximo(): Cartao {
   let livres = POOL.filter(c => !vistos.has(c.id));
   if (!livres.length) { vistos.clear(); livres = POOL; }
-  const peso = (c: Cartao) => Math.max(.3, 1 + (gosto[c.tema] || 0) / 4) * (c.tipo === "santo" ? .35 : 1);
+  const peso = (c: Cartao) => Math.max(.3, 1 + (gosto[c.tema] || 0) / 4) * (c.tipo === "santo" ? .35 : c.tipo === "catecismo" ? .2 : 1);
   let r = Math.random() * livres.reduce((a, c) => a + peso(c), 0);
   for (const c of livres) { r -= peso(c); if (r <= 0) { vistos.add(c.id); return c; } }
   const c = livres[0]; vistos.add(c.id); return c;
@@ -58,8 +59,10 @@ function cartaoMisto(c: Cartao) {
     ${simbolo(c.simbolo, "grande")}
     <div class="kicker">${c.rotulo}</div>
     ${c.titulo ? html`<h2>${c.titulo}</h2>` : ""}
-    ${c.tipo === "jaculatoria" ? html`<blockquote>${c.texto}</blockquote><cite>${c.de}</cite>` : html`<p class="lead txt">${curto(c.texto)}</p>`}
-    ${longo ? html`<button class="link mais" data-mais="${c.id}">Ler tudo</button>` : ""}
+    ${c.tipo === "jaculatoria" ? html`<blockquote>${c.texto}</blockquote><cite>${c.de}</cite>`
+      : c.tipo === "catecismo" ? html`<button class="revelar" data-rev="${c.id}">Toque para ver a resposta</button><p class="lead txt resp-cat" hidden>${c.texto}</p><p class="fine" hidden>${c.de}</p>`
+      : html`<p class="lead txt">${curto(c.texto)}</p>`}
+    ${longo && c.tipo !== "catecismo" ? html`<button class="link mais" data-mais="${c.id}">Ler tudo</button>` : ""}
     ${c.tipo === "misterio" ? html`<p class="fine">${c.de}</p>` : ""}
     ${c.acao?.aba ? html`<button class="pill" data-ir="${c.acao.aba}">${IC("rosary")}${c.acao.rotulo}</button>` : ""}
     ${trilho(c)}</section>`;
@@ -72,7 +75,7 @@ function maisCartoes(feed: HTMLElement, n: number): void {
 
 /** Onboarding: na primeira visita, pergunta o que a pessoa busca e dá um peso inicial aos temas. */
 const BUSCAS: { rotulo: string; temas: string[] }[] = [
-  { rotulo: "Rezar mais", temas: ["oracoes", "jaculatoria", "terco"] }, { rotulo: "Entender a fé", temas: ["liturgia", "sacramentos", "missa", "simbolos"] },
+  { rotulo: "Rezar mais", temas: ["oracoes", "jaculatoria", "terco"] }, { rotulo: "Entender a fé", temas: ["liturgia", "sacramentos", "missa", "simbolos", "catequese"] },
   { rotulo: "Conhecer os santos", temas: ["santos"] }, { rotulo: "Nossa Senhora", temas: ["maria", "terco"] }, { rotulo: "A Bíblia", temas: ["biblia", "ano"] },
 ];
 function onboarding(feed: HTMLElement): void {
@@ -163,6 +166,13 @@ export function renderHoje(el: HTMLElement): void {
   </div>`);
   const feed = byId("feed");
   maisCartoes(feed, 6); onboarding(feed);
+  void carregarCatecismo().then(C => {
+    if (!POOL.some(c => c.tipo === "catecismo")) POOL.push(...perguntasDoFeed(C).map(q => cartaoCatecismo(C, q)));
+    const q = perguntaDoDia(C, d, L, I.titulo), c = cartaoCatecismo(C, q, "Pergunta do dia"), ter = feed.querySelector(`[data-card="${cTer.id}"]`);
+    c.id = `pd:${q.n}`; vistos.add(`cat:${q.n}`);
+    const tmp = document.createElement("div"); setHTML(tmp, cartaoMisto(c)); tmp.firstElementChild?.classList.add("pdia");
+    if (ter && document.body.contains(ter)) ter.after(tmp.firstElementChild!);
+  });
   byId("rezei").onclick = () => { registrarOracao(); vibrate(10); toast("Amém. Bom dia com Deus"); };
   byId("rezarTerco").onclick = () => irPara("terco");
   if (I.evangelho && cEv) carregarEvangelho(I.evangelho, cEv);
@@ -172,6 +182,9 @@ export function renderHoje(el: HTMLElement): void {
     const t = e.target as HTMLElement, b = t.closest<HTMLElement>("[data-a]");
     if (b) { const c = mapa.get(b.closest<HTMLElement>(".trilho")?.dataset.id || ""); if (c) acao(c, b.dataset.a || "", b); return; }
     const m = t.closest<HTMLElement>("[data-mais]"); if (m) { const c = mapa.get(m.dataset.mais || ""); if (c) openSheet(html`<div class="kicker">${c.rotulo}</div><h2>${c.titulo || ""}</h2><div class="oracao"><p>${c.texto}</p></div>`, c.titulo || c.rotulo); return; }
+    const rv = t.closest<HTMLElement>("[data-rev]");
+    if (rv) { rv.parentElement?.querySelectorAll<HTMLElement>("[hidden]").forEach(x => x.hidden = false); rv.remove(); vibrate(5);
+      const n = Number((rv.dataset.rev || "").split(":")[1]); if (n) marcarLida(n); return; }
     const ir = t.closest<HTMLElement>("[data-ir]"); if (ir) irPara(ir.dataset.ir || "hoje");
   };
   feed.ondblclick = e => {

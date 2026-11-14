@@ -34,7 +34,7 @@ const server = http.createServer((q, r) => { const f = path.join(ROOT, decodeURI
   const n0 = (await p.$$("#feed [data-card]")).length; ok(n0 >= 10, `feed com cartões misturados (${n0})`);
   await p.evaluate(() => { const f = document.getElementById("feed"); f.scrollTop = f.scrollHeight; }); await p.waitForTimeout(700);
   const n1 = (await p.$$("#feed [data-card]")).length; ok(n1 > n0, `feed infinito carrega mais (${n0}→${n1})`);
-  const mix = await p.evaluate(() => [...document.querySelectorAll("#feed [data-card]")].filter(c => /^(jac|sab|mis|san|ora):/.test(c.dataset.card)).length);
+  const mix = await p.evaluate(() => [...document.querySelectorAll("#feed [data-card]")].filter(c => /^(jac|sab|mis|san|ora|cat):/.test(c.dataset.card)).length);
   ok(mix >= 6, "cartões de vários tipos no feed");
   await p.evaluate(() => document.querySelector('#feed .t-sabia [data-a=salvar], #feed .t-jac [data-a=salvar], #feed .t-sant [data-a=salvar]').click());
   await p.evaluate(() => document.querySelector('#feed [data-card^="dia:"] [data-a=amem]').click());
@@ -46,6 +46,16 @@ const server = http.createServer((q, r) => { const f = path.join(ROOT, decodeURI
   await p.tap("#bnav [data-tab=voce]"); await p.fill("#intTxt", "Pela saúde da família"); await p.tap("#intForm button");
   ok((await p.textContent(".intencoes")).includes("saúde"), "intenção de oração guardada");
   ok((await p.$$(".salvo")).length === 1, "cartão salvo aparece em Você");
+  // catecismo: pergunta do dia, revelar resposta, leitura por capítulos com nota
+  await p.tap("#bnav [data-tab=hoje]"); await p.waitForTimeout(800);
+  ok(await p.$(".card.pdia") !== null, "pergunta do dia no Hoje");
+  await p.evaluate(() => document.querySelector(".card.pdia [data-rev]").click());
+  ok(await p.$eval(".card.pdia .resp-cat", e => !e.hidden && e.textContent.length > 10), "toque revela a resposta");
+  await p.tap("#bnav [data-tab=oracoes]"); await p.tap("#abrirCat"); await p.waitForTimeout(400);
+  ok(/Você leu 1 de 430/.test(await p.textContent("#app")), "catecismo mostra o progresso");
+  await p.evaluate(() => [...document.querySelectorAll("[data-cap]")].find(b => b.textContent.includes("A Igreja e a comunhão")).click()); await p.waitForTimeout(300);
+  await p.evaluate(() => document.querySelector('details.qa[data-n="125"] summary').click());
+  ok((await p.textContent('details.qa[data-n="125"]')).includes("O que a Igreja ensina hoje"), "pergunta com divergência traz a nota do CIC");
   ok(errs.length === 0, "sem erros de script" + (errs.length ? ": " + errs.join(" | ") : ""));
   await b.close(); server.close(); if (falhas) process.exit(1); console.log("\nTudo certo");
 })();

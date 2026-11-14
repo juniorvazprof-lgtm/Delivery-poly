@@ -7,7 +7,7 @@ import { CONJUNTOS } from "./terco";
 import { SANTOS } from "./santos";
 import sabia from "./sabia.json";
 
-export type Tipo = "jaculatoria" | "sabia" | "misterio" | "santo" | "oracao" | "evangelho" | "dia" | "oracaodia";
+export type Tipo = "jaculatoria" | "sabia" | "misterio" | "santo" | "oracao" | "catecismo" | "evangelho" | "dia" | "oracaodia";
 export interface Cartao { id: string; tipo: Tipo; tema: string; simbolo: Simbolo; rotulo: string; titulo?: string; texto: string; de: string; acao?: { rotulo: string; aba?: string; oracao?: string } }
 
 const SIMB_SABIA: Record<string, Simbolo> = { liturgia: "luz", missa: "calice", sacramentos: "pomba", terco: "terco", maria: "maria", santos: "luz", biblia: "livro", ano: "estrela", simbolos: "cruz", oracoes: "vela" };
@@ -31,4 +31,4 @@ export const POOL: Cartao[] = [
     return { id: `ora:${id}`, tipo: "oracao", tema: "oracoes", simbolo: id === "anjo" || id === "miguel" ? "asas" : "vela", rotulo: "Oração", titulo: o.nome, texto: o.texto.replace(/\n/g, " "), de: "Oração tradicional" };
   }),
 ];
-export const ROTULO_TEMA: Record<string, string> = { jaculatoria: "Jaculatórias", liturgia: "Liturgia", missa: "Missa", sacramentos: "Sacramentos", terco: "Terço", maria: "Nossa Senhora", santos: "Santos", biblia: "Bíblia", ano: "Ano litúrgico", simbolos: "Símbolos", oracoes: "Orações" };
+export const ROTULO_TEMA: Record<string, string> = { jaculatoria: "Jaculatórias", liturgia: "Liturgia", missa: "Missa", sacramentos: "Sacramentos", terco: "Terço", maria: "Nossa Senhora", santos: "Santos", biblia: "Bíblia", ano: "Ano litúrgico", simbolos: "Símbolos", oracoes: "Orações", catequese: "Catecismo" };

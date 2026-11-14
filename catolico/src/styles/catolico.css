@@ -127,9 +127,9 @@ body.rezando #bnav{transform:translateY(130%);opacity:0;pointer-events:none}
 
 /* Visual por tipo de cartão */
 .card.t-jac blockquote{font-size:clamp(1.8rem,7.8vw,2.5rem);line-height:1.28}
-.card.t-sabia .kicker{color:#9FC6E8}.card.t-sabia h2{font-size:clamp(1.6rem,7vw,2.1rem)}
+.card.t-sabia .kicker{color:color-mix(in srgb,#5E9BD0 75%,var(--ink))}.card.t-sabia h2{font-size:clamp(1.6rem,7vw,2.1rem)}
 .card.t-sant h2{font-style:italic}
-.card.t-mist .kicker,.card.t-mist .simb{color:#C9A9F2}
+.card.t-mist .kicker,.card.t-mist .simb{color:color-mix(in srgb,#9B72D8 75%,var(--ink))}
 .card .lead.txt{font:400 clamp(1.08rem,4.6vw,1.28rem)/1.55 var(--serif);color:color-mix(in srgb,var(--ink) 88%,transparent)}
 .link.mais{align-self:flex-start;background:none;border:0;color:var(--gold);font:600 .85rem var(--sans);padding:0;text-decoration:underline;text-underline-offset:3px}
 .sentinela{height:1px}
@@ -166,3 +166,27 @@ body.rezando #bnav{transform:translateY(130%);opacity:0;pointer-events:none}
 .auto{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 14px;font:500 .92rem var(--sans)}
 .auto input{width:22px;height:22px;accent-color:var(--gold)}
 @media (prefers-reduced-motion:reduce){.card>.simb.grande,.amem-voo .simb{animation:none}}
+
+/* Catecismo */
+.revelar{align-self:flex-start;background:color-mix(in srgb,var(--gold) 16%,transparent);border:1px dashed color-mix(in srgb,var(--gold) 60%,transparent);color:var(--ink);border-radius:14px;padding:14px 18px;font:600 .92rem var(--sans)}
+.card.t-cat .kicker{color:color-mix(in srgb,#D08A4E 75%,var(--ink))}
+.card .resp-cat{animation:surge .5s ease-out}
+@keyframes surge{from{opacity:0;transform:translateY(6px)}}
+.catbtn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:4px 0 8px;padding:16px;border-radius:18px;color:var(--ink);
+  background:linear-gradient(120deg,color-mix(in srgb,var(--gold) 18%,transparent),color-mix(in srgb,var(--ink) 4%,transparent));border:1px solid color-mix(in srgb,var(--gold) 35%,transparent)}
+.catbtn .simb,.lista .item .simb{width:34px;height:34px;flex:none}
+.catbtn b{display:block;font:450 1.12rem var(--serif)}.catbtn small{color:var(--muted);font-size:.8rem}
+.link.voltar{background:none;border:0;color:var(--gold);font:600 .9rem var(--sans);padding:0 0 10px}
+.progresso{height:6px;border-radius:9px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden;margin-top:10px}
+.progresso i{display:block;height:100%;width:var(--p);background:var(--gold);border-radius:9px}
+.qa{border-bottom:1px solid color-mix(in srgb,var(--ink) 9%,transparent);padding:4px 0}
+.qa summary{list-style:none;cursor:pointer;display:flex;gap:12px;padding:12px 0;font:450 1.04rem/1.35 var(--serif)}
+.qa summary::-webkit-details-marker{display:none}
+.qa .num{flex:none;min-width:30px;font:700 .72rem/1.9 var(--sans);color:var(--gold)}
+.qa.lida .num::after{content:" ✓"}
+.qa .resp{margin:0 0 12px 42px;font:400 1rem/1.55 var(--serif);color:color-mix(in srgb,var(--ink) 86%,transparent)}
+.qa.com-nota summary::after{content:"nota";margin-left:auto;align-self:center;font:700 .58rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,#D08A4E 75%,var(--ink));border:1px solid currentColor;border-radius:6px;padding:2px 5px}
+.nota-hoje{margin:0 0 14px 42px;padding:12px 14px;border-left:3px solid color-mix(in srgb,#D08A4E 75%,var(--ink));background:color-mix(in srgb,color-mix(in srgb,#D08A4E 75%,var(--ink)) 10%,transparent);border-radius:0 12px 12px 0}
+.nota-hoje b{font:700 .66rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,#D08A4E 75%,var(--ink))}
+.nota-hoje p{margin:6px 0;font:400 .95rem/1.5 var(--sans)}.nota-hoje small{color:var(--muted);font-size:.78rem}
+.qas .label{margin-top:18px}
