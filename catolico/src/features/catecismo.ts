@@ -7,6 +7,8 @@ import { S } from "../services/storage";
 import { vibrate } from "../ui/ui";
 import { simbolo } from "../ui/simbolos";
 import type { Cartao } from "../data/cartoes";
+import { chipsCIC } from "../ui/chips";
+import { numerosCIC } from "../core/cic";
 import type { DiaLiturgico } from "../core/liturgia";
 
 export interface Nota { perguntas: number[]; tema: string; tipo: string; texto: string; cic: string; outras: string }
@@ -43,7 +45,7 @@ export function perguntaDoDia(C: Catecismo, d: Date, L: DiaLiturgico, titulo: st
 const notaHtml = (C: Catecismo, q: Pergunta) => {
   const n = q.d !== undefined ? C.notas[q.d] : null;
   return html`${n ? html`<div class="nota-hoje"><b>O que a Igreja ensina hoje</b><p>${n.texto}</p>
-      <small>Catecismo da Igreja Católica ${n.cic}${n.outras ? ` · ${n.outras}` : ""}</small></div>` : ""}
+      <small>Aprofunde no texto oficial do Catecismo da Igreja Católica${n.outras ? ` · ${n.outras}` : ""}</small>${chipsCIC(numerosCIC(n.cic))}</div>` : ""}
     ${q.ne ? html`<p class="fine">Nota de edições posteriores: ${q.ne}</p>` : ""}`;
 };
 

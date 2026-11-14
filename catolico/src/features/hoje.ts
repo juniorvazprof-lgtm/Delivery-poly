@@ -12,6 +12,7 @@ import { simbolo, simboloDoSanto } from "../ui/simbolos";
 import { POOL, type Cartao } from "../data/cartoes";
 import { alternarSalvo, curtidos, gosto, marcarGosto, salvar, salvos } from "../core/estado";
 import { compartilhar } from "./compartilhar";
+import { chipsCIC } from "../ui/chips";
 import { carregarCatecismo, cartaoCatecismo, marcarLida, perguntaDoDia, perguntasDoFeed } from "./catecismo";
 import { DEVOCOES } from "../data/santos";
 import { conjuntoDoDia } from "../data/terco";
@@ -34,7 +35,7 @@ export function lerOracao(id: string): void {
   byId("amem").onclick = () => { registrarOracao(); vibrate(10); toast("Amém"); dispatchEvent(new CustomEvent("cat:fechar")); };
 }
 
-const ESTILO: Record<string, string> = { jaculatoria: "jac", sabia: "sabia", misterio: "mist", santo: "sant", oracao: "ora", catecismo: "cat" };
+const ESTILO: Record<string, string> = { jaculatoria: "jac", sabia: "sabia", misterio: "mist", santo: "sant", oracao: "ora", catecismo: "cat", quiz: "quiz", explica: "expl" };
 const curto = (t: string, n = 220) => t.length > n ? t.slice(0, t.lastIndexOf(" ", n)) + "…" : t;
 let mapa = new Map<string, Cartao>();
 
@@ -60,6 +61,9 @@ function cartaoMisto(c: Cartao) {
     <div class="kicker">${c.rotulo}</div>
     ${c.titulo ? html`<h2>${c.titulo}</h2>` : ""}
     ${c.tipo === "jaculatoria" ? html`<blockquote>${c.texto}</blockquote><cite>${c.de}</cite>`
+      : c.quiz ? html`<div class="opcoes">${c.quiz.op.map((o, i) => html`<button class="op" data-op="${i}" data-q="${c.id}">${o}</button>`)}</div>
+          <div class="feedback" hidden><p class="lead txt">${c.quiz.exp}</p>${chipsCIC(c.cic || [])}</div>`
+      : c.tipo === "explica" ? html`<p class="lead txt">${c.texto}</p>${chipsCIC(c.cic || [])}`
       : c.tipo === "catecismo" ? html`<button class="revelar" data-rev="${c.id}">Toque para ver a resposta</button><p class="lead txt resp-cat" hidden>${c.texto}</p><p class="fine" hidden>${c.de}</p>`
       : html`<p class="lead txt">${curto(c.texto)}</p>`}
     ${longo && c.tipo !== "catecismo" ? html`<button class="link mais" data-mais="${c.id}">Ler tudo</button>` : ""}
@@ -182,6 +186,12 @@ export function renderHoje(el: HTMLElement): void {
     const t = e.target as HTMLElement, b = t.closest<HTMLElement>("[data-a]");
     if (b) { const c = mapa.get(b.closest<HTMLElement>(".trilho")?.dataset.id || ""); if (c) acao(c, b.dataset.a || "", b); return; }
     const m = t.closest<HTMLElement>("[data-mais]"); if (m) { const c = mapa.get(m.dataset.mais || ""); if (c) openSheet(html`<div class="kicker">${c.rotulo}</div><h2>${c.titulo || ""}</h2><div class="oracao"><p>${c.texto}</p></div>`, c.titulo || c.rotulo); return; }
+    const op = t.closest<HTMLElement>("[data-op]");
+    if (op) { const c = mapa.get(op.dataset.q || ""), sec = op.closest("section"); if (!c?.quiz || !sec || sec.classList.contains("respondido")) return;
+      const i = Number(op.dataset.op), certo = i === c.quiz.certa; sec.classList.add("respondido");
+      sec.querySelectorAll<HTMLElement>("[data-op]").forEach(b => { const k = Number(b.dataset.op); b.classList.toggle("certa", k === c.quiz!.certa); b.classList.toggle("errada", k === i && !certo); });
+      const fb = sec.querySelector<HTMLElement>(".feedback"); if (fb) { fb.hidden = false; fb.querySelector("p")?.insertAdjacentText("afterbegin", certo ? "Isso! " : "Quase. "); }
+      vibrate(certo ? 12 : 30); if (certo) marcarGosto(c.tema, 2); return; }
     const rv = t.closest<HTMLElement>("[data-rev]");
     if (rv) { rv.parentElement?.querySelectorAll<HTMLElement>("[hidden]").forEach(x => x.hidden = false); rv.remove(); vibrate(5);
       const n = Number((rv.dataset.rev || "").split(":")[1]); if (n) marcarLida(n); return; }

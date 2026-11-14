@@ -6,12 +6,22 @@ import { JACULATORIAS, oracao } from "./oracoes";
 import { CONJUNTOS } from "./terco";
 import { SANTOS } from "./santos";
 import sabia from "./sabia.json";
+import quiz from "./quiz-sacramentos.json";
 
-export type Tipo = "jaculatoria" | "sabia" | "misterio" | "santo" | "oracao" | "catecismo" | "evangelho" | "dia" | "oracaodia";
-export interface Cartao { id: string; tipo: Tipo; tema: string; simbolo: Simbolo; rotulo: string; titulo?: string; texto: string; de: string; acao?: { rotulo: string; aba?: string; oracao?: string } }
+export type Tipo = "jaculatoria" | "sabia" | "misterio" | "santo" | "oracao" | "catecismo" | "quiz" | "explica" | "evangelho" | "dia" | "oracaodia";
+export interface Cartao { id: string; tipo: Tipo; tema: string; simbolo: Simbolo; rotulo: string; titulo?: string; texto: string; de: string; acao?: { rotulo: string; aba?: string; oracao?: string }; cic?: number[]; quiz?: { op: string[]; certa: number; exp: string } }
 
 const SIMB_SABIA: Record<string, Simbolo> = { liturgia: "luz", missa: "calice", sacramentos: "pomba", terco: "terco", maria: "maria", santos: "luz", biblia: "livro", ano: "estrela", simbolos: "cruz", oracoes: "vela" };
 const SIMB_JAC = (t: string): Simbolo => /coração/i.test(t) ? "coracao" : /maria|senhora|mãe/i.test(t) ? "maria" : /josé/i.test(t) ? "lirio" : /espírito/i.test(t) ? "pomba" : /sacramento/i.test(t) ? "calice" : "cruz";
+interface QuizItem { sac: string; p: string; op: string[]; certa: number; exp: string; cic: number[] }
+const QZ = quiz as { quiz: QuizItem[]; explica: { sac: string; titulo: string; texto: string; cic: number[] }[] };
+const SAC: Record<string, [string, Simbolo]> = { geral: ["Sacramentos", "luz"], batismo: ["Batismo", "pomba"], crisma: ["Crisma", "pomba"], eucaristia: ["Eucaristia", "calice"],
+  confissao: ["Confissão", "chaves"], uncao: ["Unção dos Enfermos", "vela"], ordem: ["Ordem", "cruz"], matrimonio: ["Matrimônio", "coracao"] };
+/** Embaralha as opções do quiz de forma fixa por pergunta (a certa não fica sempre em primeiro). */
+const ORDENS = [[0, 1, 2], [1, 0, 2], [1, 2, 0], [2, 0, 1], [0, 2, 1], [2, 1, 0]];
+function embaralhar(q: QuizItem, i: number): { op: string[]; certa: number; exp: string } {
+  const o = ORDENS[(i * 5 + 3) % 6]; return { op: o.map(k => q.op[k]), certa: o.indexOf(q.certa), exp: q.exp };
+}
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
 export const POOL: Cartao[] = [
@@ -30,5 +40,9 @@ export const POOL: Cartao[] = [
     const o = oracao(id);
     return { id: `ora:${id}`, tipo: "oracao", tema: "oracoes", simbolo: id === "anjo" || id === "miguel" ? "asas" : "vela", rotulo: "Oração", titulo: o.nome, texto: o.texto.replace(/\n/g, " "), de: "Oração tradicional" };
   }),
+  ...QZ.quiz.map((q, i): Cartao => ({ id: `qz:${i}`, tipo: "quiz", tema: q.sac === "eucaristia" ? "missa" : "sacramentos", simbolo: SAC[q.sac][1],
+    rotulo: `Quiz · ${SAC[q.sac][0]}`, titulo: q.p, texto: `${q.op[q.certa]}. ${q.exp}`, de: "Lumen Católico", cic: q.cic, quiz: embaralhar(q, i) })),
+  ...QZ.explica.map((e, i): Cartao => ({ id: `ex:${i}`, tipo: "explica", tema: e.sac === "eucaristia" ? "missa" : "sacramentos", simbolo: SAC[e.sac][1],
+    rotulo: SAC[e.sac][0], titulo: e.titulo, texto: e.texto, de: "Lumen Católico", cic: e.cic })),
 ];
 export const ROTULO_TEMA: Record<string, string> = { jaculatoria: "Jaculatórias", liturgia: "Liturgia", missa: "Missa", sacramentos: "Sacramentos", terco: "Terço", maria: "Nossa Senhora", santos: "Santos", biblia: "Bíblia", ano: "Ano litúrgico", simbolos: "Símbolos", oracoes: "Orações", catequese: "Catecismo" };

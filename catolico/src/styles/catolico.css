@@ -190,3 +190,16 @@ body.rezando #bnav{transform:translateY(130%);opacity:0;pointer-events:none}
 .nota-hoje b{font:700 .66rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,#D08A4E 75%,var(--ink))}
 .nota-hoje p{margin:6px 0;font:400 .95rem/1.5 var(--sans)}.nota-hoje small{color:var(--muted);font-size:.78rem}
 .qas .label{margin-top:18px}
+
+/* Quiz, explicações e chips do CIC */
+.opcoes{display:flex;flex-direction:column;gap:10px}
+.op{text-align:left;padding:14px 16px;border-radius:14px;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent);background:color-mix(in srgb,var(--ink) 4%,transparent);color:var(--ink);font:500 .98rem/1.35 var(--sans);transition:background .25s,border-color .25s}
+.op.certa{background:color-mix(in srgb,#4E9A5E 22%,transparent);border-color:#4E9A5E}
+.op.errada{background:color-mix(in srgb,#C9404F 16%,transparent);border-color:#C9404F}
+.respondido .op:not(.certa):not(.errada){opacity:.5}
+.feedback{animation:surge .4s ease-out}
+.card.t-quiz .kicker{color:color-mix(in srgb,#4E9A5E 75%,var(--ink))}
+.card.t-quiz h2{font-size:clamp(1.3rem,5.6vw,1.65rem)}
+.chips-cic{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.chips-cic span{font:600 .74rem var(--sans);color:var(--muted)}
+.cic{font:700 .74rem var(--sans);letter-spacing:.04em;color:var(--gold);text-decoration:none;border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);border-radius:99px;padding:5px 10px}

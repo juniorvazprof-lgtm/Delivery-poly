@@ -1,0 +1,533 @@
+{
+ "quiz": [
+  {
+   "sac": "geral",
+   "p": "O que é um sacramento?",
+   "op": [
+    "Um sinal visível pelo qual Cristo realmente nos dá a sua graça",
+    "Um simples lembrete que não comunica nada",
+    "Uma invenção da Igreja para substituir a fé pessoal"
+   ],
+   "certa": 0,
+   "exp": "Sacramento é um sinal sensível que Deus usa para nos dar a graça. Ele foi instituído por Cristo e não depende do merecimento do ministro.",
+   "cic": [
+    1131
+   ]
+  },
+  {
+   "sac": "geral",
+   "p": "Quantos sacramentos existem na Igreja Católica?",
+   "op": [
+    "Sete",
+    "Três",
+    "Doze"
+   ],
+   "certa": 0,
+   "exp": "São sete: Batismo, Crisma, Eucaristia, Confissão, Unção dos Enfermos, Ordem e Matrimônio.",
+   "cic": [
+    1113
+   ]
+  },
+  {
+   "sac": "geral",
+   "p": "Quem instituiu os sacramentos?",
+   "op": [
+    "Jesus Cristo",
+    "Os apóstolos por conta própria",
+    "As leis civis de cada país"
+   ],
+   "certa": 0,
+   "exp": "Cristo é a fonte dos sacramentos; a Igreja os guarda e administra em nome dele.",
+   "cic": [
+    1114
+   ]
+  },
+  {
+   "sac": "geral",
+   "p": "A eficácia de um sacramento depende principalmente do mérito do ministro?",
+   "op": [
+    "Não; ela vem de Cristo, desde que não haja obstáculo em quem recebe",
+    "Sim; se o padre for santo, o sacramento vale mais",
+    "Sim; se quem recebe não sentir nada, o sacramento não acontece"
+   ],
+   "certa": 0,
+   "exp": "A graça vem de Cristo. O fruto do sacramento cresce conforme a fé e a disposição de quem o recebe.",
+   "cic": [
+    1128
+   ]
+  },
+  {
+   "sac": "batismo",
+   "p": "Qual é o sinal principal usado no Batismo?",
+   "op": [
+    "Água",
+    "Óleo do crisma",
+    "Pão e vinho"
+   ],
+   "certa": 0,
+   "exp": "A água lembra purificação e nova vida. O Batismo nos lava do pecado e nos faz filhos de Deus.",
+   "cic": [
+    1213
+   ]
+  },
+  {
+   "sac": "batismo",
+   "p": "Em perigo de morte, quem pode batizar?",
+   "op": [
+    "Somente o Papa",
+    "Qualquer pessoa com a intenção de fazer o que a Igreja faz, usando água e a fórmula trinitária",
+    "Somente um diácono"
+   ],
+   "certa": 1,
+   "exp": "O ministro ordinário é bispo, presbítero ou diácono; em necessidade, qualquer pessoa pode batizar do modo correto.",
+   "cic": [
+    1256
+   ]
+  },
+  {
+   "sac": "batismo",
+   "p": "A Igreja batiza crianças?",
+   "op": [
+    "Não, só adultos",
+    "Sim, acolhendo-as na fé da Igreja com o compromisso dos pais",
+    "Só depois dos 18 anos"
+   ],
+   "certa": 1,
+   "exp": "Desde os primeiros tempos a Igreja batiza crianças. Elas recebem a graça e a comunidade cristã assume ajudar na educação na fé.",
+   "cic": [
+    1252
+   ]
+  },
+  {
+   "sac": "batismo",
+   "p": "Quem foi batizado validamente pode ser batizado outra vez?",
+   "op": [
+    "Não, porque o Batismo marca a pessoa para sempre",
+    "Sim, em toda troca de paróquia",
+    "Sim, se a pessoa cometer pecados graves"
+   ],
+   "certa": 0,
+   "exp": "O Batismo imprime caráter espiritual e não se repete. Se houver dúvida sobre a validade, a Igreja investiga antes.",
+   "cic": [
+    1272
+   ]
+  },
+  {
+   "sac": "crisma",
+   "p": "Qual sacramento completa a iniciação cristã e fortalece para testemunhar a fé?",
+   "op": [
+    "Crisma",
+    "Unção dos Enfermos",
+    "Ordem"
+   ],
+   "certa": 0,
+   "exp": "Crisma completa o Batismo e dá o Espírito Santo para vivermos e anunciarmos a fé com coragem.",
+   "cic": [
+    1285
+   ]
+  },
+  {
+   "sac": "crisma",
+   "p": "Quais são os sinais principais da Crisma?",
+   "op": [
+    "Imposição das mãos e unção com óleo do crisma",
+    "Aspersão de água e vela",
+    "Pão e vinho"
+   ],
+   "certa": 0,
+   "exp": "O bispo impõe as mãos e unge a testa com óleo perfumado. Isso significa força e consagração para a missão.",
+   "cic": [
+    1300
+   ]
+  },
+  {
+   "sac": "crisma",
+   "p": "Quem é o ministro ordinário da Crisma?",
+   "op": [
+    "O bispo",
+    "O diácono",
+    "Qualquer leigo"
+   ],
+   "certa": 0,
+   "exp": "O bispo é o ministro ordinário. Um presbítero pode confirmar em casos previstos pelo direito da Igreja.",
+   "cic": [
+    1312,
+    1313
+   ]
+  },
+  {
+   "sac": "crisma",
+   "p": "Pode-se receber a Crisma mais de uma vez?",
+   "op": [
+    "Não, porque ela marca a pessoa para sempre",
+    "Sim, a cada ano",
+    "Sim, quando a pessoa muda de cidade"
+   ],
+   "certa": 0,
+   "exp": "A Crisma imprime caráter e só pode ser recebida uma vez. Ela não se repete.",
+   "cic": [
+    1317
+   ]
+  },
+  {
+   "sac": "eucaristia",
+   "p": "O que é a Eucaristia?",
+   "op": [
+    "O Corpo e o Sangue de Cristo, sob pão e vinho, memorial da Páscoa",
+    "Apenas um símbolo que lembra a última ceia",
+    "Uma refeição comum sem relação com Cristo"
+   ],
+   "certa": 0,
+   "exp": "Na Eucaristia Cristo se oferece ao Pai e se dá a nós. É o centro da vida cristã.",
+   "cic": [
+    1323,
+    1324
+   ]
+  },
+  {
+   "sac": "eucaristia",
+   "p": "Quem preside a celebração da Missa e consagra o pão e o vinho?",
+   "op": [
+    "O sacerdote ordenado",
+    "Qualquer pessoa batizada",
+    "O diácono sozinho"
+   ],
+   "certa": 0,
+   "exp": "Somente o sacerdote validamente ordenado preside a Eucaristia e age em nome de Cristo.",
+   "cic": [
+    1411
+   ]
+  },
+  {
+   "sac": "eucaristia",
+   "p": "O que acontece na consagração?",
+   "op": [
+    "O pão e o vinho se tornam Corpo e Sangue de Cristo",
+    "O pão continua pão e só recebe um nome diferente",
+    "O vinho se transforma em suco"
+   ],
+   "certa": 0,
+   "exp": "Pela ação do Espírito e da palavra de Cristo, a substância muda, embora as aparências continuem. Chamamos isso de transubstanciação.",
+   "cic": [
+    1375,
+    1376
+   ]
+  },
+  {
+   "sac": "eucaristia",
+   "p": "Quanto tempo de jejum eucarístico a Igreja pede hoje antes da Comunhão?",
+   "op": [
+    "Uma hora",
+    "Três horas",
+    "Doze horas"
+   ],
+   "certa": 0,
+   "exp": "A disciplina atual pede uma hora, exceto água e remédios. Isso ajuda a receber Jesus com reverência.",
+   "cic": [
+    1387
+   ]
+  },
+  {
+   "sac": "confissao",
+   "p": "Para que serve o sacramento da Confissão?",
+   "op": [
+    "Para receber o perdão dos pecados e nos reconciliar com Deus e a Igreja",
+    "Para o padre conhecer a vida das pessoas",
+    "Para substituir a oração pessoal"
+   ],
+   "certa": 0,
+   "exp": "Confissão é encontro com a misericórdia de Deus. Ela devolve a graça e ajuda a recomeçar.",
+   "cic": [
+    1422,
+    1423
+   ]
+  },
+  {
+   "sac": "confissao",
+   "p": "Quais são as partes essenciais do sacramento da Reconciliação?",
+   "op": [
+    "Contrição, confissão, absolvição e satisfação",
+    "Leitura, canto e coleta",
+    "Unção, imposição das mãos e óleo"
+   ],
+   "certa": 0,
+   "exp": "A pessoa se arrepende, confessa, recebe a absolvição e faz reparação. Tudo isso forma o caminho do perdão.",
+   "cic": [
+    1448
+   ]
+  },
+  {
+   "sac": "confissao",
+   "p": "O sacerdote pode revelar os pecados que ouviu em confissão?",
+   "op": [
+    "Não, o sigilo sacramental é absoluto",
+    "Sim, se a pessoa autorizar publicamente",
+    "Sim, para ajudar a família"
+   ],
+   "certa": 0,
+   "exp": "O sigilo é inviolável. O confessor não pode contar nem usar o que ouviu para prejudicar ninguém.",
+   "cic": [
+    1467
+   ]
+  },
+  {
+   "sac": "confissao",
+   "p": "Quem pode dar a absolvição sacramental?",
+   "op": [
+    "O bispo ou o presbítero com faculdade para isso",
+    "O diácono",
+    "Qualquer leigo"
+   ],
+   "certa": 0,
+   "exp": "Somente bispos e presbíteros são ministros da Reconciliação. O diácono não pode absolver.",
+   "cic": [
+    1461
+   ]
+  },
+  {
+   "sac": "uncao",
+   "p": "Para quem é a Unção dos Enfermos?",
+   "op": [
+    "Para batizados em doença grave ou idade avançada, não só para quem está morrendo",
+    "Somente para quem já morreu",
+    "Somente para pessoas jovens"
+   ],
+   "certa": 0,
+   "exp": "A Igreja quer dar força e paz a quem enfrenta doença séria. Não é o sacramento apenas dos últimos momentos.",
+   "cic": [
+    1499,
+    1514
+   ]
+  },
+  {
+   "sac": "uncao",
+   "p": "Qual é o sinal principal da Unção dos Enfermos?",
+   "op": [
+    "Unção com óleo abençoado e oração da Igreja",
+    "Banho de água benta",
+    "Imposição de cinzas"
+   ],
+   "certa": 0,
+   "exp": "O óleo abençoado é aplicado com oração. Ele representa a força e o cuidado de Deus.",
+   "cic": [
+    1513
+   ]
+  },
+  {
+   "sac": "uncao",
+   "p": "Quem pode administrar a Unção dos Enfermos?",
+   "op": [
+    "O sacerdote",
+    "O diácono",
+    "Qualquer familiar"
+   ],
+   "certa": 0,
+   "exp": "Somente bispos e presbíteros administram este sacramento. Diáconos e leigos podem ajudar com oração e carinho.",
+   "cic": [
+    1516
+   ]
+  },
+  {
+   "sac": "uncao",
+   "p": "A Unção dos Enfermos pode ser recebida de novo?",
+   "op": [
+    "Sim, se a doença piorar ou surgir outra doença grave",
+    "Não, só uma vez na vida",
+    "Sim, todos os dias sem motivo"
+   ],
+   "certa": 0,
+   "exp": "O sacramento pode ser repetido quando a situação grave volta ou se agrava. Deus oferece sua graça em cada momento.",
+   "cic": [
+    1515
+   ]
+  },
+  {
+   "sac": "ordem",
+   "p": "O que é o sacramento da Ordem?",
+   "op": [
+    "O sacramento que consagra homens para servir como diáconos, presbíteros ou bispos",
+    "Um prêmio por bons estudos",
+    "Uma escolha apenas administrativa da paróquia"
+   ],
+   "certa": 0,
+   "exp": "A Ordem dá uma missão especial de serviço ao povo de Deus. Ela não é um privilégio de poder, mas um chamado a servir.",
+   "cic": [
+    1536
+   ]
+  },
+  {
+   "sac": "ordem",
+   "p": "Quais são os três graus do sacramento da Ordem?",
+   "op": [
+    "Diaconato, presbiterado e episcopado",
+    "Batismo, Crisma e Eucaristia",
+    "Leitor, acólito e sacristão"
+   ],
+   "certa": 0,
+   "exp": "São os graus do diácono, do presbítero e do bispo. Cada um tem uma função própria no serviço da Igreja.",
+   "cic": [
+    1554
+   ]
+  },
+  {
+   "sac": "ordem",
+   "p": "Quem é o ministro do sacramento da Ordem?",
+   "op": [
+    "O bispo",
+    "O diácono",
+    "O próprio candidato"
+   ],
+   "certa": 0,
+   "exp": "O bispo ordena diáconos, presbíteros e outros bispos. Ele age como sucessor dos apóstolos.",
+   "cic": [
+    1576
+   ]
+  },
+  {
+   "sac": "ordem",
+   "p": "Pode-se receber o sacramento da Ordem mais de uma vez?",
+   "op": [
+    "Não, porque ele marca a pessoa para sempre",
+    "Sim, a cada mudança de paróquia",
+    "Sim, quando o padre envelhece"
+   ],
+   "certa": 0,
+   "exp": "A Ordem imprime caráter espiritual e não se repete. Quem foi ordenado permanece ordenado para sempre.",
+   "cic": [
+    1582
+   ]
+  },
+  {
+   "sac": "matrimonio",
+   "p": "O que é o sacramento do Matrimônio?",
+   "op": [
+    "A aliança de um homem e uma mulher, elevada por Cristo, para amor fiel, indissolúvel e aberto à vida",
+    "Apenas uma festa social sem compromisso religioso",
+    "Um contrato que termina automaticamente em qualquer separação"
+   ],
+   "certa": 0,
+   "exp": "Cristo eleva o amor dos esposos a sacramento. Eles se comprometem a se amar como Ele ama a Igreja.",
+   "cic": [
+    1601
+   ]
+  },
+  {
+   "sac": "matrimonio",
+   "p": "Quem são os ministros do sacramento do Matrimônio?",
+   "op": [
+    "Os próprios noivos, com o sacerdote ou diácono como testemunha qualificada",
+    "Somente o padre",
+    "Somente as testemunhas"
+   ],
+   "certa": 0,
+   "exp": "Os noivos se dão mutuamente o consentimento. O ministro sagrado assiste e recebe o consentimento em nome da Igreja.",
+   "cic": [
+    1623
+   ]
+  },
+  {
+   "sac": "matrimonio",
+   "p": "Um diácono pode assistir a um casamento católico?",
+   "op": [
+    "Sim, quando está delegado para isso",
+    "Não, nunca",
+    "Só se for casamento de não batizados"
+   ],
+   "certa": 0,
+   "exp": "Com a devida delegação, o diácono pode assistir ao Matrimônio como testemunha qualificada da Igreja.",
+   "cic": [
+    1630
+   ]
+  },
+  {
+   "sac": "matrimonio",
+   "p": "O casamento válido entre batizados é indissolúvel?",
+   "op": [
+    "Sim, até a morte; não pode haver novo casamento válido enquanto o cônjuge vive",
+    "Não, qualquer divórcio civil dissolve o vínculo",
+    "Só é indissolúvel se não houver filhos"
+   ],
+   "certa": 0,
+   "exp": "O vínculo sacramental é estável. Divórcio civil pode separar bens e convivência, mas não dissolve casamento válido aos olhos da Igreja.",
+   "cic": [
+    1640
+   ]
+  }
+ ],
+ "explica": [
+  {
+   "sac": "geral",
+   "titulo": "O que é um sacramento?",
+   "texto": "É um sinal visível que Jesus usa para nos dar sua graça. A eficácia vem de Cristo, não do merecimento do ministro; eu preciso acolher com fé. São sete caminhos de encontro com Ele.",
+   "cic": [
+    1131,
+    1128
+   ]
+  },
+  {
+   "sac": "batismo",
+   "titulo": "O que o Batismo faz em mim?",
+   "texto": "Pela água e pelas palavras \"eu te batizo em nome do Pai, do Filho e do Espírito Santo\", Deus nos torna seus filhos, membros da Igreja e livres do pecado original. É a porta da vida cristã e não se repete: marca a alma para sempre.",
+   "cic": [
+    1213,
+    1272
+   ]
+  },
+  {
+   "sac": "crisma",
+   "titulo": "Para que serve a Crisma?",
+   "texto": "Com a imposição das mãos e a unção do óleo, o Espírito Santo nos fortalece para viver e testemunhar a fé. Ela completa o Batismo e também não se repete.",
+   "cic": [
+    1285,
+    1317
+   ]
+  },
+  {
+   "sac": "eucaristia",
+   "titulo": "Por que a Eucaristia é o centro da Missa?",
+   "texto": "Na Missa, o pão e o vinho se tornam Corpo e Sangue de Cristo. Ele se oferece ao Pai e se dá a nós como alimento, para nos unir a Ele e à Igreja. É memorial da Páscoa.",
+   "cic": [
+    1322,
+    1375
+   ]
+  },
+  {
+   "sac": "confissao",
+   "titulo": "Como a Confissão me reconcilia com Deus?",
+   "texto": "Eu reconheço meus pecados, o sacerdote me absolve em nome de Cristo e recebo o perdão. É preciso arrependimento, confissão e reparação. O sigilo do confessor é absoluto.",
+   "cic": [
+    1422,
+    1467
+   ]
+  },
+  {
+   "sac": "uncao",
+   "titulo": "Para quem é a Unção dos Enfermos?",
+   "texto": "Para batizados em doença grave ou idade avançada, não só para quem está morrendo. O óleo e a oração pedem força, paz e cura segundo a vontade de Deus. Pode ser recebida de novo se a doença piorar.",
+   "cic": [
+    1499,
+    1514,
+    1515
+   ]
+  },
+  {
+   "sac": "ordem",
+   "titulo": "O que o sacramento da Ordem faz?",
+   "texto": "Ele consagra homens para servir como diáconos, presbíteros ou bispos. Cada grau, a seu modo, serve o povo de Deus: anunciando a Palavra, celebrando os sacramentos e cuidando da comunidade. Marca para sempre e não se repete.",
+   "cic": [
+    1536,
+    1582
+   ]
+  },
+  {
+   "sac": "matrimonio",
+   "titulo": "O que é o sacramento do Matrimônio?",
+   "texto": "É a aliança de um homem e uma mulher, elevada por Cristo, para se amarem fielmente, formarem família e acolherem a vida. Os noivos se dão o sim diante de Deus e da Igreja.",
+   "cic": [
+    1601,
+    1623
+   ]
+  }
+ ],
+ "fonte": "Texto próprio do Lumen Católico (rascunho revisado). Números de parágrafo do Catecismo da Igreja Católica conferidos no vatican.va em 14/11/2026."
+}

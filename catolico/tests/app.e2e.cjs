@@ -56,6 +56,13 @@ const server = http.createServer((q, r) => { const f = path.join(ROOT, decodeURI
   await p.evaluate(() => [...document.querySelectorAll("[data-cap]")].find(b => b.textContent.includes("A Igreja e a comunhão")).click()); await p.waitForTimeout(300);
   await p.evaluate(() => document.querySelector('details.qa[data-n="125"] summary').click());
   ok((await p.textContent('details.qa[data-n="125"]')).includes("O que a Igreja ensina hoje"), "pergunta com divergência traz a nota do CIC");
+  // quiz dos sacramentos com chips do CIC
+  await p.tap("#bnav [data-tab=hoje]"); await p.waitForTimeout(500);
+  for (let k = 0; k < 40 && !(await p.$(".card.t-quiz")); k++) { await p.evaluate(() => { const f = document.getElementById("feed"); f.scrollTop = f.scrollHeight; }); await p.waitForTimeout(250); }
+  ok(await p.$(".card.t-quiz") !== null, "quiz aparece no feed");
+  await p.evaluate(() => document.querySelector(".card.t-quiz [data-op]").click());
+  ok(await p.$eval(".card.t-quiz", s => s.classList.contains("respondido") && !!s.querySelector(".op.certa") && !s.querySelector(".feedback").hidden), "quiz mostra a certa e a explicação");
+  ok(/vatican\.va\/archive\/cathechism_po\/index_new\/p2s/.test(await p.$eval(".card.t-quiz .feedback a.cic", a => a.href)), "chip CIC leva à página oficial");
   ok(errs.length === 0, "sem erros de script" + (errs.length ? ": " + errs.join(" | ") : ""));
   await b.close(); server.close(); if (falhas) process.exit(1); console.log("\nTudo certo");
 })();
