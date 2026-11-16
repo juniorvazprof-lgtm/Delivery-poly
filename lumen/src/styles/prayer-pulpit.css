@@ -140,3 +140,7 @@ body.guiding #light i{animation-duration:14s,18s}
 .esboco .tp-conclusao .tipo,.esboco .tp-oracao .tipo{color:color-mix(in srgb,#E8A9A9 80%,var(--ink))}
 .esboco .tp-perguntas .tipo{color:color-mix(in srgb,#9EC5E8 80%,var(--ink))}
 .esboco .ref{display:block;font:italic 500 .82rem var(--sans);color:var(--muted);margin-top:2px}
+/* controles sempre visíveis: o palco encolhe e rola se o texto for maior que a tela */
+.gtop,.gfoot{flex:none}
+.gstage{min-height:0;overflow-y:auto;align-items:safe center;overscroll-behavior:contain}
+#guide.paused .gstage::after{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 104px);pointer-events:none;background:color-mix(in srgb,var(--bg) 80%,transparent);padding:4px 0}

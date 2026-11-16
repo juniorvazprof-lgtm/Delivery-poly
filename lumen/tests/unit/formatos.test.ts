@@ -54,6 +54,6 @@ describe("pregação guiada com textos longos", () => {
     expect(telas.join(" ")).toBe(t); for (const x of telas) expect(x.endsWith(".")).toBe(true);
   });
   it("nenhuma tela dos exemplos passa de ~50 palavras", () => {
-    for (const s of Object.values(EXEMPLOS)) for (const sl of slidesOf(s)) if (sl.kind === "text") expect(sl.text.split(/\s+/).length, sl.text.slice(0, 40)).toBeLessThanOrEqual(55);
+    for (const s of Object.values(EXEMPLOS)) for (const sl of slidesOf(s)) if (sl.kind === "text" || sl.kind === "passage") expect(sl.text.split(/\s+/).length, sl.text.slice(0, 40)).toBeLessThanOrEqual(55);
   });
 });

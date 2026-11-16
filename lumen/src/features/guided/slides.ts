@@ -33,7 +33,7 @@ export function slidesOf(s: Sermon): Slide[] {
       if (/\[LEITURA\]/i.test(para)) {
         const [before, after] = para.split(/\[LEITURA\]/i).map(x => x.trim());
         if (before) emTelas(before.replace(CUE, "").trim()).forEach(t => out.push({ kind: "text", part, text: t, ms: readMs(t) }));
-        if (pass) out.push({ kind: "passage", part, text: pass.texto, ref: pass.ref, ms: readMs(pass.texto, 2500) });
+        if (pass) { const ts = emTelas(pass.texto, 38); ts.forEach((t, k) => out.push({ kind: "passage", part, text: t, ref: ts.length > 1 ? `${pass.ref} · ${k + 1}/${ts.length}` : pass.ref, ms: readMs(t, 2500) })); }
         if (after) emTelas(after.replace(CUE, "").trim()).forEach(t => out.push({ kind: "text", part, text: t, ms: readMs(t) }));
         continue;
       }
