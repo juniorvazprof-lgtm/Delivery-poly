@@ -75,7 +75,25 @@ async function main() {
   await step("premium e púlpito", async () => { await tap("#bnav [data-tab=premium]"); await wait(700); await tap(".tool2[data-t=pulpito]"); await wait(800); });
   await step("modo pregar", async () => {
     await tap("#goPreach"); await wait(700); await tap("#prNext"); await wait(500); await tap("#prX"); await wait(400);
-    await tap(".pcard"); await wait(600); await p.evaluate(() => document.getElementById("veil").click()); await wait(400); await tap("#smClose"); await wait(400);
+    await tap(".pcard"); await wait(600); await p.evaluate(() => document.getElementById("veil").click()); await wait(400);
+  });
+  await step("esboço: texto base, tema e partes da pregação", async () => {
+    const t = await p.textContent(".outline");
+    for (const s of ["Texto base", "Isaías 40:28-31", "Tema", "Introdução", "Desenvolvimento 1", "Aplicação", "Conclusão", "Oração final"])
+      if (!t.includes(s)) throw new Error("faltou no esboço: " + s);
+  });
+  await step("formatos: palestra e estudo mostram o exemplo e as ocasiões de cada um", async () => {
+    await p.evaluate(() => { document.querySelector(".newsm").open = true; }); await wait(200);
+    await tap('.chip[data-k="formato"][data-v="palestra"]'); await wait(400);
+    let t = await p.textContent(".outline");
+    if (!t.includes("Palestra") || !t.includes("Colossenses 3:12-14") || t.includes("Oração final")) throw new Error("exemplo de palestra errado");
+    if (!(await p.$('.chip[data-k="ocasiao"][data-v="Casais e famílias"]'))) throw new Error("ocasiões da palestra");
+    await tap('.chip[data-k="formato"][data-v="estudo"]'); await wait(400);
+    t = await p.textContent(".outline");
+    for (const s of ["Estudo", "Filipenses 4:4-9", "Contexto do texto", "Perguntas para o grupo", "Oração final", "Começar o estudo"])
+      if (!t.includes(s)) throw new Error("faltou no estudo: " + s);
+    await tap("#goPreach"); await wait(600); await tap("#prNext"); await wait(400); await tap("#prX"); await wait(400);
+    await tap("#smClose"); await wait(400);
   });
   await step("aba você e sobre a bíblia", async () => { await tap("#bnav [data-tab=you]"); await wait(700); await tap("#aboutBible"); await wait(500); });
 

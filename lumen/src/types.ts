@@ -39,9 +39,10 @@ export interface Passage {
   ref: string; texto: string; quem: string; para_quem: string; quando: string; explicacao: string;
   palavras: { p: string; s: string }[]; lembrar: string; conferir?: boolean;
 }
-export interface SermonPart { nome: string; min: number; ref: string; fala: string; }
+export interface SermonPart { nome: string; min: number; ref: string; fala: string; tipo?: string; }
 export interface Sermon {
   titulo: string; ideia_central: string; tema?: string; ocasiao?: string; minutos?: number; ia?: boolean;
+  formato?: "pregacao" | "palestra" | "estudo"; texto_base?: string; tema_frase?: string;
   passagens: Passage[]; partes: SermonPart[];
 }
 

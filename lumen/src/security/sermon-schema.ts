@@ -8,6 +8,8 @@
 import { cleanText } from "../utils/text";
 import { parseRef } from "../services/bible";
 import type { Passage, Sermon, SermonPart } from "../types";
+import { TIPOS, type Formato } from "../features/pulpit/formatos";
+const FORMATOS_OK: Formato[] = ["pregacao", "palestra", "estudo"];
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const T = cleanText;
@@ -23,7 +25,11 @@ export function parseSermon(data: unknown, minutes: number): Sermon | null {
   const partes: SermonPart[] = data.partes.slice(0, 12).filter(isObj).map(r => ({
     nome: T(r.nome, 60), min: Math.min(30, Math.max(1, Math.round(Number(r.min) || 1))),
     ref: parseRef(r.ref) ? T(r.ref, 60) : "", fala: T(r.fala, 12000),
+    ...(TIPOS.includes(r.tipo as never) ? { tipo: r.tipo as string } : {}),
   })).filter(r => r.nome && r.fala);
   if (!passagens.length || !partes.length) return null;
-  return { titulo: T(data.titulo, 120) || "Pregação", ideia_central: T(data.ideia_central, 300), passagens, partes, minutos: minutes };
+  const formato = FORMATOS_OK.includes(data.formato as Formato) ? (data.formato as Formato) : undefined;
+  const base = parseRef(data.texto_base) ? T(data.texto_base, 60) : passagens[0].ref;
+  return { titulo: T(data.titulo, 120) || "Pregação", ideia_central: T(data.ideia_central, 300), passagens, partes, minutos: minutes,
+    ...(formato ? { formato } : {}), texto_base: base, tema_frase: T(data.tema, 200) };
 }

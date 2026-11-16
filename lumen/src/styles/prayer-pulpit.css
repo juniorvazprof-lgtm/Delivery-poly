@@ -126,3 +126,17 @@ body.guiding #light i{animation-duration:14s,18s}
 .gfoot .gplay svg{fill:currentColor;stroke:none}
 #guide.paused .gstage::after{content:"pausado · toque para continuar";position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 110px);text-align:center;font:600 .74rem var(--sans);color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.gslide,.gslide .w,.gpass cite{animation:none!important;opacity:1!important;filter:none!important;transform:none!important}}
+
+/* Esboço: texto base, tema e partes etiquetadas (introdução, desenvolvimento, aplicação, conclusão) */
+.fmt-resumo{margin:-4px 0 6px}
+.texto-base.pcard{display:block;width:100%;margin:12px 0;background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 16%,transparent),var(--glass));border-color:color-mix(in srgb,var(--gold) 40%,var(--line))}
+.texto-base small{display:block;font:700 .62rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.texto-base b{display:block;font:500 1.2rem var(--serif);margin-bottom:6px}
+.texto-base .pt{display:block;font:italic 400 .98rem/1.5 var(--serif);color:var(--muted)}
+.texto-base .go{display:block;margin-top:8px}
+.ideia{margin:10px 0 0;font-size:.92rem;line-height:1.5;color:var(--muted)}
+.esboco .tipo{display:block;font:800 .62rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+.esboco .tp-desenvolvimento{padding-left:10px;border-left:2px solid color-mix(in srgb,var(--gold) 45%,transparent)}
+.esboco .tp-conclusao .tipo,.esboco .tp-oracao .tipo{color:color-mix(in srgb,#E8A9A9 80%,var(--ink))}
+.esboco .tp-perguntas .tipo{color:color-mix(in srgb,#9EC5E8 80%,var(--ink))}
+.esboco .ref{display:block;font:italic 500 .82rem var(--sans);color:var(--muted);margin-top:2px}
