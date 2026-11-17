@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a14">
+<title>Cabanas na Floresta</title>
+<style>
+  :root { --bg: #0a0a14; --ink: #f8e6a0; --dim: #8c9cb8; --line: #3a3f5a; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); touch-action: none; user-select: none; -webkit-user-select: none; }
+  /* a cena é desenhada em baixa resolução e ampliada sem suavizar: cada pixel é um bloco nítido */
+  #view { position: fixed; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+  #hud { position: fixed; left: 12px; top: calc(10px + env(safe-area-inset-top, 0px)); font: 12px/1.4 monospace; color: var(--dim); text-shadow: 1px 1px 0 #000; pointer-events: none; }
+  #hud b { color: var(--ink); }
+  #stick { position: fixed; width: 110px; height: 110px; margin: -55px 0 0 -55px; border: 3px solid #f8e6a055; border-radius: 50%; opacity: 0; pointer-events: none; }
+  #stick.on { opacity: 1; }
+  #knob { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: #f8e6a0aa; border: 3px solid #0a0a14; }
+  #lamp { position: fixed; right: calc(18px + env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 78px; height: 78px;
+    border: 3px solid #f8e6a0; background: #141428cc; color: #f8e6a0; font: bold 11px monospace; display: grid; place-items: center; text-align: center; line-height: 1.2; }
+  #lamp.off { border-color: #3a3f5a; color: #5d6a8a; }
+  #lamp i { display: block; font-style: normal; font-size: 26px; }
+</style>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div id="hud"><b>Cabanas na Floresta</b><br>Arraste para andar · Botão ou F: lanterna</div>
+<div id="stick"><div id="knob"></div></div>
+<button id="lamp"><span><i>◉</i>LANTERNA</span></button>
+
+<script type="module">
+import * as T from './three.module.js';
+
+// ---------- paleta (26 cores, rampas com hue shifting: sombras puxam para azul/violeta, luzes para amarelo) ----------
+const PALETTE = [
+  '#0a0a14', '#141428', '#1e2340', '#2b2f52',           // noite / vazio
+  '#132420', '#1b3a30', '#25553d', '#3f7a48', '#6fa35a', '#a8cf78',   // floresta (verde -> amarelado)
+  '#2b1d2a', '#4a2c2a', '#6e4434', '#9a6a44', '#c99a5c', // madeira (violeta -> ocre)
+  '#3a3f5a', '#5d6a8a', '#8c9cb8', '#c5d3e8',           // pedra / luar (frio)
+  '#7a3a2a', '#c8703a', '#e8a850', '#f8e6a0', '#fffbe6', // fogo / lanterna (quente)
+  '#8a2c3a', '#e8b08a',                                  // casaco vermelho escuro / pele
+].map(h => new T.Color(h));
+
+// ---------- renderização em baixa resolução ----------
+const PIX_H = 230;                       // altura interna em pixels (densidade única para toda a cena)
+const canvas = document.getElementById('view');
+const renderer = new T.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.BasicShadowMap;   // sombras de borda dura
+let W = 1, H = 1;
+const depthTex = new T.DepthTexture(1, 1); depthTex.type = T.UnsignedIntType;
+const rt = new T.WebGLRenderTarget(1, 1, { minFilter: T.NearestFilter, magFilter: T.NearestFilter, depthTexture: depthTex });
+
+const VIEW = 15;                         // altura visível em unidades do mundo
+const cam = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 120);
+function resize() {
+  H = PIX_H; W = Math.round(PIX_H * innerWidth / innerHeight);
+  renderer.setSize(W, H, false); rt.setSize(W, H);
+  const a = W / H; Object.assign(cam, { left: -VIEW * a / 2, right: VIEW * a / 2, top: VIEW / 2, bottom: -VIEW / 2 }); cam.updateProjectionMatrix();
+  post.uniforms.res.value.set(W, H);
+}
+
+// ---------- pós-processamento: contorno seletivo + dithering Bayer + paleta limitada ----------
+const post = new T.ShaderMaterial({
+  uniforms: { tColor: { value: rt.texture }, tDepth: { value: depthTex }, res: { value: new T.Vector2() }, pal: { value: PALETTE.map(c => { const s = c.clone().convertLinearToSRGB(); return new T.Vector3(s.r, s.g, s.b); }) } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }',
+  fragmentShader: `
+    precision highp float;
+    uniform sampler2D tColor, tDepth; uniform vec2 res; uniform vec3 pal[${PALETTE.length}];
+    varying vec2 vUv;
+    float bayer(vec2 p){ // matriz de Bayer 4x4 (um único estilo de dithering na cena toda)
+      int x = int(mod(p.x, 4.)), y = int(mod(p.y, 4.)), i = x + y * 4;
+      float m[16]; m[0]=0.;m[1]=8.;m[2]=2.;m[3]=10.;m[4]=12.;m[5]=4.;m[6]=14.;m[7]=6.;m[8]=3.;m[9]=11.;m[10]=1.;m[11]=9.;m[12]=15.;m[13]=7.;m[14]=13.;m[15]=5.;
+      for (int k = 0; k < 16; k++) if (k == i) return m[k] / 16. - .5;
+      return 0.;
+    }
+    vec3 nearest(vec3 c){ // cor mais próxima da paleta, com peso perceptual
+      vec3 best = pal[0]; float bd = 1e9;
+      for (int i = 0; i < ${PALETTE.length}; i++) { vec3 d = c - pal[i]; float e = dot(d * vec3(.9, 1.2, .8), d); if (e < bd) { bd = e; best = pal[i]; } }
+      return best;
+    }
+    void main(){
+      vec2 px = 1. / res;
+      vec3 c = pow(max(texture2D(tColor, vUv).rgb, 0.), vec3(1. / 2.2));   // linear -> cor de tela
+      float d = texture2D(tDepth, vUv).r;
+      // contorno seletivo: o pixel do objeto da frente que encosta em algo mais distante escurece
+      // com a própria cor (não preto puro), como um selout
+      float dn = min(min(texture2D(tDepth, vUv + vec2(px.x, 0.)).r, texture2D(tDepth, vUv - vec2(px.x, 0.)).r),
+                     min(texture2D(tDepth, vUv + vec2(0., px.y)).r, texture2D(tDepth, vUv - vec2(0., px.y)).r));
+      float df = max(max(texture2D(tDepth, vUv + vec2(px.x, 0.)).r, texture2D(tDepth, vUv - vec2(px.x, 0.)).r),
+                     max(texture2D(tDepth, vUv + vec2(0., px.y)).r, texture2D(tDepth, vUv - vec2(0., px.y)).r));
+      bool edge = df - d > .0035 && d < .999;
+      if (edge) c *= .42;
+      // vinheta suave (atmosfera)
+      vec2 q = vUv - .5; c *= 1. - dot(q, q) * .9;
+      // dithering só como deslocamento pequeno: degradês de luz viram padrões, áreas chapadas ficam limpas
+      c += bayer(gl_FragCoord.xy) * .05;
+      gl_FragColor = vec4(nearest(clamp(c, 0., 1.)), 1.);
+    }`,
+});
+const postScene = new T.Scene(), postCam = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+postScene.add(new T.Mesh(new T.PlaneGeometry(2, 2), post));
+
+// ---------- cena ----------
+const scene = new T.Scene();
+scene.background = new T.Color('#0a0a14');
+scene.fog = new T.Fog('#141428', 22, 46);
+const mat = (c, o = {}) => new T.MeshLambertMaterial({ color: c, flatShading: true, ...o });
+const glowMat = c => new T.MeshBasicMaterial({ color: c });
+
+// luar frio vindo do alto à esquerda (a mesma direção de luz em toda a cena)
+scene.add(new T.HemisphereLight('#8c9cb8', '#1e2340', 1.6));
+const moon = new T.DirectionalLight('#c5d3e8', 1.6);
+moon.position.set(-14, 22, 8); moon.castShadow = true;
+Object.assign(moon.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20, near: 1, far: 60 }); moon.shadow.mapSize.set(1024, 1024);
+scene.add(moon, moon.target);
+
+// chão: blocos de grama com variação de tom e uma trilha de terra entre as cabanas
+const WORLD = 34;
+{
+  const g = new T.PlaneGeometry(WORLD * 2, WORLD * 2, 68, 68); g.rotateX(-Math.PI / 2);
+  const cols = [], p = g.attributes.position, tmp = new T.Color();
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), z = p.getZ(i), n = Math.sin(x * 0.7) * Math.cos(z * 0.6) + Math.sin(x * 0.23 + z * 0.31);
+    const trail = Math.abs(z - Math.sin(x * 0.18) * 3) < 1.4 || Math.abs(x + 2 - Math.sin(z * 0.2) * 2) < 1.2;
+    tmp.set(trail ? (n > 0 ? '#4a2c2a' : '#6e4434') : n > 0.6 ? '#25553d' : n > -0.4 ? '#1b3a30' : '#132420');
+    cols.push(tmp.r, tmp.g, tmp.b);
+  }
+  g.setAttribute('color', new T.Float32BufferAttribute(cols, 3));
+  const ground = new T.Mesh(g, new T.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
+  ground.receiveShadow = true; scene.add(ground);
+}
+
+const colliders = [];   // círculos [x, z, raio]
+const rand = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+
+// pinheiro: tronco + três cones facetados (silhueta legível de longe)
+function pine(x, z, s = 1) {
+  const g = new T.Group();
+  const trunk = new T.Mesh(new T.CylinderGeometry(0.16 * s, 0.22 * s, 1.2 * s, 5), mat('#4a2c2a')); trunk.position.y = 0.6 * s;
+  g.add(trunk);
+  const greens = ['#1b3a30', '#25553d', '#3f7a48'];
+  for (let i = 0; i < 3; i++) {
+    const c = new T.Mesh(new T.ConeGeometry((1.35 - i * 0.33) * s, 1.5 * s, 6), mat(greens[i]));
+    c.position.y = (1.4 + i * 0.85) * s; c.rotation.y = rand() * 3; g.add(c);
+  }
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  g.position.set(x, 0, z); scene.add(g); colliders.push([x, z, 0.45 * s]);
+}
+
+// cabana de troncos: paredes em camadas alternadas, telhado em duas águas, porta e janela acesa
+const lights = [];
+function cabin(x, z, ry) {
+  const g = new T.Group(), w = 3.4, d = 2.8, h = 2.0;
+  for (let i = 0; i < 6; i++) {   // troncos empilhados (alternância de tom = textura sem ruído)
+    const log = new T.Mesh(new T.BoxGeometry(w, h / 6, d), mat(i % 2 ? '#6e4434' : '#9a6a44'));
+    log.position.y = h / 12 + i * h / 6; g.add(log);
+  }
+  const roofShape = new T.Shape(); roofShape.moveTo(-w / 2 - 0.35, 0); roofShape.lineTo(0, 1.5); roofShape.lineTo(w / 2 + 0.35, 0);
+  const roof = new T.Mesh(new T.ExtrudeGeometry(roofShape, { depth: d + 0.6, bevelEnabled: false }), mat('#2b1d2a'));
+  roof.position.set(0, h, -d / 2 - 0.3); g.add(roof);
+  const door = new T.Mesh(new T.BoxGeometry(0.8, 1.3, 0.08), mat('#4a2c2a')); door.position.set(-0.7, 0.65, d / 2 + 0.03); g.add(door);
+  const win = new T.Mesh(new T.BoxGeometry(0.7, 0.55, 0.08), glowMat('#e8a850')); win.position.set(0.8, 1.1, d / 2 + 0.03); g.add(win);
+  const frameH = new T.Mesh(new T.BoxGeometry(0.06, 0.6, 0.1), mat('#2b1d2a')); frameH.position.set(0.8, 1.1, d / 2 + 0.06); g.add(frameH);
+  const chim = new T.Mesh(new T.BoxGeometry(0.45, 1.2, 0.45), mat('#5d6a8a')); chim.position.set(w / 2 - 0.6, h + 0.9, -0.4); g.add(chim);
+  g.traverse(o => { if (o.isMesh && o.material.type !== 'MeshBasicMaterial') { o.castShadow = true; o.receiveShadow = true; } });
+  const lamp = new T.PointLight('#e8a850', 14, 7, 1.5); lamp.position.set(0.8, 1.1, d / 2 + 0.8); g.add(lamp); lights.push(lamp);
+  g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+  colliders.push([x, z, 2.0]);
+}
+
+cabin(-5, -3, 0.25); cabin(6, -6, -0.4); cabin(2, 6, Math.PI - 0.2);
+// pedras e tocos espalhados
+for (let i = 0; i < 18; i++) {
+  const x = (rand() - 0.5) * WORLD * 1.6, z = (rand() - 0.5) * WORLD * 1.6;
+  if (Math.hypot(x, z) < 3) continue;
+  const r = new T.Mesh(new T.DodecahedronGeometry(0.3 + rand() * 0.35, 0), mat(rand() < 0.5 ? '#3a3f5a' : '#5d6a8a'));
+  r.position.set(x, 0.15, z); r.rotation.set(rand(), rand(), rand()); r.castShadow = r.receiveShadow = true; scene.add(r);
+}
+// floresta: mais densa nas bordas, clareira no meio onde ficam as cabanas
+for (let i = 0; i < 170; i++) {
+  const x = (rand() - 0.5) * WORLD * 2, z = (rand() - 0.5) * WORLD * 2, r = Math.hypot(x, z);
+  if (r < 4 || (r < 11 && rand() < 0.75)) continue;
+  if (colliders.some(([cx, cz, cr]) => Math.hypot(cx - x, cz - z) < cr + 1.2)) continue;
+  pine(x, z, 0.8 + rand() * 0.7);
+}
+// vaga-lumes: pontos quentes que pulsam (cada um alterna cor da paleta, não posição sub-pixel)
+const flies = [];
+for (let i = 0; i < 26; i++) {
+  const m = new T.Mesh(new T.BoxGeometry(0.08, 0.08, 0.08), glowMat('#f8e6a0'));
+  m.userData = { x: (rand() - 0.5) * 30, z: (rand() - 0.5) * 30, y: 0.6 + rand() * 1.4, p: rand() * 6 };
+  scene.add(m); flies.push(m);
+}
+
+// ---------- personagem: proporção estilizada, casaco vermelho escuro, chapéu, espingarda e lanterna ----------
+const hero = new T.Group(); scene.add(hero);
+const body = new T.Group(); hero.add(body);
+const box = (w, h, d, c, x, y, z) => { const m = new T.Mesh(new T.BoxGeometry(w, h, d), typeof c === 'string' ? mat(c) : c); m.position.set(x, y, z); m.castShadow = true; return m; };
+const legL = new T.Group(), legR = new T.Group();
+legL.position.set(-0.13, 0.62, 0); legR.position.set(0.13, 0.62, 0);
+legL.add(box(0.2, 0.62, 0.22, '#2b2f52', 0, -0.31, 0), box(0.22, 0.14, 0.3, '#2b1d2a', 0, -0.58, 0.04));
+legR.add(box(0.2, 0.62, 0.22, '#2b2f52', 0, -0.31, 0), box(0.22, 0.14, 0.3, '#2b1d2a', 0, -0.58, 0.04));
+body.add(legL, legR);
+body.add(box(0.56, 0.62, 0.34, '#8a2c3a', 0, 0.95, 0));            // casaco
+body.add(box(0.58, 0.1, 0.36, '#4a2c2a', 0, 0.7, 0));              // cinto
+body.add(box(0.34, 0.32, 0.32, '#e8b08a', 0, 1.42, 0));            // cabeça
+body.add(box(0.5, 0.08, 0.5, '#2b1d2a', 0, 1.6, 0));               // aba do chapéu
+body.add(box(0.32, 0.2, 0.32, '#4a2c2a', 0, 1.72, 0));             // copa do chapéu
+// braço direito com a espingarda apontada para frente
+const armR = new T.Group(); armR.position.set(0.34, 1.18, 0);
+armR.add(box(0.16, 0.44, 0.16, '#8a2c3a', 0, -0.2, 0.08));
+const gun = new T.Group(); gun.position.set(0, -0.36, 0.2);
+gun.add(box(0.08, 0.08, 0.9, '#3a3f5a', 0, 0.02, 0.4), box(0.12, 0.14, 0.34, '#6e4434', 0, -0.03, -0.06));
+armR.add(gun); armR.rotation.x = -1.1; body.add(armR);
+// braço esquerdo segurando a lanterna
+const armL = new T.Group(); armL.position.set(-0.34, 1.18, 0);
+armL.add(box(0.16, 0.44, 0.16, '#8a2c3a', 0, -0.2, 0.08));
+const torch = box(0.12, 0.12, 0.26, '#5d6a8a', 0, -0.4, 0.2); armL.add(torch);
+const lens = box(0.1, 0.1, 0.03, glowMat('#fffbe6'), 0, -0.4, 0.34); armL.add(lens);
+armL.rotation.x = -1.0; body.add(armL);
+// a luz da lanterna: cone quente com sombra dura, mais um feixe visível bem sutil
+const spot = new T.SpotLight('#f8e6a0', 60, 15, 0.42, 0.35, 1.2);
+spot.castShadow = true; spot.shadow.mapSize.set(512, 512); spot.shadow.camera.near = 0.2;
+spot.position.set(-0.34, 1.1, 0.35); hero.add(spot);
+const spotTarget = new T.Object3D(); spotTarget.position.set(-0.2, 0, 5); hero.add(spotTarget); spot.target = spotTarget;
+const beam = new T.Mesh(new T.ConeGeometry(1.6, 5.5, 10, 1, true), new T.MeshBasicMaterial({ color: '#f8e6a0', transparent: true, opacity: 0.07, depthWrite: false, side: T.DoubleSide }));
+beam.rotation.x = -Math.PI / 2 - 0.2; beam.position.set(-0.3, 0.75, 3.1); hero.add(beam);
+// luz de preenchimento fria acima do personagem: mantém a silhueta legível no escuro
+const fill = new T.PointLight('#c5d3e8', 5, 3.2, 1.4); fill.position.set(0.6, 2.4, 0.8); hero.add(fill);
+let lampOn = true;
+function setLamp(v) { lampOn = v; spot.visible = beam.visible = v; lens.material.color.set(v ? '#fffbe6' : '#3a3f5a'); document.getElementById('lamp').classList.toggle('off', !v); }
+
+// ---------- controles: joystick flutuante + teclado ----------
+const input = { x: 0, z: 0, id: null, ox: 0, oy: 0, keys: new Set() };
+const stick = document.getElementById('stick'), knob = document.getElementById('knob'), R = 48;
+addEventListener('pointerdown', e => { if (e.target.closest('#lamp') || input.id !== null) return; input.id = e.pointerId; input.ox = e.clientX; input.oy = e.clientY; stick.style.left = e.clientX + 'px'; stick.style.top = e.clientY + 'px'; stick.classList.add('on'); });
+addEventListener('pointermove', e => { if (e.pointerId !== input.id) return; let dx = e.clientX - input.ox, dy = e.clientY - input.oy; const l = Math.hypot(dx, dy); if (l > R) { dx *= R / l; dy *= R / l; } knob.style.transform = `translate(${dx}px,${dy}px)`; input.x = l > 6 ? dx / R : 0; input.z = l > 6 ? dy / R : 0; });
+const release = e => { if (e.pointerId !== input.id) return; input.id = null; input.x = input.z = 0; stick.classList.remove('on'); knob.style.transform = ''; };
+addEventListener('pointerup', release); addEventListener('pointercancel', release);
+addEventListener('keydown', e => { const k = e.key.toLowerCase(); input.keys.add(k); if (k === 'f' && !e.repeat) setLamp(!lampOn); });
+addEventListener('keyup', e => input.keys.delete(e.key.toLowerCase()));
+document.getElementById('lamp').onclick = () => setLamp(!lampOn);
+
+// ---------- câmera estilo Diablo: isométrica, alta, a 45°, seguindo o personagem ----------
+const YAW = Math.PI / 4, PITCH = 0.62, DIST = 30;
+const camDir = new T.Vector3(Math.sin(YAW) * Math.cos(PITCH), Math.sin(PITCH), Math.cos(YAW) * Math.cos(PITCH));
+cam.position.copy(camDir).multiplyScalar(DIST); cam.lookAt(0, 0, 0);
+// eixos da tela no chão, para o joystick mover "para cima" = para o fundo da tela
+const fwd = new T.Vector3(-Math.sin(YAW), 0, -Math.cos(YAW)), right = new T.Vector3(Math.cos(YAW), 0, -Math.sin(YAW));
+const focus = new T.Vector3(), camRight = new T.Vector3(), camUp = new T.Vector3();
+
+// ---------- laço ----------
+let last = performance.now(), walkT = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; const t = now / 1000;
+  // movimento
+  let ix = input.x, iz = input.z;
+  if (input.id === null) { ix = (input.keys.has('d') || input.keys.has('arrowright')) - (input.keys.has('a') || input.keys.has('arrowleft')); iz = (input.keys.has('s') || input.keys.has('arrowdown')) - (input.keys.has('w') || input.keys.has('arrowup')); }
+  const mag = Math.min(1, Math.hypot(ix, iz));
+  if (mag > 0.05) {
+    const dir = right.clone().multiplyScalar(ix).addScaledVector(fwd, -iz).normalize(), sp = 3.4 * mag;
+    let nx = hero.position.x + dir.x * sp * dt, nz = hero.position.z + dir.z * sp * dt;
+    for (const [cx, cz, cr] of colliders) { const dx = nx - cx, dz = nz - cz, d = Math.hypot(dx, dz), m = cr + 0.3; if (d < m && d > 0) { nx = cx + dx / d * m; nz = cz + dz / d * m; } }
+    const lim = WORLD - 2; hero.position.x = Math.max(-lim, Math.min(lim, nx)); hero.position.z = Math.max(-lim, Math.min(lim, nz));
+    const target = Math.atan2(dir.x, dir.z); let da = target - hero.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); hero.rotation.y += da * Math.min(1, dt * 12);
+    walkT += dt * 9 * mag;
+  } else walkT += (Math.round(walkT / Math.PI) * Math.PI - walkT) * Math.min(1, dt * 10);
+  // caminhada em poucas poses claras: pernas balançam, corpo sobe meio passo
+  const sw = Math.sin(walkT);
+  legL.rotation.x = sw * 0.55; legR.rotation.x = -sw * 0.55; body.position.y = Math.abs(Math.cos(walkT)) * 0.06;
+  armL.rotation.x = -1.0 + sw * 0.06; armR.rotation.x = -1.1 - sw * 0.06;
+  // lanterna treme de leve; vaga-lumes piscam
+  if (lampOn) spot.intensity = 60 + Math.sin(t * 23) * 1.5;
+  for (const f of flies) { const u = f.userData; f.position.set(u.x + Math.sin(t * 0.6 + u.p) * 1.2, u.y + Math.sin(t * 1.7 + u.p) * 0.3, u.z + Math.cos(t * 0.5 + u.p) * 1.2); f.visible = Math.sin(t * 2 + u.p * 3) > -0.2; }
+  for (const l of lights) l.intensity = 14 + Math.sin(t * 9 + l.id) * 1;
+  // câmera segue e encaixa na grade de pixels (evita que a cena "trema" ao andar)
+  focus.lerp(hero.position, 1 - Math.exp(-dt * 6));
+  cam.position.copy(focus).addScaledVector(camDir, DIST); cam.lookAt(focus); cam.updateMatrixWorld();
+  const texel = VIEW / H; camRight.setFromMatrixColumn(cam.matrixWorld, 0); camUp.setFromMatrixColumn(cam.matrixWorld, 1);
+  const rx = cam.position.dot(camRight), ry = cam.position.dot(camUp);
+  cam.position.addScaledVector(camRight, Math.round(rx / texel) * texel - rx).addScaledVector(camUp, Math.round(ry / texel) * texel - ry);
+  moon.position.set(focus.x - 14, 22, focus.z + 8); moon.target.position.copy(focus);
+  // render em duas etapas: cena em baixa resolução -> contorno, dithering e paleta
+  renderer.setRenderTarget(rt); renderer.render(scene, cam);
+  renderer.setRenderTarget(null); renderer.render(postScene, postCam);
+}
+addEventListener('resize', resize); resize(); setLamp(true);
+requestAnimationFrame(frame);
+window.__cena = { hero, setLamp, input };
+</script>
+</body>
+</html>
