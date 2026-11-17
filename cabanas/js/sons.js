@@ -53,6 +53,11 @@ export const SOM = {
   sinal() { tom({ f: 400, f2: 900, dur: 0.6, vol: 0.18, tipo: 'sawtooth' }); if (ctx && !chiado) chiado = chiar({ dur: 999, vol: 0.06, f: 3500, tipo: 'highpass', ataque: 0.5 }); },
   pararSinal() { if (chiado) { chiado.gain.cancelScheduledValues(ctx.currentTime); chiado.gain.setTargetAtTime(0, ctx.currentTime, 0.2); chiado = null; } },
   helicoptero() { if (!ctx) return; for (let i = 0; i < 26; i++) chiar({ dur: 0.09, vol: 0.06 + Math.min(i, 12) * 0.025, f: 300, tipo: 'lowpass', quando: i * 0.085 }); },
+  passo() { chiar({ dur: 0.07, vol: 0.05, f: 900, tipo: 'bandpass', q: 1.2 }); },
+  grito() { tom({ f: 520, f2: 260, dur: 1.4, vol: 0.32, tipo: 'sawtooth', ataque: 0.05 }); tom({ f: 760, f2: 300, dur: 1.2, vol: 0.18, tipo: 'square', ataque: 0.05 }); chiar({ dur: 1.3, vol: 0.25, f: 2200, tipo: 'bandpass', q: 3 }); },
+  sinalizadorMao() { tom({ f: 300, dur: 0.06, vol: 0.2, tipo: 'square' }); chiar({ dur: 1.4, vol: 0.18, f: 4000, tipo: 'highpass', ataque: 0.05 }); },
+  vasculhar() { for (let i = 0; i < 5; i++) chiar({ dur: 0.12, vol: 0.12, f: 1200 + Math.random() * 800, tipo: 'bandpass', q: 2, quando: i * 0.35 }); },
+  pilha() { tom({ f: 1200, dur: 0.04, vol: 0.12, tipo: 'square' }); tom({ f: 3000, dur: 0.02, vol: 0.12, tipo: 'square', quando: 0.12 }); },
   derrota() { tom({ f: 196, f2: 98, dur: 1.4, vol: 0.25, tipo: 'triangle' }); tom({ f: 147, f2: 73, dur: 1.6, vol: 0.2, tipo: 'triangle', quando: 0.2 }); },
   vitoria() { [392, 523, 659, 784].forEach((f, i) => tom({ f, dur: 0.35, vol: 0.12, tipo: 'square', quando: i * 0.12 })); },
 };

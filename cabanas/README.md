@@ -4,6 +4,20 @@ Um mercenário do pós-apocalipse aceita contratos para limpar áreas infestadas
 sobrevive até a extração e recebe em satoshis. Visual HD-2D: cena 3D (Three.js r160) em baixa
 resolução, paleta de 26 cores, contorno seletivo e dithering Bayer.
 
+## Pacote da demo
+- Refúgio (Posto 9): carteira, quadro com 2 contratos (Limpeza e Recuperação) e loja do Seu Bento
+  (pilhas, sinalizadores de mão, cartuchos, balas de pistola). Inventário salvo no aparelho.
+- Lanterna com bateria (~2 min ligada); pisca quando fraca; troca de pilha automática se você tiver uma.
+- Sinalizador de mão (botão ✦ ou G): cai à frente, ilumina 20 s e chama os zumbis para lá.
+- Som com ondas visíveis no chão: tiros, passos e buscas fazem barulho; quem está no raio vai investigar.
+  Joystick até a metade (ou Shift) = andar devagar, em silêncio.
+- Zumbi mariposa (pálido, braços para cima): corre para a luz; apagar a lanterna o despista.
+- Zumbi gritador (cabeça grande, boca vermelha): ao te ver, se prepara e grita, chamando todos num raio grande.
+- Ganância: cumprido o objetivo, o sinal acende; quanto mais você demora para entrar nele, mais o saque vale
+  (×1,25 a cada 40 s, até ×2,5), e mais reforços chegam.
+- Recuperação: o HD está numa das 3 cabanas mais distantes; vasculhar leva 3 s e faz barulho.
+- Teste: `node cabanas/tests/bot.cjs [missões] [rapido] [limpeza|recuperacao] [segundos de ganância]`.
+
 ## Ajustes após o primeiro teste
 - Zumbis cinza, 2× mais resistentes (espingarda: 2 tiros de perto; pistola: 3 a 4).
 - Pose realista: espingarda no ombro com a mão de apoio na telha e lanterna sob o cano; pistola com as duas mãos.

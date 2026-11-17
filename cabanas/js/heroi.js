@@ -57,7 +57,7 @@ export function criarHeroi(scene) {
 
   const h = {
     g: heroi, corpo, pernaE, pernaD, boca, usar,
-    vida: CFG.heroi.vida, invul: 0, passo: 0, coice: 0, lanterna: true, caido: false,
+    vida: CFG.heroi.vida, invul: 0, passo: 0, coice: 0, lanterna: true, caido: false, bateria: 1, pilhas: 0, sinalizadores: 0, devagar: false, piscar: false,
     setLanterna(v) { h.lanterna = v; foco.visible = v; for (const k in rigs) rigs[k].lente.material.color.set(v ? '#fffbe6' : '#3a3f5a'); document.getElementById('lamp')?.classList.toggle('off', !v); },
     frente() { return new T.Vector3(Math.sin(heroi.rotation.y), 0, Math.cos(heroi.rotation.y)); },
     animar(dt, t, mag) {
@@ -67,7 +67,8 @@ export function criarHeroi(scene) {
       h.coice = Math.max(0, h.coice - dt * 7);
       // coice: a arma (e os braços) recuam e o cano sobe um pouco; ao andar, a mira balança de leve
       rig.r.position.z = -h.coice * rig.recuo; rig.r.rotation.x = -h.coice * 0.12 + sw * 0.015;
-      if (h.lanterna) foco.intensity = 60 + Math.sin(t * 23) * 1.5;
+      if (h.lanterna) foco.intensity = h.piscar ? 4 : (h.bateria < CFG.lanterna.fraca ? 38 : 60) + Math.sin(t * 23) * 1.5;
+      corpo.position.y -= h.devagar ? 0.08 : 0;   // andando devagar, o corpo abaixa um pouco
       heroi.visible = !(h.invul > 0 && Math.floor(t * 14) % 2);
     },
   };
@@ -76,7 +77,7 @@ export function criarHeroi(scene) {
 
 /** Entrada: joystick na metade esquerda da tela, botões à direita, teclado (WASD/setas, espaço, F, R). */
 export function criarEntrada() {
-  const e = { x: 0, z: 0, id: null, teclas: new Set(), atirando: false, lanterna: 0, recarregar: 0, trocar: 0 };
+  const e = { x: 0, z: 0, id: null, teclas: new Set(), atirando: false, lanterna: 0, recarregar: 0, trocar: 0, sinalizador: 0 };
   const stick = document.getElementById('stick'), knob = document.getElementById('knob'), R = 50;
   const centro = () => { const r = stick.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
   const mover = ev => { const [cx, cy] = centro(); let dx = ev.clientX - cx, dy = ev.clientY - cy; const l = Math.hypot(dx, dy); if (l > R) { dx *= R / l; dy *= R / l; }
@@ -85,7 +86,7 @@ export function criarEntrada() {
   addEventListener('pointermove', ev => { if (ev.pointerId === e.id) mover(ev); });
   const soltar = ev => { if (ev.pointerId !== e.id) return; e.id = null; e.x = e.z = 0; stick.classList.remove('on'); knob.style.transform = ''; };
   addEventListener('pointerup', soltar); addEventListener('pointercancel', soltar);
-  addEventListener('keydown', ev => { const k = ev.key.toLowerCase(); e.teclas.add(k); if (k === 'f' && !ev.repeat) e.lanterna++; if (k === 'r' && !ev.repeat) e.recarregar++; if (k === 'q' && !ev.repeat) e.trocar++; if (k === ' ') { e.atirando = true; ev.preventDefault(); } });
+  addEventListener('keydown', ev => { const k = ev.key.toLowerCase(); e.teclas.add(k); if (k === 'f' && !ev.repeat) e.lanterna++; if (k === 'r' && !ev.repeat) e.recarregar++; if (k === 'q' && !ev.repeat) e.trocar++; if (k === 'g' && !ev.repeat) e.sinalizador++; if (k === ' ') { e.atirando = true; ev.preventDefault(); } });
   addEventListener('keyup', ev => { e.teclas.delete(ev.key.toLowerCase()); if (ev.key === ' ') e.atirando = false; });
   const fogo = document.getElementById('fire');
   fogo.addEventListener('pointerdown', ev => { ev.preventDefault(); e.atirando = true; fogo.classList.add('on'); });
@@ -93,11 +94,15 @@ export function criarEntrada() {
   document.getElementById('lamp').onclick = () => e.lanterna++;
   document.getElementById('reload').onclick = () => e.recarregar++;
   document.getElementById('swap').onclick = () => e.trocar++;
+  document.getElementById('flare').onclick = () => e.sinalizador++;
+  // com teclado: Shift segurado = andar devagar
+  addEventListener('keydown', ev => { if (ev.key === 'Shift') e.devagarTecla = true; }); addEventListener('keyup', ev => { if (ev.key === 'Shift') e.devagarTecla = false; });
   /** Direção pedida (−1..1 nos dois eixos da tela). */
   e.direcao = () => {
     if (e.id !== null) return [e.x, e.z];
     const k = e.teclas, b = n => (k.has(n) ? 1 : 0);
-    return [Math.max(b('d'), b('arrowright')) - Math.max(b('a'), b('arrowleft')), Math.max(b('s'), b('arrowdown')) - Math.max(b('w'), b('arrowup'))];
+    const v = e.devagarTecla ? 0.45 : 1;
+    return [(Math.max(b('d'), b('arrowright')) - Math.max(b('a'), b('arrowleft'))) * v, (Math.max(b('s'), b('arrowdown')) - Math.max(b('w'), b('arrowup'))) * v];
   };
   return e;
 }

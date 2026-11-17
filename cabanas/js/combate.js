@@ -1,4 +1,5 @@
-// Combate: zumbis (percepção por barulho e lanterna), tiro com munição e recarga, efeitos e saque no chão.
+// Combate: zumbis de três tipos, percepção por luz e por som (ondas visíveis), tiro com munição e recarga,
+// sinalizadores de mão, efeitos e saque no chão.
 import * as T from './lib/three.module.js';
 import { CFG } from './config.js';
 import { brilho, caixa, mat } from './mundo.js';
@@ -9,8 +10,8 @@ const tmpA = new T.Vector3(), tmpB = new T.Vector3();
 function descartar(scene, g) { scene.remove(g); g.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } }); }
 
 export function criarCombate(mundo, heroi, render, eventos) {
-  const { scene } = mundo, Z = CFG.zumbi, V = CFG.visao;
-  const zumbis = [], pedacos = [], saques = [], janelas = []; let gemidoT = 2;
+  const { scene } = mundo, Z = CFG.zumbi, V = CFG.visao, TP = CFG.tipos;
+  const zumbis = [], pedacos = [], saques = [], janelas = [], ondas = [], sinalizadores = [], stats = { tiros: 0, acertos: 0 }; let gemidoT = 2;
 
   // ---------- efeitos do tiro ----------
   const luzTiro = new T.PointLight('#f8e6a0', 0, 5, 1.2); scene.add(luzTiro);
@@ -22,50 +23,63 @@ export function criarCombate(mundo, heroi, render, eventos) {
     for (let i = 0; i < n; i++) { const m = new T.Mesh(geoPedaco, m0); m.position.copy(p); m.userData = { v: new T.Vector3((Math.random() - .5) * sp, Math.random() * sp, (Math.random() - .5) * sp), t: 0.5 }; scene.add(m); pedacos.push(m); }
   }
 
+  // ---------- som: ondas visíveis no chão; zumbis dentro do raio vão investigar a origem ----------
+  const geoOnda = new T.RingGeometry(0.92, 1, 40);
+  /** Faz barulho em `p` com alcance `raio`. Quem está dentro vai até lá (ou caça, se já te viu). */
+  function ruido(p, raio, cor = '#8c9cb8', mostrar = true) {
+    if (mostrar) { const m = new T.Mesh(geoOnda, new T.MeshBasicMaterial({ color: cor, transparent: true, opacity: 0.7, side: T.DoubleSide, depthWrite: false }));
+      m.rotation.x = -Math.PI / 2; m.position.set(p.x, 0.06, p.z); m.userData = { t: 0, raio }; scene.add(m); ondas.push(m); }
+    for (const z of zumbis) if (!z.morto && !z.horda && z.g.position.distanceTo(p) < raio && !z.cacando) { z.investiga = { x: p.x, z: p.z }; z.rumoT = 9; }
+  }
+
   // ---------- zumbis ----------
-  function modeloZumbi() {
-    const g = new T.Group(), b = new T.Group(); g.add(b);
-    const pele = mat('#8c9cb8'), roupa = mat('#2b2f52'), calca = mat('#1e2340');   // pele cinza-azulada, roupa escura
+  function modeloZumbi(tipo) {
+    const t = TP[tipo], g = new T.Group(), b = new T.Group(); g.add(b);
+    const pele = mat(t.pele), roupa = mat(t.roupa), calca = mat('#1e2340'), s = t.escala;
     const lE = new T.Group(), lD = new T.Group(); lE.position.set(-0.13, 0.6, 0); lD.position.set(0.13, 0.6, 0);
-    lE.add(caixa(0.2, 0.6, 0.22, calca, 0, -0.3, 0)); lD.add(caixa(0.2, 0.6, 0.22, calca, 0, -0.3, 0)); b.add(lE, lD);
-    b.add(caixa(0.54, 0.6, 0.32, roupa, 0, 0.92, 0), caixa(0.2, 0.18, 0.05, mat('#8a2c3a'), 0.1, 1.0, 0.17));
-    const cab = caixa(0.34, 0.34, 0.32, pele, 0.04, 1.42, 0.04); cab.rotation.z = 0.25; b.add(cab);
-    const olhos = [caixa(0.07, 0.05, 0.02, brilho('#e84040'), -0.04, 1.46, 0.21), caixa(0.07, 0.05, 0.02, brilho('#e84040'), 0.12, 1.48, 0.21)]; b.add(...olhos);
-    const aE = new T.Group(), aD = new T.Group(); aE.position.set(-0.33, 1.15, 0); aD.position.set(0.33, 1.15, 0);
-    aE.add(caixa(0.15, 0.5, 0.15, pele, 0, -0.22, 0)); aD.add(caixa(0.15, 0.5, 0.15, pele, 0, -0.22, 0));
-    aE.rotation.x = aD.rotation.x = -1.45; b.add(aE, aD);
+    lE.add(caixa(0.2 * s, 0.6, 0.22 * s, calca, 0, -0.3, 0)); lD.add(caixa(0.2 * s, 0.6, 0.22 * s, calca, 0, -0.3, 0)); b.add(lE, lD);
+    b.add(caixa(0.54 * s, 0.6, 0.32 * s, roupa, 0, 0.92, 0), caixa(0.2, 0.18, 0.05, mat('#8a2c3a'), 0.1, 1.0, 0.17 * s));
+    const cab = caixa(0.34 * t.cabeca, 0.34 * t.cabeca, 0.32 * t.cabeca, pele, 0.04, 1.42 + (t.cabeca - 1) * 0.15, 0.04); cab.rotation.z = 0.25; b.add(cab);
+    const olhos = [caixa(0.07, 0.05, 0.02, brilho(t.olhos), -0.04, 1.46, 0.21 * t.cabeca), caixa(0.07, 0.05, 0.02, brilho(t.olhos), 0.12, 1.48, 0.21 * t.cabeca)];
+    if (tipo === 'gritador') olhos.push(caixa(0.16, 0.1, 0.03, brilho('#c84060'), 0.04, 1.33, 0.22 * t.cabeca));   // boca aberta
+    b.add(...olhos);
+    const aE = new T.Group(), aD = new T.Group(); aE.position.set(-0.33 * s, 1.15, 0); aD.position.set(0.33 * s, 1.15, 0);
+    aE.add(caixa(0.15, 0.5 * t.braco, 0.15, pele, 0, -0.22 * t.braco, 0)); aD.add(caixa(0.15, 0.5 * t.braco, 0.15, pele, 0, -0.22 * t.braco, 0));
+    aE.rotation.x = aD.rotation.x = t.bracos; b.add(aE, aD);
     const corpoMeshes = []; b.traverse(o => { if (o.isMesh && !olhos.includes(o)) corpoMeshes.push(o); });
     return { g, b, lE, lD, aE, aD, mats: [pele, roupa], olhos, corpoMeshes, vistoT: 0, modo: '' };
   }
-  /** Cria um zumbi num ponto livre entre `min` e `max` de distância do jogador. */
-  function surgir(min, max, horda = false) {
-    const hp = heroi.g.position; let x = 0, z = 0, ok = false;
-    for (let k = 0; k < 60 && !ok; k++) { const a = Math.random() * 6.28, d = min + Math.random() * (max - min); x = hp.x + Math.sin(a) * d; z = hp.z + Math.cos(a) * d; ok = mundo.livre(x, z, 0.6); }
-    if (!ok) return null;
-    const m = modeloZumbi(); m.g.position.set(x, 0, z); scene.add(m.g);
-    const zb = { ...m, vida: Z.vida, morto: false, t: Math.random() * 6, tocado: 0, ataque: 0, kx: 0, kz: 0, mortoT: 0, cacando: horda, horda, visivel: false };
-    m.g.visible = false;
+  function sortearTipo() {
+    const r = Math.random(), gritadores = zumbis.filter(z => !z.morto && z.tipo === 'gritador').length;
+    if (r < TP.gritador.chance && gritadores < TP.gritador.max) return 'gritador';
+    if (r < TP.gritador.chance + TP.mariposa.chance) return 'mariposa';
+    return 'comum';
+  }
+  function criar(x, z, tipo, horda) {
+    const m = modeloZumbi(tipo); m.g.position.set(x, 0, z); m.g.visible = false; scene.add(m.g);
+    const zb = { ...m, tipo, vida: TP[tipo].vida, morto: false, t: Math.random() * 6, tocado: 0, ataque: 0, kx: 0, kz: 0, mortoT: 0, cacando: horda, horda, visivel: false, gritou: false, grito: 0 };
     zumbis.push(zb); return zb;
   }
-  /** Surge junto de um ponto (para grupos). */
-  function surgirPerto(c) {
-    for (let k = 0; k < 20; k++) { const x = c.x + (Math.random() - 0.5) * 3, z = c.z + (Math.random() - 0.5) * 3;
-      if (mundo.livre(x, z, 0.6)) { const m = modeloZumbi(); m.g.position.set(x, 0, z); scene.add(m.g); const zb = { ...m, vida: Z.vida, morto: false, t: Math.random() * 6, tocado: 0, ataque: 0, kx: 0, kz: 0, mortoT: 0, cacando: true, horda: false }; m.g.visible = false; zb.visivel = false; zumbis.push(zb); return zb; } }
+  /** Cria um zumbi num ponto livre entre `min` e `max` de distância do jogador. */
+  function surgir(min, max, horda = false, tipo = null) {
+    const hp = heroi.g.position;
+    for (let k = 0; k < 60; k++) { const a = Math.random() * 6.28, d = min + Math.random() * (max - min), x = hp.x + Math.sin(a) * d, z = hp.z + Math.cos(a) * d;
+      if (mundo.livre(x, z, 0.6)) return criar(x, z, tipo || (horda ? (Math.random() < 0.15 ? 'mariposa' : 'comum') : sortearTipo()), horda); }
     return null;
   }
   const vivos = () => zumbis.filter(z => !z.morto).length;
 
   function ferir(z, dir, dano) {
-    z.vida -= dano; z.tocado = 0.12; z.kx = dir.x * 3.2; z.kz = dir.z * 3.2; z.cacando = true;
+    z.vida -= dano; z.tocado = 0.12; z.kx = dir.x * 3.2 * TP[z.tipo].empurrao; z.kz = dir.z * 3.2 * TP[z.tipo].empurrao; z.cacando = true;
     respingo(z.g.position.clone().setY(1.1), '#8a2c3a', 4 + Math.round(dano * 1.5)); SOM.impacto();
     if (z.vida <= 0 && !z.morto) {
       z.morto = true; z.mortoT = 0; respingo(z.g.position.clone().setY(0.8), '#5d6a8a', 10); SOM.queda();
       eventos.abate(z);
-      // saque no chão: moedas e, às vezes, uma carteira fria
-      const S = CFG.saque, r = Math.random(), p = z.g.position;
-      if (r < S.carteiraFria.chance) soltar(p, 'carteira', sorteio(S.carteiraFria.sats));
-      else if (r < S.carteiraFria.chance + S.moeda.chance) soltar(p, 'moeda', sorteio(S.moeda.sats));
-      else if (r < S.carteiraFria.chance + S.moeda.chance + S.municao.chance) soltar(p, 'municao', 0, Math.random() < 0.6 ? arma.atual : (arma.atual === 'espingarda' ? 'pistola' : 'espingarda'));
+      const S = CFG.saque, p = z.g.position; let r = Math.random() / (z.tipo === 'comum' ? 1 : 1.6);   // especiais soltam mais coisa
+      if ((r -= S.carteiraFria.chance) < 0) soltar(p, 'carteira', sorteio(S.carteiraFria.sats));
+      else if ((r -= S.moeda.chance) < 0) soltar(p, 'moeda', sorteio(S.moeda.sats));
+      else if ((r -= S.municao.chance) < 0) soltar(p, 'municao', 0, Math.random() < 0.6 ? arma.atual : (arma.atual === 'espingarda' ? 'pistola' : 'espingarda'));
+      else if ((r -= S.pilha.chance) < 0) soltar(p, 'pilha', 0);
     }
   }
   const sorteio = ([a, b]) => Math.round(a + Math.random() * (b - a));
@@ -73,9 +87,21 @@ export function criarCombate(mundo, heroi, render, eventos) {
     const g = new T.Group();
     if (tipo === 'moeda') g.add(caixa(0.24, 0.24, 0.06, brilho('#e8a850'), 0, 0, 0), caixa(0.1, 0.12, 0.07, brilho('#fffbe6'), 0, 0, 0));
     else if (tipo === 'carteira') g.add(caixa(0.36, 0.24, 0.1, brilho('#3fd0c8'), 0, 0, 0), caixa(0.12, 0.08, 0.11, brilho('#fffbe6'), 0.06, 0.03, 0));
+    else if (tipo === 'pilha') g.add(caixa(0.12, 0.28, 0.12, brilho('#a8cf78'), 0, 0, 0), caixa(0.06, 0.05, 0.06, brilho('#fffbe6'), 0, 0.16, 0));
     else if (qual === 'espingarda') for (let k = 0; k < 3; k++) g.add(caixa(0.08, 0.22, 0.08, brilho(k === 1 ? '#c84060' : '#8a2c3a'), (k - 1) * 0.11, 0, 0));
     else g.add(caixa(0.18, 0.24, 0.08, brilho('#e8a850'), 0, 0, 0), caixa(0.14, 0.06, 0.09, brilho('#fffbe6'), 0, 0.1, 0));
     g.position.set(p.x, 0.45, p.z); scene.add(g); saques.push({ g, tipo, sats, t: 0, arma: qual });
+  }
+
+  // ---------- sinalizador de mão: cai à frente, ilumina 20 s em vermelho e chama os zumbis com chiado ----------
+  function lancarSinalizador() {
+    const g = heroi.g, f = heroi.frente(), S = CFG.sinalizador;
+    let [x, z] = mundo.resolver(g.position.x + f.x * S.distancia, g.position.z + f.z * S.distancia, 0.2);
+    const o = new T.Group(); o.add(caixa(0.1, 0.1, 0.32, '#7a3a2a', 0, 0.06, 0), caixa(0.12, 0.12, 0.1, brilho('#ff5a3a'), 0, 0.08, 0.18));
+    const luz = new T.PointLight('#ff6040', 40, S.luz, 1.3); luz.position.y = 0.8; o.add(luz);
+    o.position.set(x, 0, z); o.rotation.y = Math.random() * 6; scene.add(o);
+    sinalizadores.push({ o, luz, t: S.duracao, chamado: 0, x, z }); SOM.sinalizadorMao();
+    ruido(o.position, S.chamado, '#ff6040');
   }
 
   // ---------- armas: espingarda e pistola, cada uma com seu pente e sua reserva ----------
@@ -97,7 +123,7 @@ export function criarCombate(mundo, heroi, render, eventos) {
     // mira assistida: vira para o zumbi vivo e VISÍVEL mais próximo à frente
     const g = heroi.g, frente = heroi.frente(); let melhor = null, bs = 1e9;
     for (const z of zumbis) { if (z.morto || !z.visivel) continue; tmpA.subVectors(z.g.position, g.position); const d = tmpA.length(); if (d > A.alcance) continue;
-      const ang = Math.acos(Math.max(-1, Math.min(1, tmpA.dot(frente) / d))), sc = d + ang * 4; if (sc < bs) { bs = sc; melhor = z; } }
+      const ang = Math.acos(Math.max(-1, Math.min(1, tmpA.dot(frente) / d))), sc = d + ang * 4 - (z.tipo === 'gritador' && !z.gritou ? 3 : 0); if (sc < bs) { bs = sc; melhor = z; } }
     if (melhor) g.rotation.y = Math.atan2(melhor.g.position.x - g.position.x, melhor.g.position.z - g.position.z);
     g.updateMatrixWorld(true);
     const dir = heroi.frente(); let alvo = null, ha = A.alcance;
@@ -108,12 +134,16 @@ export function criarCombate(mundo, heroi, render, eventos) {
     clarao.position.copy(tmpA); clarao.visible = true; luzTiro.position.copy(tmpA); luzTiro.intensity = arma.atual === 'espingarda' ? 34 : 20; flashT = 0.07;
     heroi.coice = A.coice; render.tremer(0.14 * A.coice);
     arma.atual === 'espingarda' ? SOM.espingarda() : SOM.pistola();
-    if (alvo) ferir(alvo, dir, A.dano(ha));
-    // barulho: zumbis no raio escutam e vêm
-    for (const z of zumbis) if (!z.morto && z.g.position.distanceTo(g.position) < A.barulho) z.cacando = true;
+    stats.tiros++; if (alvo) { stats.acertos++; ferir(alvo, dir, A.dano(ha)); }
+    // barulho: uma onda visível; quem está perto caça, quem está no raio vem investigar
+    ruido(g.position, A.barulho, '#e8a850');
+    for (const z of zumbis) if (!z.morto && z.g.position.distanceTo(g.position) < A.barulho * 0.5) z.cacando = true;
     eventos.tiro();
     if (m.pente === 0 && m.reserva > 0) recarregar();
   }
+
+  /** Luzes que revelam zumbis: janelas acesas e sinalizadores queimando. */
+  const iluminado = p => janelas.some(j => Math.hypot(j.x - p.x, j.z - p.z) < V.janela) || sinalizadores.some(s => Math.hypot(s.x - p.x, s.z - p.z) < CFG.sinalizador.luz * 0.8);
 
   function passo(dt, t) {
     const g = heroi.g;
@@ -122,53 +152,90 @@ export function criarCombate(mundo, heroi, render, eventos) {
     if ((flashT -= dt) <= 0) { clarao.visible = false; rastro.visible = false; luzTiro.intensity = 0; }
     for (let i = pedacos.length - 1; i >= 0; i--) { const m = pedacos[i], u = m.userData; u.t -= dt; u.v.y -= 9 * dt; m.position.addScaledVector(u.v, dt); if (m.position.y < 0.05) { m.position.y = 0.05; u.v.set(0, 0, 0); }
       if (u.t <= 0) { scene.remove(m); pedacos.splice(i, 1); } }
+    for (let i = ondas.length - 1; i >= 0; i--) { const o = ondas[i], u = o.userData; u.t += dt / 0.7; o.scale.setScalar(Math.max(0.01, u.t * u.raio)); o.material.opacity = 0.7 * (1 - u.t);
+      if (u.t >= 1) { scene.remove(o); o.material.dispose(); ondas.splice(i, 1); } }
+    for (let i = sinalizadores.length - 1; i >= 0; i--) {
+      const s = sinalizadores[i]; s.t -= dt; s.luz.intensity = (s.t < 3 ? s.t / 3 : 1) * (36 + Math.sin(t * 31 + i) * 8 + Math.random() * 6);
+      if ((s.chamado -= dt) <= 0) { s.chamado = 2; ruido(s.o.position, CFG.sinalizador.chamado, '#ff6040'); }
+      if (s.t <= 0) { descartar(scene, s.o); sinalizadores.splice(i, 1); }
+    }
     // saque: flutua, gira e é puxado quando o jogador chega perto
     for (let i = saques.length - 1; i >= 0; i--) {
       const s = saques[i]; s.t += dt; s.g.rotation.y += dt * 2.5; s.g.position.y = 0.45 + Math.sin(s.t * 3) * 0.08;
       const d = Math.hypot(s.g.position.x - g.position.x, s.g.position.z - g.position.z);
       if (d < CFG.saque.ima && !heroi.caido) { s.g.position.x += (g.position.x - s.g.position.x) * Math.min(1, dt * 10); s.g.position.z += (g.position.z - s.g.position.z) * Math.min(1, dt * 10);
-        if (d < 0.45) { descartar(scene, s.g); saques.splice(i, 1); if (s.tipo === 'municao') { const b = CFG.saque.municao.balas[s.arma]; arma.muni[s.arma].reserva += b; SOM.municao(); eventos.municao(b, s.arma); } else { s.tipo === 'carteira' ? SOM.carteira() : SOM.moeda(); eventos.saque(s.tipo, s.sats); } } }
+        if (d < 0.45) { descartar(scene, s.g); saques.splice(i, 1);
+          if (s.tipo === 'municao') { const b = CFG.saque.municao.balas[s.arma]; arma.muni[s.arma].reserva += b; SOM.municao(); eventos.municao(b, s.arma); }
+          else if (s.tipo === 'pilha') { SOM.municao(); eventos.pilha(); }
+          else { s.tipo === 'carteira' ? SOM.carteira() : SOM.moeda(); eventos.saque(s.tipo, s.sats); } } }
     }
     const percebe = heroi.lanterna ? CFG.lanterna.visto : CFG.lanterna.escondido, fr = heroi.frente();
     if (!janelas.length && mundo.luzes.length) for (const l of mundo.luzes) { const w = new T.Vector3(); l.getWorldPosition(w); janelas.push(w); }
-    // gemidos: de tempos em tempos, um zumbi perto geme (mais alto quanto mais perto)
-    if ((gemidoT -= dt) <= 0) { gemidoT = 2 + Math.random() * 3.5; const perto = zumbis.filter(z => !z.morto && z.g.position.distanceTo(heroi.g.position) < 15);
-      if (perto.length) SOM.gemido(1 - perto[Math.floor(Math.random() * perto.length)].g.position.distanceTo(heroi.g.position) / 15); }
+    if ((gemidoT -= dt) <= 0) { gemidoT = 2 + Math.random() * 3.5; const perto = zumbis.filter(z => !z.morto && z.g.position.distanceTo(g.position) < 15);
+      if (perto.length) SOM.gemido(1 - perto[Math.floor(Math.random() * perto.length)].g.position.distanceTo(g.position) / 15); }
+
     for (let i = zumbis.length - 1; i >= 0; i--) {
-      const z = zumbis[i]; z.t += dt;
+      const z = zumbis[i], tp = TP[z.tipo]; z.t += dt;
       if (z.morto) {
         z.mortoT += dt; z.b.rotation.x = -Math.min(1, z.mortoT / 0.35) * Math.PI / 2; z.b.position.y = z.mortoT > 1.5 ? -(z.mortoT - 1.5) * 0.8 : 0;
         if (z.mortoT > 2.6) { descartar(scene, z.g); zumbis.splice(i, 1); }
         continue;
       }
       tmpA.subVectors(g.position, z.g.position); tmpA.y = 0; const d = tmpA.length();
-      if (!z.cacando && d < percebe) z.cacando = true;
+      // percepção: perto o bastante para te notar (mais longe com a lanterna ligada)
+      if (!z.cacando && d < percebe * tp.percepcao) z.cacando = true;
       if (z.cacando && !z.horda && d > Z.esquece) z.cacando = false;
-      const cacar = z.cacando && !heroi.caido, sp = cacar ? (z.horda ? Z.velocidadeHorda : Z.velocidade) : Z.vagando;
-      // vagando: anda devagar até um ponto aleatório por perto e escolhe outro ao chegar
-      if (!cacar && (!z.rumo || (z.rumoT -= dt) <= 0 || Math.hypot(z.rumo.x - z.g.position.x, z.rumo.z - z.g.position.z) < 0.6)) {
-        z.rumo = { x: z.g.position.x + (Math.random() - 0.5) * 14, z: z.g.position.z + (Math.random() - 0.5) * 14 }; z.rumoT = 5 + Math.random() * 6;
+      // mariposa: corre para a luz mais próxima (a sua lanterna ou um sinalizador); no escuro, perde o rumo
+      let luzAlvo = null;
+      if (z.tipo === 'mariposa') {
+        let melhor = heroi.lanterna && d < tp.atracao ? d : 1e9;
+        for (const s of sinalizadores) { const ds = Math.hypot(s.x - z.g.position.x, s.z - z.g.position.z); if (ds < tp.atracao && ds < melhor) { melhor = ds; luzAlvo = s; } }
+        if (luzAlvo) z.cacando = false; else if (melhor < 1e9) z.cacando = true; else if (d > 3.5 && !z.horda) z.cacando = false;
       }
-      const dir = cacar ? tmpA.normalize() : tmpB.set(z.rumo.x - z.g.position.x, 0, z.rumo.z - z.g.position.z).normalize();
+      // gritador: ao te ver, para, se prepara e grita, chamando todos por perto
+      if (z.tipo === 'gritador' && z.cacando && !z.gritou && !heroi.caido) {
+        if (z.grito === 0) { z.grito = tp.preparo; eventos.alertaGritador(); }
+        z.grito -= dt; z.b.position.x = Math.sin(t * 60) * 0.04;
+        if (z.grito <= 0) { z.gritou = true; z.b.position.x = 0; SOM.grito(); render.tremer(0.2); ruido(z.g.position, tp.raioGrito, '#c84060');
+          for (const o of zumbis) if (!o.morto && o.g.position.distanceTo(z.g.position) < tp.raioGrito) o.cacando = true; }
+      }
+      const preparando = z.tipo === 'gritador' && z.cacando && !z.gritou;
+      const cacar = z.cacando && !heroi.caido && !preparando;
+      let dir, sp;
+      if (luzAlvo) { dir = tmpB.set(luzAlvo.x - z.g.position.x, 0, luzAlvo.z - z.g.position.z); sp = Math.hypot(dir.x, dir.z) > 1.2 ? tp.velocidade : 0; dir.normalize(); }
+      else if (cacar) { dir = tmpA.normalize(); sp = z.horda ? Math.max(tp.velocidade, Z.velocidadeHorda) : tp.velocidade; }
+      else {
+        // investigando um barulho, ou vagando até um ponto aleatório por perto
+        if (z.investiga) { z.rumo = z.investiga; z.investiga = null; z.indo = true; }
+        if (!z.rumo || (z.rumoT -= dt) <= 0 || Math.hypot(z.rumo.x - z.g.position.x, z.rumo.z - z.g.position.z) < 0.6) {
+          z.rumo = { x: z.g.position.x + (Math.random() - 0.5) * 14, z: z.g.position.z + (Math.random() - 0.5) * 14 }; z.rumoT = 5 + Math.random() * 6; z.indo = false;
+        }
+        dir = tmpB.set(z.rumo.x - z.g.position.x, 0, z.rumo.z - z.g.position.z).normalize(); sp = preparando ? 0 : z.indo ? tp.velocidade * 0.85 : Z.vagando;
+      }
       let nx = z.g.position.x + (dir.x * sp + z.kx) * dt, nz = z.g.position.z + (dir.z * sp + z.kz) * dt;
       z.kx *= Math.pow(0.02, dt); z.kz *= Math.pow(0.02, dt);
       [nx, nz] = mundo.resolver(nx, nz, 0.3);
-      if (d > 0.75) { z.g.position.x = nx; z.g.position.z = nz; }
-      z.g.rotation.y = Math.atan2(dir.x, dir.z);
-      const zw = Math.sin(z.t * (cacar ? 5 : 3));
-      z.lE.rotation.x = zw * 0.35; z.lD.rotation.x = -zw * 0.35; z.b.rotation.z = Math.sin(z.t * 2.1) * 0.08; z.b.position.y = Math.abs(zw) * 0.03;
-      z.aE.rotation.x = -1.45 + Math.sin(z.t * 3) * 0.12; z.aD.rotation.x = -1.45 - Math.sin(z.t * 3) * 0.12;
-      z.tocado -= dt; const pisca = z.tocado > 0; z.mats[0].color.set(pisca ? '#fffbe6' : '#8c9cb8'); z.mats[1].color.set(pisca ? '#fffbe6' : '#2b2f52');
-      if (d < Z.alcance && (z.ataque -= dt) <= 0 && !heroi.caido) { z.ataque = Z.ataque; eventos.mordida(Z.dano); }
-      // visão: só aparece no cone da lanterna, muito perto, no clarão do tiro ou perto de uma janela acesa; no escuro, só os olhos
+      if (d > 0.75 || luzAlvo) { z.g.position.x = nx; z.g.position.z = nz; }
+      if (sp > 0 || cacar) z.g.rotation.y = Math.atan2(dir.x, dir.z);
+      const zw = Math.sin(z.t * (sp > 1.5 ? 9 : cacar ? 5 : 3));
+      z.lE.rotation.x = zw * (sp > 1.5 ? 0.7 : 0.35); z.lD.rotation.x = -zw * (sp > 1.5 ? 0.7 : 0.35); z.b.rotation.z = Math.sin(z.t * 2.1) * 0.08; z.b.position.y = Math.abs(zw) * 0.03;
+      z.aE.rotation.x = tp.bracos + Math.sin(z.t * 3) * 0.12; z.aD.rotation.x = tp.bracos - Math.sin(z.t * 3) * 0.12;
+      z.tocado -= dt; const pisca = z.tocado > 0; z.mats[0].color.set(pisca ? '#fffbe6' : tp.pele); z.mats[1].color.set(pisca ? '#fffbe6' : tp.roupa);
+      if (d < Z.alcance && (z.ataque -= dt) <= 0 && !heroi.caido) { z.ataque = Z.ataque; eventos.mordida(tp.dano); }
+      // visão: cone da lanterna, muito perto, clarão do tiro, janela acesa ou sinalizador; no escuro, só os olhos
       const vx = z.g.position.x - g.position.x, vz = z.g.position.z - g.position.z, ang = Math.acos(Math.max(-1, Math.min(1, (vx * fr.x + vz * fr.z) / (Math.hypot(vx, vz) || 1))));
-      const visto = d < V.perto || (heroi.lanterna && d < V.alcance && ang < V.angulo) || (flashT > 0 && d < V.clarao) || janelas.some(j => Math.hypot(j.x - z.g.position.x, j.z - z.g.position.z) < V.janela);
+      const visto = d < V.perto || (heroi.lanterna && d < V.alcance && ang < V.angulo) || (flashT > 0 && d < V.clarao) || iluminado(z.g.position);
       if (visto) z.vistoT = V.memoria; else z.vistoT -= dt;
       const modo = z.vistoT > 0 ? 'todo' : d < V.olhos && Math.sin(z.t * 1.3 + i) > -0.6 ? 'olhos' : 'nada';
       z.visivel = modo === 'todo';
       if (modo !== z.modo) { z.modo = modo; z.g.visible = modo !== 'nada'; for (const o of z.corpoMeshes) o.visible = modo === 'todo'; }
     }
   }
-  function limpar() { for (const z of zumbis) descartar(scene, z.g); zumbis.length = 0; for (const s of saques) descartar(scene, s.g); saques.length = 0; }
-  return { zumbis, saques, arma, resetarArmas, trocar, surgir, surgirPerto, vivos, soltarMunicao: (p, n = 1) => { for (let i = 0; i < n; i++) soltar(p.clone().add(new T.Vector3((i - (n - 1) / 2) * 0.7, 0, 0.9)), 'municao', 0, i % 2 ? 'pistola' : 'espingarda'); }, atirar, recarregar, passo, limpar };
+  function limpar() {
+    for (const z of zumbis) descartar(scene, z.g); zumbis.length = 0; for (const s of saques) descartar(scene, s.g); saques.length = 0;
+    for (const s of sinalizadores) descartar(scene, s.o); sinalizadores.length = 0; for (const o of ondas) { scene.remove(o); o.material.dispose(); } ondas.length = 0;
+  }
+  return { stats, zumbis, saques, sinalizadores, arma, resetarArmas, trocar, surgir, vivos, ruido, lancarSinalizador,
+    soltarMunicao: (p, n = 1) => { for (let i = 0; i < n; i++) soltar(p.clone().add(new T.Vector3((i - (n - 1) / 2) * 0.7, 0, 0.9)), 'municao', 0, i % 2 ? 'pistola' : 'espingarda'); },
+    atirar, recarregar, passo, limpar };
 }
