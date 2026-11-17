@@ -13,6 +13,13 @@ export const PALETA = [
   '#3fd0c8', '#c84060',                                   // sinalizador de extração (turquesa) e alerta (magenta)
 ].map(h => new T.Color(h));
 
+// Névoa ao redor do personagem: em vez da distância até a câmera (que é igual para tudo numa câmera isométrica alta),
+// a névoa usa a distância até o centro da tela, onde o personagem sempre está. Ele fica nítido; o mundo some nas bordas.
+T.ShaderChunk.fog_vertex = `
+#ifdef USE_FOG
+  vFogDepth = length( mvPosition.xy * vec2( 1.0, 1.25 ) );
+#endif`;
+
 export function criarRender(canvas) {
   const renderer = new T.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(1);

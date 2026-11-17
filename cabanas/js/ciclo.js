@@ -8,9 +8,9 @@ export const CICLO = {
   transicao: 1.2,                                  // horas de crepúsculo (antes de 19h e antes de 6h)
 };
 // cores na paleta do jogo: noite fria e escura; dia nublado, cinza-azulado (a cidade nunca tem sol pleno)
-const NOITE = { fundo: '#0a0a14', nevoa: '#141428', perto: 22, longe: 46, ceu: '#8c9cb8', chao: '#1e2340', hemi: 1.6, sol: '#c5d3e8', solI: 1.6 };
-const DIA = { fundo: '#8c9cb8', nevoa: '#8c9cb8', perto: 14, longe: 40, ceu: '#c5d3e8', chao: '#3f7a48', hemi: 3.0, sol: '#f8e6a0', solI: 2.2 };
-const ENTARDECER = { fundo: '#7a3a2a', nevoa: '#4a2c2a', perto: 16, longe: 42, ceu: '#e8a850', chao: '#2b1d2a', hemi: 2.2, sol: '#c8703a', solI: 1.8 };
+const NOITE = { fundo: '#0a0a14', nevoa: '#0a0a14', perto: 6, longe: 13, ceu: '#8c9cb8', chao: '#1e2340', hemi: 1.6, sol: '#c5d3e8', solI: 1.6 };
+const DIA = { fundo: '#8c9cb8', nevoa: '#8c9cb8', perto: 3.2, longe: 9.5, ceu: '#c5d3e8', chao: '#3f7a48', hemi: 3.0, sol: '#f8e6a0', solI: 2.2 };
+const ENTARDECER = { fundo: '#4a2c2a', nevoa: '#4a2c2a', perto: 4.5, longe: 11, ceu: '#e8a850', chao: '#2b1d2a', hemi: 2.2, sol: '#c8703a', solI: 1.8 };
 
 const ehNoite = h => h >= CICLO.inicioNoite || h < CICLO.inicioDia;
 /** 0 = noite fechada, 1 = dia pleno, com crepúsculo suave nas viradas. */
