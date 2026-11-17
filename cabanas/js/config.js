@@ -30,33 +30,8 @@ export const CFG = {
       preparo: 1.3, raioGrito: 24, chance: 0.1, max: 2 },
   },
 
-  // contratos do quadro do Posto 9; a área é a mesma (mesma semente), o objetivo muda
-  contratos: {
-    limpeza: { id: 'limpeza', area: 'Acampamento Pinheiro', tipo: 'Limpeza', objetivo: 35, risco: 'Médio', pagamento: 5500, descricao: n => `Abater ${n} zumbis e extrair` },
-    recuperacao: { id: 'recuperacao', area: 'Acampamento Pinheiro', tipo: 'Recuperação', objetivo: 1, risco: 'Médio', pagamento: 4800, descricao: () => 'Achar o HD em uma das cabanas e extrair', vasculhar: 3, ruido: 4,
-      populacao: { vagando: 18, minimo: 10 }, extracao: { segurar: 18, maxHorda: 9 } },   // missão de busca: área menos cheia e extração mais curta
-  },
   area: { semente: 1977, mundo: 34, vagando: 26, minimo: 16, surgeLonge: 16, surgeCada: 6 },   // zumbis vagando desde o início; quando caem abaixo do mínimo, outros chegam pela mata
 
-  extracao: {
-    segurar: 25, raio: 3.2, distancia: 22,         // segundos no ponto, raio do ponto, distância do jogador ao acender
-    ondaCada: 4, porOnda: [2, 3, 3, 4, 4, 5], maxHorda: 16,
-  },
-  // ganância: depois de cumprir o objetivo, cada etapa que você demora para entrar no sinal multiplica o saque
-  ganancia: { etapa: 40, passo: 0.25, maximo: 2.5, reforcoCada: [7, 5.5, 4.5, 3.5, 3] },
-  saque: {
-    moeda: { chance: 0.38, sats: [40, 130] }, municao: { chance: 0.3, balas: { espingarda: 3, pistola: 6 } }, carteiraFria: { chance: 0.05, sats: [600, 1500] },
-    pilha: { chance: 0.06 },
-    caixaMunicao: { espingarda: 8, pistola: 14 }, caixaSats: [80, 260], ima: 1.4,
-  },
-  // loja do Seu Bento, no refúgio; o que você compra fica guardado até usar
-  loja: {
-    pilha: { nome: 'Pilha', preco: 250 },
-    sinalizador: { nome: 'Sinalizador de mão', preco: 400 },
-    cartuchos: { nome: '12 cartuchos', preco: 350, arma: 'espingarda', balas: 12 },
-    pente: { nome: '24 balas de pistola', preco: 300, arma: 'pistola', balas: 24 },
-  },
-  kit: { sinalizadores: 1 },                       // todo contrato sai com 1 sinalizador de graça
+  // o que cai no chão e o que sai das caixas de suprimento
+  saque: { caixaMunicao: { espingarda: 8, pistola: 14 }, ima: 1.4 },
 };
-// contrato em andamento (a missão e a interface leem daqui)
-CFG.contrato = CFG.contratos.limpeza;

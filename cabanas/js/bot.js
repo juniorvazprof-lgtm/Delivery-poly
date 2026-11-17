@@ -1,22 +1,25 @@
-// Bot de teste: joga a missão sozinho para medir duração e dificuldade (?bot=1).
-// Joga como um jogador mediano: chega perto, atira, recua quando cercado, busca munição e corre para a extração.
+// Bot de teste: joga a sessão sozinho (?bot=1) caçando zumbis e buscando munição nas caixas.
+// ?duracao=N: quantos segundos de sobrevivência contam como "sobreviveu" (padrão 120).
 const YAW = Math.PI / 4, R = [Math.cos(YAW), -Math.sin(YAW)], F = [-Math.sin(YAW), -Math.cos(YAW)];
 
 export function criarBot({ heroi, combate, missao, mundo, entrada }) {
-  const GANANCIA = Number(new URLSearchParams(location.search).get('ganancia')) || 0;   // segundos que o bot fica caçando depois do objetivo
-  const st = { sinalizadores: 0, vidaMin: 100, tiros: 0, caixas: 0, preso: 0, desvio: 0, ultimo: [0, 0], fim: null, tLimpeza: 0 };
+  const DURACAO = Number(new URLSearchParams(location.search).get('duracao')) || 120;
+  const st = { sinalizadores: 0, vidaMin: 100, tiros: 0, preso: 0, desvio: 0, ultimo: [0, 0], fim: null };
   entrada.id = 'bot';
   const ir = (dx, dz) => { const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; entrada.x = dx * R[0] + dz * R[1]; entrada.z = -(dx * F[0] + dz * F[1]); };
+  /** Fecha a medição da sessão: caído ou tempo de sobrevivência cumprido. */
+  const fechar = estado => {
+    const municao = Object.values(combate.arma.muni).map(m => m.pente + m.reserva).join('/');
+    st.fim = { estado, tempo: Math.round(missao.tempo), abates: missao.abates, vidaMin: Math.round(st.vidaMin), municao };
+  };
   return {
     st,
     passo(dt) {
       entrada.atirando = false; entrada.x = entrada.z = 0;
-      if (!missao.ativo) {
-        if (!st.fim && (missao.estado === 'pago' || missao.estado === 'caido')) st.fim = { estado: missao.estado, mult: missao.mult, contrato: missao.C.id, pilhas: heroi.pilhas, bateria: +heroi.bateria.toFixed(2), sinalizadores: st.sinalizadores, tempo: missao.tempo, tLimpeza: st.tLimpeza, abates: missao.abates + missao.horda, saque: missao.saque, vidaMin: st.vidaMin, municao: Object.values(combate.arma.muni).map(m => m.pente + m.reserva).join('/'), caixas: mundo.caixas.filter(c => c.aberta).length };
-        return;
-      }
+      if (st.fim) return;
+      if (!missao.ativo) { if (missao.estado === 'caido') fechar('caido'); return; }
+      if (missao.tempo >= DURACAO) { fechar('sobreviveu'); return; }
       const p = heroi.g.position; st.vidaMin = Math.min(st.vidaMin, heroi.vida);
-      if (missao.estado === 'objetivo') st.tLimpeza = missao.tempo;
       let alvo = null, dAlvo = 1e9;
       for (const z of combate.zumbis) { if (z.morto) continue; const d = z.g.position.distanceTo(p) + (z.visivel ? 0 : 4); if (d < dAlvo) { dAlvo = d; alvo = z; } }
       if (alvo) dAlvo = alvo.g.position.distanceTo(p);
@@ -24,21 +27,15 @@ export function criarBot({ heroi, combate, missao, mundo, entrada }) {
       const A = combate.arma, outra = A.atual === 'espingarda' ? 'pistola' : 'espingarda';
       if (A.pente + A.reserva === 0 && A.muni[outra].pente + A.muni[outra].reserva > 0) combate.trocar(outra);
       const mun = Object.values(combate.arma.muni).reduce((t, m) => t + m.pente + m.reserva, 0) / 2;
+      const caixa = mundo.caixas.filter(c => !c.aberta).sort((a, b) => a.g.position.distanceTo(p) - b.g.position.distanceTo(p))[0];
+      const saque = combate.saques.find(s => s.g.position.distanceTo(p) < 7);
       let mx = 0, mz = 0;
-      if (missao.estado === 'extracao' || (missao.estado === 'ganancia' && missao.ganT >= GANANCIA)) {
-        const s = mundo.sinal.position, d = s.distanceTo(p);
-        if (d > 1.2) { mx = s.x - p.x; mz = s.z - p.z; }
-        if (alvo && dAlvo < 1.6 && d < 2.5) { mx = p.x - alvo.g.position.x; mz = p.z - alvo.g.position.z; }   // dentro do círculo, recua um pouco
-      } else {
-        const caixa = missao.estado !== 'objetivo' ? null : (missao.C.id === 'recuperacao' && !missao.achouHd ? mundo.caixas.filter(c => !c.aberta) : mundo.caixas.filter(c => !c.aberta)).sort((a, b) => a.g.position.distanceTo(p) - b.g.position.distanceTo(p))[0];
-        const saque = combate.saques.find(s => s.g.position.distanceTo(p) < 7);
-        if (caixa && (mun < 14 || (missao.C.id === 'recuperacao' && !missao.achouHd && (!alvo || dAlvo > 3)))) { mx = caixa.g.position.x - p.x; mz = caixa.g.position.z - p.z; }
-        else if (alvo && !alvo.visivel && dAlvo < 9) { mx = alvo.g.position.x - p.x; mz = alvo.g.position.z - p.z; }   // vira a lanterna para o barulho
-        else if (alvo && dAlvo < 2.4) { mx = p.x - alvo.g.position.x; mz = p.z - alvo.g.position.z; }          // recua
-        else if (saque && (!alvo || dAlvo > 6)) { mx = saque.g.position.x - p.x; mz = saque.g.position.z - p.z; }
-        else if (alvo && dAlvo > 6) { mx = alvo.g.position.x - p.x; mz = alvo.g.position.z - p.z; }
-        else if (!alvo) { mx = -p.x; mz = -p.z; }
-      }
+      if (caixa && mun < 14) { mx = caixa.g.position.x - p.x; mz = caixa.g.position.z - p.z; }         // munição baixa: vai na caixa
+      else if (alvo && !alvo.visivel && dAlvo < 9) { mx = alvo.g.position.x - p.x; mz = alvo.g.position.z - p.z; }   // vira a lanterna para o barulho
+      else if (alvo && dAlvo < 2.4) { mx = p.x - alvo.g.position.x; mz = p.z - alvo.g.position.z; }    // recua
+      else if (saque && (!alvo || dAlvo > 6)) { mx = saque.g.position.x - p.x; mz = saque.g.position.z - p.z; }
+      else if (alvo && dAlvo > 6) { mx = alvo.g.position.x - p.x; mz = alvo.g.position.z - p.z; }
+      else if (!alvo) { mx = -p.x; mz = -p.z; }                                                        // sem alvo: volta para o centro
       // destrava: se ficou parado querendo andar, contorna pelo lado
       const moveu = Math.hypot(p.x - st.ultimo[0], p.z - st.ultimo[1]); st.ultimo = [p.x, p.z];
       if ((mx || mz) && moveu < 0.01) st.preso += dt; else st.preso = Math.max(0, st.preso - dt);

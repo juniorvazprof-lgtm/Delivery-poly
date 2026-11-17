@@ -1,5 +1,5 @@
 // Combate: zumbis de três tipos, percepção por luz e por som (ondas visíveis), tiro com munição e recarga,
-// sinalizadores de mão, efeitos e saque no chão.
+// sinalizadores de mão, efeitos e itens caídos no chão.
 import * as T from './lib/three.module.js';
 import { CFG } from './config.js';
 import { brilho, caixa, mat } from './mundo.js';
@@ -74,23 +74,15 @@ export function criarCombate(mundo, heroi, render, eventos) {
     respingo(z.g.position.clone().setY(1.1), '#8a2c3a', 4 + Math.round(dano * 1.5)); SOM.impacto();
     if (z.vida <= 0 && !z.morto) {
       z.morto = true; z.mortoT = 0; respingo(z.g.position.clone().setY(0.8), '#5d6a8a', 10); SOM.queda();
-      eventos.abate(z);
-      const S = CFG.saque, p = z.g.position; let r = Math.random() / (z.tipo === 'comum' ? 1 : 1.6);   // especiais soltam mais coisa
-      if ((r -= S.carteiraFria.chance) < 0) soltar(p, 'carteira', sorteio(S.carteiraFria.sats));
-      else if ((r -= S.moeda.chance) < 0) soltar(p, 'moeda', sorteio(S.moeda.sats));
-      else if ((r -= S.municao.chance) < 0) soltar(p, 'municao', 0, Math.random() < 0.6 ? arma.atual : (arma.atual === 'espingarda' ? 'pistola' : 'espingarda'));
-      else if ((r -= S.pilha.chance) < 0) soltar(p, 'pilha', 0);
+      eventos.abate(z);   // inimigo não solta nada: munição vem das caixas
     }
   }
-  const sorteio = ([a, b]) => Math.round(a + Math.random() * (b - a));
-  function soltar(p, tipo, sats, qual = 'espingarda') {
+  function soltar(p, tipo, qual = 'espingarda') {
     const g = new T.Group();
-    if (tipo === 'moeda') g.add(caixa(0.24, 0.24, 0.06, brilho('#e8a850'), 0, 0, 0), caixa(0.1, 0.12, 0.07, brilho('#fffbe6'), 0, 0, 0));
-    else if (tipo === 'carteira') g.add(caixa(0.36, 0.24, 0.1, brilho('#3fd0c8'), 0, 0, 0), caixa(0.12, 0.08, 0.11, brilho('#fffbe6'), 0.06, 0.03, 0));
-    else if (tipo === 'pilha') g.add(caixa(0.12, 0.28, 0.12, brilho('#a8cf78'), 0, 0, 0), caixa(0.06, 0.05, 0.06, brilho('#fffbe6'), 0, 0.16, 0));
+    if (tipo === 'pilha') g.add(caixa(0.12, 0.28, 0.12, brilho('#a8cf78'), 0, 0, 0), caixa(0.06, 0.05, 0.06, brilho('#fffbe6'), 0, 0.16, 0));
     else if (qual === 'espingarda') for (let k = 0; k < 3; k++) g.add(caixa(0.08, 0.22, 0.08, brilho(k === 1 ? '#c84060' : '#8a2c3a'), (k - 1) * 0.11, 0, 0));
     else g.add(caixa(0.18, 0.24, 0.08, brilho('#e8a850'), 0, 0, 0), caixa(0.14, 0.06, 0.09, brilho('#fffbe6'), 0, 0.1, 0));
-    g.position.set(p.x, 0.45, p.z); scene.add(g); saques.push({ g, tipo, sats, t: 0, arma: qual });
+    g.position.set(p.x, 0.45, p.z); scene.add(g); saques.push({ g, tipo, t: 0, arma: qual });
   }
 
   // ---------- sinalizador de mão: cai à frente, ilumina 20 s em vermelho e chama os zumbis com chiado ----------
@@ -165,9 +157,8 @@ export function criarCombate(mundo, heroi, render, eventos) {
       const d = Math.hypot(s.g.position.x - g.position.x, s.g.position.z - g.position.z);
       if (d < CFG.saque.ima && !heroi.caido) { s.g.position.x += (g.position.x - s.g.position.x) * Math.min(1, dt * 10); s.g.position.z += (g.position.z - s.g.position.z) * Math.min(1, dt * 10);
         if (d < 0.45) { descartar(scene, s.g); saques.splice(i, 1);
-          if (s.tipo === 'municao') { const b = CFG.saque.municao.balas[s.arma]; arma.muni[s.arma].reserva += b; SOM.municao(); eventos.municao(b, s.arma); }
-          else if (s.tipo === 'pilha') { SOM.municao(); eventos.pilha(); }
-          else { s.tipo === 'carteira' ? SOM.carteira() : SOM.moeda(); eventos.saque(s.tipo, s.sats); } } }
+          if (s.tipo === 'municao') { const b = CFG.saque.caixaMunicao[s.arma]; arma.muni[s.arma].reserva += b; SOM.municao(); eventos.municao(b, s.arma); }
+          else if (s.tipo === 'pilha') { SOM.municao(); eventos.pilha(); } } }
     }
     const percebe = heroi.lanterna ? CFG.lanterna.visto : CFG.lanterna.escondido, fr = heroi.frente();
     if (!janelas.length && mundo.luzes.length) for (const l of mundo.luzes) { const w = new T.Vector3(); l.getWorldPosition(w); janelas.push(w); }
@@ -236,6 +227,5 @@ export function criarCombate(mundo, heroi, render, eventos) {
     for (const s of sinalizadores) descartar(scene, s.o); sinalizadores.length = 0; for (const o of ondas) { scene.remove(o); o.material.dispose(); } ondas.length = 0;
   }
   return { stats, zumbis, saques, sinalizadores, arma, resetarArmas, trocar, surgir, vivos, ruido, lancarSinalizador,
-    soltarMunicao: (p, n = 1) => { for (let i = 0; i < n; i++) soltar(p.clone().add(new T.Vector3((i - (n - 1) / 2) * 0.7, 0, 0.9)), 'municao', 0, i % 2 ? 'pistola' : 'espingarda'); },
     atirar, recarregar, passo, limpar };
 }

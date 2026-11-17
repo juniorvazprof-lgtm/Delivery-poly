@@ -1,5 +1,5 @@
-// Mundo da área: chão, cabanas, pinheiros, pedras, caixas de suprimento e o sinalizador de extração.
-// Gerado a partir de uma semente: o mesmo contrato tem sempre o mesmo mapa.
+// Mundo da área: chão, cabanas, pinheiros, pedras, caixas de suprimento e vaga-lumes.
+// Gerado a partir de uma semente: a mesma semente tem sempre o mesmo mapa.
 import * as T from './lib/three.module.js';
 
 export const mat = (c, o = {}) => new T.MeshLambertMaterial({ color: c, flatShading: true, ...o });
@@ -87,7 +87,7 @@ export function criarMundo(semente, MUNDO) {
   const vagalumes = [];
   for (let i = 0; i < 26; i++) { const m = new T.Mesh(new T.BoxGeometry(0.08, 0.08, 0.08), brilho('#f8e6a0')); m.userData = { x: (rand() - 0.5) * 34, z: (rand() - 0.5) * 34, y: 0.6 + rand() * 1.4, p: rand() * 6 }; scene.add(m); vagalumes.push(m); }
 
-  // ---- caixas de suprimento (munição e sats) em frente às portas ----
+  // ---- caixas de suprimento (munição) em frente às portas ----
   const caixas = portas.map(p => {
     const g = new T.Group();
     g.add(caixa(0.7, 0.42, 0.5, '#6e4434', 0, 0.21, 0), caixa(0.74, 0.08, 0.54, '#2b1d2a', 0, 0.44, 0), caixa(0.2, 0.12, 0.04, brilho('#e8a850'), 0, 0.3, 0.27));
@@ -95,37 +95,8 @@ export function criarMundo(semente, MUNDO) {
     return { g, aberta: false };
   });
 
-  // ---- sinalizador de extração: fumaça turquesa + coluna de luz ----
-  const sinal = new T.Group(); sinal.visible = false; scene.add(sinal);
-  const anel = new T.Mesh(new T.RingGeometry(2.9, 3.2, 32), new T.MeshBasicMaterial({ color: '#3fd0c8', transparent: true, opacity: 0.85, side: T.DoubleSide }));
-  anel.rotation.x = -Math.PI / 2; anel.position.y = 0.04; sinal.add(anel);
-  const progresso = new T.Mesh(new T.RingGeometry(2.4, 2.75, 48, 1, 0, 0.001), new T.MeshBasicMaterial({ color: '#f8e6a0', side: T.DoubleSide }));
-  progresso.rotation.x = -Math.PI / 2; progresso.position.y = 0.05; sinal.add(progresso);
-  sinal.add(caixa(0.2, 0.5, 0.2, '#7a3a2a', 0, 0.25, 0));
-  const chama = caixa(0.18, 0.18, 0.18, brilho('#3fd0c8'), 0, 0.6, 0); sinal.add(chama);
-  const luzSinal = new T.PointLight('#3fd0c8', 30, 9, 1.4); luzSinal.position.y = 1.2; sinal.add(luzSinal);
-  const fumaca = []; for (let i = 0; i < 14; i++) { const m = caixa(0.3, 0.3, 0.3, brilho('#3fd0c8'), 0, 0, 0); m.castShadow = false; m.userData.p = i / 14; sinal.add(m); fumaca.push(m); }
-  const coluna = new T.Mesh(new T.CylinderGeometry(0.12, 0.12, 14, 6, 1, true), new T.MeshBasicMaterial({ color: '#3fd0c8', transparent: true, opacity: 0.35 }));
-  coluna.position.y = 7; sinal.add(coluna);
-
-  /** Escolhe o ponto de extração: longe do jogador, num lugar livre. */
-  function posicionarSinal(longeDe, dist) {
-    for (let k = 0; k < 400; k++) {
-      const a = rand() * Math.PI * 2, d = dist + (rand() - 0.5) * 6, x = longeDe.x + Math.sin(a) * d, z = longeDe.z + Math.cos(a) * d;
-      if (Math.abs(x) < MUNDO - 6 && Math.abs(z) < MUNDO - 6 && livre(x, z, 3.4)) { sinal.position.set(x, 0, z); sinal.visible = true; return; }
-    }
-    sinal.position.set(0, 0, 0); sinal.visible = true;
-  }
-  function animarSinal(t, frac) {
-    if (!sinal.visible) return;
-    chama.visible = Math.sin(t * 22) > -0.5; luzSinal.intensity = 26 + Math.sin(t * 17) * 6;
-    for (const m of fumaca) { const u = (m.userData.p + t * 0.18) % 1; m.position.set(Math.sin(u * 9 + m.userData.p * 20) * u * 0.6, 0.7 + u * 4, Math.cos(u * 7) * u * 0.5); m.scale.setScalar(0.5 + u * 1.6); m.visible = u < 0.92; }
-    progresso.geometry.dispose(); progresso.geometry = new T.RingGeometry(2.4, 2.75, 48, 1, 0, Math.max(0.001, frac * Math.PI * 2));
-    anel.material.opacity = 0.55 + Math.sin(t * 4) * 0.3;
-  }
-
   return {
-    scene, lua, colisores, luzes, vagalumes, caixas, sinal, livre, rand, MUNDO, posicionarSinal, animarSinal,
+    scene, lua, colisores, luzes, vagalumes, caixas, livre, rand, MUNDO,
     /** Empurra um ponto para fora dos colisores (cabanas, árvores) e dos limites do mapa. */
     resolver(nx, nz, raio) {
       for (const [cx, cz, cr] of colisores) { const dx = nx - cx, dz = nz - cz, d = Math.hypot(dx, dz), m = cr + raio; if (d < m && d > 0) { nx = cx + dx / d * m; nz = cz + dz / d * m; } }
