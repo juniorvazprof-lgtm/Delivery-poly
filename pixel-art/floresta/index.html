@@ -13,10 +13,19 @@
   #view { position: fixed; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
   #hud { position: fixed; left: 12px; top: calc(10px + env(safe-area-inset-top, 0px)); font: 12px/1.4 monospace; color: var(--dim); text-shadow: 1px 1px 0 #000; pointer-events: none; }
   #hud b { color: var(--ink); }
-  #stick { position: fixed; width: 110px; height: 110px; margin: -55px 0 0 -55px; border: 3px solid #f8e6a055; border-radius: 50%; opacity: 0; pointer-events: none; }
-  #stick.on { opacity: 1; }
+  /* joystick fixo e sempre visível no canto esquerdo; o lado esquerdo inteiro da tela aceita o toque */
+  #stick { position: fixed; left: calc(30px + env(safe-area-inset-left, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); width: 124px; height: 124px;
+    border: 3px solid #f8e6a066; border-radius: 50%; background: #14142866; pointer-events: none; }
+  #stick.on { border-color: #f8e6a0; }
   #knob { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: #f8e6a0aa; border: 3px solid #0a0a14; }
-  #lamp { position: fixed; right: calc(18px + env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 78px; height: 78px;
+  #fire { position: fixed; right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); width: 104px; height: 104px; border-radius: 50%;
+    border: 3px solid #e8a850; background: #7a3a2acc; color: #fffbe6; font: bold 13px monospace; }
+  #fire:active, #fire.on { background: #c8703a; transform: scale(0.95); }
+  #hpbar { position: fixed; left: 12px; top: calc(52px + env(safe-area-inset-top, 0px)); width: 120px; height: 10px; background: #2b1d2a; border: 2px solid #0a0a14; }
+  #hpfill { height: 100%; width: 100%; background: #8a2c3a; }
+  #kills { position: fixed; right: 14px; top: calc(12px + env(safe-area-inset-top, 0px)); font: bold 14px monospace; color: #f8e6a0; text-shadow: 1px 1px 0 #000; }
+  #hurt { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 70px 20px #8a2c3a; opacity: 0; transition: opacity .25s; }
+  #lamp { position: fixed; right: calc(140px + env(safe-area-inset-right, 0px)); bottom: calc(38px + env(safe-area-inset-bottom, 0px)); width: 66px; height: 66px;
     border: 3px solid #f8e6a0; background: #141428cc; color: #f8e6a0; font: bold 11px monospace; display: grid; place-items: center; text-align: center; line-height: 1.2; }
   #lamp.off { border-color: #3a3f5a; color: #5d6a8a; }
   #lamp i { display: block; font-style: normal; font-size: 26px; }
@@ -24,7 +33,9 @@
 </head>
 <body>
 <canvas id="view"></canvas>
-<div id="hud"><b>Cabanas na Floresta</b><br>Arraste para andar · Botão ou F: lanterna</div>
+<div id="hud"><b>Cabanas na Floresta</b><br>Joystick: andar · Espaço: atirar · F: lanterna</div>
+<div id="hpbar"><div id="hpfill"></div></div><div id="kills">☠ 0</div><div id="hurt"></div>
+<button id="fire">ATIRAR</button>
 <div id="stick"><div id="knob"></div></div>
 <button id="lamp"><span><i>◉</i>LANTERNA</span></button>
 
@@ -223,23 +234,92 @@ const spot = new T.SpotLight('#f8e6a0', 60, 15, 0.42, 0.35, 1.2);
 spot.castShadow = true; spot.shadow.mapSize.set(512, 512); spot.shadow.camera.near = 0.2;
 spot.position.set(-0.34, 1.1, 0.35); hero.add(spot);
 const spotTarget = new T.Object3D(); spotTarget.position.set(-0.2, 0, 5); hero.add(spotTarget); spot.target = spotTarget;
-const beam = new T.Mesh(new T.ConeGeometry(1.6, 5.5, 10, 1, true), new T.MeshBasicMaterial({ color: '#f8e6a0', transparent: true, opacity: 0.07, depthWrite: false, side: T.DoubleSide }));
-beam.rotation.x = -Math.PI / 2 - 0.2; beam.position.set(-0.3, 0.75, 3.1); hero.add(beam);
 // luz de preenchimento fria acima do personagem: mantém a silhueta legível no escuro
 const fill = new T.PointLight('#c5d3e8', 5, 3.2, 1.4); fill.position.set(0.6, 2.4, 0.8); hero.add(fill);
 let lampOn = true;
-function setLamp(v) { lampOn = v; spot.visible = beam.visible = v; lens.material.color.set(v ? '#fffbe6' : '#3a3f5a'); document.getElementById('lamp').classList.toggle('off', !v); }
+function setLamp(v) { lampOn = v; spot.visible = v; lens.material.color.set(v ? '#fffbe6' : '#3a3f5a'); document.getElementById('lamp').classList.toggle('off', !v); }
 
 // ---------- controles: joystick flutuante + teclado ----------
 const input = { x: 0, z: 0, id: null, ox: 0, oy: 0, keys: new Set() };
-const stick = document.getElementById('stick'), knob = document.getElementById('knob'), R = 48;
-addEventListener('pointerdown', e => { if (e.target.closest('#lamp') || input.id !== null) return; input.id = e.pointerId; input.ox = e.clientX; input.oy = e.clientY; stick.style.left = e.clientX + 'px'; stick.style.top = e.clientY + 'px'; stick.classList.add('on'); });
-addEventListener('pointermove', e => { if (e.pointerId !== input.id) return; let dx = e.clientX - input.ox, dy = e.clientY - input.oy; const l = Math.hypot(dx, dy); if (l > R) { dx *= R / l; dy *= R / l; } knob.style.transform = `translate(${dx}px,${dy}px)`; input.x = l > 6 ? dx / R : 0; input.z = l > 6 ? dy / R : 0; });
+const stick = document.getElementById('stick'), knob = document.getElementById('knob'), R = 50;
+const stickCenter = () => { const r = stick.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+const moveStick = e => { const [cx, cy] = stickCenter(); let dx = e.clientX - cx, dy = e.clientY - cy; const l = Math.hypot(dx, dy); if (l > R) { dx *= R / l; dy *= R / l; }
+  knob.style.transform = `translate(${dx}px,${dy}px)`; input.x = l > 6 ? dx / R : 0; input.z = l > 6 ? dy / R : 0; };
+// o toque na metade esquerda da tela controla o joystick
+addEventListener('pointerdown', e => { if (e.target.closest('button') || input.id !== null || e.clientX > innerWidth * 0.55) return; input.id = e.pointerId; stick.classList.add('on'); moveStick(e); });
+addEventListener('pointermove', e => { if (e.pointerId === input.id) moveStick(e); });
 const release = e => { if (e.pointerId !== input.id) return; input.id = null; input.x = input.z = 0; stick.classList.remove('on'); knob.style.transform = ''; };
 addEventListener('pointerup', release); addEventListener('pointercancel', release);
-addEventListener('keydown', e => { const k = e.key.toLowerCase(); input.keys.add(k); if (k === 'f' && !e.repeat) setLamp(!lampOn); });
-addEventListener('keyup', e => input.keys.delete(e.key.toLowerCase()));
+let firing = false;
+addEventListener('keydown', e => { const k = e.key.toLowerCase(); input.keys.add(k); if (k === 'f' && !e.repeat) setLamp(!lampOn); if (k === ' ') { firing = true; e.preventDefault(); } });
+addEventListener('keyup', e => { input.keys.delete(e.key.toLowerCase()); if (e.key === ' ') firing = false; });
+const fireBtn = document.getElementById('fire');
+fireBtn.addEventListener('pointerdown', e => { e.preventDefault(); firing = true; fireBtn.classList.add('on'); });
+['pointerup', 'pointercancel', 'pointerleave'].forEach(n => fireBtn.addEventListener(n, () => { firing = false; fireBtn.classList.remove('on'); }));
 document.getElementById('lamp').onclick = () => setLamp(!lampOn);
+
+// ---------- tiro: boca da arma, clarão, rastro e coice ----------
+const muzzle = new T.Object3D(); muzzle.position.set(0, 0.02, 0.88); gun.add(muzzle);
+const flashLight = new T.PointLight('#f8e6a0', 0, 5, 1.2); scene.add(flashLight);
+const flashBox = new T.Mesh(new T.BoxGeometry(0.22, 0.22, 0.22), glowMat('#fffbe6')); flashBox.visible = false; scene.add(flashBox);
+const tracer = new T.Mesh(new T.BoxGeometry(0.05, 0.05, 1), glowMat('#f8e6a0')); tracer.visible = false; scene.add(tracer);
+const bits = [];   // respingos e faíscas (cubos que caem)
+function burst(p, color, n, sp = 2.5) { for (let i = 0; i < n; i++) { const m = new T.Mesh(new T.BoxGeometry(0.09, 0.09, 0.09), glowMat(color)); m.position.copy(p);
+  m.userData = { v: new T.Vector3((Math.random() - .5) * sp, Math.random() * sp, (Math.random() - .5) * sp), t: 0.5 }; scene.add(m); bits.push(m); } }
+let cool = 0, recoil = 0, flashT = 0, shake = 0;
+const tmpA = new T.Vector3(), tmpB = new T.Vector3();
+function shoot() {
+  // mira assistida: vira para o zumbi vivo mais próximo à frente (ou o mais próximo, se nenhum estiver à frente)
+  const face = new T.Vector3(Math.sin(hero.rotation.y), 0, Math.cos(hero.rotation.y));
+  let best = null, bs = 1e9;
+  for (const z of zombies) { if (z.dead) continue; tmpA.subVectors(z.g.position, hero.position); const d = tmpA.length(); if (d > 10) continue;
+    const ang = Math.acos(Math.max(-1, Math.min(1, tmpA.dot(face) / d))), sc = d + ang * 4; if (sc < bs) { bs = sc; best = z; } }
+  if (best) hero.rotation.y = Math.atan2(best.g.position.x - hero.position.x, best.g.position.z - hero.position.z);
+  hero.updateMatrixWorld(true);
+  const dir = new T.Vector3(Math.sin(hero.rotation.y), 0, Math.cos(hero.rotation.y));
+  // o disparo acerta o primeiro zumbi na linha
+  let hit = null, ha = 12;
+  for (const z of zombies) { if (z.dead) continue; tmpA.subVectors(z.g.position, hero.position); const along = tmpA.dot(dir), perp = Math.abs(tmpA.x * dir.z - tmpA.z * dir.x);
+    if (along > 0 && along < ha && perp < 0.55) { ha = along; hit = z; } }
+  muzzle.getWorldPosition(tmpA); tmpB.copy(hero.position).addScaledVector(dir, ha); tmpB.y = 1.0;
+  tracer.position.lerpVectors(tmpA, tmpB, 0.5); tracer.scale.z = tmpA.distanceTo(tmpB); tracer.lookAt(tmpB); tracer.visible = true;
+  flashBox.position.copy(tmpA); flashBox.visible = true; flashLight.position.copy(tmpA); flashLight.intensity = 30; flashT = 0.07;
+  recoil = 1; shake = 0.12; cool = 0.42;
+  if (hit) hurtZombie(hit, dir);
+}
+
+// ---------- zumbis: lentos, braços à frente, arrastam os pés ----------
+const zombies = [];
+function makeZombie() {
+  const g = new T.Group(), b = new T.Group(); g.add(b);
+  const skin = mat('#6fa35a'), cloth = mat('#3a3f5a'), pants = mat('#2b2f52');
+  const lL = new T.Group(), lR = new T.Group(); lL.position.set(-0.13, 0.6, 0); lR.position.set(0.13, 0.6, 0);
+  lL.add(box(0.2, 0.6, 0.22, pants, 0, -0.3, 0)); lR.add(box(0.2, 0.6, 0.22, pants, 0, -0.3, 0)); b.add(lL, lR);
+  b.add(box(0.54, 0.6, 0.32, cloth, 0, 0.92, 0), box(0.2, 0.18, 0.05, mat('#8a2c3a'), 0.1, 1.0, 0.17));   // camisa rasgada com mancha
+  const head = box(0.34, 0.34, 0.32, skin, 0.04, 1.42, 0.04); head.rotation.z = 0.25; b.add(head);
+  b.add(box(0.07, 0.05, 0.02, glowMat('#e84040'), -0.04, 1.46, 0.21), box(0.07, 0.05, 0.02, glowMat('#e84040'), 0.12, 1.48, 0.21));   // olhos
+  const aL = new T.Group(), aR = new T.Group(); aL.position.set(-0.33, 1.15, 0); aR.position.set(0.33, 1.15, 0);
+  aL.add(box(0.15, 0.5, 0.15, skin, 0, -0.22, 0)); aR.add(box(0.15, 0.5, 0.15, skin, 0, -0.22, 0));
+  aL.rotation.x = aR.rotation.x = -1.45; b.add(aL, aR);
+  let x, z; do { const a = Math.random() * 6.28, d = 10 + Math.random() * 9; x = hero.position.x + Math.sin(a) * d; z = hero.position.z + Math.cos(a) * d; }
+  while (Math.abs(x) > WORLD - 3 || Math.abs(z) > WORLD - 3 || colliders.some(([cx, cz, cr]) => Math.hypot(cx - x, cz - z) < cr + 0.6));
+  g.position.set(x, 0, z); scene.add(g);
+  const zb = { g, b, lL, lR, aL, aR, hp: 3, dead: false, t: Math.random() * 6, hitT: 0, atk: 0, kx: 0, kz: 0, deadT: 0, mats: [skin, cloth, pants] };
+  zombies.push(zb); return zb;
+}
+function hurtZombie(z, dir) {
+  z.hp--; z.hitT = 0.12; z.kx = dir.x * 3; z.kz = dir.z * 3;
+  burst(z.g.position.clone().setY(1.1), '#8a2c3a', 7);
+  if (z.hp <= 0) { z.dead = true; z.deadT = 0; kills++; document.getElementById('kills').textContent = '☠ ' + kills; burst(z.g.position.clone().setY(0.8), '#6fa35a', 10); }
+}
+let kills = 0, hp = 100, downT = 0;
+function hurtHero(d) {
+  if (downT > 0) return;
+  hp = Math.max(0, hp - d); document.getElementById('hpfill').style.width = hp + '%';
+  const h = document.getElementById('hurt'); h.style.opacity = 1; setTimeout(() => h.style.opacity = 0, 140); shake = 0.15;
+  if (hp <= 0) downT = 2;
+}
+for (let i = 0; i < 4; i++) makeZombie();
 
 // ---------- câmera estilo Diablo: isométrica, alta, a 45°, seguindo o personagem ----------
 const YAW = Math.PI / 4, PITCH = 0.62, DIST = 30;
@@ -269,7 +349,37 @@ function frame(now) {
   // caminhada em poucas poses claras: pernas balançam, corpo sobe meio passo
   const sw = Math.sin(walkT);
   legL.rotation.x = sw * 0.55; legR.rotation.x = -sw * 0.55; body.position.y = Math.abs(Math.cos(walkT)) * 0.06;
-  armL.rotation.x = -1.0 + sw * 0.06; armR.rotation.x = -1.1 - sw * 0.06;
+  // tiro e coice: o braço sobe e volta, a arma recua um pouco
+  cool -= dt; if (firing && cool <= 0 && downT <= 0) shoot();
+  recoil = Math.max(0, recoil - dt * 7);
+  armL.rotation.x = -1.0 + sw * 0.06; armR.rotation.x = -1.1 - sw * 0.06 - recoil * 0.55; gun.position.z = 0.2 - recoil * 0.12;
+  if ((flashT -= dt) <= 0) { flashBox.visible = false; tracer.visible = false; flashLight.intensity = 0; }
+  for (let i = bits.length - 1; i >= 0; i--) { const m = bits[i], u = m.userData; u.t -= dt; u.v.y -= 9 * dt; m.position.addScaledVector(u.v, dt); if (m.position.y < 0.05) { m.position.y = 0.05; u.v.set(0, 0, 0); }
+    if (u.t <= 0) { scene.remove(m); bits.splice(i, 1); } }
+  // zumbis
+  for (let i = zombies.length - 1; i >= 0; i--) {
+    const z = zombies[i]; z.t += dt;
+    if (z.dead) {   // cai para trás e afunda
+      z.deadT += dt; z.b.rotation.x = -Math.min(1, z.deadT / 0.35) * Math.PI / 2; z.b.position.y = z.deadT > 1.5 ? -(z.deadT - 1.5) * 0.8 : 0;
+      if (z.deadT > 2.6) { scene.remove(z.g); zombies.splice(i, 1); setTimeout(makeZombie, 1500); }
+      continue;
+    }
+    tmpA.subVectors(hero.position, z.g.position); tmpA.y = 0; const d = tmpA.length();
+    const chase = d < 15 && downT <= 0, sp = chase ? 1.15 : 0.35;
+    const dir = chase ? tmpA.normalize() : tmpB.set(Math.sin(z.t * 0.3 + i), 0, Math.cos(z.t * 0.3 + i));
+    let nx = z.g.position.x + (dir.x * sp + z.kx) * dt, nz = z.g.position.z + (dir.z * sp + z.kz) * dt;
+    z.kx *= Math.pow(0.02, dt); z.kz *= Math.pow(0.02, dt);
+    for (const [cx, cz, cr] of colliders) { const dx = nx - cx, dz = nz - cz, dd = Math.hypot(dx, dz), m = cr + 0.3; if (dd < m && dd > 0) { nx = cx + dx / dd * m; nz = cz + dz / dd * m; } }
+    if (d > 0.75) { z.g.position.x = nx; z.g.position.z = nz; }
+    z.g.rotation.y = Math.atan2(dir.x, dir.z);
+    const zw = Math.sin(z.t * 4.2);   // passos arrastados e corpo balançando
+    z.lL.rotation.x = zw * 0.35; z.lR.rotation.x = -zw * 0.35; z.b.rotation.z = Math.sin(z.t * 2.1) * 0.08; z.b.position.y = Math.abs(zw) * 0.03;
+    z.aL.rotation.x = -1.45 + Math.sin(z.t * 3) * 0.12; z.aR.rotation.x = -1.45 - Math.sin(z.t * 3) * 0.12;
+    z.hitT -= dt; const flash = z.hitT > 0; z.mats[0].color.set(flash ? '#fffbe6' : '#6fa35a'); z.mats[1].color.set(flash ? '#fffbe6' : '#3a3f5a');
+    if (d < 0.95 && (z.atk -= dt) <= 0) { z.atk = 1.0; hurtHero(14); }
+  }
+  if (downT > 0 && (downT -= dt) <= 0) { hp = 100; document.getElementById('hpfill').style.width = '100%'; }
+  hero.visible = !(downT > 0 && Math.floor(t * 10) % 2);
   // lanterna treme de leve; vaga-lumes piscam
   if (lampOn) spot.intensity = 60 + Math.sin(t * 23) * 1.5;
   for (const f of flies) { const u = f.userData; f.position.set(u.x + Math.sin(t * 0.6 + u.p) * 1.2, u.y + Math.sin(t * 1.7 + u.p) * 0.3, u.z + Math.cos(t * 0.5 + u.p) * 1.2); f.visible = Math.sin(t * 2 + u.p * 3) > -0.2; }
@@ -280,6 +390,7 @@ function frame(now) {
   const texel = VIEW / H; camRight.setFromMatrixColumn(cam.matrixWorld, 0); camUp.setFromMatrixColumn(cam.matrixWorld, 1);
   const rx = cam.position.dot(camRight), ry = cam.position.dot(camUp);
   cam.position.addScaledVector(camRight, Math.round(rx / texel) * texel - rx).addScaledVector(camUp, Math.round(ry / texel) * texel - ry);
+  if (shake > 0) { shake -= dt; cam.position.addScaledVector(camRight, (Math.random() - .5) * shake).addScaledVector(camUp, (Math.random() - .5) * shake); }
   moon.position.set(focus.x - 14, 22, focus.z + 8); moon.target.position.copy(focus);
   // render em duas etapas: cena em baixa resolução -> contorno, dithering e paleta
   renderer.setRenderTarget(rt); renderer.render(scene, cam);
@@ -287,7 +398,7 @@ function frame(now) {
 }
 addEventListener('resize', resize); resize(); setLamp(true);
 requestAnimationFrame(frame);
-window.__cena = { hero, setLamp, input };
+window.__cena = { hero, setLamp, input, zombies, shoot, setFiring: v => firing = v };
 </script>
 </body>
 </html>
