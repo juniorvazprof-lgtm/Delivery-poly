@@ -149,4 +149,6 @@ export default {
 
   'quem.voce': 'You',
   'quem.radio': 'Radio',
+  'ui.atirar': 'FIRE',
+  'ui.lanterna': 'LIGHT',
 };

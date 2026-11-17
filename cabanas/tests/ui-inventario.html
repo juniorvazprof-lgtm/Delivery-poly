@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>teste ui-inventario</title>
+    <link rel="stylesheet" href="../css/inventario.css" />
+    <style>
+      body {
+        margin: 0;
+        background: #14121c;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      // Página de teste: monta um inventário fixo e abre a tela do inventário.
+      import { abrirInventario, fecharInventario, inventarioAberto } from '../js/ui-inventario.js';
+      import { criarInventario, adicionar, contar } from '../js/inventario.js';
+
+      const inv = criarInventario(8);
+      adicionar(inv, 'espingarda', 1);
+      adicionar(inv, 'pistola', 1);
+      adicionar(inv, 'cartuchos', 6);
+      adicionar(inv, 'pano', 1);
+      adicionar(inv, 'alcool', 1);
+
+      const bau = criarInventario(24);
+      adicionar(bau, 'vela', 1);
+
+      const usados = [];
+      const equipadas = [];
+
+      window.__inv = {
+        inv,
+        bau,
+        aberto: () => inventarioAberto(),
+        fechados: 0,
+        usados,
+        equipadas,
+        contar,
+        abrir: () => abrir(),
+        fecharSimples: () => fecharInventario(),
+      };
+
+      function abrir() {
+        abrirInventario({
+          inv,
+          bau,
+          equipada: 'espingarda',
+          usar(i) {
+            const slot = inv.slots[i];
+            const id = slot ? slot.id : null;
+            usados.push({ i, id });
+            return id ? 'usou ' + id : null;
+          },
+          equipar(id) {
+            equipadas.push(id);
+            window.__inv.equipada = id;
+          },
+          aoFechar() {
+            window.__inv.fechados++;
+          },
+        });
+      }
+
+      // estado de equipada fica no objeto exposto
+      window.__inv.equipada = 'espingarda';
+      abrir();
+    </script>
+  </body>
+</html>

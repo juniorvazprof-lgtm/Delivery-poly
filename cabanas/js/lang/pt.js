@@ -149,4 +149,6 @@ export default {
 
   'quem.voce': 'Você',
   'quem.radio': 'Rádio',
+  'ui.atirar': 'ATIRAR',
+  'ui.lanterna': 'LANTERNA',
 };

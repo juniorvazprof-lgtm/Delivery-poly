@@ -1,0 +1,343 @@
+/* Tela do inventário e do baú: papel envelhecido, bordas duras, pixel art noturna. */
+/* Tudo com prefixo .inv-, sem cantos arredondados. */
+
+.inv-tela {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: #0a0a14cc;
+  font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  box-sizing: border-box;
+}
+
+.inv-tela[hidden] {
+  display: none;
+}
+
+.inv-tela * {
+  box-sizing: border-box;
+  border-radius: 0;
+}
+
+/* ---------- painel de papel ---------- */
+
+.inv-painel {
+  position: relative;
+  width: min(332px, 100%);
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  padding: 10px;
+  background: #e9d9b0;
+  color: #2b1d2a;
+  border: 3px solid #2b1d2a;
+  box-shadow: 6px 6px 0 #000;
+  font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.inv-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom: 3px solid #2b1d2a;
+}
+
+.inv-titulo {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #2b1d2a;
+}
+
+.inv-subtitulo {
+  margin: 10px 0 6px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #5a3a30;
+  border-bottom: 2px dashed #9a8460;
+  padding-bottom: 3px;
+}
+
+/* ---------- botões ---------- */
+
+.inv-btn {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #7a3a2a;
+  color: #fffbe6;
+  border: 3px solid #2b1d2a;
+  box-shadow: 3px 3px 0 #000;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  image-rendering: pixelated;
+}
+
+.inv-btn:hover {
+  background: #934a34;
+}
+
+.inv-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.inv-btn:focus-visible {
+  outline: 3px solid #e8a850;
+  outline-offset: 1px;
+}
+
+.inv-topo .inv-btn {
+  min-width: 28px;
+  padding: 2px 6px;
+  font-size: 15px;
+  line-height: 1;
+  text-transform: none;
+}
+
+/* ---------- grades ---------- */
+
+.inv-grade {
+  display: grid;
+  gap: 4px;
+  justify-content: start;
+}
+
+.inv-grade-inv {
+  grid-template-columns: repeat(4, 1fr);
+  width: min(268px, 100%); /* 4 × 64px + folgas: cabe em 360px */
+}
+
+.inv-grade-bau {
+  grid-template-columns: repeat(6, 1fr);
+  width: min(279px, 100%); /* 6 × 44px + folgas */
+  gap: 3px;
+}
+
+.inv-celula {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+  background: #d8c79e;
+  border: 3px solid #2b1d2a;
+  color: #2b1d2a;
+  cursor: pointer;
+}
+
+/* segundo espaço de item duplo: existe no DOM, não é desenhado */
+.inv-celula[hidden],
+.inv-celula-ref {
+  display: none;
+}
+
+.inv-celula-dupla {
+  /* ocupa 2 colunas (grid-column: span 2 vem do JS): fica 2x mais larga, mesma altura */
+  border-style: solid;
+  aspect-ratio: 2 / 1;
+}
+
+.inv-vazia {
+  background: #ded0ae;
+  border: 3px dashed #9a8460;
+  cursor: default;
+}
+
+.inv-vazio-txt {
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #9a8460;
+  text-align: center;
+  padding: 0 2px;
+}
+
+.inv-icone {
+  font-size: 26px;
+  line-height: 1;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #fffbe6;
+  pointer-events: none;
+}
+
+.inv-grade-bau .inv-icone {
+  font-size: 18px;
+}
+
+.inv-qtd {
+  position: absolute;
+  top: 0;
+  right: 1px;
+  padding: 0 2px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #fffbe6;
+  background: #2b1d2a;
+  border-left: 2px solid #2b1d2a;
+  border-bottom: 2px solid #2b1d2a;
+  pointer-events: none;
+}
+
+.inv-grade-bau .inv-qtd {
+  font-size: 9px;
+}
+
+.inv-nome {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1px 2px;
+  font-size: 8px;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #2b1d2a;
+  color: #fffbe6;
+  pointer-events: none;
+}
+
+.inv-grade-bau .inv-nome {
+  font-size: 7px;
+}
+
+/* arma equipada */
+.inv-marca {
+  position: absolute;
+  top: 0;
+  left: 1px;
+  font-size: 12px;
+  line-height: 1;
+  color: #2b1d2a;
+  text-shadow: 1px 1px 0 #e8a850;
+  pointer-events: none;
+}
+
+/* selecionado */
+.inv-celula.inv-selecionado {
+  outline: 3px solid #e8a850;
+  outline-offset: -1px;
+  z-index: 1;
+}
+
+/* modo combinar: contorno pulsando */
+.inv-celula.inv-combinando {
+  outline: 3px solid #e8a850;
+  outline-offset: -1px;
+  animation: inv-pulsa 0.8s steps(2, end) infinite;
+  z-index: 2;
+}
+
+@keyframes inv-pulsa {
+  0%,
+  100% {
+    outline-color: #e8a850;
+    background-color: #f3d79a;
+  }
+  50% {
+    outline-color: #7a3a2a;
+    background-color: #e9d9b0;
+  }
+}
+
+/* ---------- detalhe do item ---------- */
+
+.inv-detalhe {
+  margin-top: 8px;
+}
+
+.inv-detalhe:empty {
+  display: none;
+}
+
+.inv-info-nome {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #2b1d2a;
+}
+
+.inv-info-desc {
+  margin: 2px 0 6px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #4a3428;
+}
+
+.inv-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- baú ---------- */
+
+.inv-secao-bau {
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 3px solid #2b1d2a;
+}
+
+/* ---------- mensagem do rodapé ---------- */
+
+.inv-msg {
+  min-height: 14px;
+  margin-top: 8px;
+  padding-top: 4px;
+  border-top: 2px dashed #9a8460;
+  font-size: 10px;
+  color: #7a3a2a;
+  font-weight: bold;
+  text-align: center;
+}
+
+.inv-msg:empty {
+  border-top: 0;
+  min-height: 0;
+  margin-top: 0;
+}
+
+/* telas bem estreitas: células menores */
+@media (max-width: 360px) {
+  .inv-painel {
+    padding: 8px;
+    width: 100%;
+  }
+
+  .inv-icone {
+    font-size: 22px;
+  }
+
+  .inv-grade-bau .inv-icone {
+    font-size: 15px;
+  }
+
+  .inv-grade-bau .inv-nome {
+    font-size: 6px;
+  }
+}

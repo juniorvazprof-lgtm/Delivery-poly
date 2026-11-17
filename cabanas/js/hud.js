@@ -50,6 +50,7 @@ export function criarHud() {
       $('batFill').style.width = bat * 100 + '%'; lamp.classList.toggle('fraca', bat < CFG.lanterna.fraca); lamp.classList.toggle('sem', bat <= 0 && heroi.pilhas <= 0);
       $('pilhas').textContent = heroi.pilhas ? `+${heroi.pilhas}` : '';
       $('flare').querySelector('b').textContent = heroi.sinalizadores; $('flare').disabled = heroi.sinalizadores <= 0;
+      $('fire').textContent = t('ui.atirar'); $('lamp').querySelector('span').lastChild.textContent = t('ui.lanterna');
       $('furtivo').hidden = !heroi.devagar; $('furtivo').textContent = t('ui.silencio');
       const am = $('ammo'); am.textContent = '';
       am.append(el('small', '', t(`arma.${arma.atual}`)), arma.recarregando > 0 ? el('b', 'rec', '↻') : el('b', '', String(arma.pente)), document.createTextNode(` | ${arma.reserva}`));

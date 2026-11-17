@@ -1,3 +1,22 @@
+# Pine Hollow (protótipo · antes "Cabanas na Floresta")
+
+Survival horror em pixel art (HD-2D com Three.js r160). Seu carro morre numa ponte e você chega a Pine Hollow,
+uma cidadezinha dos EUA presa noutra dimensão. De dia, as criaturas dormem; ao anoitecer o sino toca três vezes.
+
+## Etapa 1 (esta versão)
+- Ciclo de dia (~8 min) e noite (~5 min), luz/névoa/céu mudando, sino ao anoitecer, criaturas só à noite.
+- Abrigos com círculo de sal (as criaturas não entram): acender a vela salva o jogo, baú de 24 espaços, dormir até o amanhecer.
+- Inventário de 8 espaços (espingarda ocupa 2), itens empilháveis, combinar pano + álcool = curativo.
+- Munição rara (espalhada pelo mapa e nas caixas das cabanas); mira que fecha ao segurar ATIRAR; soltar = atirar.
+- Inglês por padrão, português opcional (tela de título).
+- Testes: `node --test cabanas/tests/*.test.mjs`, `node cabanas/tests/ui-inventario.check.cjs`, `node cabanas/tests/bot.cjs [sessões] [rápido] [duração] [hora]`.
+
+Especificação da etapa: `SPEC-etapa1.md`. Parte do código (inventário, itens, idiomas, tela do inventário, remoção do sistema
+financeiro) foi escrita pelo DeepSeek a partir da especificação e revisada antes de entrar.
+
+---
+Histórico anterior (extraction shooter):
+
 # Cabanas na Floresta (protótipo)
 
 Um mercenário do pós-apocalipse aceita contratos para limpar áreas infestadas, cumpre o objetivo,
