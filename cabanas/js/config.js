@@ -32,6 +32,16 @@ export const CFG = {
       preparo: 1.3, raioGrito: 24, chance: 0.1, max: 2 },
   },
 
+  // noite: criaturas que saem quando o sino toca; de dia não há nenhuma
+  noite: { criaturas: 10, minimo: 7, surgeLonge: 16, surgeCada: 9 },
+  abrigo: { curaDormir: 30 },
+  // começo do jogo: o que você carrega e o que já está no baú dos abrigos
+  inicio: { hora: 7, inventario: [['espingarda', 1], ['pistola', 1], ['cartuchos', 6], ['balas', 12], ['curativo', 1], ['pilha', 1]], bau: [['vela', 1], ['pano', 1]] },
+  // itens espalhados pelo mapa ([id, qtd, quantos lugares]) e o que as caixas das cabanas podem ter
+  mapa: {
+    itens: [['cartuchos', 4, 3], ['balas', 8, 3], ['pilha', 1, 2], ['vela', 1, 2], ['pano', 1, 2], ['alcool', 1, 2], ['curativo', 1, 1]],
+    caixas: [['cartuchos', 6], ['balas', 10], ['pilha', 1], ['curativo', 1], ['alcool', 1], ['vela', 1]],
+  },
   area: { semente: 1977, mundo: 34, vagando: 26, minimo: 16, surgeLonge: 16, surgeCada: 6 },   // zumbis vagando desde o início; quando caem abaixo do mínimo, outros chegam pela mata
 
   // o que cai no chão e o que sai das caixas de suprimento

@@ -4,6 +4,8 @@ import * as T from './lib/three.module.js';
 import { CFG } from './config.js';
 import { brilho, caixa, mat } from './mundo.js';
 import { SOM } from './sons.js';
+import { adicionar, contar, remover } from './inventario.js';
+const MUNICAO = { espingarda: 'cartuchos', pistola: 'balas' };
 
 const tmpA = new T.Vector3(), tmpB = new T.Vector3();
 /** Tira um objeto da cena e libera a memória das peças que são só dele. */
@@ -77,12 +79,13 @@ export function criarCombate(mundo, heroi, render, eventos) {
       eventos.abate(z);   // inimigo não solta nada: munição vem das caixas
     }
   }
-  function soltar(p, tipo, qual = 'espingarda') {
-    const g = new T.Group();
-    if (tipo === 'pilha') g.add(caixa(0.12, 0.28, 0.12, brilho('#a8cf78'), 0, 0, 0), caixa(0.06, 0.05, 0.06, brilho('#fffbe6'), 0, 0.16, 0));
-    else if (qual === 'espingarda') for (let k = 0; k < 3; k++) g.add(caixa(0.08, 0.22, 0.08, brilho(k === 1 ? '#c84060' : '#8a2c3a'), (k - 1) * 0.11, 0, 0));
-    else g.add(caixa(0.18, 0.24, 0.08, brilho('#e8a850'), 0, 0, 0), caixa(0.14, 0.06, 0.09, brilho('#fffbe6'), 0, 0.1, 0));
-    g.position.set(p.x, 0.45, p.z); scene.add(g); saques.push({ g, tipo, t: 0, arma: qual });
+  /** Um item no chão (id do inventário e quantidade), com um modelinho que lembra o que é. */
+  const COR = { cartuchos: ['#8a2c3a', '#c84060'], balas: ['#e8a850', '#fffbe6'], pilha: ['#a8cf78', '#fffbe6'], vela: ['#f8e6a0', '#e8a850'],
+    pano: ['#c5d3e8', '#8c9cb8'], alcool: ['#3fd0c8', '#c5d3e8'], curativo: ['#fffbe6', '#c84060'], kit: ['#c84060', '#fffbe6'], fosforo: ['#c99a5c', '#c84060'] };
+  function soltar(p, id, qtd = 1) {
+    const g = new T.Group(), [c1, c2] = COR[id] || ['#f8e6a0', '#fffbe6'];
+    g.add(caixa(0.22, 0.22, 0.14, brilho(c1), 0, 0, 0), caixa(0.1, 0.1, 0.16, brilho(c2), 0, 0.06, 0));
+    g.position.set(p.x, 0.45, p.z); scene.add(g); saques.push({ g, id, qtd, t: 0, bloqueado: 0 });
   }
 
   // ---------- sinalizador de mão: cai à frente, ilumina 20 s em vermelho e chama os zumbis com chiado ----------
@@ -97,7 +100,10 @@ export function criarCombate(mundo, heroi, render, eventos) {
   }
 
   // ---------- armas: espingarda e pistola, cada uma com seu pente e sua reserva ----------
-  const novaArma = () => Object.fromEntries(Object.entries(CFG.armas).map(([k, a]) => [k, { pente: a.pente, reserva: a.reserva }]));
+  // a reserva de cada arma é a munição no inventário (cartuchos / balas); o pente fica na arma
+  const novaArma = () => Object.fromEntries(Object.keys(CFG.armas).map(k => [k, { pente: CFG.armas[k].pente,
+    get reserva() { return heroi.inv ? contar(heroi.inv, MUNICAO[k]) : 0; },
+    set reserva(v) { if (!heroi.inv) return; const d = v - contar(heroi.inv, MUNICAO[k]); if (d > 0) adicionar(heroi.inv, MUNICAO[k], d); else if (d < 0) remover(heroi.inv, MUNICAO[k], -d); } }]));
   const arma = { atual: 'espingarda', muni: novaArma(), espera: 0, recarregando: 0,
     get pente() { return this.muni[this.atual].pente; }, get reserva() { return this.muni[this.atual].reserva; }, get cfg() { return CFG.armas[this.atual]; } };
   function resetarArmas() { arma.atual = 'espingarda'; arma.muni = novaArma(); arma.espera = 0; arma.recarregando = 0; heroi.usar('espingarda'); }
@@ -173,14 +179,16 @@ export function criarCombate(mundo, heroi, render, eventos) {
       if ((s.chamado -= dt) <= 0) { s.chamado = 2; ruido(s.o.position, CFG.sinalizador.chamado, '#ff6040'); }
       if (s.t <= 0) { descartar(scene, s.o); sinalizadores.splice(i, 1); }
     }
-    // saque: flutua, gira e é puxado quando o jogador chega perto
+    // itens no chão: flutuam, giram e vão para o inventário quando o jogador encosta (se couber)
     for (let i = saques.length - 1; i >= 0; i--) {
       const s = saques[i]; s.t += dt; s.g.rotation.y += dt * 2.5; s.g.position.y = 0.45 + Math.sin(s.t * 3) * 0.08;
+      if (s.bloqueado > 0) { s.bloqueado -= dt; continue; }   // inventário estava cheio: espera um pouco antes de tentar de novo
       const d = Math.hypot(s.g.position.x - g.position.x, s.g.position.z - g.position.z);
-      if (d < CFG.saque.ima && !heroi.caido) { s.g.position.x += (g.position.x - s.g.position.x) * Math.min(1, dt * 10); s.g.position.z += (g.position.z - s.g.position.z) * Math.min(1, dt * 10);
-        if (d < 0.45) { descartar(scene, s.g); saques.splice(i, 1);
-          if (s.tipo === 'municao') { const b = CFG.saque.caixaMunicao[s.arma]; arma.muni[s.arma].reserva += b; SOM.municao(); eventos.municao(b, s.arma); }
-          else if (s.tipo === 'pilha') { SOM.municao(); eventos.pilha(); } } }
+      if (d < 0.9 && !heroi.caido) {
+        const sobra = heroi.inv ? adicionar(heroi.inv, s.id, s.qtd) : s.qtd;
+        if (sobra < s.qtd) { SOM.municao(); eventos.pegou(s.id, s.qtd - sobra); }
+        if (sobra > 0) { s.qtd = sobra; s.bloqueado = 2.5; eventos.cheio(); } else { descartar(scene, s.g); saques.splice(i, 1); }
+      }
     }
     const percebe = heroi.lanterna ? CFG.lanterna.visto : CFG.lanterna.escondido, fr = heroi.frente();
     if (!janelas.length && mundo.luzes.length) for (const l of mundo.luzes) { const w = new T.Vector3(); l.getWorldPosition(w); janelas.push(w); }
@@ -228,6 +236,7 @@ export function criarCombate(mundo, heroi, render, eventos) {
       let nx = z.g.position.x + (dir.x * sp + z.kx) * dt, nz = z.g.position.z + (dir.z * sp + z.kz) * dt;
       z.kx *= Math.pow(0.02, dt); z.kz *= Math.pow(0.02, dt);
       [nx, nz] = mundo.resolver(nx, nz, 0.3);
+      if (eventos.repelir) [nx, nz] = eventos.repelir(nx, nz);   // o sal dos abrigos
       if (d > 0.75 || luzAlvo) { z.g.position.x = nx; z.g.position.z = nz; }
       if (sp > 0 || cacar) z.g.rotation.y = Math.atan2(dir.x, dir.z);
       const zw = Math.sin(z.t * (sp > 1.5 ? 9 : cacar ? 5 : 3));
@@ -244,10 +253,14 @@ export function criarCombate(mundo, heroi, render, eventos) {
       if (modo !== z.modo) { z.modo = modo; z.g.visible = modo !== 'nada'; for (const o of z.corpoMeshes) o.visible = modo === 'todo'; }
     }
   }
+  /** Amanhecer: as criaturas se desfazem em fumaça e voltam aos esconderijos (não conta como abate). */
+  function recolher() {
+    for (const z of zumbis) if (!z.morto) { respingo(z.g.position.clone().setY(1), '#3a3f5a', 8, 1.5); z.morto = true; z.mortoT = 1.4; z.g.visible = false; }
+  }
   function limpar() {
     for (const z of zumbis) descartar(scene, z.g); zumbis.length = 0; for (const s of saques) descartar(scene, s.g); saques.length = 0;
     for (const s of sinalizadores) descartar(scene, s.o); sinalizadores.length = 0; for (const o of ondas) { scene.remove(o); o.material.dispose(); } ondas.length = 0;
   }
-  return { stats, zumbis, saques, sinalizadores, arma, resetarArmas, trocar, surgir, vivos, ruido, lancarSinalizador,
+  return { stats, zumbis, saques, sinalizadores, arma, soltar, recolher, resetarArmas, trocar, surgir, vivos, ruido, lancarSinalizador,
     atirar, gatilho, get mira() { return mira; }, recarregar, passo, limpar };
 }

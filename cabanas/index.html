@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a14">
-<title>Cabanas na Floresta</title>
+<title>Pine Hollow</title>
 <link rel="stylesheet" href="css/estilo.css">
+<link rel="stylesheet" href="css/inventario.css">
 </head>
 <body>
 <canvas id="view"></canvas>
@@ -14,7 +15,11 @@
   <div id="obj"></div>
   <button id="somBtn" aria-label="Som"></button>
 </div>
+<div id="relogio"></div>
 <div id="ganho"></div>
+<div id="aviso"></div>
+<button id="rest" hidden></button>
+<button id="bag" aria-label="Inventory">▦</button>
 <div id="radio"></div>
 <div id="hurt"></div>
 <div id="hold" hidden><div id="holdBar"><div id="holdFill"></div></div><span id="holdTxt"></span></div>
@@ -28,6 +33,7 @@
 <div id="furtivo" hidden>silêncio</div>
 <section id="telaContrato" class="tela" hidden></section>
 <section id="telaFim" class="tela" hidden></section>
+<section id="telaAbrigo" class="tela" hidden></section>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

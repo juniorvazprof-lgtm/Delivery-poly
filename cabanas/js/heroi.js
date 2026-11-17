@@ -2,6 +2,7 @@
 import * as T from './lib/three.module.js';
 import { brilho, caixa } from './mundo.js';
 import { CFG } from './config.js';
+import { adicionar, contar, remover } from './inventario.js';
 
 export function criarHeroi(scene) {
   const heroi = new T.Group(); scene.add(heroi);
@@ -57,7 +58,10 @@ export function criarHeroi(scene) {
 
   const h = {
     g: heroi, corpo, pernaE, pernaD, boca, usar,
-    vida: CFG.heroi.vida, invul: 0, passo: 0, coice: 0, lanterna: true, caido: false, bateria: 1, pilhas: 0, sinalizadores: 0, devagar: false, piscar: false,
+    vida: CFG.heroi.vida, invul: 0, passo: 0, coice: 0, lanterna: true, caido: false, bateria: 1, devagar: false, piscar: false, inv: null,
+    // pilhas e velas vivem no inventário: ler conta, escrever adiciona ou remove (o que não couber se perde)
+    get pilhas() { return h.inv ? contar(h.inv, 'pilha') : 0; }, set pilhas(v) { ajustar('pilha', v); },
+    get sinalizadores() { return h.inv ? contar(h.inv, 'vela') : 0; }, set sinalizadores(v) { ajustar('vela', v); },
     setLanterna(v) { h.lanterna = v; foco.visible = v; for (const k in rigs) rigs[k].lente.material.color.set(v ? '#fffbe6' : '#3a3f5a'); document.getElementById('lamp')?.classList.toggle('off', !v); },
     frente() { return new T.Vector3(Math.sin(heroi.rotation.y), 0, Math.cos(heroi.rotation.y)); },
     animar(dt, t, mag) {
@@ -72,6 +76,7 @@ export function criarHeroi(scene) {
       heroi.visible = !(h.invul > 0 && Math.floor(t * 14) % 2);
     },
   };
+  function ajustar(id, v) { if (!h.inv) return; const d = v - contar(h.inv, id); if (d > 0) adicionar(h.inv, id, d); else if (d < 0) remover(h.inv, id, -d); }
   return h;
 }
 

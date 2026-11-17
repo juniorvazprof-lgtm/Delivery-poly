@@ -12,7 +12,7 @@ const N = Number(process.argv[2]) || 4, RAPIDO = Number(process.argv[3]) || 8, D
   p.on("pageerror", e => erros.push(e.message)); p.on("console", m => m.type() === "error" && erros.push(m.text()));
   const res = [];
   for (let i = 0; i < N; i++) {
-    await p.goto(`http://localhost:4630/?bot=1&rapido=${RAPIDO}&duracao=${DURACAO}`);
+    await p.goto(`http://localhost:4630/?bot=1&rapido=${RAPIDO}&duracao=${DURACAO}&hora=${process.argv[5] || 18.5}`);
     await p.waitForFunction(() => window.__jogo?.bot?.st.fim, null, { timeout: 240000 }).catch(() => {});
     const r = await p.evaluate(() => ({ ...(window.__jogo.bot.st.fim || { estado: "travou", tempo: window.__jogo.missao.tempo, abates: window.__jogo.missao.abates }), tiros: window.__jogo.bot.st.tiros }));
     res.push(r); console.log(`sessão ${i + 1}: ${r.estado} · ${(r.tempo / 60).toFixed(1)} min · abates ${r.abates} · vida mín ${r.vidaMin} · munição ${r.municao}`);

@@ -58,6 +58,8 @@ export const SOM = {
   sinalizadorMao() { tom({ f: 300, dur: 0.06, vol: 0.2, tipo: 'square' }); chiar({ dur: 1.4, vol: 0.18, f: 4000, tipo: 'highpass', ataque: 0.05 }); },
   vasculhar() { for (let i = 0; i < 5; i++) chiar({ dur: 0.12, vol: 0.12, f: 1200 + Math.random() * 800, tipo: 'bandpass', q: 2, quando: i * 0.35 }); },
   pilha() { tom({ f: 1200, dur: 0.04, vol: 0.12, tipo: 'square' }); tom({ f: 3000, dur: 0.02, vol: 0.12, tipo: 'square', quando: 0.12 }); },
+  /** Sino da igreja, três badaladas ao anoitecer. */
+  sino() { for (let i = 0; i < 3; i++) { tom({ f: 196, dur: 3.2, vol: 0.28, tipo: 'sine', quando: i * 1.8 }); tom({ f: 392 * 1.19, dur: 2.2, vol: 0.12, tipo: 'sine', quando: i * 1.8 }); tom({ f: 588, dur: 1.4, vol: 0.06, tipo: 'triangle', quando: i * 1.8 }); } },
   derrota() { tom({ f: 196, f2: 98, dur: 1.4, vol: 0.25, tipo: 'triangle' }); tom({ f: 147, f2: 73, dur: 1.6, vol: 0.2, tipo: 'triangle', quando: 0.2 }); },
   vitoria() { [392, 523, 659, 784].forEach((f, i) => tom({ f, dur: 0.35, vol: 0.12, tipo: 'square', quando: i * 0.12 })); },
 };

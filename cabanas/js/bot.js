@@ -30,7 +30,11 @@ export function criarBot({ heroi, combate, missao, mundo, entrada }) {
       const caixa = mundo.caixas.filter(c => !c.aberta).sort((a, b) => a.g.position.distanceTo(p) - b.g.position.distanceTo(p))[0];
       const saque = combate.saques.find(s => s.g.position.distanceTo(p) < 7);
       let mx = 0, mz = 0;
-      if (caixa && mun < 14) { mx = caixa.g.position.x - p.x; mz = caixa.g.position.z - p.z; }         // munição baixa: vai na caixa
+      // à noite: vai para o abrigo mais próximo e fica dentro do sal; de lá só atira
+      const J = window.__jogo, abrigo = J?.ciclo?.noite ? J.abrigos.lista.slice().sort((a, b) => a.g.position.distanceTo(p) - b.g.position.distanceTo(p))[0] : null;
+      if (abrigo) { st.abrigoT = (st.abrigoT || 0); const d = abrigo.g.position.distanceTo(p); if (d > 1.2) { mx = abrigo.g.position.x - p.x; mz = abrigo.g.position.z - p.z; } else st.abrigoT += dt; }
+      if (abrigo) { /* noite: decide só o caminho até o abrigo */ }
+      else if (caixa && mun < 14) { mx = caixa.g.position.x - p.x; mz = caixa.g.position.z - p.z; }         // munição baixa: vai na caixa
       else if (alvo && !alvo.visivel && dAlvo < 9) { mx = alvo.g.position.x - p.x; mz = alvo.g.position.z - p.z; }   // vira a lanterna para o barulho
       else if (alvo && dAlvo < 2.4) { mx = p.x - alvo.g.position.x; mz = p.z - alvo.g.position.z; }    // recua
       else if (saque && (!alvo || dAlvo > 6)) { mx = saque.g.position.x - p.x; mz = saque.g.position.z - p.z; }
