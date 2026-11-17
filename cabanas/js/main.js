@@ -59,7 +59,11 @@ function passo(dt) {
   if (bot) bot.passo(dt);
   const ativo = missao.ativo;
   // movimento relativo à tela; joystick até a metade = andar devagar e em silêncio
-  let [ix, iz] = entrada.direcao(); const mag = Math.min(1, Math.hypot(ix, iz));
+  let [ix, iz] = entrada.direcao(); let mag = Math.min(1, Math.hypot(ix, iz));
+  // mirando: o herói para; o joystick só gira a mira devagar
+  const mirando = ativo && !heroi.caido && combate.gatilho(dt, entrada.atirando);
+  if (mirando && mag > 0.2) { const alvo = Math.atan2(tmp.copy(render.right).multiplyScalar(ix).addScaledVector(render.fwd, -iz).x, tmp.z); let da = alvo - heroi.g.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); heroi.g.rotation.y += Math.sign(da) * Math.min(Math.abs(da), dt * 2.2); }
+  if (mirando) mag = 0;
   heroi.devagar = ativo && mag > 0.05 && mag <= CFG.heroi.devagar + 0.02;
   if (ativo && !heroi.caido && mag > 0.05) {
     const dir = tmp.copy(render.right).multiplyScalar(ix).addScaledVector(render.fwd, -iz).normalize(), sp = CFG.heroi.velocidade * (heroi.devagar ? 0.45 : mag);
@@ -82,7 +86,7 @@ function passo(dt) {
   if (entrada.sinalizador) { entrada.sinalizador = 0; if (ativo && !heroi.caido && heroi.sinalizadores > 0) { heroi.sinalizadores--; combate.lancarSinalizador(); } }
   if (entrada.trocar) { entrada.trocar = 0; if (ativo && !heroi.caido) combate.trocar(); }
   if (entrada.recarregar) { entrada.recarregar = 0; if (ativo) combate.recarregar(); }
-  if (ativo && entrada.atirando && !heroi.caido) combate.atirar();
+
   // primeira mariposa à vista: aviso pelo rádio
   if (ativo && !avisos.mariposa && combate.zumbis.some(z => z.tipo === 'mariposa' && z.visivel && !z.morto)) { avisos.mariposa = true; hud.radio(sortear(TEXTOS.mariposa), 3); }
   heroi.invul = Math.max(0, heroi.invul - dt);

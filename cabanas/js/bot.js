@@ -15,7 +15,7 @@ export function criarBot({ heroi, combate, missao, mundo, entrada }) {
   return {
     st,
     passo(dt) {
-      entrada.atirando = false; entrada.x = entrada.z = 0;
+      entrada.x = entrada.z = 0; if (!st.segurando) entrada.atirando = false;
       if (st.fim) return;
       if (!missao.ativo) { if (missao.estado === 'caido') fechar('caido'); return; }
       if (missao.tempo >= DURACAO) { fechar('sobreviveu'); return; }
@@ -45,7 +45,12 @@ export function criarBot({ heroi, combate, missao, mundo, entrada }) {
       // cercado: joga um sinalizador para longe e deixa a horda ir até ele
       const cerco = combate.zumbis.filter(z => !z.morto && z.g.position.distanceTo(p) < 6).length;
       if (cerco >= 5 && heroi.sinalizadores > 0 && (st.sinT = (st.sinT || 0) - dt) <= 0) { entrada.sinalizador++; st.sinalizadores++; st.sinT = 8; }
-      if (alvo && alvo.visivel && dAlvo < 8.5) { entrada.atirando = true; if (combate.arma.espera <= 0 && combate.arma.pente > 0) st.tiros++; }
+      // mira: segura o botão até a mira fechar (mais rápido se a criatura estiver perto) e solta para atirar
+      const f = heroi.frente(), vx = alvo ? alvo.g.position.x - p.x : 0, vz = alvo ? alvo.g.position.z - p.z : 0;
+      const de_frente = alvo && (vx * f.x + vz * f.z) / (Math.hypot(vx, vz) || 1) > Math.cos(0.45);
+      if (alvo && alvo.visivel && dAlvo < 8.5 && !de_frente && !st.segurando) ir(vx, vz);   // vira para a criatura antes de mirar
+      const quer = alvo && alvo.visivel && dAlvo < 8.5 && (de_frente || st.segurando), pronto = combate.mira >= (dAlvo < 2.5 ? 0.25 : 0.75);
+      if (quer && !(st.segurando && pronto)) { entrada.atirando = true; st.segurando = true; entrada.x = entrada.z = 0; } else { if (st.segurando) st.tiros++; st.segurando = false; }
     },
   };
 }

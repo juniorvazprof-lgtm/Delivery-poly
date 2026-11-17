@@ -1,0 +1,125 @@
+// Tabela de itens e receitas do inventário (dados puros, sem DOM).
+// nome/desc são chaves de i18n; icone é 1 caractere; espacos = quantos slot ocupa.
+
+export const ITENS = {
+  espingarda: {
+    nome: 'item.espingarda',
+    desc: 'item.espingarda.desc',
+    icone: 'E',
+    pilha: 1,
+    espacos: 2, // arma longa: ocupa dois slots
+    tipo: 'arma',
+  },
+  pistola: {
+    nome: 'item.pistola',
+    desc: 'item.pistola.desc',
+    icone: 'P',
+    pilha: 1,
+    espacos: 1,
+    tipo: 'arma',
+  },
+  cartuchos: {
+    nome: 'item.cartuchos',
+    desc: 'item.cartuchos.desc',
+    icone: 'C',
+    pilha: 8,
+    espacos: 1,
+    tipo: 'municao',
+    arma: 'espingarda',
+  },
+  balas: {
+    nome: 'item.balas',
+    desc: 'item.balas.desc',
+    icone: 'B',
+    pilha: 15,
+    espacos: 1,
+    tipo: 'municao',
+    arma: 'pistola',
+  },
+  pilha: {
+    nome: 'item.pilha',
+    desc: 'item.pilha.desc',
+    icone: '▮',
+    pilha: 3,
+    espacos: 1,
+    tipo: 'luz',
+    duracao: 1, // 1 unidade = carga cheia da lanterna
+  },
+  vela: {
+    nome: 'item.vela',
+    desc: 'item.vela.desc',
+    icone: '▲',
+    pilha: 3,
+    espacos: 1,
+    tipo: 'luz',
+  },
+  pano: {
+    nome: 'item.pano',
+    desc: 'item.pano.desc',
+    icone: '≈',
+    pilha: 3,
+    espacos: 1,
+    tipo: 'material',
+  },
+  alcool: {
+    nome: 'item.alcool',
+    desc: 'item.alcool.desc',
+    icone: '◯',
+    pilha: 2,
+    espacos: 1,
+    tipo: 'material',
+  },
+  curativo: {
+    nome: 'item.curativo',
+    desc: 'item.curativo.desc',
+    icone: '+',
+    pilha: 3,
+    espacos: 1,
+    tipo: 'cura',
+    cura: 35,
+  },
+  kit: {
+    nome: 'item.kit',
+    desc: 'item.kit.desc',
+    icone: '⊞',
+    pilha: 1,
+    espacos: 1,
+    tipo: 'cura',
+    cura: 100,
+  },
+  fosforo: {
+    nome: 'item.fosforo',
+    desc: 'item.fosforo.desc',
+    icone: '✳',
+    pilha: 5,
+    espacos: 1,
+    tipo: 'material',
+  },
+  chave_barracao: {
+    nome: 'item.chave_barracao',
+    desc: 'item.chave_barracao.desc',
+    icone: '⚿',
+    pilha: 1,
+    espacos: 1,
+    tipo: 'chave',
+  },
+  chave_motel7: {
+    nome: 'item.chave_motel7',
+    desc: 'item.chave_motel7.desc',
+    icone: '⚷',
+    pilha: 1,
+    espacos: 1,
+    tipo: 'chave',
+  },
+  bilhete: {
+    nome: 'item.bilhete',
+    desc: 'item.bilhete.desc',
+    icone: '?',
+    pilha: 1,
+    espacos: 1,
+    tipo: 'doc',
+  },
+};
+
+// Receitas de combinação (a ordem a/b não importa). vela + fósforo fica para depois.
+export const RECEITAS = [{ a: 'pano', b: 'alcool', resultado: 'curativo', qtd: 1 }];

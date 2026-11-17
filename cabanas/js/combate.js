@@ -107,16 +107,38 @@ export function criarCombate(mundo, heroi, render, eventos) {
     arma.atual = nova; arma.recarregando = 0; arma.espera = 0.35; heroi.usar(nova); SOM.troca();
   }
   let flashT = 0;
-  function atirar() {
+  // ---------- mira: segurar o botão = parar e mirar (o laser fecha); soltar = atirar ----------
+  const M = CFG.mira;
+  const laser = new T.Mesh(new T.BoxGeometry(0.03, 0.03, 1), new T.MeshBasicMaterial({ color: '#c84060', transparent: true, opacity: 0.5 })); laser.visible = false; scene.add(laser);
+  let mira = 0, mirando = false;
+  /** Vira, uma vez, para a criatura visível mais próxima dentro de um cone estreito à frente (mira assistida fraca). */
+  function travarAlvo() {
+    const g = heroi.g, frente = heroi.frente(), A = arma.cfg; let melhor = null, bs = 1e9;
+    for (const z of zumbis) { if (z.morto || !z.visivel) continue; tmpA.subVectors(z.g.position, g.position); const d = tmpA.length(); if (d > A.alcance) continue;
+      const ang = Math.acos(Math.max(-1, Math.min(1, tmpA.dot(frente) / d))); if (ang > M.cone) continue; const sc = d + ang * 4; if (sc < bs) { bs = sc; melhor = z; } }
+    if (melhor) g.rotation.y = Math.atan2(melhor.g.position.x - g.position.x, melhor.g.position.z - g.position.z);
+  }
+  /** Chamado a cada passo com o estado do botão. Devolve true enquanto estiver mirando (o herói não anda). */
+  function gatilho(dt, segurando) {
+    if (segurando && !mirando && arma.espera <= 0 && arma.recarregando <= 0) { mirando = true; mira = 0; travarAlvo(); }
+    if (mirando && segurando) mira = Math.min(1, mira + dt / M.tempo);
+    if (mirando && !segurando) { mirando = false; laser.visible = false; atirar(mira); mira = 0; }
+    if (mirando) {   // o laser sai do cano; fica mais forte e firme conforme a mira fecha
+      const g = heroi.g; g.updateMatrixWorld(true); heroi.boca.getWorldPosition(tmpA); const dir = heroi.frente(), L = arma.cfg.alcance;
+      const tremor = (1 - mira) * M.tremor * Math.sin(performance.now() / 70);
+      tmpB.copy(tmpA).add(new T.Vector3(dir.x * L + dir.z * tremor * L, 0, dir.z * L - dir.x * tremor * L));
+      laser.position.lerpVectors(tmpA, tmpB, 0.5); laser.scale.z = L; laser.lookAt(tmpB); laser.visible = true; laser.material.opacity = 0.2 + mira * 0.6;
+    }
+    return mirando;
+  }
+  function atirar(forca = 1) {
     const A = arma.cfg, m = arma.muni[arma.atual];
     if (arma.espera > 0 || arma.recarregando > 0) return;
     if (m.pente <= 0) { if (!recarregar()) { arma.espera = 0.4; SOM.vazio(); eventos.semMunicao(); } return; }
     m.pente--; arma.espera = A.cadencia;
-    // mira assistida: vira para o zumbi vivo e VISÍVEL mais próximo à frente
-    const g = heroi.g, frente = heroi.frente(); let melhor = null, bs = 1e9;
-    for (const z of zumbis) { if (z.morto || !z.visivel) continue; tmpA.subVectors(z.g.position, g.position); const d = tmpA.length(); if (d > A.alcance) continue;
-      const ang = Math.acos(Math.max(-1, Math.min(1, tmpA.dot(frente) / d))), sc = d + ang * 4 - (z.tipo === 'gritador' && !z.gritou ? 3 : 0); if (sc < bs) { bs = sc; melhor = z; } }
-    if (melhor) g.rotation.y = Math.atan2(melhor.g.position.x - g.position.x, melhor.g.position.z - g.position.z);
+    const g = heroi.g;
+    // sem mirar, o tiro desvia; com a mira fechada, vai reto
+    g.rotation.y += (Math.random() - 0.5) * 2 * M.desvio * (1 - forca);
     g.updateMatrixWorld(true);
     const dir = heroi.frente(); let alvo = null, ha = A.alcance;
     for (const z of zumbis) { if (z.morto) continue; tmpA.subVectors(z.g.position, g.position); const along = tmpA.dot(dir), perp = Math.abs(tmpA.x * dir.z - tmpA.z * dir.x);
@@ -126,7 +148,7 @@ export function criarCombate(mundo, heroi, render, eventos) {
     clarao.position.copy(tmpA); clarao.visible = true; luzTiro.position.copy(tmpA); luzTiro.intensity = arma.atual === 'espingarda' ? 34 : 20; flashT = 0.07;
     heroi.coice = A.coice; render.tremer(0.14 * A.coice);
     arma.atual === 'espingarda' ? SOM.espingarda() : SOM.pistola();
-    stats.tiros++; if (alvo) { stats.acertos++; ferir(alvo, dir, A.dano(ha)); }
+    stats.tiros++; if (alvo) { stats.acertos++; ferir(alvo, dir, A.dano(ha) * (M.danoMin + (1 - M.danoMin) * forca)); }
     // barulho: uma onda visível; quem está perto caça, quem está no raio vem investigar
     ruido(g.position, A.barulho, '#e8a850');
     for (const z of zumbis) if (!z.morto && z.g.position.distanceTo(g.position) < A.barulho * 0.5) z.cacando = true;
@@ -227,5 +249,5 @@ export function criarCombate(mundo, heroi, render, eventos) {
     for (const s of sinalizadores) descartar(scene, s.o); sinalizadores.length = 0; for (const o of ondas) { scene.remove(o); o.material.dispose(); } ondas.length = 0;
   }
   return { stats, zumbis, saques, sinalizadores, arma, resetarArmas, trocar, surgir, vivos, ruido, lancarSinalizador,
-    atirar, recarregar, passo, limpar };
+    atirar, gatilho, get mira() { return mira; }, recarregar, passo, limpar };
 }

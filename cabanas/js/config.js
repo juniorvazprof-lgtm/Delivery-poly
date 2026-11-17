@@ -13,6 +13,8 @@ export const CFG = {
     pistola: { nome: 'Pistola', pente: 12, reserva: 60, recarga: 1.15, cadencia: 0.26, alcance: 10,
       dano: d => (d < 8 ? 2 : 1.5), largura: 0.4, barulho: 10, coice: 0.45 },                    // 3 a 4 tiros, mais silenciosa
   },
+  // mira: segurar = parar e mirar; em `tempo` s a mira fecha. Tiro sem mira desvia até `desvio` rad e causa `danoMin` do dano.
+  mira: { tempo: 0.8, desvio: 0.22, danoMin: 0.55, cone: 0.6, tremor: 0.12 },
   // lanterna: ligada, os zumbis te percebem de mais longe; a bateria acaba (uma pilha dura ~2 min ligada)
   lanterna: { visto: 12, escondido: 6.5, duracao: 130, fraca: 0.2, troca: 1.4 },
   sinalizador: { distancia: 6, duracao: 20, luz: 9, chamado: 22 },     // sinalizador de mão: alcance do arremesso, segundos, raio da luz, raio do chiado
