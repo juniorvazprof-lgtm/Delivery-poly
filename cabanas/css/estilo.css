@@ -71,3 +71,8 @@ body.emTela #stick, body.emTela #fire, body.emTela #lamp, body.emTela #reload, b
 .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
 #ammo .rec { display: inline-block; animation: gira .5s steps(4) infinite; }
 @keyframes gira { to { transform: rotate(360deg); } }
+#somBtn { width: 34px; height: 30px; padding: 0; font-size: 16px; background: #141428cc; border: 2px solid var(--line); color: var(--ink); }
+#swap { position: fixed; right: calc(148px + env(safe-area-inset-right, 0px)); bottom: calc(160px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px;
+  border: 3px solid var(--dim); background: #141428cc; color: var(--ink); font: bold 22px ui-monospace, monospace; }
+#ammo small { display: block; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); text-align: right; }
+body.emTela #swap { visibility: hidden; }

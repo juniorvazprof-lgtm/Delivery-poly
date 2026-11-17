@@ -4,7 +4,16 @@ Um mercenário do pós-apocalipse aceita contratos para limpar áreas infestadas
 sobrevive até a extração e recebe em satoshis. Visual HD-2D: cena 3D (Three.js r160) em baixa
 resolução, paleta de 26 cores, contorno seletivo e dithering Bayer.
 
-## Etapa 1 (esta versão)
+## Ajustes após o primeiro teste
+- Zumbis cinza, 2× mais resistentes (espingarda: 2 tiros de perto; pistola: 3 a 4).
+- Pose realista: espingarda no ombro com a mão de apoio na telha e lanterna sob o cano; pistola com as duas mãos.
+- Troca de arma (botão ⇄ ou Q); cada arma tem pente e reserva próprios.
+- A área começa com 26 zumbis vagando; só aparecem no cone da lanterna, muito perto, no clarão do tiro
+  ou perto de uma janela acesa (no escuro, às vezes, só os olhos).
+- Sons sintetizados (tiros, recarga, gemidos, passos da horda, sinal, helicóptero, ambiente noturno); botão 🔊 ou M.
+- Contrato agora pede 35 abates (5.500 sats).
+
+## Etapa 1
 - Contrato de limpeza "Acampamento Pinheiro": abater 25 zumbis e extrair (4.200 sats).
 - Zumbis surgem em grupos longe do jogador; tiros fazem barulho e atraem quem está perto;
   lanterna ligada deixa você visível de mais longe.

@@ -9,6 +9,7 @@ import { criarCombate } from './combate.js';
 import { criarMissao } from './missao.js';
 import { criarHud } from './hud.js';
 import { criarBot } from './bot.js';
+import { SOM } from './sons.js';
 
 const qs = new URLSearchParams(location.search), RAPIDO = Math.min(20, Math.max(1, Number(qs.get('rapido')) || 1));
 const render = criarRender(document.getElementById('view'));
@@ -21,16 +22,17 @@ const hurt = document.getElementById('hurt');
 const combate = criarCombate(mundo, heroi, render, {
   abate: () => missao.abate(),
   saque: (tipo, sats) => missao.ganhoSaque(tipo, sats),
-  municao: n => hud.ganho('municao', 0, n),
+  municao: (n, qual) => hud.ganho('municao', 0, `${n} balas de ${CFG.armas[qual].nome.toLowerCase()}`),
   tiro: () => {}, recarga: () => {}, semMunicao: () => hud.radio('Sem munição! Procure as caixas nas cabanas.', 2.5),
   mordida(dano) {
     if (heroi.invul > 0 || heroi.caido) return;
-    heroi.vida = Math.max(0, heroi.vida - dano); heroi.invul = CFG.heroi.invul; render.tremer(0.15);
+    heroi.vida = Math.max(0, heroi.vida - dano); SOM.dor(); heroi.invul = CFG.heroi.invul; render.tremer(0.15);
     hurt.style.opacity = 1; setTimeout(() => (hurt.style.opacity = 0), 140);
     if (heroi.vida <= 0) { heroi.caido = true; missao.caiu(); }
   },
 });
 missao = criarMissao({ mundo, heroi, combate, hud });
+hud.somBotao();
 const bot = qs.get('bot') ? criarBot({ heroi, combate, missao, mundo, entrada }) : null;
 
 function comecar() { hud.contrato(missao.carteira, () => missao.iniciar()); if (bot) document.getElementById('aceitar').click(); }
@@ -54,7 +56,8 @@ function passo(dt) {
     heroi.g.position.x = nx; heroi.g.position.z = nz;
     let da = Math.atan2(dir.x, dir.z) - heroi.g.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); heroi.g.rotation.y += da * Math.min(1, dt * 12);
   }
-  if (entrada.lanterna) { entrada.lanterna = 0; if (ativo) heroi.setLanterna(!heroi.lanterna); }
+  if (entrada.lanterna) { entrada.lanterna = 0; if (ativo) { heroi.setLanterna(!heroi.lanterna); SOM.lanterna(); } }
+  if (entrada.trocar) { entrada.trocar = 0; if (ativo && !heroi.caido) combate.trocar(); }
   if (entrada.recarregar) { entrada.recarregar = 0; if (ativo) combate.recarregar(); }
   if (ativo && entrada.atirando && !heroi.caido) combate.atirar();
   heroi.invul = Math.max(0, heroi.invul - dt);

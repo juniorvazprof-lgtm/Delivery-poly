@@ -2,6 +2,7 @@
 import { CFG } from './config.js';
 import { TEXTOS, sortear } from './textos.js';
 import { btcFmt, satsFmt } from './sats.js';
+import { SOM } from './sons.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -22,7 +23,7 @@ export function criarHud() {
         <button id="aceitar" class="btn">Aceitar contrato</button>
         <p class="carteira">Sua carteira: <b>${satsFmt(carteira.sats)}</b> · ${carteira.contratos} contrato(s) cumprido(s)</p></div>`;
       $('telaContrato').hidden = false; $('telaFim').hidden = true; document.body.classList.add('emTela');
-      $('aceitar').onclick = () => { $('telaContrato').hidden = true; document.body.classList.remove('emTela'); aceitar(); };
+      $('aceitar').onclick = () => { SOM.iniciar(); $('telaContrato').hidden = true; document.body.classList.remove('emTela'); aceitar(); };
     },
     fim(r) {
       const t = $('telaFim');
@@ -36,10 +37,11 @@ export function criarHud() {
         <p class="carteira">Carteira: <b>${satsFmt(r.carteira)}</b></p><button id="denovo" class="btn">Tentar de novo</button></div>`;
       setTimeout(() => { t.hidden = false; document.body.classList.add('emTela'); }, r.venceu ? 1400 : 1100);
     },
+    somBotao() { const b = $('somBtn'); const pinta = () => (b.textContent = SOM.ligado ? '🔊' : '🔇'); pinta(); b.onclick = () => { SOM.iniciar(); SOM.alternar(); pinta(); }; addEventListener('keydown', e => { if (e.key.toLowerCase() === 'm') setTimeout(pinta); }); },
     aoRecomecar(fn) { document.addEventListener('click', e => { if (e.target.id === 'denovo') { $('telaFim').hidden = true; fn(); } }); },
     radio(txt, seg = 3.5) { const r = $('radio'); r.textContent = txt; r.classList.add('on'); radioT = seg; },
     ganho(tipo, sats, municao = 0) {
-      const g = $('ganho'); g.textContent = tipo === 'municao' ? `+${municao} balas` : `+${satsFmt(sats)}${tipo === 'carteira' ? ' · carteira fria!' : ''}${municao ? ` · +${municao} balas` : ''}`;
+      const g = $('ganho'); g.textContent = tipo === 'municao' ? `+${municao}` : `+${satsFmt(sats)}${tipo === 'carteira' ? ' · carteira fria!' : ''}${municao ? ` · +${municao}` : ''}`;
       g.className = 'on ' + tipo; ganhoT = 1.6;
     },
     segurar(frac, dentro) { const b = $('hold'); b.hidden = false; b.classList.toggle('fora', !dentro); $('holdFill').style.width = frac * 100 + '%';
@@ -47,7 +49,7 @@ export function criarHud() {
     quadro(dt, { m, heroi, arma, sinal, render }) {
       $('hpfill').style.width = Math.max(0, heroi.vida) / CFG.heroi.vida * 100 + '%';
       $('obj').textContent = m.estado === 'limpeza' ? `☠ ${m.abates}/${CFG.contrato.objetivo}` : m.estado === 'extracao' ? 'Extração!' : '';
-      $('ammo').innerHTML = arma.recarregando > 0 ? `<b class="rec">↻</b> | ${arma.reserva}` : `<b>${arma.pente}</b> | ${arma.reserva}`;
+      $('ammo').innerHTML = `<small>${arma.cfg.nome}</small>` + (arma.recarregando > 0 ? `<b class="rec">↻</b> | ${arma.reserva}` : `<b>${arma.pente}</b> | ${arma.reserva}`);
       $('ammo').classList.toggle('vazio', arma.pente === 0 && arma.reserva === 0);
       $('loot').textContent = m.saque ? `Saque: ${satsFmt(m.saque)}` : '';
       if (m.estado !== 'extracao') $('hold').hidden = true;

@@ -11,14 +11,18 @@ export function criarBot({ heroi, combate, missao, mundo, entrada }) {
     passo(dt) {
       entrada.atirando = false; entrada.x = entrada.z = 0;
       if (missao.estado !== 'limpeza' && missao.estado !== 'extracao') {
-        if (!st.fim && (missao.estado === 'pago' || missao.estado === 'caido')) st.fim = { estado: missao.estado, tempo: missao.tempo, tLimpeza: st.tLimpeza, abates: missao.abates, saque: missao.saque, vidaMin: st.vidaMin, municao: combate.arma.pente + combate.arma.reserva, caixas: mundo.caixas.filter(c => c.aberta).length };
+        if (!st.fim && (missao.estado === 'pago' || missao.estado === 'caido')) st.fim = { estado: missao.estado, tempo: missao.tempo, tLimpeza: st.tLimpeza, abates: missao.abates, saque: missao.saque, vidaMin: st.vidaMin, municao: Object.values(combate.arma.muni).map(m => m.pente + m.reserva).join('/'), caixas: mundo.caixas.filter(c => c.aberta).length };
         return;
       }
       const p = heroi.g.position; st.vidaMin = Math.min(st.vidaMin, heroi.vida);
       if (missao.estado === 'limpeza') st.tLimpeza = missao.tempo;
       let alvo = null, dAlvo = 1e9;
-      for (const z of combate.zumbis) { if (z.morto) continue; const d = z.g.position.distanceTo(p); if (d < dAlvo) { dAlvo = d; alvo = z; } }
-      const mun = combate.arma.pente + combate.arma.reserva;
+      for (const z of combate.zumbis) { if (z.morto) continue; const d = z.g.position.distanceTo(p) + (z.visivel ? 0 : 4); if (d < dAlvo) { dAlvo = d; alvo = z; } }
+      if (alvo) dAlvo = alvo.g.position.distanceTo(p);
+      // troca de arma quando a atual secou e a outra tem bala
+      const A = combate.arma, outra = A.atual === 'espingarda' ? 'pistola' : 'espingarda';
+      if (A.pente + A.reserva === 0 && A.muni[outra].pente + A.muni[outra].reserva > 0) combate.trocar(outra);
+      const mun = Object.values(combate.arma.muni).reduce((t, m) => t + m.pente + m.reserva, 0) / 2;
       let mx = 0, mz = 0;
       if (missao.estado === 'extracao') {
         const s = mundo.sinal.position, d = s.distanceTo(p);
@@ -27,7 +31,8 @@ export function criarBot({ heroi, combate, missao, mundo, entrada }) {
       } else {
         const caixa = mundo.caixas.filter(c => !c.aberta).sort((a, b) => a.g.position.distanceTo(p) - b.g.position.distanceTo(p))[0];
         const saque = combate.saques.find(s => s.g.position.distanceTo(p) < 7);
-        if (mun < 10 && caixa) { mx = caixa.g.position.x - p.x; mz = caixa.g.position.z - p.z; }
+        if (mun < 14 && caixa) { mx = caixa.g.position.x - p.x; mz = caixa.g.position.z - p.z; }
+        else if (alvo && !alvo.visivel && dAlvo < 9) { mx = alvo.g.position.x - p.x; mz = alvo.g.position.z - p.z; }   // vira a lanterna para o barulho
         else if (alvo && dAlvo < 2.4) { mx = p.x - alvo.g.position.x; mz = p.z - alvo.g.position.z; }          // recua
         else if (saque && (!alvo || dAlvo > 6)) { mx = saque.g.position.x - p.x; mz = saque.g.position.z - p.z; }
         else if (alvo && dAlvo > 6) { mx = alvo.g.position.x - p.x; mz = alvo.g.position.z - p.z; }
@@ -39,7 +44,7 @@ export function criarBot({ heroi, combate, missao, mundo, entrada }) {
       if (st.preso > 0.4) st.desvio = 1.2;
       if (st.desvio > 0) { st.desvio -= dt; [mx, mz] = [-mz, mx]; }
       if (mx || mz) ir(mx, mz);
-      if (alvo && dAlvo < 8.5) { entrada.atirando = true; if (combate.arma.espera <= 0 && combate.arma.pente > 0) st.tiros++; }
+      if (alvo && alvo.visivel && dAlvo < 8.5) { entrada.atirando = true; if (combate.arma.espera <= 0 && combate.arma.pente > 0) st.tiros++; }
     },
   };
 }

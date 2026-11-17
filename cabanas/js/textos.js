@@ -1,8 +1,8 @@
 // Textos do jogo (rascunho do DeepSeek, revisado).
 export const TEXTOS = {
  "briefing": [
-  "Dona Ivone, Posto 9. Pinheiro tá cheio de zumbi e cliente reclamando. Mate 25 e volte vivo. Pago em sats, na hora.",
-  "Contrato novo: Limpar o Acampamento Pinheiro. São 25 cabeças. Traga seu couro de volta, mercenário. Satoshis não servem pra defunto.",
+  "Dona Ivone, Posto 9. Pinheiro tá cheio de zumbi e cliente reclamando. Mate 35 e volte vivo. Pago em sats, na hora.",
+  "Contrato novo: Limpar o Acampamento Pinheiro. São 35 cabeças. Traga seu couro de volta, mercenário. Satoshis não servem pra defunto.",
   "O Posto 9 paga em satoshi, não em promessa. Limpe o Pinheiro e saia vivo. Se morrer, o saque fica e eu fico no prejuízo."
  ],
  "radio": [
@@ -16,7 +16,7 @@ export const TEXTOS = {
   },
   {
    "quando": "objetivo",
-   "t": "25 no chão? Acende e não sai daí."
+   "t": "35 no chão? Acende e não sai daí."
   },
   {
    "quando": "objetivo",
@@ -73,7 +73,7 @@ export const TEXTOS = {
  ],
  "pagamento": [
   "Sats na carteira. Prazer.",
-  "25 baixas. Pagamento limpo.",
+  "35 baixas. Pagamento limpo.",
   "Contrato fechado. Sem choro.",
   "Transferência feita. Próximo.",
   "Dinheiro é dinheiro. Valeu.",
