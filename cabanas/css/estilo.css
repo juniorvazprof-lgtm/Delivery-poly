@@ -1,0 +1,73 @@
+/* Cabanas na Floresta · interface em pixel (fonte monoespaçada, bordas duras, paleta da cena) */
+:root { --bg: #0a0a14; --ink: #f8e6a0; --dim: #8c9cb8; --line: #3a3f5a; --red: #8a2c3a; --teal: #3fd0c8; --amber: #e8a850; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); touch-action: none; user-select: none; -webkit-user-select: none; font-family: ui-monospace, Menlo, Consolas, monospace; }
+#view { position: fixed; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+.sombra, #obj, #loot, #ammo, #ganho { text-shadow: 2px 2px 0 #000; }
+
+#topo { position: fixed; left: 12px; top: calc(12px + env(safe-area-inset-top, 0px)); display: flex; align-items: center; gap: 12px; }
+#hpbar { width: 120px; height: 12px; background: #2b1d2a; border: 2px solid #0a0a14; box-shadow: 0 0 0 2px var(--line); }
+#hpfill { height: 100%; width: 100%; background: var(--red); transition: width .15s steps(4); }
+#obj { font-weight: bold; font-size: 16px; color: var(--ink); }
+#loot { position: fixed; right: 14px; top: calc(14px + env(safe-area-inset-top, 0px)); font-size: 13px; font-weight: bold; color: var(--amber); }
+#ganho { position: fixed; left: 50%; top: 30%; transform: translate(-50%, 0); font-size: 15px; font-weight: bold; color: var(--amber); opacity: 0; pointer-events: none; transition: opacity .2s, transform .8s; white-space: nowrap; }
+#ganho.on { opacity: 1; transform: translate(-50%, -18px); }
+#ganho.carteira { color: var(--teal); font-size: 18px; }
+#radio { position: fixed; left: 50%; top: calc(46px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); max-width: min(86vw, 420px); padding: 8px 12px; font-size: 13px; color: var(--ink);
+  background: #141428e6; border: 2px solid var(--teal); opacity: 0; transition: opacity .25s; pointer-events: none; }
+#radio::before { content: "📻 Kátia: "; color: var(--teal); }
+#radio.on { opacity: 1; }
+#hurt { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 70px 20px var(--red); opacity: 0; transition: opacity .25s; }
+
+/* seta para o sinal de extração */
+#seta { position: fixed; left: 0; top: 0; pointer-events: none; width: 0; height: 0; }
+#seta i { position: absolute; left: -12px; top: -10px; width: 0; height: 0; border-left: 24px solid var(--teal); border-top: 10px solid transparent; border-bottom: 10px solid transparent; filter: drop-shadow(2px 2px 0 #000); animation: pulsa .6s steps(2) infinite; }
+#seta span { position: absolute; left: -30px; top: 14px; width: 60px; text-align: center; font-size: 11px; font-weight: bold; color: var(--teal); text-shadow: 1px 1px 0 #000; transform-origin: 0 0; }
+#seta.perto i { border-left-width: 18px; }
+@keyframes pulsa { 50% { opacity: .55; } }
+
+#hold { position: fixed; left: 50%; bottom: calc(196px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(70vw, 320px); text-align: center; color: var(--ink); font-size: 13px; font-weight: bold; text-shadow: 2px 2px 0 #000; }
+#holdBar { height: 14px; border: 2px solid var(--teal); background: #141428cc; margin-bottom: 6px; }
+#holdFill { height: 100%; width: 0; background: var(--teal); }
+#hold.fora #holdBar { border-color: #c84060; animation: pulsa .5s steps(2) infinite; }
+
+/* controles */
+#stick { position: fixed; left: calc(30px + env(safe-area-inset-left, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); width: 124px; height: 124px;
+  border: 3px solid #f8e6a066; border-radius: 50%; background: #14142866; pointer-events: none; }
+#stick.on { border-color: var(--ink); }
+#knob { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: #f8e6a0aa; border: 3px solid var(--bg); }
+#fire { position: fixed; right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); width: 104px; height: 104px; border-radius: 50%;
+  border: 3px solid var(--amber); background: #7a3a2acc; color: #fffbe6; font: bold 13px ui-monospace, monospace; }
+#fire:active, #fire.on { background: #c8703a; transform: scale(0.95); }
+#lamp { position: fixed; right: calc(140px + env(safe-area-inset-right, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); width: 66px; height: 66px;
+  border: 3px solid var(--ink); background: #141428cc; color: var(--ink); font: bold 10px ui-monospace, monospace; display: grid; place-items: center; text-align: center; line-height: 1.2; }
+#lamp.off { border-color: var(--line); color: #5d6a8a; }
+#lamp i { display: block; font-style: normal; font-size: 24px; }
+#ammo { position: fixed; right: calc(30px + env(safe-area-inset-right, 0px)); bottom: calc(146px + env(safe-area-inset-bottom, 0px)); font-size: 14px; color: var(--dim); }
+#ammo b { color: var(--ink); font-size: 20px; }
+#ammo.vazio { color: #c84060; }
+#reload { position: fixed; right: calc(148px + env(safe-area-inset-right, 0px)); bottom: calc(108px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px;
+  border: 3px solid var(--dim); background: #141428cc; color: var(--ink); font: bold 22px ui-monospace, monospace; }
+body.emTela #stick, body.emTela #fire, body.emTela #lamp, body.emTela #reload, body.emTela #ammo { visibility: hidden; }
+
+/* telas de contrato e de fim: papel de quadro de avisos */
+.tela { position: fixed; inset: 0; display: grid; place-items: center; padding: 18px; background: #0a0a14cc; z-index: 5; }
+.tela[hidden] { display: none; }
+.papel { width: min(92vw, 380px); padding: 20px 18px; background: #e9d9b0; color: #2b1d2a; border: 3px solid #2b1d2a; box-shadow: 6px 6px 0 #000, inset 0 0 0 3px #c99a5c; }
+.papel small { display: block; font-size: 11px; font-weight: bold; letter-spacing: .14em; text-transform: uppercase; color: #6e4434; }
+.papel h1 { margin: 6px 0 10px; font-size: 22px; line-height: 1.15; }
+.papel .brief { margin: 0 0 12px; font-size: 13px; line-height: 1.45; font-style: italic; color: #4a2c2a; }
+.papel dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0 0 12px; font-size: 13px; }
+.papel dt { font-weight: bold; color: #6e4434; }
+.papel dd { margin: 0; }
+.papel .sats { font-size: 17px; font-weight: bold; color: #7a3a2a; }
+.papel .sats span { font-size: 12px; font-weight: normal; color: #6e4434; }
+.papel .risco { color: #8a2c3a; font-weight: bold; }
+.papel .regra { margin: 0 0 14px; padding: 8px; font-size: 12px; background: #d8c38f; border-left: 4px solid #8a2c3a; }
+.papel .carteira { margin: 12px 0 0; font-size: 12px; text-align: center; color: #4a2c2a; }
+.papel.ok { box-shadow: 6px 6px 0 #000, inset 0 0 0 3px var(--teal); }
+.papel.mal { background: #d9c2b0; }
+.btn { display: block; width: 100%; padding: 14px; font: bold 16px ui-monospace, monospace; color: #fffbe6; background: #7a3a2a; border: 3px solid #2b1d2a; box-shadow: 3px 3px 0 #000; cursor: pointer; }
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+#ammo .rec { display: inline-block; animation: gira .5s steps(4) infinite; }
+@keyframes gira { to { transform: rotate(360deg); } }
