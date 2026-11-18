@@ -57,9 +57,9 @@ canvas{display:block}
   </div>
 </div></div>
 
-<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
-<script type="module">
-import * as THREE from 'three';
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
 
 // ---------- setup ----------
 const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -128,7 +128,7 @@ function setupHoles(){
   openHole = holes[Math.floor(Math.random()*holes.length)];
   for(const h of holes){
     if(h===openHole){
-      const l=new THREE.PointLight(0x6bff6b,8,10); l.position.set(h.x,2,h.z); scene.add(l); holeMarks.push(l);
+      const l=new THREE.PointLight(0x6bff6b,1.6,10); l.position.set(h.x,2,h.z); scene.add(l); holeMarks.push(l);
       const r=new THREE.Mesh(new THREE.RingGeometry(1,1.4,16),new THREE.MeshBasicMaterial({color:0x6bff6b,side:2})); r.rotation.x=-Math.PI/2;r.position.set(h.x,.05,h.z);scene.add(r);holeMarks.push(r);
     } else {
       const b=box(h.x===HALF||h.x===-HALF?.4:3,1.4,h.x===HALF||h.x===-HALF?3:.4,0x6b3b12,h.x,.7,h.z); holeMarks.push(b);
@@ -137,7 +137,7 @@ function setupHoles(){
 }
 // panela mágica
 const pot = new THREE.Mesh(new THREE.CylinderGeometry(1.2,1,1.2,10),M(0x333333)); pot.position.set(8,.6,11); scene.add(pot);
-const potGlow = new THREE.PointLight(0xffa030,6,8); potGlow.position.set(8,2,11); scene.add(potGlow);
+const potGlow = new THREE.PointLight(0xffa030,1.4,8); potGlow.position.set(8,2,11); scene.add(potGlow);
 
 // ---------- characters ----------
 function makeChicken(color){
@@ -310,7 +310,7 @@ function updateFarmer(dt){
   if(F.target&&F.aim>0&&!night){ laser.visible=true; laser.geometry.setFromPoints([F.pos.clone().setY(1.9),F.target.pos.clone().setY(.7)]); } else laser.visible=false;
   // lanterna
   const flick = F.stun>0 ? (Math.random()<.5?0:.3) : 1;
-  flash.intensity = nightT*60*flick; beam.material.opacity = nightT*.12*flick;
+  flash.intensity = nightT*3*flick; beam.material.opacity = nightT*.12*flick;
 }
 
 // ---------- chickens ----------
@@ -337,7 +337,7 @@ function updateChicken(c,dt){
     c.pos.x+=mx*6*dt; c.pos.z+=mz*6*dt; c.pos.x=Math.max(-HALF,Math.min(HALF,c.pos.x)); c.pos.z=Math.max(-HALF,Math.min(HALF,c.pos.z));
     c.mesh.position.set(c.pos.x,1.2+Math.sin(performance.now()/300)*.2,c.pos.z);
     if(c.roast&&!c.roast.carriedBy) c.roast.position.copy(c.roastPos);
-    c.roast&&(c.roast.userData.glow.intensity=nightT*3);
+    c.roast&&(c.roast.userData.glow.intensity=nightT*1);
     return;
   }
   let speed = run?7:3.4; if(c.carry) speed*=.6; if(inMud(c.pos)) speed*=.55;
@@ -395,6 +395,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 tick();
+})();
 </script>
 </body>
 </html>
