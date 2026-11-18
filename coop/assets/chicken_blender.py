@@ -236,20 +236,47 @@ def make_wing(name, side, parent):
 wingL=make_wing("wingL", 1, body)
 wingR=make_wing("wingR", -1, body)
 
-# ---- TAIL: 4 feathers fully OUT of body, base y~+0.55 z~0.80 fanning up to z~1.30 ----
+# ---- TAIL: 5 large flat teardrop feathers in vertical fan ----
 tail=new_mesh_obj("tail", None)
 bm=bmesh.new()
-base=(0, 0.55, 0.80)
-for i in range(4):
-    ang=math.radians(-26+i*17)
-    ret=bmesh.ops.create_uvsphere(bm,u_segments=8,v_segments=5,radius=0.09)
-    m_rot=mathutils.Euler((math.radians(42), 0, ang)).to_matrix()
+base=(0, 0.45, 0.75)
+# (angle_deg_elev, side_x, length_scale)
+feathers=[
+    (35, 0.12, 0.50),
+    (48, 0.06, 0.55),
+    (60, 0.00, 0.58),
+    (48, -0.06, 0.55),
+    (35, -0.12, 0.50),
+]
+for ang_deg, sx, length in feathers:
+    ret=bmesh.ops.create_uvsphere(bm,u_segments=8,v_segments=5,radius=0.5)
+    m_rot=mathutils.Euler((math.radians(90-ang_deg), 0, 0)).to_matrix()
     for v in ret['verts']:
-        v.co.x*=0.55
-        v.co.y*=0.50
-        v.co.z*=2.6
-        v.co=m_rot@v.co
-        v.co.x+=base[0]; v.co.y+=base[1]; v.co.z+=base[2]
+        x,y,z=v.co
+        # teardrop: taper top, pointy tip along +z
+        # map unit sphere -> teardrop shape: width 0.16, thickness 0.04, length 0.55
+        # first scale so long axis = length, wide = 0.16, thin = 0.04
+        x *= 0.16
+        y *= 0.04
+        z *= length
+        # teardrop taper: shrink x,y toward tip (z>0)
+        t = (z/length)  # -1..1 roughly (z ranges from -length*0.5 to +length*0.5 after scale? sphere r=0.5 so z in -0.5..0.5, scaled -> -length/2..+length/2)
+        # recompute normalized
+        zn = z / (length*0.5)  # -1..1
+        if zn > 0:
+            taper = 1.0 - 0.75*(zn**1.5)
+            x *= taper
+            y *= taper
+            # push tip forward (elongate point) 
+            z += (zn**2)*0.12*length
+        else:
+            # rounded bottom slightly wider
+            x *= 1.0 + 0.15*(-zn)
+        v.co.x=x; v.co.y=y; v.co.z=z
+        v.co = m_rot @ v.co
+        v.co.x += base[0] + sx
+        v.co.y += base[1]
+        v.co.z += base[2]
 bm_to_obj(bm,tail)
 set_mats(tail,[MATS['Body']]); shade_flat(tail)
 set_origin(tail, base)
