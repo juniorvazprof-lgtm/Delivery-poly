@@ -46,7 +46,7 @@ canvas{display:block}
 <button class="btn" id="bRun">CORRE</button>
 <button class="btn" id="bJump">PULA</button>
 <button class="btn" id="bBoo">BUUU</button>
-<button class="btn" id="bCam">3ª P</button>
+<button class="btn" id="bCam">1ª P</button>
 <div id="hint">arraste à direita para girar</div>
 <div id="panel"><div class="card">
   <h1>COOP</h1>
@@ -170,6 +170,11 @@ const farmer = new THREE.Group();
   for(const s of[-1,1]){const e=new THREE.Mesh(new THREE.SphereGeometry(.07,6,4),new THREE.MeshBasicMaterial({color:0xfff2a0}));e.position.set(.14*s,2.95,.31);farmer.add(e)}
   const gun=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,1.6),M(0x3b2a1a)); gun.position.set(.5,1.9,.7); farmer.add(gun);
   farmer.traverse(o=>o.castShadow=true); scene.add(farmer); }
+scene.add(camera);
+const fpRig=new THREE.Group(); camera.add(fpRig);
+const fpWings=[-1,1].map(s=>{const pv=new THREE.Group(); pv.position.set(.36*s,-.3,-.62); const w=new THREE.Mesh(new THREE.BoxGeometry(.42,.07,.3),M(0xf2f2f2)); w.position.x=.22*s; pv.add(w); const tip=new THREE.Mesh(new THREE.BoxGeometry(.2,.06,.3),M(0xd8d8d8)); tip.position.x=.5*s; pv.add(tip); pv.userData.s=s; fpRig.add(pv); return pv});
+const fpBeak=new THREE.Mesh(new THREE.ConeGeometry(.07,.22,4),new THREE.MeshBasicMaterial({color:0xffa000})); fpBeak.rotation.x=-Math.PI/2; fpBeak.position.set(0,-.3,-.6); fpRig.add(fpBeak);
+let fpBob=0, fpFlap=0;
 const flash = new THREE.SpotLight(0xfff6d0,0,24,Math.PI/9,.35,1.2);
 flash.position.set(0,2.2,.4); flash.castShadow=true; farmer.add(flash);
 const flashTarget=new THREE.Object3D(); flashTarget.position.set(0,0,10); farmer.add(flashTarget); flash.target=flashTarget;
@@ -191,7 +196,7 @@ function bang(){if(!AC)return;const b=AC.createBuffer(1,AC.sampleRate*.4,AC.samp
 // ---------- state ----------
 const keys={}; addEventListener('keydown',e=>{keys[e.code]=true; if(e.code==='KeyB')boo(); if(e.code==='KeyE')drop()}); addEventListener('keyup',e=>keys[e.code]=false);
 let chickens=[], player, mode='day', nightT=0, time=120, running=false, escaped=0, msgT=0, feathers=[];
-const F={pos:new THREE.Vector3(),yaw:0,state:'patrol',target:null,aim:0,stun:0,wp:0,cool:0,hear:null,lost:0};
+const F={snap:0,pos:new THREE.Vector3(),yaw:0,state:'patrol',target:null,aim:0,stun:0,wp:0,cool:0,hear:null,lost:0};
 const patrol=[[0,0],[10,-4],[20,8],[6,22],[-10,14],[-20,-12],[-4,-20],[12,-26]].map(([x,z])=>new THREE.Vector3(x,0,z));
 
 function start(m){
@@ -201,7 +206,7 @@ function start(m){
   chickens=[]; escaped=0; time=120; nightT = m==='night'?1:0;
   const cols=[0xffffff,0xa0522d,0x333333];
   cols.forEach((c,i)=>chickens.push({mesh:makeChicken(c),pos:new THREE.Vector3(-14+i*1.5,0,-13),vel:new THREE.Vector3(),vy:0,y:0,alive:true,ghost:false,escaped:false,isPlayer:i===0,noise:0,wander:null,carry:null,carriedBy:null,booCd:0,name:['Você','Bot Carijó','Bot Preta'][i]}));
-  player=chickens[0];
+  player=chickens[0]; camYaw=0.82; camPitch=0;
   F.pos.set(12,0,20); F.state='patrol'; F.wp=0; F.stun=0; F.aim=0; F.target=null; F.hear=null;
   setupHoles(); running=true; say('Ache a saída verde!',2);
 }
@@ -216,7 +221,7 @@ bRun.addEventListener('pointerdown',e=>{e.stopPropagation();runHeld=true;bRun.cl
 addEventListener('pointerup',()=>{runHeld=false;bRun.classList.remove('on')});
 bJump.addEventListener('pointerdown',e=>{e.stopPropagation();jumpReq=true});
 bBoo.addEventListener('pointerdown',e=>{e.stopPropagation();boo()});
-let camYaw=Math.PI, camPitch=0, camMode='third'; const look={id:null,x:0,y:0};
+let camYaw=Math.PI, camPitch=0, camMode='first'; const look={id:null,x:0,y:0};
 const bCam=document.getElementById('bCam');
 function toggleCam(){camMode=camMode==='third'?'first':'third';bCam.textContent=camMode==='third'?'3ª P':'1ª P'}
 bCam.addEventListener('pointerdown',e=>{e.stopPropagation();toggleCam()});
@@ -248,8 +253,10 @@ function collide(p,r=.5){
   for(const h of holes) if(h===openHole && Math.hypot(p.x-h.x,p.z-h.z)<2) return; // pode sair
   p.x=Math.max(-lim,Math.min(lim,p.x)); p.z=Math.max(-lim,Math.min(lim,p.z));
 }
+const ALERT_R=16;
 function makeNoise(c,level){ // level: radius
   c.noise=Math.max(c.noise,level);
+  if(level>=12 && F.state!=='chase' && F.pos.distanceTo(c.pos)<ALERT_R){ if(F.snap<=0){setMark('?');beep(160,.2,'sawtooth',.05,.7)} F.snap=.8; F.hear=c.pos.clone(); F.state='investigate'; }
   if(F.state!=='chase' && F.pos.distanceTo(c.pos)<level){ F.hear=c.pos.clone(); if(F.state==='patrol'){F.state='investigate';setMark('?');if(Math.random()<.5)beep(180,.25,'sawtooth',.05,.7)} else F.hear=c.pos.clone(); }
 }
 let cluckT=0;
@@ -309,13 +316,14 @@ function updateFarmer(dt){
   else { F.state='patrol'; goal=patrol[F.wp]; speed=2.6; if(F.pos.distanceTo(goal)<1.5) F.wp=(F.wp+1)%patrol.length; }
   if(F.stun>0) speed*=.2;
   const dir=goal.clone().sub(F.pos); dir.y=0;
-  if(dir.length()>.3){
+  if(F.snap>0){ F.snap-=dt; const sd=F.hear.clone().sub(F.pos); const want=Math.atan2(sd.x,sd.z); let dy=want-F.yaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); F.yaw+=Math.max(-12*dt,Math.min(12*dt,dy)); }
+  else if(dir.length()>.3){
     const want=Math.atan2(dir.x,dir.z); let dy=want-F.yaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy));
     F.yaw+=Math.max(-3*dt,Math.min(3*dt,dy));
     if(F.state!=='chase'||!seen||F.aim<.3||!night){ F.pos.addScaledVector(new THREE.Vector3(Math.sin(F.yaw),0,Math.cos(F.yaw)), speed*dt*(F.aim>0?.3:1)); }
   }
   // patrulha olha em volta
-  if(F.state==='patrol') F.yaw+=Math.sin(performance.now()/700)*dt*.6;
+  if(F.state==='patrol'&&F.snap<=0) F.yaw+=Math.sin(performance.now()/700)*dt*.6;
   collide(F.pos,.7);
   farmer.position.copy(F.pos); farmer.rotation.y=F.yaw;
   // laser de mira (dia)
@@ -365,6 +373,7 @@ function updateChicken(c,dt){
     c.ct=(c.ct||0)-dt; if(c.ct<=0){cluck(c,run);c.ct=run?.18:.55}
     c.mesh.rotation.y=Math.atan2(mx,mz);
   }
+  c.moving=moving; c.running=run&&moving;
   const bob = moving? Math.abs(Math.sin(performance.now()/(run?60:110)))*.25 : 0;
   c.mesh.position.set(c.pos.x,c.y+bob,c.pos.z);
   c.mesh.children.forEach(o=>{if(o.name==='wing')o.rotation.z=(c.y>0||run)?Math.sin(performance.now()/40)*.8*Math.sign(o.position.x):0});
@@ -401,7 +410,14 @@ function tick(){
     if(!player.escaped){
       const fx=Math.sin(camYaw),fz=Math.cos(camYaw), py=player.ghost?player.mesh.position.y:player.y;
       player.mesh.visible = camMode==='third' || player.ghost && false;
-      if(camMode==='first'){ camPos.set(player.pos.x+fx*.3, py+1.25, player.pos.z+fz*.3); camLook.set(camPos.x+fx*5, camPos.y+camPitch*5, camPos.z+fz*5); }
+      fpRig.visible = camMode==='first' && !player.ghost;
+      const t=performance.now()/1000; const air=player.y>0.05;
+      const hop = player.running ? Math.abs(Math.sin(t*11))*.28 : player.moving ? Math.abs(Math.sin(t*7))*.06 : 0;
+      fpBob += (hop-fpBob)*.5;
+      const flapTarget = (player.running||air) ? 1 : 0; fpFlap += (flapTarget-fpFlap)*.15;
+      fpWings.forEach(w=>{const s=w.userData.s; const flap=Math.sin(t*(air?28:20))*.7*fpFlap; w.position.y=-.3-0.4*(1-fpFlap); w.rotation.z=s*(.55+flap)*fpFlap; w.rotation.y=-s*.5;});
+      fpBeak.position.y=-.3-fpBob*.15;
+      if(camMode==='first'){ camPos.set(player.pos.x+fx*.3, py+1.25+fpBob, player.pos.z+fz*.3); camLook.set(camPos.x+fx*5, camPos.y+camPitch*5, camPos.z+fz*5); }
       else { let d=4.2; const head=new THREE.Vector3(player.pos.x,0,player.pos.z); const back=new THREE.Vector3(player.pos.x-fx*d,0,player.pos.z-fz*d); if(!los(head,back)) d=1.6;
         const want=new THREE.Vector3(player.pos.x-fx*d, py+2.1-camPitch*2, player.pos.z-fz*d); camPos.lerp(want,.25); camLook.set(player.pos.x+fx*2, py+.9+camPitch*2, player.pos.z+fz*2); }
     }
