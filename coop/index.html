@@ -21,6 +21,8 @@ canvas{display:block}
 #bRun{right:24px;bottom:28px;width:84px;height:84px}
 #bJump{right:120px;bottom:20px;width:68px;height:68px}
 #bBoo{right:40px;bottom:126px;width:68px;height:68px;background:#9fd3ff;display:none}
+#bCam{top:62px;right:14px;width:64px;height:64px;font-size:14px;background:#fff6dc}
+#hint{position:fixed;right:16px;top:134px;font-size:12px;font-family:system-ui,sans-serif;opacity:.8;pointer-events:none;text-shadow:0 1px 2px #000}
 #stick{position:fixed;width:120px;height:120px;border-radius:50%;border:4px solid #fff8;background:#0002;display:none;pointer-events:none}
 #stick i{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:#fffc}
 #panel{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0008}
@@ -44,6 +46,8 @@ canvas{display:block}
 <button class="btn" id="bRun">CORRE</button>
 <button class="btn" id="bJump">PULA</button>
 <button class="btn" id="bBoo">BUUU</button>
+<button class="btn" id="bCam">3ª P</button>
+<div id="hint">arraste à direita para girar</div>
 <div id="panel"><div class="card">
   <h1>COOP</h1>
   <p><b>MVP de mecânicas.</b> Fuja pela saída aberta (marcada com luz verde). Correr e pular fazem barulho e atraem o Seu Tião.</p>
@@ -212,7 +216,15 @@ bRun.addEventListener('pointerdown',e=>{e.stopPropagation();runHeld=true;bRun.cl
 addEventListener('pointerup',()=>{runHeld=false;bRun.classList.remove('on')});
 bJump.addEventListener('pointerdown',e=>{e.stopPropagation();jumpReq=true});
 bBoo.addEventListener('pointerdown',e=>{e.stopPropagation();boo()});
-renderer.domElement.addEventListener('pointerdown',e=>{if(e.clientX<innerWidth*.6&&stick.id===null){stick.id=e.pointerId;stick.ox=e.clientX;stick.oy=e.clientY;stick.x=stick.y=0;stickEl.style.display='block';stickEl.style.left=(e.clientX-60)+'px';stickEl.style.top=(e.clientY-60)+'px'}});
+let camYaw=Math.PI, camPitch=0, camMode='third'; const look={id:null,x:0,y:0};
+const bCam=document.getElementById('bCam');
+function toggleCam(){camMode=camMode==='third'?'first':'third';bCam.textContent=camMode==='third'?'3ª P':'1ª P'}
+bCam.addEventListener('pointerdown',e=>{e.stopPropagation();toggleCam()});
+addEventListener('keydown',e=>{if(e.code==='KeyV')toggleCam()});
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.clientX>=innerWidth*.45&&look.id===null){look.id=e.pointerId;look.x=e.clientX;look.y=e.clientY}});
+addEventListener('pointermove',e=>{if(e.pointerId!==look.id)return;camYaw-=(e.clientX-look.x)*.007;camPitch=Math.max(-.6,Math.min(.5,camPitch-(e.clientY-look.y)*.004));look.x=e.clientX;look.y=e.clientY});
+addEventListener('pointerup',e=>{if(e.pointerId===look.id)look.id=null});
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.clientX<innerWidth*.45&&stick.id===null){stick.id=e.pointerId;stick.ox=e.clientX;stick.oy=e.clientY;stick.x=stick.y=0;stickEl.style.display='block';stickEl.style.left=(e.clientX-60)+'px';stickEl.style.top=(e.clientY-60)+'px'}});
 addEventListener('pointermove',e=>{if(e.pointerId!==stick.id)return;let dx=e.clientX-stick.ox,dy=e.clientY-stick.oy;const l=Math.hypot(dx,dy),mx=50;if(l>mx){dx*=mx/l;dy*=mx/l}stick.x=dx/mx;stick.y=dy/mx;stickEl.firstChild.style.transform=`translate(${dx}px,${dy}px)`});
 addEventListener('pointerup',e=>{if(e.pointerId===stick.id){stick.id=null;stick.x=stick.y=0;stickEl.style.display='none'}});
 
@@ -319,7 +331,8 @@ function updateChicken(c,dt){
   if(c.escaped) return;
   let mx=0,mz=0,run=false,jump=false;
   if(c.isPlayer){
-    mx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+stick.x;
+    if(keys.ArrowLeft)camYaw+=2.2*dt; if(keys.ArrowRight)camYaw-=2.2*dt;
+    mx=(keys.KeyD?1:0)-(keys.KeyA?1:0)+stick.x;
     mz=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0)+stick.y;
     run=keys.ShiftLeft||keys.ShiftRight||runHeld; jump=keys.Space||jumpReq; jumpReq=false;
   } else if(c.alive){
@@ -331,6 +344,7 @@ function updateChicken(c,dt){
     const d=c.wander.clone().sub(c.pos); d.normalize(); mx=d.x; mz=d.z; run=c.botRun;
     if(F.pos.distanceTo(c.pos)<7){const a=c.pos.clone().sub(F.pos).normalize();mx=a.x;mz=a.z;run=true}
   }
+  if(c.isPlayer){const fx=Math.sin(camYaw),fz=Math.cos(camYaw),f=-mz,r=mx;mx=fx*f-fz*r;mz=fz*f+fx*r;}
   const l=Math.hypot(mx,mz); if(l>1){mx/=l;mz/=l}
   const moving=Math.hypot(mx,mz)>.15;
   if(c.ghost){ // fantasma flutua livre
@@ -366,8 +380,10 @@ function updateChicken(c,dt){
 }
 
 // ---------- loop ----------
-const clock=new THREE.Clock(); const camPos=new THREE.Vector3(0,20,20);
-const dayFog=new THREE.Fog(0x87c7ff,40,110), nightFog=new THREE.Fog(0x0b1030,8,38);
+const clock=new THREE.Clock(); const camPos=new THREE.Vector3(0,20,20), camLook=new THREE.Vector3();
+const moon=new THREE.DirectionalLight(0x9fb4ff,0); moon.position.set(-20,30,-10); scene.add(moon);
+const nightEye=new THREE.PointLight(0xc8d4ff,0,14); scene.add(nightEye);
+const dayFog=new THREE.Fog(0x87c7ff,40,110), nightFog=new THREE.Fog(0x24305e,10,48);
 function end(text){ running=false; setTimeout(()=>{const p=document.getElementById('panel');p.querySelector('h1').textContent=text;p.querySelector('p').innerHTML=`🏁 ${escaped} fugiram · 🍗 ${chickens.filter(c=>c.ghost).length} assadas · ⏱ ${Math.round(120-time)}s<br><br><b>Jogar de novo:</b>`;p.style.display='flex'},1200) }
 function tick(){
   requestAnimationFrame(tick);
@@ -382,16 +398,22 @@ function tick(){
     document.querySelector('#noise i').style.width=Math.min(100,player.noise/24*100)+'%';
     const danger = (F.target===player&&F.aim>0) || (nightT>.5 && player.alive && player.pos.distanceTo(F.pos)<8);
     document.getElementById('vig').style.boxShadow=`inset 0 0 120px 40px rgba(229,72,77,${danger?.55:0})`;
-    if(!player.escaped){ const want=new THREE.Vector3(player.pos.x,17,player.pos.z+14); camPos.lerp(want,.08); }
+    if(!player.escaped){
+      const fx=Math.sin(camYaw),fz=Math.cos(camYaw), py=player.ghost?player.mesh.position.y:player.y;
+      player.mesh.visible = camMode==='third' || player.ghost && false;
+      if(camMode==='first'){ camPos.set(player.pos.x+fx*.3, py+1.25, player.pos.z+fz*.3); camLook.set(camPos.x+fx*5, camPos.y+camPitch*5, camPos.z+fz*5); }
+      else { let d=4.2; const head=new THREE.Vector3(player.pos.x,0,player.pos.z); const back=new THREE.Vector3(player.pos.x-fx*d,0,player.pos.z-fz*d); if(!los(head,back)) d=1.6;
+        const want=new THREE.Vector3(player.pos.x-fx*d, py+2.1-camPitch*2, player.pos.z-fz*d); camPos.lerp(want,.25); camLook.set(player.pos.x+fx*2, py+.9+camPitch*2, player.pos.z+fz*2); }
+    }
   }
   // dia/noite visual
-  hemi.intensity=1-nightT*.88; sun.intensity=1.6*(1-nightT*.95); sun.color.setHSL(.1,.3,1-nightT*.4);
-  scene.background=new THREE.Color().lerpColors(new THREE.Color(0x87c7ff),new THREE.Color(0x0b1030),nightT);
+  hemi.intensity=.62*(1-nightT*.4); moon.intensity=nightT*.7; if(player){nightEye.position.set(player.pos.x,3,player.pos.z);nightEye.intensity=nightT*.9} sun.intensity=.85*(1-nightT*.95); sun.color.setHSL(.1,.3,1-nightT*.4);
+  scene.background=new THREE.Color().lerpColors(new THREE.Color(0x87c7ff),new THREE.Color(0x24305e),nightT);
   scene.fog = nightT>.5?nightFog:dayFog;
-  document.body.style.background=nightT>.5?'#0b1030':'#87c7ff';
+  document.body.style.background=nightT>.5?'#24305e':'#87c7ff';
   for(let i=feathers.length-1;i>=0;i--){const f=feathers[i];f.t-=dt;f.v.y-=9*dt;f.v.multiplyScalar(.97);f.m.position.addScaledVector(f.v,dt);f.m.rotation.x+=dt*5;f.m.rotation.z+=dt*3;if(f.m.position.y<.05)f.m.position.y=.05;if(f.t<0){scene.remove(f.m);feathers.splice(i,1)}}
   if(msgT>0){msgT-=dt; if(msgT<=0)document.getElementById('msg').textContent=''}
-  camera.position.copy(camPos); camera.lookAt(camPos.x,0,camPos.z-14);
+  camera.position.copy(camPos); camera.lookAt(camLook);
   renderer.render(scene,camera);
 }
 tick();
