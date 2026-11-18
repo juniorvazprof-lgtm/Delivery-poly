@@ -2419,10 +2419,12 @@ const inMud = p => Math.hypot(p.x+18,p.z-14)<4;
 
 // cerca com 3 buracos
 const holes = [{x:HALF,z:2},{x:-6,z:-HALF},{x:-HALF,z:22}];
+// portão principal (sul): abre com 2 galinhas nas alavancas ao mesmo tempo
+const GATE={x:0,z:HALF,open:false,prog:0,wall:null,leaves:[],levers:[]};
 function fenceSeg(x0,z0,x1,z1){const len=Math.hypot(x1-x0,z1-z0); if(len<.1)return; const m=box(Math.abs(x1-x0)||.3,1.4,Math.abs(z1-z0)||.3,0xb5651d,(x0+x1)/2,.7,(z0+z1)/2)}
 function nearHoleOnEdge(x,z){return holes.find(h=>Math.hypot(h.x-x,h.z-z)<1.6)}
 for(let t=-HALF;t<HALF;t+=2){
-  for(const [x,z] of [[t+1,-HALF],[t+1,HALF],[-HALF,t+1],[HALF,t+1]]){ if(holes.some(h=>Math.hypot(h.x-x,h.z-z)<2.2)) continue;
+  for(const [x,z] of [[t+1,-HALF],[t+1,HALF],[-HALF,t+1],[HALF,t+1]]){ if(holes.some(h=>Math.hypot(h.x-x,h.z-z)<2.2)||Math.hypot(GATE.x-x,GATE.z-z)<2.6) continue;
     const f=window.makeFencePanel(2); f.position.set(x,0,z); if(x===HALF||x===-HALF) f.rotation.y=Math.PI/2; scene.add(f); }
 }
 let openHole, holeMarks=[];
@@ -2438,6 +2440,32 @@ function setupHoles(){
     }
   }
 }
+{ // folhas do portão + alavancas
+  const wood=M(0x8a5a2b), dark=M(0x5a3a1a);
+  for(const sd of [-1,1]){ const piv=new THREE.Group(); piv.position.set(sd*2,0,HALF); scene.add(piv);
+    for(const y of [.35,1.05]){ const r=new THREE.Mesh(new THREE.BoxGeometry(2,.18,.12),wood); r.position.set(-sd,y,0); r.castShadow=true; piv.add(r); }
+    const dg=new THREE.Mesh(new THREE.BoxGeometry(2.2,.14,.1),dark); dg.position.set(-sd,.7,0); dg.rotation.z=sd*.6; piv.add(dg);
+    const post=new THREE.Mesh(new THREE.BoxGeometry(.25,1.9,.25),dark); post.position.set(0,.95,0); post.castShadow=true; piv.parent.add(post); post.position.set(sd*2.1,.95,HALF);
+    GATE.leaves.push({piv,sd}); }
+  for(const sd of [-1,1]){ const lx=sd*3.6, lz=HALF-2.2; const base=new THREE.Mesh(new THREE.BoxGeometry(.6,.5,.6),M(0x6d6d6d)); base.position.set(lx,.25,lz); base.castShadow=true; scene.add(base);
+    const arm=new THREE.Group(); arm.position.set(lx,.5,lz); const st=new THREE.Mesh(new THREE.BoxGeometry(.1,1,.1),M(0x444444)); st.position.y=.5; arm.add(st);
+    const knob=new THREE.Mesh(new THREE.SphereGeometry(.14,8,6),M(0xe5383b)); knob.position.y=1; arm.add(knob); arm.rotation.x=.5; scene.add(arm);
+    const ring=new THREE.Mesh(new THREE.RingGeometry(.9,1.15,20),new THREE.MeshBasicMaterial({color:0xffc93c,side:2,transparent:true,opacity:.7})); ring.rotation.x=-Math.PI/2; ring.position.set(lx,.04,lz); scene.add(ring);
+    GATE.levers.push({pos:new THREE.Vector3(lx,0,lz),arm,ring}); }
+  GATE.wall={x0:-2,x1:2,z0:HALF-.25,z1:HALF+.25,sight:false}; walls.push(GATE.wall);
+}
+// superfícies: feno abafa, cascalho e lata fazem barulho
+const SURF={hay:[],gravel:[],tin:[]};
+for(const [x,z,r] of [[-18,-13.6,2.6],[14,-7.6,3.2],[-5,-6,2.2],[8,-6.2,1.8],[20,2.2,1.8]]){ const m=new THREE.Mesh(new THREE.CircleGeometry(r,14),M(0xd8b860)); m.rotation.x=-Math.PI/2; m.position.set(x,.02,z); m.receiveShadow=true; scene.add(m); SURF.hay.push({x,z,r}); }
+for(const [x0,x1,z0,z1] of [[12.5,15.5,-8.5,11.5],[2.5,5.5,3.2,11],[-2,2,24,29.5]]){ const m=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),M(0x9a948a)); m.rotation.x=-Math.PI/2; m.position.set((x0+x1)/2,.021,(z0+z1)/2); m.receiveShadow=true; scene.add(m); SURF.gravel.push({x0,x1,z0,z1});
+  for(let i=0;i<(x1-x0)*(z1-z0)/3;i++){ const pb=new THREE.Mesh(new THREE.DodecahedronGeometry(.07+Math.random()*.06,0),M(0x7d776e)); pb.position.set(x0+Math.random()*(x1-x0),.04,z0+Math.random()*(z1-z0)); scene.add(pb); } }
+for(const [x,z,ry] of [[0,-2,.3],[8,4,1.1],[-10,12,-.4],[20,-4,.8],[-4,-15,0],[-14,-9.5,.5],[6,20,1.4]]){ const m=new THREE.Mesh(new THREE.BoxGeometry(1.8,.05,1.3),new THREE.MeshLambertMaterial({color:0xb7bcc2})); m.position.set(x,.03,z); m.rotation.y=ry; m.receiveShadow=true; m.castShadow=true; scene.add(m);
+  for(let k=-3;k<=3;k++){ const rib=new THREE.Mesh(new THREE.BoxGeometry(.05,.04,1.3),M(0x8f959c)); rib.position.set(k*.25,.04,0); m.add(rib); } SURF.tin.push({x,z}); }
+function surfaceAt(p){ if(SURF.tin.some(t=>Math.hypot(p.x-t.x,p.z-t.z)<.9)) return 'tin';
+  if(SURF.hay.some(h=>Math.hypot(p.x-h.x,p.z-h.z)<h.r)) return 'hay';
+  if(SURF.gravel.some(g=>p.x>g.x0&&p.x<g.x1&&p.z>g.z0&&p.z<g.z1)) return 'gravel'; return 'grass'; }
+function clang(){ if(!AC)return; for(const f of [880,1320,1760]) beep(f*(0.95+Math.random()*.1),.18,'square',.025,.6) }
+function crunch(){ try{SFX.step(false)}catch(e){} }
 // panela mágica
 const pot = window.makePot(); pot.position.set(8,0,11); scene.add(pot);
 const potGlow = new THREE.PointLight(0xffa030,1.4,8); potGlow.position.set(8,2,11); scene.add(potGlow);
@@ -2489,7 +2517,8 @@ function bang(){window.SFX&&SFX.bang();return;const b=AC.createBuffer(1,AC.sampl
 
 // ---------- state ----------
 const keys={}; addEventListener('keydown',e=>{keys[e.code]=true; if(e.code==='KeyB')boo(); if(e.code==='KeyE')drop()}); addEventListener('keyup',e=>keys[e.code]=false);
-let chickens=[], player, mode='day', nightT=0, time=120, running=false, escaped=0, msgT=0, feathers=[];
+const ROUND=180, GOAL=2;
+let chickens=[], player, mode='day', nightT=0, time=ROUND, running=false, escaped=0, msgT=0, feathers=[];
 const F={snap:0,pos:new THREE.Vector3(),yaw:0,state:'patrol',target:null,aim:0,stun:0,wp:0,cool:0,hear:null,lost:0};
 const patrol=[[0,0],[10,-4],[20,8],[6,22],[-10,14],[-20,-12],[-4,-20],[12,-26]].map(([x,z])=>new THREE.Vector3(x,0,z));
 
@@ -2500,14 +2529,16 @@ function start(m){
   mode=m; document.getElementById('panel').style.display='none';
   if(!AC){try{AC=new AudioContext()}catch(e){}} try{SFX.init();SFX.music(false);}catch(e){} if(window.ENV&&!window._env){ ENV.init(scene); window._env=1; for(const [w,d,x,z,r] of [[8,6,-18,-18,0],[12,10,14,-14,0],[10,8,14,16,0],[3,4,-2,10,.2],[2,2,4,2,0]]) ENV.groundAO(w,d,x,z,r); } if(!window._fx&&window.FX){FX.init(scene);window._fx=1}
   chickens.forEach(c=>{scene.remove(c.mesh); if(c.roast)scene.remove(c.roast); if(c.blob)scene.remove(c.blob)});
-  chickens=[]; escaped=0; time=120; nightT = m==='night'?1:0;
+  chickens=[]; escaped=0; time=ROUND; nightT = m==='night'?1:0;
   const cols=[0xffffff,0xa0522d,0x333333];
   cols.forEach((c,i)=>chickens.push({mesh:makeChicken(c),pos:new THREE.Vector3(-14+i*1.5,0,-13),vel:new THREE.Vector3(),vy:0,y:0,alive:true,ghost:false,escaped:false,isPlayer:i===0,noise:0,wander:null,carry:null,carriedBy:null,booCd:0,name:['Você','Bot Carijó','Bot Preta'][i]}));
   player=chickens[0]; camYaw=0.82; camPitch=0;
   F.pos.set(12,0,20); F.state='patrol'; F.wp=0; F.stun=0; F.aim=0; F.target=null; F.hear=null;
   eggs.forEach(e=>scene.remove(e.m)); eggs=[]; eggCd=0; F.slipT=0; F.snap=0;
   if(window.ENV){ chickens.forEach(c=>{ c.blob=ENV.blobShadow(.6); scene.add(c.blob) }); if(!F.blob){F.blob=ENV.blobShadow(1.1); scene.add(F.blob)} }
-  setupHoles(); running=true; say('Ache a saída verde!',2);
+  GATE.open=false; GATE.prog=0; if(!walls.includes(GATE.wall)) walls.push(GATE.wall); GATE.leaves.forEach(l=>l.piv.rotation.y=0);
+  chickens.forEach((c,i)=>{ if(!c.isPlayer){ c.waitT=12+Math.random()*18; c.botT=0 } });
+  setupHoles(); running=true; say(`Meta: fujam ${GOAL} de 3 galinhas!`,3.5);
 }
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>start(b.dataset.mode));
 function say(t,d=1.5){const m=document.getElementById('msg');m.textContent=t;msgT=d}
@@ -2552,6 +2583,7 @@ function collide(p,r=.5,y=0){
   }
   const lim=HALF-.6;
   for(const h of holes) if(h===openHole && Math.hypot(p.x-h.x,p.z-h.z)<2) return; // pode sair
+  if(GATE.open && Math.abs(p.x)<1.9 && p.z>HALF-3) return;
   p.x=Math.max(-lim,Math.min(lim,p.x)); p.z=Math.max(-lim,Math.min(lim,p.z));
 }
 const ALERT_R=16;
@@ -2589,6 +2621,18 @@ function updateEggs(dt){ eggCd=Math.max(0,eggCd-dt); const be=document.getElemen
   for(let i=eggs.length-1;i>=0;i--){const e=eggs[i]; e.t-=dt;
     if(e.pos.distanceTo(F.pos)<1){ F.stun=2.8; F.slipT=1.2; F.aim=0; window.SFX&&SFX.slip(); window.FX&&FX.splat(e.pos.clone()); say('🥚 Seu Tião escorregou!',1.5); e.t=0; }
     if(e.t<=0){ scene.remove(e.m); eggs.splice(i,1) } } }
+function updateGate(dt){
+  const occ=GATE.levers.map(L=>chickens.find(c=>c.alive&&!c.escaped&&!c.ghost&&c.pos.distanceTo(L.pos)<1.2));
+  GATE.levers.forEach((L,i)=>{ L.arm.rotation.x += ((occ[i]?-.6:.5)-L.arm.rotation.x)*.2; L.ring.material.color.setHex(occ[i]?0x6bff6b:0xffc93c); L.ring.visible=!GATE.open; });
+  if(GATE.open){ GATE.leaves.forEach(l=>l.piv.rotation.y += (l.sd*-1.7 - l.piv.rotation.y)*.05); return; }
+  const onP=occ.indexOf(player);
+  if(occ[0]&&occ[1]){ GATE.prog+=dt/2.5; if(onP>=0||player.ghost) say(`🚪 Puxando... ${Math.min(100,Math.round(GATE.prog*100))}%`,.3);
+    if(Math.random()<dt*3) window.SFX&&SFX.step(false);
+    if(GATE.prog>=1){ GATE.open=true; walls.splice(walls.indexOf(GATE.wall),1); say('🚪 PORTÃO ABERTO! (o barulho atraiu o Seu Tião)',2.5); window.SFX&&SFX.alert();
+      const fake={pos:new THREE.Vector3(GATE.x,0,GATE.z-1),noise:0}; makeNoise(fake,40); F.hear=fake.pos.clone(); F.state='investigate'; F.snap=.8;
+      const gl=new THREE.PointLight(0x6bff6b,1.4,10); gl.position.set(0,2,HALF); scene.add(gl); holeMarks.push(gl); } }
+  else { GATE.prog=Math.max(0,GATE.prog-dt*.3); if(onP>=0) say('Precisa de outra galinha na outra alavanca!',.3); }
+}
 function boo(){
   if(!running||!player.ghost||player.booCd>0) return;
   player.booCd=6; window.SFX&&SFX.boo();
@@ -2659,6 +2703,41 @@ function updateFarmer(dt){
 }
 
 // ---------- chickens ----------
+// ---------- cérebro das galinhas do computador ----------
+function blockedC(x,z){ return walls.some(w=>!w.soft&&x>w.x0-.55&&x<w.x1+.55&&z>w.z0-.55&&z<w.z1+.55) }
+function botDir(c,target){ const dx=target.x-c.pos.x, dz=target.z-c.pos.z; if(Math.hypot(dx,dz)<.35) return [0,0];
+  const a=Math.atan2(dx,dz), sd=c.side||1;
+  for(const o of [0,.5,-.5,1,-1,1.6,-1.6,2.3,-2.3]){ const b=a+o*sd; if(!blockedC(c.pos.x+Math.sin(b)*1.3,c.pos.z+Math.cos(b)*1.3)) return [Math.sin(b),Math.cos(b)] }
+  c.side=-sd; return [Math.sin(a+Math.PI/2),Math.cos(a+Math.PI/2)] }
+function inFarmerCone(p,range,half){ const dx=p.x-F.pos.x, dz=p.z-F.pos.z, d=Math.hypot(dx,dz); if(d>range) return false;
+  const fx=Math.sin(F.yaw), fz=Math.cos(F.yaw); return (dx*fx+dz*fz)/Math.max(d,1e-3) > Math.cos(half) }
+function pickHide(c){ let best=null, sc=-1e9; for(const h of HIDE){ const dc=h.distanceTo(c.pos); if(dc>20) continue; const v=h.distanceTo(F.pos)*1.2-dc*.6; if(v>sc){sc=v;best=h} } return best||c.pos.clone() }
+function botBrain(c,dt){
+  c.botT=(c.botT||0)-dt; c.waitT=(c.waitT||0)-dt;
+  const dF=F.pos.distanceTo(c.pos), night=nightT>.5;
+  const hunted = F.target===c || dF<8 || (F.state==='search'&&dF<12) || (night&&inFarmerCone(c.pos,20,.45));
+  // 1) perigo: correr para o esconderijo mais longe do fazendeiro e ficar quieta lá
+  if(hunted){ if(!c.hide||c.botT<=0||c.hide.distanceTo(F.pos)<6){ c.hide=pickHide(c); c.botT=3 }
+    const there=c.pos.distanceTo(c.hide)<1.2; if(there&&F.target!==c&&dF>5) return [0,0,false];
+    const d=botDir(c,c.hide); return [d[0],d[1], F.target===c||dF<6]; }
+  // 2) ajudar no portão: se a jogadora está numa alavanca, a galinha mais próxima vai para a outra
+  const onL=GATE.open?-1:GATE.levers.findIndex(L=>player.alive&&!player.escaped&&player.pos.distanceTo(L.pos)<1.2);
+  if(onL>=0){ const other=GATE.levers[1-onL].pos; const helpers=chickens.filter(o=>!o.isPlayer&&o.alive&&!o.escaped).sort((x,y)=>x.pos.distanceTo(other)-y.pos.distanceTo(other));
+    if(helpers[0]===c){ if(c.pos.distanceTo(other)<.9) return [0,0,false]; const d=botDir(c,other); return [d[0],d[1],false]; } }
+  // 3) resgate: levar amiga assada até a panela quando o fazendeiro está longe
+  const potP=pot.position.clone().setY(0);
+  if(c.carry){ const d=botDir(c,potP); return [d[0],d[1],dF>14]; }
+  const roast=chickens.find(o=>o.ghost&&o.roast&&!o.roast.carriedBy&&o.roastPos.distanceTo(F.pos)>12&&potP.distanceTo(F.pos)>10);
+  if(roast&&roast.roastPos.distanceTo(c.pos)<25){ const d=botDir(c,roast.roastPos); return [d[0],d[1],false]; }
+  // 4) começo: ficar escondida um tempo antes de arriscar
+  if(c.waitT>0){ if(!c.hide||c.botT<=0){ c.hide=pickHide(c); c.botT=6 } if(c.pos.distanceTo(c.hide)<1.2) return [0,0,false]; const d=botDir(c,c.hide); return [d[0],d[1],false]; }
+  // 5) fugir pela saída mais perto (furo aberto ou portão), andando em silêncio; espera se o fazendeiro estiver perto da saída
+  const ex=[new THREE.Vector3(openHole.x*.97,0,openHole.z*.97)]; if(GATE.open) ex.push(new THREE.Vector3(0,0,HALF+1));
+  ex.sort((x,y)=>x.distanceTo(c.pos)-y.distanceTo(c.pos)); const goal=ex[0];
+  if(F.pos.distanceTo(goal)<9&&c.pos.distanceTo(goal)>4){ if(!c.hide||c.botT<=0){c.hide=pickHide(c);c.botT=3} if(c.pos.distanceTo(c.hide)<1.2) return [0,0,false]; const d=botDir(c,c.hide); return [d[0],d[1],false]; }
+  const d=botDir(c,goal); return [d[0],d[1], c.pos.distanceTo(goal)<5];
+}
+window.__coop={get chickens(){return chickens},F,GATE,get time(){return time}};
 function updateChicken(c,dt){
   c.noise=Math.max(0,c.noise-dt*20); c.booCd=Math.max(0,c.booCd-dt);
   if(c.escaped) return;
@@ -2669,13 +2748,7 @@ function updateChicken(c,dt){
     mz=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0)+stick.y;
     run=keys.ShiftLeft||keys.ShiftRight||runHeld; jump=jumpReq; jumpReq=false;
   } else if(c.alive){
-    // bot simples: vagueia, às vezes corre, foge do fazendeiro, vai para a saída de vez em quando
-    if(!c.wander||c.pos.distanceTo(c.wander)<1||Math.random()<.003){
-      c.wander = Math.random()<.25 ? new THREE.Vector3(openHole.x*.95,0,openHole.z*.95) : new THREE.Vector3((Math.random()-.5)*50,0,(Math.random()-.5)*50);
-      c.botRun = Math.random()<.3;
-    }
-    const d=c.wander.clone().sub(c.pos); d.normalize(); mx=d.x; mz=d.z; run=c.botRun;
-    if(F.pos.distanceTo(c.pos)<7){const a=c.pos.clone().sub(F.pos).normalize();mx=a.x;mz=a.z;run=true}
+    const out=botBrain(c,dt); mx=out[0]; mz=out[1]; run=out[2];
   }
   if(c.isPlayer){const fx=Math.sin(camYaw),fz=Math.cos(camYaw),f=-mz,r=mx;mx=fx*f-fz*r;mz=fz*f+fx*r;}
   const l=Math.hypot(mx,mz); if(l>1){mx/=l;mz/=l}
@@ -2689,6 +2762,12 @@ function updateChicken(c,dt){
   }
   let speed = run?7:3.4; if(c.carry) speed*=.6; if(inMud(c.pos)) speed*=.55;
   c.pos.x+=mx*speed*dt; c.pos.z+=mz*speed*dt;
+  if(c.kb){ c.pos.addScaledVector(c.kb,dt); c.kb.multiplyScalar(Math.max(0,1-6*dt)); if(c.kb.length()<.2) c.kb=null; }
+  for(const o of chickens){ if(o===c||!o.alive||o.escaped||o.ghost) continue; const dx=o.pos.x-c.pos.x, dz=o.pos.z-c.pos.z, d=Math.hypot(dx,dz);
+    if(d<.9&&d>1e-4){ const nx=dx/d, nz=dz/d, pen=(.9-d)/2; c.pos.x-=nx*pen; c.pos.z-=nz*pen; o.pos.x+=nx*pen; o.pos.z+=nz*pen;
+      if(run&&moving&&!o.kb&&(o.bumpCd||0)<=0){ o.kb=new THREE.Vector3(nx*7,0,nz*7); o.vy=Math.max(o.vy,3.2); o.bumpCd=.8; window.SFX&&SFX.cluck(true); makeNoise(o,14); window.FX&&FX.feathers(o.pos.clone().setY(.8));
+        if(c.isPlayer) say(`💥 Trombou a ${o.name.replace('Bot ','')}!`,.8); else if(o.isPlayer) say(`💥 A ${c.name.replace('Bot ','')} te trombou!`,.8); } } }
+  c.bumpCd=Math.max(0,(c.bumpCd||0)-dt);
   if(jump&&c.y<=0){c.vy=6.5; c.dbl=1; makeNoise(c,24); cluck(c,true)}
   else if(jump&&c.y>0&&c.dbl>0){c.dbl=0; c.vy=5.5; makeNoise(c,24); window.SFX&&SFX.flap()}
   const gliding = c.isPlayer && c.y>0.05 && c.vy<0 && (keys.Space||jumpHeld);
@@ -2699,8 +2778,12 @@ function updateChicken(c,dt){
   if(c.isPlayer&&eggReq){ eggReq=false; layEgg(c); }
   if(run&&moving&&c.y===0&&window.FX&&Math.random()<dt*9&&c.pos.distanceTo(camPos)<25) FX.dust(c.pos.clone());
   if(moving){
-    const lvl = run? (inCorn(c.pos)?12:18) : (inCorn(c.pos)?3:6);
+    let lvl = run? (inCorn(c.pos)?12:18) : (inCorn(c.pos)?3:6);
+    const surf = c.y>0.05 ? 'air' : surfaceAt(c.pos);
+    if(surf==='hay') lvl*=.45; else if(surf==='gravel') lvl*=1.5; else if(surf==='tin') lvl=Math.max(lvl*1.6,16);
     makeNoise(c, c.carry?lvl+4:lvl);
+    c.stT=(c.stT||0)-dt; if(c.stT<=0&&surf!=='grass'&&surf!=='air'&&(c.isPlayer||c.pos.distanceTo(player.pos)<15)){ c.stT=run?.22:.42; if(surf==='tin')clang(); else if(surf==='gravel')crunch(); }
+    if(c.isPlayer){ const nh=surf==='hay'?'🌾 feno abafa seus passos':surf==='tin'?'🔔 lata! muito barulho':surf==='gravel'?'🪨 cascalho faz barulho':''; if(nh&&nh!==c.lastSurfMsg){say(nh,1.2)} c.lastSurfMsg=nh; }
     c.ct=(c.ct||0)-dt; if(c.ct<=0){cluck(c,run);c.ct=run?.18:.55}
     c.mesh.rotation.y=Math.atan2(mx,mz);
   }
@@ -2724,21 +2807,25 @@ const clock=new THREE.Clock(); const camPos=new THREE.Vector3(0,20,20), camLook=
 const moon=new THREE.DirectionalLight(0x9fb4ff,0); moon.position.set(-20,30,-10); scene.add(moon);
 const nightEye=new THREE.PointLight(0xc8d4ff,0,14); scene.add(nightEye);
 const dayFog=new THREE.Fog(0x87c7ff,40,110), nightFog=new THREE.Fog(0x24305e,10,48);
-function end(text){ running=false; try{SFX.music(true)}catch(e){} setTimeout(()=>{const p=document.getElementById('panel');p.querySelector('h1').textContent=text;p.querySelector('p').innerHTML=`🏁 ${escaped} fugiram · 🍗 ${chickens.filter(c=>c.ghost).length} assadas · ⏱ ${Math.round(120-time)}s<br><br><b>Jogar de novo:</b>`;p.style.display='flex';document.body.classList.add('menu')},1200) }
+function end(text){ running=false; try{SFX.music(true)}catch(e){} setTimeout(()=>{const p=document.getElementById('panel');p.querySelector('h1').textContent=text;p.querySelector('p').innerHTML=`🏁 ${escaped} fugiram · 🍗 ${chickens.filter(c=>c.ghost).length} assadas · ⏱ ${Math.round(ROUND-time)}s<br>${escaped>=GOAL?'O galinheiro está livre! 🎉':escaped>0?`Faltou ${GOAL-escaped} galinha para a meta.`:'Seu Tião vai jantar bem hoje.'}<br><br><b>Jogar de novo:</b>`;p.style.display='flex';document.body.classList.add('menu')},1200) }
 function tick(){
   requestAnimationFrame(tick);
   const dt=Math.min(clock.getDelta(),.05);
   if(running){
-    time-=dt; if(mode==='dusk') nightT=Math.min(1,Math.max(0,(120-time-30)/50));
+    time-=dt; if(mode==='dusk') nightT=Math.min(1,Math.max(0,(ROUND-time-40)/70));
+    updateGate(dt);
     updateFarmer(dt); chickens.forEach(c=>updateChicken(c,dt));
     const alive=chickens.filter(c=>c.alive&&!c.escaped).length;
-    if(alive===0||time<=0) end(escaped>0?'FUGIRAM!':'ASSADAS!');
+    if(alive===0||time<=0) end(escaped>=GOAL?'VITÓRIA!':escaped>0?'QUASE!':'ASSADAS!');
     document.getElementById('time').textContent=`${Math.floor(Math.max(0,time)/60)}:${String(Math.floor(Math.max(0,time)%60)).padStart(2,'0')}`;
-    document.getElementById('count').textContent=`🐔 ${alive} · 🍗 ${chickens.filter(c=>c.ghost).length} · 🏁 ${escaped}`;
+    document.getElementById('count').textContent=`🐔 ${alive} · 🍗 ${chickens.filter(c=>c.ghost).length} · 🏁 ${escaped}/${GOAL}`;
     document.querySelector('#noise i').style.width=Math.min(100,player.noise/24*100)+'%';
     const danger = (F.target===player&&F.aim>0) || (nightT>.5 && player.alive && player.pos.distanceTo(F.pos)<8);
     document.getElementById('vig').style.boxShadow=`inset 0 0 120px 40px rgba(229,72,77,${danger?.55:0})`;
-    if(!player.escaped){
+    if(player.escaped){ const b=chickens.find(o=>!o.isPlayer&&o.alive&&!o.escaped)||chickens.find(o=>!o.isPlayer&&o.ghost);
+      if(b){ const bx=b.pos.x-Math.sin(b.mesh.rotation.y)*4, bz=b.pos.z-Math.cos(b.mesh.rotation.y)*4; camPos.lerp(new THREE.Vector3(bx,3.2,bz),.08); camLook.set(b.pos.x,1,b.pos.z); fpRig.visible=false; }
+      if(!window._specMsg){ window._specMsg=1; say('🏁 Você fugiu! Assistindo as amigas...',3); } }
+    if(!player.escaped){ window._specMsg=0;
       const fx=Math.sin(camYaw),fz=Math.cos(camYaw), py=player.ghost?player.mesh.position.y:player.y;
       player.mesh.visible = camMode==='third' || player.ghost && false;
       fpRig.visible = camMode==='first' && !player.ghost;
