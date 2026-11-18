@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>COOP MVP</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2b1d12;--egg:#ffc93c;--red:#e5484d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#87c7ff;font-family:'Lilita One',system-ui,sans-serif;color:#fff;touch-action:none}
+canvas{display:block}
+.hud{position:fixed;left:0;right:0;top:0;display:flex;gap:8px;justify-content:center;padding:10px;pointer-events:none;flex-wrap:wrap}
+.pill{background:rgba(43,29,18,.75);border:3px solid var(--ink);border-radius:999px;padding:6px 14px;font-size:18px;text-shadow:0 2px 0 #0006}
+#noise{width:120px;height:14px;border-radius:8px;background:#0005;overflow:hidden;display:inline-block;vertical-align:middle}
+#noise i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7cf27c,#ffc93c,#e5484d);transition:width .1s}
+#msg{position:fixed;left:50%;top:22%;transform:translateX(-50%);font-size:34px;text-align:center;text-shadow:0 3px 0 var(--ink),0 0 12px #000a;pointer-events:none;white-space:nowrap}
+#vig{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 120px 40px rgba(229,72,77,.0);transition:box-shadow .15s}
+.btn{position:fixed;border-radius:50%;background:var(--egg);border:4px solid var(--ink);color:var(--ink);font-family:inherit;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 var(--ink)}
+.btn:active,.btn.on{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
+#bRun{right:24px;bottom:28px;width:84px;height:84px}
+#bJump{right:120px;bottom:20px;width:68px;height:68px}
+#bBoo{right:40px;bottom:126px;width:68px;height:68px;background:#9fd3ff;display:none}
+#stick{position:fixed;width:120px;height:120px;border-radius:50%;border:4px solid #fff8;background:#0002;display:none;pointer-events:none}
+#stick i{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:#fffc}
+#panel{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0008}
+.card{background:#fff6dc;color:var(--ink);border:5px solid var(--ink);border-radius:24px;padding:22px 26px;max-width:440px;width:calc(100% - 32px);text-align:center;box-shadow:0 8px 0 var(--ink)}
+.card h1{margin:0;font-size:56px;letter-spacing:2px;color:var(--egg);-webkit-text-stroke:3px var(--ink)}
+.card p{font-family:system-ui,sans-serif;font-size:14px;line-height:1.45;margin:8px 0}
+.row{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.big{border:4px solid var(--ink);border-radius:16px;background:var(--egg);color:var(--ink);font-family:inherit;font-size:22px;padding:10px 20px;box-shadow:0 5px 0 var(--ink);cursor:pointer}
+.big.night{background:#3b3f8f;color:#fff}
+</style>
+</head>
+<body>
+<div class="hud">
+  <span class="pill" id="time">2:00</span>
+  <span class="pill" id="count">🐔 3 · 🍗 0 · 🏁 0</span>
+  <span class="pill">🔊 <span id="noise"><i></i></span></span>
+</div>
+<div id="vig"></div>
+<div id="msg"></div>
+<div id="stick"><i></i></div>
+<button class="btn" id="bRun">CORRE</button>
+<button class="btn" id="bJump">PULA</button>
+<button class="btn" id="bBoo">BUUU</button>
+<div id="panel"><div class="card">
+  <h1>COOP</h1>
+  <p><b>MVP de mecânicas.</b> Fuja pela saída aberta (marcada com luz verde). Correr e pular fazem barulho e atraem o Seu Tião.</p>
+  <p>De dia ele mira ~1s antes de atirar. De noite, se a lanterna te iluminar, é tiro na hora.</p>
+  <p>Amigas assadas: encoste no frango e leve até a <b>panela</b> na varanda para reviver. Morreu? Vire fantasma e use <b>BUUU</b>.</p>
+  <p>PC: WASD · Shift corre · Espaço pula · E solta · B = BUUU</p>
+  <div class="row">
+    <button class="big" data-mode="day">☀️ DIA</button>
+    <button class="big night" data-mode="night">🌙 NOITE</button>
+    <button class="big" data-mode="dusk">🌇 ANOITECER</button>
+  </div>
+</div></div>
+
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- setup ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, .1, 200);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+const hemi = new THREE.HemisphereLight(0xcfe8ff,0x6a8a3a,1);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff,1.6);
+sun.position.set(20,40,15); sun.castShadow=true;
+sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;
+sun.shadow.mapSize.set(2048,2048);
+scene.add(sun);
+
+const M = c => new THREE.MeshLambertMaterial({color:c, flatShading:true});
+function box(w,h,d,c,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;scene.add(m);return m}
+
+// ---------- map ----------
+const HALF = 30;
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(90,90), M(0x8fd14f));
+ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+const walls = []; // AABBs that block movement and sight
+function solid(w,h,d,c,x,z,blocksSight=true){box(w,h,d,c,x,h/2,z);walls.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,sight:blocksSight})}
+
+// buildings
+solid(8,4,6,0xd9a066,-18,-18);          // galinheiro (spawn ao lado)
+solid(12,8,10,0xc0392b,14,-14);          // celeiro
+box(12.4,1,10.4,0x7a2a20,14,8.5,-14);
+solid(10,5,8,0xf1e3c6,14,16);            // casa
+box(10.6,1.2,8.6,0x8a5a3a,14,5.6,16);
+solid(3,2,4,0x2f7d32,-2,10);             // trator
+solid(2,1.2,2,0x7d7d7d,4,2);             // poço
+for(const [x,z] of [[-6,-4],[-4,-4],[2,-10],[8,-4],[20,0],[-14,4]]) solid(1.6,1.2,1.2,0xe8c35a,x,z); // fardos
+// varal (bloqueia visão, não movimento) - aproximado como muro fino visual
+box(8,.1,.1,0xffffff,-8,2.2,18);
+for(let i=0;i<4;i++) box(1.2,1.4,.05,[0xff6b6b,0x6bc5ff,0xffe66b,0xc56bff][i],-11+i*2,1.4,18);
+walls.push({x0:-12,x1:-4,z0:17.9,z1:18.1,sight:true,soft:true});
+// chiqueiro
+const mud = new THREE.Mesh(new THREE.CircleGeometry(4,10),M(0x6b4a2b)); mud.rotation.x=-Math.PI/2; mud.position.set(-18,.02,14); scene.add(mud);
+// milharal (região de esconderijo)
+const corn = {x0:-26,x1:-8,z0:-8,z1:6};
+const cornGeo = new THREE.ConeGeometry(.35,2.6,5);
+const cornMat = M(0xc9d84a);
+const cornMesh = new THREE.InstancedMesh(cornGeo,cornMat,420);
+let ci=0; const dm=new THREE.Object3D();
+for(let x=corn.x0;x<corn.x1;x+=.9)for(let z=corn.z0;z<corn.z1;z+=1.4){ if(ci>=420)break; dm.position.set(x+Math.random()*.4,1.3,z+Math.random()*.4);dm.updateMatrix();cornMesh.setMatrixAt(ci++,dm.matrix)}
+cornMesh.count=ci; scene.add(cornMesh);
+const inCorn = p => p.x>corn.x0&&p.x<corn.x1&&p.z>corn.z0&&p.z<corn.z1;
+const inMud = p => Math.hypot(p.x+18,p.z-14)<4;
+
+// cerca com 3 buracos
+const holes = [{x:HALF,z:2},{x:-6,z:-HALF},{x:-HALF,z:22}];
+function fenceSeg(x0,z0,x1,z1){const len=Math.hypot(x1-x0,z1-z0); if(len<.1)return; const m=box(Math.abs(x1-x0)||.3,1.4,Math.abs(z1-z0)||.3,0xb5651d,(x0+x1)/2,.7,(z0+z1)/2)}
+function nearHoleOnEdge(x,z){return holes.find(h=>Math.hypot(h.x-x,h.z-z)<1.6)}
+for(let t=-HALF;t<HALF;t+=1){
+  for(const [x,z] of [[t+.5,-HALF],[t+.5,HALF],[-HALF,t+.5],[HALF,t+.5]]) if(!nearHoleOnEdge(x,z)) box(x===HALF||x===-HALF?.3:1,1.4,x===HALF||x===-HALF?1:.3,0xb5651d,x,.7,z);
+}
+let openHole, holeMarks=[];
+function setupHoles(){
+  holeMarks.forEach(m=>scene.remove(m)); holeMarks=[];
+  openHole = holes[Math.floor(Math.random()*holes.length)];
+  for(const h of holes){
+    if(h===openHole){
+      const l=new THREE.PointLight(0x6bff6b,8,10); l.position.set(h.x,2,h.z); scene.add(l); holeMarks.push(l);
+      const r=new THREE.Mesh(new THREE.RingGeometry(1,1.4,16),new THREE.MeshBasicMaterial({color:0x6bff6b,side:2})); r.rotation.x=-Math.PI/2;r.position.set(h.x,.05,h.z);scene.add(r);holeMarks.push(r);
+    } else {
+      const b=box(h.x===HALF||h.x===-HALF?.4:3,1.4,h.x===HALF||h.x===-HALF?3:.4,0x6b3b12,h.x,.7,h.z); holeMarks.push(b);
+    }
+  }
+}
+// panela mágica
+const pot = new THREE.Mesh(new THREE.CylinderGeometry(1.2,1,1.2,10),M(0x333333)); pot.position.set(8,.6,11); scene.add(pot);
+const potGlow = new THREE.PointLight(0xffa030,6,8); potGlow.position.set(8,2,11); scene.add(potGlow);
+
+// ---------- characters ----------
+function makeChicken(color){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.IcosahedronGeometry(.55,0),M(color)); body.scale.set(1,.9,1.15); body.position.y=.6; body.castShadow=true; g.add(body);
+  const head=new THREE.Mesh(new THREE.IcosahedronGeometry(.32,0),M(color)); head.position.set(0,1.15,.35); head.castShadow=true; g.add(head);
+  const beak=new THREE.Mesh(new THREE.ConeGeometry(.1,.25,4),M(0xffa000)); beak.rotation.x=Math.PI/2; beak.position.set(0,1.12,.7); g.add(beak);
+  const comb=new THREE.Mesh(new THREE.BoxGeometry(.08,.2,.3),M(0xe5484d)); comb.position.set(0,1.5,.3); g.add(comb);
+  for(const s of[-1,1]){const e=new THREE.Mesh(new THREE.SphereGeometry(.06,6,4),new THREE.MeshBasicMaterial({color:0x111111}));e.position.set(.18*s,1.22,.6);g.add(e)}
+  for(const s of[-1,1]){const w=new THREE.Mesh(new THREE.BoxGeometry(.12,.35,.6),M(color));w.position.set(.55*s,.65,0);w.name='wing';g.add(w)}
+  scene.add(g); return g;
+}
+function makeRoast(){
+  const g=new THREE.Group();
+  const plate=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,.08,14),M(0xffffff)); plate.position.y=.05; g.add(plate);
+  const r=new THREE.Mesh(new THREE.IcosahedronGeometry(.5,1),M(0xb5651d)); r.scale.set(1,.65,1.2); r.position.y=.4; g.add(r);
+  for(const s of[-1,1]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.08,.14,.5,5),M(0xd98c3a));l.rotation.x=1.1;l.position.set(.25*s,.45,.6);g.add(l)}
+  const glow=new THREE.PointLight(0xffb060,0,5); glow.position.y=1; g.add(glow); g.userData.glow=glow;
+  scene.add(g); return g;
+}
+const farmer = new THREE.Group();
+{ const legs=new THREE.Mesh(new THREE.BoxGeometry(.9,1.4,.6),M(0x2e5fa8)); legs.position.y=.7; farmer.add(legs);
+  const torso=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.3,.7),M(0x3a6fc0)); torso.position.y=2; farmer.add(torso);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.6,.6,.6),M(0xe0a878)); head.position.y=2.95; farmer.add(head);
+  const hat=new THREE.Mesh(new THREE.CylinderGeometry(.5,1.1,.35,8),M(0xe8cf6a)); hat.position.y=3.35; farmer.add(hat);
+  for(const s of[-1,1]){const e=new THREE.Mesh(new THREE.SphereGeometry(.07,6,4),new THREE.MeshBasicMaterial({color:0xfff2a0}));e.position.set(.14*s,2.95,.31);farmer.add(e)}
+  const gun=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,1.6),M(0x3b2a1a)); gun.position.set(.5,1.9,.7); farmer.add(gun);
+  farmer.traverse(o=>o.castShadow=true); scene.add(farmer); }
+const flash = new THREE.SpotLight(0xfff6d0,0,24,Math.PI/9,.35,1.2);
+flash.position.set(0,2.2,.4); flash.castShadow=true; farmer.add(flash);
+const flashTarget=new THREE.Object3D(); flashTarget.position.set(0,0,10); farmer.add(flashTarget); flash.target=flashTarget;
+const beamGeo=new THREE.ConeGeometry(Math.tan(Math.PI/9)*18,18,20,1,true); beamGeo.translate(0,-9,0); beamGeo.rotateX(-Math.PI/2);
+const beam=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({color:0xfff6d0,transparent:true,opacity:.0,depthWrite:false,side:2}));
+beam.position.set(0,2.2,.4); beam.rotation.x=.12; farmer.add(beam);
+const laser=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),new THREE.LineBasicMaterial({color:0xff2020}));
+scene.add(laser);
+const mark=new THREE.Sprite(new THREE.SpriteMaterial({map:textTex('?'),depthTest:false})); mark.scale.set(1.2,1.2,1); mark.position.y=4.3; farmer.add(mark);
+function textTex(t){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.font='bold 54px sans-serif';x.textAlign='center';x.fillStyle='#ffc93c';x.strokeStyle='#2b1d12';x.lineWidth=6;x.strokeText(t,32,52);x.fillText(t,32,52);return new THREE.CanvasTexture(c)}
+const marks={'?':textTex('?'),'!':textTex('!'),'':null};
+function setMark(t){mark.visible=!!t; if(t) mark.material.map=marks[t]}
+
+// ---------- audio ----------
+let AC;
+function beep(f,d=.08,type='square',vol=.06,slide=0){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;if(slide)o.frequency.exponentialRampToValueAtTime(f*slide,AC.currentTime+d);g.gain.value=vol;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g).connect(AC.destination);o.start();o.stop(AC.currentTime+d)}
+function bang(){if(!AC)return;const b=AC.createBuffer(1,AC.sampleRate*.4,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);const s=AC.createBufferSource(),g=AC.createGain();g.gain.value=.5;s.buffer=b;s.connect(g).connect(AC.destination);s.start()}
+
+// ---------- state ----------
+const keys={}; addEventListener('keydown',e=>{keys[e.code]=true; if(e.code==='KeyB')boo(); if(e.code==='KeyE')drop()}); addEventListener('keyup',e=>keys[e.code]=false);
+let chickens=[], player, mode='day', nightT=0, time=120, running=false, escaped=0, msgT=0, feathers=[];
+const F={pos:new THREE.Vector3(),yaw:0,state:'patrol',target:null,aim:0,stun:0,wp:0,cool:0,hear:null,lost:0};
+const patrol=[[0,0],[10,-4],[20,8],[6,22],[-10,14],[-20,-12],[-4,-20],[12,-26]].map(([x,z])=>new THREE.Vector3(x,0,z));
+
+function start(m){
+  mode=m; document.getElementById('panel').style.display='none';
+  if(!AC){try{AC=new AudioContext()}catch(e){}}
+  chickens.forEach(c=>{scene.remove(c.mesh); if(c.roast)scene.remove(c.roast)});
+  chickens=[]; escaped=0; time=120; nightT = m==='night'?1:0;
+  const cols=[0xffffff,0xa0522d,0x333333];
+  cols.forEach((c,i)=>chickens.push({mesh:makeChicken(c),pos:new THREE.Vector3(-14+i*1.5,0,-13),vel:new THREE.Vector3(),vy:0,y:0,alive:true,ghost:false,escaped:false,isPlayer:i===0,noise:0,wander:null,carry:null,carriedBy:null,booCd:0,name:['Você','Bot Carijó','Bot Preta'][i]}));
+  player=chickens[0];
+  F.pos.set(12,0,20); F.state='patrol'; F.wp=0; F.stun=0; F.aim=0; F.target=null; F.hear=null;
+  setupHoles(); running=true; say('Ache a saída verde!',2);
+}
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>start(b.dataset.mode));
+function say(t,d=1.5){const m=document.getElementById('msg');m.textContent=t;msgT=d}
+
+// ---------- input mobile ----------
+const stick={id:null,ox:0,oy:0,x:0,y:0}; const stickEl=document.getElementById('stick');
+let runHeld=false, jumpReq=false;
+const bRun=document.getElementById('bRun'), bJump=document.getElementById('bJump'), bBoo=document.getElementById('bBoo');
+bRun.addEventListener('pointerdown',e=>{e.stopPropagation();runHeld=true;bRun.classList.add('on')});
+addEventListener('pointerup',()=>{runHeld=false;bRun.classList.remove('on')});
+bJump.addEventListener('pointerdown',e=>{e.stopPropagation();jumpReq=true});
+bBoo.addEventListener('pointerdown',e=>{e.stopPropagation();boo()});
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.clientX<innerWidth*.6&&stick.id===null){stick.id=e.pointerId;stick.ox=e.clientX;stick.oy=e.clientY;stick.x=stick.y=0;stickEl.style.display='block';stickEl.style.left=(e.clientX-60)+'px';stickEl.style.top=(e.clientY-60)+'px'}});
+addEventListener('pointermove',e=>{if(e.pointerId!==stick.id)return;let dx=e.clientX-stick.ox,dy=e.clientY-stick.oy;const l=Math.hypot(dx,dy),mx=50;if(l>mx){dx*=mx/l;dy*=mx/l}stick.x=dx/mx;stick.y=dy/mx;stickEl.firstChild.style.transform=`translate(${dx}px,${dy}px)`});
+addEventListener('pointerup',e=>{if(e.pointerId===stick.id){stick.id=null;stick.x=stick.y=0;stickEl.style.display='none'}});
+
+// ---------- helpers ----------
+function segHitsBox(a,b,w){ // 2D slab test
+  let t0=0,t1=1; const dx=b.x-a.x, dz=b.z-a.z;
+  for(const [p,d,lo,hi] of [[a.x,dx,w.x0,w.x1],[a.z,dz,w.z0,w.z1]]){
+    if(Math.abs(d)<1e-6){ if(p<lo||p>hi) return false; }
+    else { let u=(lo-p)/d, v=(hi-p)/d; if(u>v)[u,v]=[v,u]; t0=Math.max(t0,u); t1=Math.min(t1,v); if(t0>t1) return false; }
+  }
+  return true;
+}
+const los=(a,b)=>!walls.some(w=>w.sight&&segHitsBox(a,b,w));
+function collide(p,r=.5){
+  for(const w of walls){ if(w.soft)continue;
+    const cx=Math.max(w.x0,Math.min(p.x,w.x1)), cz=Math.max(w.z0,Math.min(p.z,w.z1));
+    const dx=p.x-cx, dz=p.z-cz, d=Math.hypot(dx,dz);
+    if(d<r){ if(d<1e-4){p.x+=r;continue} p.x+=dx/d*(r-d); p.z+=dz/d*(r-d); }
+  }
+  const lim=HALF-.6;
+  for(const h of holes) if(h===openHole && Math.hypot(p.x-h.x,p.z-h.z)<2) return; // pode sair
+  p.x=Math.max(-lim,Math.min(lim,p.x)); p.z=Math.max(-lim,Math.min(lim,p.z));
+}
+function makeNoise(c,level){ // level: radius
+  c.noise=Math.max(c.noise,level);
+  if(F.state!=='chase' && F.pos.distanceTo(c.pos)<level){ F.hear=c.pos.clone(); if(F.state==='patrol'){F.state='investigate';setMark('?');if(Math.random()<.5)beep(180,.25,'sawtooth',.05,.7)} else F.hear=c.pos.clone(); }
+}
+let cluckT=0;
+function cluck(c,loud){ if(!c.isPlayer && F.pos.distanceTo(c.pos)>25) return; if(c.isPlayer||Math.random()<.3) beep(loud?900:600,loud?.07:.05,'square',loud?.05:.015,loud?1.4:1.2) }
+function burstFeathers(p){for(let i=0;i<24;i++){const m=new THREE.Mesh(new THREE.PlaneGeometry(.25,.12),new THREE.MeshBasicMaterial({color:0xffffff,side:2}));m.position.copy(p).add(new THREE.Vector3(0,1,0));scene.add(m);feathers.push({m,v:new THREE.Vector3((Math.random()-.5)*8,Math.random()*7+2,(Math.random()-.5)*8),t:2.5})}}
+
+function kill(c){
+  c.alive=false; c.ghost=true; bang(); burstFeathers(c.pos);
+  if(c.carry){c.carry.carriedBy=null;c.carry=null}
+  c.roast=makeRoast(); c.roast.position.copy(c.pos); c.roastPos=c.pos.clone();
+  c.mesh.traverse(o=>{if(o.material){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.35;o.material.color?.set(0x9fd3ff)}});
+  F.aim=0; F.cool=1.2; F.state='patrol'; F.target=null; setMark('');
+  if(c.isPlayer){ say('🍗 VIROU FRANGO ASSADO!',2.5); bBoo.style.display='flex'; }
+  else say(`🍗 ${c.name} virou assado!`,1.8);
+}
+function revive(c){
+  c.alive=true; c.ghost=false; scene.remove(c.roast); c.roast=null; c.carriedBy=null;
+  scene.remove(c.mesh); const col=c.isPlayer?0xffffff:(c.name.includes('Carijó')?0xa0522d:0x333333); c.mesh=makeChicken(col);
+  c.pos.copy(pot.position).setY(0).add(new THREE.Vector3(0,0,-2)); beep(500,.3,'triangle',.08,2);
+  say(`✨ ${c.name} reviveu!`,1.8); if(c.isPlayer) bBoo.style.display='none';
+}
+function boo(){
+  if(!running||!player.ghost||player.booCd>0) return;
+  player.booCd=6; beep(220,.5,'sine',.1,.5);
+  if(player.pos.distanceTo(F.pos)<12){ F.stun=2; F.aim=0; say('👻 BUUU! Lanterna falhou!',1.2) } else say('👻 Muito longe...',1);
+}
+function drop(){ if(player.carry){player.carry.carriedBy=null;player.carry=null} }
+
+// ---------- farmer AI ----------
+function farmerSees(c){
+  if(!c.alive||c.escaped) return false;
+  const to=c.pos.clone().sub(F.pos); const d=to.length();
+  const fwd=new THREE.Vector3(Math.sin(F.yaw),0,Math.cos(F.yaw));
+  const ang=fwd.angleTo(to.clone().normalize());
+  const night = nightT>.5;
+  if(night){ if(F.stun>0) return false; if(d>18||ang>Math.PI/9) return false; }
+  else { if(d>22||ang>Math.PI/3) return false; if(inCorn(c.pos)&&d>4) return false; if(inMud(c.pos)&&d>8) return false; }
+  if(inCorn(c.pos)&&night&&d>7) return false;
+  return los(F.pos,c.pos);
+}
+function updateFarmer(dt){
+  F.stun=Math.max(0,F.stun-dt); F.cool=Math.max(0,F.cool-dt);
+  const night=nightT>.5;
+  // procurar alvo visível
+  let seen=null, best=1e9;
+  for(const c of chickens){ if(farmerSees(c)){const d=c.pos.distanceTo(F.pos); if(d<best){best=d;seen=c}} }
+  if(seen && F.cool<=0){
+    if(night){ kill(seen); return; }
+    if(F.target!==seen){F.target=seen;F.aim=0}
+    F.state='chase'; setMark('!'); F.lost=0;
+    F.aim+=dt; if(F.aim>1) kill(seen);
+  } else { F.aim=Math.max(0,F.aim-dt*2); if(F.state==='chase'){F.lost+=dt; if(F.lost>2){F.state='investigate'; F.hear=F.target?.pos.clone(); F.target=null}} }
+
+  let goal, speed;
+  if(F.state==='chase'&&F.target){ goal=F.target.pos; speed=night?4.5:5.2; }
+  else if(F.state==='investigate'&&F.hear){ goal=F.hear; speed=4; if(F.pos.distanceTo(goal)<1.5){F.state='patrol';F.hear=null;setMark('')} }
+  else { F.state='patrol'; goal=patrol[F.wp]; speed=2.6; if(F.pos.distanceTo(goal)<1.5) F.wp=(F.wp+1)%patrol.length; }
+  if(F.stun>0) speed*=.2;
+  const dir=goal.clone().sub(F.pos); dir.y=0;
+  if(dir.length()>.3){
+    const want=Math.atan2(dir.x,dir.z); let dy=want-F.yaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy));
+    F.yaw+=Math.max(-3*dt,Math.min(3*dt,dy));
+    if(F.state!=='chase'||!seen||F.aim<.3||!night){ F.pos.addScaledVector(new THREE.Vector3(Math.sin(F.yaw),0,Math.cos(F.yaw)), speed*dt*(F.aim>0?.3:1)); }
+  }
+  // patrulha olha em volta
+  if(F.state==='patrol') F.yaw+=Math.sin(performance.now()/700)*dt*.6;
+  collide(F.pos,.7);
+  farmer.position.copy(F.pos); farmer.rotation.y=F.yaw;
+  // laser de mira (dia)
+  if(F.target&&F.aim>0&&!night){ laser.visible=true; laser.geometry.setFromPoints([F.pos.clone().setY(1.9),F.target.pos.clone().setY(.7)]); } else laser.visible=false;
+  // lanterna
+  const flick = F.stun>0 ? (Math.random()<.5?0:.3) : 1;
+  flash.intensity = nightT*60*flick; beam.material.opacity = nightT*.12*flick;
+}
+
+// ---------- chickens ----------
+function updateChicken(c,dt){
+  c.noise=Math.max(0,c.noise-dt*20); c.booCd=Math.max(0,c.booCd-dt);
+  if(c.escaped) return;
+  let mx=0,mz=0,run=false,jump=false;
+  if(c.isPlayer){
+    mx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+stick.x;
+    mz=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0)+stick.y;
+    run=keys.ShiftLeft||keys.ShiftRight||runHeld; jump=keys.Space||jumpReq; jumpReq=false;
+  } else if(c.alive){
+    // bot simples: vagueia, às vezes corre, foge do fazendeiro, vai para a saída de vez em quando
+    if(!c.wander||c.pos.distanceTo(c.wander)<1||Math.random()<.003){
+      c.wander = Math.random()<.25 ? new THREE.Vector3(openHole.x*.95,0,openHole.z*.95) : new THREE.Vector3((Math.random()-.5)*50,0,(Math.random()-.5)*50);
+      c.botRun = Math.random()<.3;
+    }
+    const d=c.wander.clone().sub(c.pos); d.normalize(); mx=d.x; mz=d.z; run=c.botRun;
+    if(F.pos.distanceTo(c.pos)<7){const a=c.pos.clone().sub(F.pos).normalize();mx=a.x;mz=a.z;run=true}
+  }
+  const l=Math.hypot(mx,mz); if(l>1){mx/=l;mz/=l}
+  const moving=Math.hypot(mx,mz)>.15;
+  if(c.ghost){ // fantasma flutua livre
+    c.pos.x+=mx*6*dt; c.pos.z+=mz*6*dt; c.pos.x=Math.max(-HALF,Math.min(HALF,c.pos.x)); c.pos.z=Math.max(-HALF,Math.min(HALF,c.pos.z));
+    c.mesh.position.set(c.pos.x,1.2+Math.sin(performance.now()/300)*.2,c.pos.z);
+    if(c.roast&&!c.roast.carriedBy) c.roast.position.copy(c.roastPos);
+    c.roast&&(c.roast.userData.glow.intensity=nightT*3);
+    return;
+  }
+  let speed = run?7:3.4; if(c.carry) speed*=.6; if(inMud(c.pos)) speed*=.55;
+  c.pos.x+=mx*speed*dt; c.pos.z+=mz*speed*dt;
+  if(jump&&c.y<=0){c.vy=6.5; makeNoise(c,24); cluck(c,true)}
+  c.vy-=18*dt; c.y=Math.max(0,c.y+c.vy*dt); if(c.y===0)c.vy=0;
+  collide(c.pos);
+  if(moving){
+    const lvl = run? (inCorn(c.pos)?12:18) : (inCorn(c.pos)?3:6);
+    makeNoise(c, c.carry?lvl+4:lvl);
+    c.ct=(c.ct||0)-dt; if(c.ct<=0){cluck(c,run);c.ct=run?.18:.55}
+    c.mesh.rotation.y=Math.atan2(mx,mz);
+  }
+  const bob = moving? Math.abs(Math.sin(performance.now()/(run?60:110)))*.25 : 0;
+  c.mesh.position.set(c.pos.x,c.y+bob,c.pos.z);
+  c.mesh.children.forEach(o=>{if(o.name==='wing')o.rotation.z=(c.y>0||run)?Math.sin(performance.now()/40)*.8*Math.sign(o.position.x):0});
+  // pegar assado de amiga
+  if(!c.carry) for(const o of chickens) if(o.ghost&&o.roast&&!o.roast.carriedBy&&o.roastPos.distanceTo(c.pos)<1.2){c.carry=o;o.roast.carriedBy=c;if(c.isPlayer)say('Leve até a panela! 🍲',1.5);break}
+  if(c.carry){ const r=c.carry; r.roastPos.copy(c.pos); r.roast.position.set(c.pos.x,c.y+1.5,c.pos.z);
+    if(c.pos.distanceTo(pot.position.clone().setY(0))<2.2){ const who=r; c.carry=null; revive(who) } }
+  // fuga
+  if(Math.hypot(c.pos.x-openHole.x,c.pos.z-openHole.z)<1.5 || Math.abs(c.pos.x)>HALF+.5 || Math.abs(c.pos.z)>HALF+.5){
+    c.escaped=true; escaped++; c.mesh.visible=false; if(c.carry){c.carry.roast.carriedBy=null;c.carry=null}
+    beep(660,.15,'triangle',.08,1.5); say(c.isPlayer?'🏁 VOCÊ FUGIU!':`🏁 ${c.name} fugiu!`,2);
+  }
+}
+
+// ---------- loop ----------
+const clock=new THREE.Clock(); const camPos=new THREE.Vector3(0,20,20);
+const dayFog=new THREE.Fog(0x87c7ff,40,110), nightFog=new THREE.Fog(0x0b1030,8,38);
+function end(text){ running=false; setTimeout(()=>{const p=document.getElementById('panel');p.querySelector('h1').textContent=text;p.querySelector('p').innerHTML=`🏁 ${escaped} fugiram · 🍗 ${chickens.filter(c=>c.ghost).length} assadas · ⏱ ${Math.round(120-time)}s<br><br><b>Jogar de novo:</b>`;p.style.display='flex'},1200) }
+function tick(){
+  requestAnimationFrame(tick);
+  const dt=Math.min(clock.getDelta(),.05);
+  if(running){
+    time-=dt; if(mode==='dusk') nightT=Math.min(1,Math.max(0,(120-time-30)/50));
+    updateFarmer(dt); chickens.forEach(c=>updateChicken(c,dt));
+    const alive=chickens.filter(c=>c.alive&&!c.escaped).length;
+    if(alive===0||time<=0) end(escaped>0?'FUGIRAM!':'ASSADAS!');
+    document.getElementById('time').textContent=`${Math.floor(Math.max(0,time)/60)}:${String(Math.floor(Math.max(0,time)%60)).padStart(2,'0')}`;
+    document.getElementById('count').textContent=`🐔 ${alive} · 🍗 ${chickens.filter(c=>c.ghost).length} · 🏁 ${escaped}`;
+    document.querySelector('#noise i').style.width=Math.min(100,player.noise/24*100)+'%';
+    const danger = (F.target===player&&F.aim>0) || (nightT>.5 && player.alive && player.pos.distanceTo(F.pos)<8);
+    document.getElementById('vig').style.boxShadow=`inset 0 0 120px 40px rgba(229,72,77,${danger?.55:0})`;
+    if(!player.escaped){ const want=new THREE.Vector3(player.pos.x,17,player.pos.z+14); camPos.lerp(want,.08); }
+  }
+  // dia/noite visual
+  hemi.intensity=1-nightT*.88; sun.intensity=1.6*(1-nightT*.95); sun.color.setHSL(.1,.3,1-nightT*.4);
+  scene.background=new THREE.Color().lerpColors(new THREE.Color(0x87c7ff),new THREE.Color(0x0b1030),nightT);
+  scene.fog = nightT>.5?nightFog:dayFog;
+  document.body.style.background=nightT>.5?'#0b1030':'#87c7ff';
+  for(let i=feathers.length-1;i>=0;i--){const f=feathers[i];f.t-=dt;f.v.y-=9*dt;f.v.multiplyScalar(.97);f.m.position.addScaledVector(f.v,dt);f.m.rotation.x+=dt*5;f.m.rotation.z+=dt*3;if(f.m.position.y<.05)f.m.position.y=.05;if(f.t<0){scene.remove(f.m);feathers.splice(i,1)}}
+  if(msgT>0){msgT-=dt; if(msgT<=0)document.getElementById('msg').textContent=''}
+  camera.position.copy(camPos); camera.lookAt(camPos.x,0,camPos.z-14);
+  renderer.render(scene,camera);
+}
+tick();
+</script>
+</body>
+</html>
