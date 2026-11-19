@@ -118,7 +118,7 @@ function economia(estrelas) {
     for (const c of CLASSES) { const falta = Math.max(0, (comp[c] || 0) - disp[c]); if (falta) { const custo = falta * HEROIS[c].custo; ouro -= custo; compra += custo; elenco[c] += falta; } }
     const res = lote(comp, i.rod.inimigos, [], 12);
     for (const [c, q] of Object.entries(res.mortos)) for (let j = 0; j < Math.round(q); j++) desm.push({ tipo: c, volta: i.rod.n + 1 + ECONOMIA.rodadasDesmaio });
-    ouro += Math.round(ECONOMIA.ouroBase(i.rod.n) * ECONOMIA.multEstrelas[estrelas]);
+    ouro += Math.round(ECONOMIA.bonusVitoria(i.rod.n) * ECONOMIA.multEstrelas[estrelas]);
     linhas.push({ ouro });
   }
   return linhas;

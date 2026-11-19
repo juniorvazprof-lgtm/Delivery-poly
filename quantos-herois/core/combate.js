@@ -277,5 +277,6 @@ export function simular(cfg) {
   const ah = b.stats.acertosArea;
   return { vitoria: b.fim === 'vitoria', fim: b.fim, tempo: +b.t.toFixed(2), sobreviventes, mortos,
     danoPorClasse: b.stats.danoPorClasse, mediaAcertosArea: ah.length ? ah.reduce((s, x) => s + x, 0) / ah.length : 0,
-    slimesGerados: b.unidades.filter((u) => u.tipo.startsWith('slime') && u.geracao > 0).length };
+    slimesGerados: b.unidades.filter((u) => u.tipo.startsWith('slime') && u.geracao > 0).length,
+    ouroAbates: b.unidades.filter((u) => u.lado === 'v' && u.morto).reduce((t, u) => t + (u.base.ouro || 0), 0) };
 }

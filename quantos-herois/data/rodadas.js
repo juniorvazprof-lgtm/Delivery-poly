@@ -11,11 +11,16 @@ export const RODADAS = [
   { n: 9,  nome: 'Mistura nojenta',     inimigos: [['slime', 5], ['goblin', 16]] },
   { n: 10, nome: 'O Rei Slime',         inimigos: [['reiSlime', 1], ['goblin', 18]], chefe: true },
 ];
-// Economia
+// Economia da run (valores iniciais; o simulador de runs ajusta estes números)
 export const ECONOMIA = {
-  ouroInicial: 60,
-  elencoInicial: { guerreiro: 3, guardiao: 1, piromante: 1 },
-  ouroBase: (rodada) => 25 + 6 * rodada,          // por vitória
+  ouroInicial: 40,
+  elencoInicial: { guerreiro: 2, guardiao: 1, piromante: 1 },
+  vidas: 3,                                   // perder uma rodada custa 1 vida e repete a rodada
+  multAbate: 1.0,                             // ouro de cada monstro morto = VILOES[tipo].ouro × multAbate
+  bonusVitoria: (rodada) => 10 + 4 * rodada,  // bônus ao vencer, × multiplicador das estrelas
   multEstrelas: { 1: 1.0, 2: 1.3, 3: 1.7 },
+  inflacao: 0.10,                             // cada herói recrutado da mesma classe fica 10% mais caro
   rodadasDesmaio: 2,
+  // estrelas: 3★ se enviou até o ideal; 2★ até 150% do ideal; 1★ só vencer
+  limiteEstrelas: { tres: 1.0, duas: 1.5 },
 };
