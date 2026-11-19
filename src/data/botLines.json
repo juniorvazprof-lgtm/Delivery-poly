@@ -1,0 +1,72 @@
+{
+ "cliente": [
+  "Oi, vim buscar meu pedido.",
+  "Tem alguém para me atender?",
+  "A reunião é aqui mesmo?",
+  "Pode me chamar quando sair?",
+  "Quanto tempo vai levar?",
+  "Desculpe, cheguei atrasado.",
+  "Obrigado pela atenção!",
+  "Posso falar com o gerente?"
+ ],
+ "estagiario": [
+  "Alguém viu meu grampeador?",
+  "Já fiz as cópias, chefe!",
+  "O café acabou de novo!",
+  "Posso ajudar em algo?",
+  "A planilha tá quase pronta.",
+  "Onde fica a sala 3?",
+  "Aprendi a usar a impressora!",
+  "Me chamaram na reunião?"
+ ],
+ "recepcionista": [
+  "Bom dia! Seja bem-vindo.",
+  "Reunião às 15h na sala 2.",
+  "Um momento, vou verificar.",
+  "Sua visita está agendada?",
+  "Pode assinar o livro, por favor?",
+  "O elevador está à direita.",
+  "Aguarde só um instante.",
+  "Ligo em breve, pode ser?"
+ ],
+ "suporte": [
+  "Já tentou reiniciar?",
+  "Abra um chamado, por favor.",
+  "O sistema voltou ao normal.",
+  "Vou verificar sua conexão.",
+  "Qual é o erro na tela?",
+  "Senha redefinida com sucesso.",
+  "Teste o cabo de rede, por favor.",
+  "Estamos cuidando do problema."
+ ],
+ "analista": [
+  "Os dados estão na planilha.",
+  "Precisamos revisar o relatório.",
+  "O gráfico ficou ótimo!",
+  "Vou conferir os números.",
+  "Prazo final é amanhã.",
+  "A meta do mês foi batida.",
+  "Falta pouco para fechar.",
+  "Enviei a análise por e-mail."
+ ],
+ "faxineiro": [
+  "Café fresquinho na copa!",
+  "Já vou limpar a sala 2.",
+  "Alguém deixou a xícara?",
+  "O lixo já foi recolhido.",
+  "Cuidado, piso molhado.",
+  "Preciso de mais café.",
+  "A copa está organizada.",
+  "Bom dia! Tudo limpinho."
+ ],
+ "geral": [
+  "Bom dia, pessoal!",
+  "Alguém viu meu celular?",
+  "Reunião às 15h, lembrem!",
+  "O café acabou de novo!",
+  "Preciso de ajuda aqui.",
+  "Já está quase na hora.",
+  "Bom fim de semana!",
+  "Quem pegou meu copo?"
+ ]
+}

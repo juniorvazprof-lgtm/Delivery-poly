@@ -1,0 +1,225 @@
+/* Barra de controles do apresentador — rodapé fixo, escura e translúcida. */
+
+#controles.ctrl-barra {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  background: #1e2333e6;
+  border-top: 1px solid #ffffff1a;
+  box-shadow: 0 -6px 18px #00000055;
+  backdrop-filter: blur(8px);
+  color: #e8ecf7;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+#controles * {
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+/* Botões */
+#controles .ctrl-btn {
+  height: 52px;
+  min-width: 52px;
+  padding: 0 14px;
+  border: 1px solid #ffffff26;
+  border-radius: 10px;
+  background: #2b3247;
+  color: #e8ecf7;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, transform 80ms ease, border-color 120ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#controles .ctrl-btn:hover {
+  background: #38405a;
+  border-color: #ffffff40;
+}
+
+#controles .ctrl-btn:active {
+  transform: translateY(1px);
+}
+
+#controles .ctrl-btn:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+#controles .ctrl-btn-play {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  min-width: 132px;
+}
+
+#controles .ctrl-btn-play:hover {
+  background: #2f74e0;
+}
+
+#controles .ctrl-btn-play.ctrl-pausado {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #1e2333;
+}
+
+/* Grupo de velocidades */
+#controles .ctrl-grupo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: #ffffff0d;
+}
+
+#controles .ctrl-btn-vel {
+  min-width: 60px;
+  padding: 0 10px;
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+  border-color: transparent;
+}
+
+#controles .ctrl-btn-vel:hover {
+  background: #ffffff1a;
+}
+
+/* Botão ativo (velocidade em uso) */
+#controles .ctrl-btn-vel.ctrl-ativo {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+/* Campos com rótulo (select / toggle) */
+#controles .ctrl-campo {
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid #ffffff1f;
+  border-radius: 10px;
+  background: #2b3247;
+  font-size: 16px;
+}
+
+#controles .ctrl-icone {
+  font-size: 18px;
+}
+
+#controles .ctrl-select {
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid #ffffff26;
+  border-radius: 8px;
+  background: #1e2333;
+  color: #e8ecf7;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#controles .ctrl-select:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 1px;
+}
+
+#controles .ctrl-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+
+#controles .ctrl-check {
+  width: 20px;
+  height: 20px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+/* Bolinha de status do modo */
+#controles .ctrl-bolinha {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #9ca3af; /* cinza = desconhecido */
+  box-shadow: 0 0 0 2px #ffffff1a;
+  flex: 0 0 auto;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
+#controles .ctrl-bolinha-online {
+  background: #3b82f6; /* azul = online */
+  box-shadow: 0 0 8px #3b82f688;
+}
+
+#controles .ctrl-bolinha-offline {
+  background: #22c55e; /* verde = offline (padrão) */
+  box-shadow: 0 0 8px #22c55e88;
+}
+
+#controles .ctrl-bolinha-falha {
+  background: #ef4444; /* vermelho = falha */
+  box-shadow: 0 0 8px #ef444488;
+}
+
+/* Telas mais estreitas (1366x768): encolhe um pouco para caber sem quebrar. */
+@media (max-width: 1440px) {
+  #controles.ctrl-barra {
+    gap: 6px;
+    padding: 6px 8px;
+    font-size: 15px;
+  }
+
+  #controles .ctrl-btn {
+    height: 52px;
+    padding: 0 10px;
+    font-size: 15px;
+  }
+
+  #controles .ctrl-btn-vel {
+    min-width: 52px;
+    padding: 0 6px;
+  }
+
+  #controles .ctrl-campo {
+    padding: 0 8px;
+    font-size: 15px;
+  }
+
+  #controles .ctrl-select {
+    font-size: 15px;
+    padding: 0 4px;
+  }
+}
+
+/* Em telas muito estreitas, esconde os ícones e mantém o texto. */
+@media (max-width: 1100px) {
+  #controles .ctrl-icone {
+    display: none;
+  }
+
+  #controles .ctrl-campo {
+    padding: 0 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #controles .ctrl-btn,
+  #controles .ctrl-bolinha {
+    transition: none;
+  }
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escritório de Agentes IA</title>
+<link rel="stylesheet" href="src/ui/estilo.css">
+<link rel="stylesheet" href="src/ui/controls.css">
+</head>
+<body>
+<div id="cena"></div>
+<div id="rotulos"></div>
+<header id="legenda"><span><i class="q ia"></i> <b>IA</b> = pensa e decide</span><span><i class="q bot"></i> <b>ROTEIRO</b> = segue script pronto</span></header>
+<aside id="guia">
+  <div id="gEtapa">ETAPA</div><div class="barra"><i id="gBarra"></i></div>
+  <h2 id="gNome">—</h2>
+  <small>Quem está trabalhando:</small><p id="gQuem"></p>
+  <small>Explique assim:</small><p id="gExplica" class="explica"></p>
+  <small>Pergunta para o público:</small><p id="gPergunta" class="pergunta"></p>
+  <small>Último pensamento da IA:</small><p id="gPensa" class="pensa"></p>
+</aside>
+<div id="aviso" hidden></div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

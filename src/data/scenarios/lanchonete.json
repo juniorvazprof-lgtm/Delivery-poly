@@ -1,0 +1,161 @@
+{
+ "id": "lanchonete",
+ "nome": "Lanchonete",
+ "pedido": "Quero um site para minha lanchonete, a Sabor do Sertão.",
+ "etapas": [
+  {
+   "id": "1-pedido",
+   "agente": "cliente",
+   "duracao": 5,
+   "explicacao": "Cliente explica o pedido do site da lanchonete.",
+   "perguntaPublico": "Qual lanche você pediria na Sabor do Sertão?",
+   "pensamento": "Vou explicar o que preciso sem complicar.",
+   "saida": {
+    "texto": "Quero um site simples para minha lanchonete, a Sabor do Sertão."
+   }
+  },
+  {
+   "id": "2-planejar",
+   "agente": "gerente",
+   "duracao": 6,
+   "explicacao": "Gerente divide o trabalho em tarefas simples.",
+   "perguntaPublico": "Quais tarefas vocês fariam primeiro?",
+   "pensamento": "Vamos dividir em partes pequenas.",
+   "saida": {
+    "tarefas": [
+     "Montar topo com nome e chamada",
+     "Criar cardápio com preços",
+     "Fazer contato com endereço e horário"
+    ]
+   }
+  },
+  {
+   "id": "3-design",
+   "agente": "designer",
+   "duracao": 5,
+   "explicacao": "Designer escolhe cores e título do site.",
+   "perguntaPublico": "Essas cores combinam com uma lanchonete?",
+   "pensamento": "Azul e amarelo lembram o céu e o sol do sertão.",
+   "saida": {
+    "cores": [
+     "#264653",
+     "#2A9D8F",
+     "#E9C46A"
+    ],
+    "titulo": "Sabor do Sertão"
+   }
+  },
+  {
+   "id": "4-codar-topo",
+   "agente": "programador",
+   "secao": "topo",
+   "duracao": 7,
+   "explicacao": "Programador monta o topo com nome e chamada.",
+   "perguntaPublico": "O topo já mostra o nome da lanchonete?",
+   "pensamento": "Primeiro o topo precisa causar boa impressão.",
+   "saida": {
+    "html": "<section class='topo' style='background:#264653;color:#ffffff;padding:20px;text-align:center'>\n  <h1 style='color:#E9C46A'>Sabor do Sertão</h1>\n  <p>Comida caseira e lanches do sertão.</p>\n</section>"
+   }
+  },
+  {
+   "id": "5-revisar-topo",
+   "agente": "revisor",
+   "secao": "topo",
+   "duracao": 5,
+   "explicacao": "Revisor confere se o topo está claro e bonito.",
+   "perguntaPublico": "O topo ficou fácil de entender?",
+   "pensamento": "Título e chamada estão claros?",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "6-codar-cardapio",
+   "agente": "programador",
+   "secao": "cardapio",
+   "duracao": 6,
+   "explicacao": "Programador monta o cardápio com itens principais.",
+   "perguntaPublico": "Quais itens não podem faltar no cardápio?",
+   "pensamento": "Vou listar os lanches mais pedidos.",
+   "saida": {
+    "html": "<section class='cardapio' style='background:#2A9D8F;color:#ffffff;padding:20px'>\n  <h2 style='color:#E9C46A'>Cardápio</h2>\n  <ul>\n    <li>Pão de queijo</li>\n    <li>Bolo de milho</li>\n    <li>Suco de caju</li>\n  </ul>\n</section>"
+   }
+  },
+  {
+   "id": "7-revisar-cardapio-1",
+   "agente": "revisor",
+   "secao": "cardapio",
+   "duracao": 5,
+   "explicacao": "Revisor pede preços e descrições curtas no cardápio.",
+   "perguntaPublico": "O que falta para o cardápio ficar completo?",
+   "pensamento": "Faltou preço e descrição curta.",
+   "saida": {
+    "aprovado": false,
+    "correcao": "Inclua preços e descrições curtas."
+   }
+  },
+  {
+   "id": "8-codar-cardapio-corrigido",
+   "agente": "programador",
+   "secao": "cardapio",
+   "duracao": 7,
+   "explicacao": "Programador corrige o cardápio com preços e descrições.",
+   "perguntaPublico": "Os preços ficaram fáceis de ler?",
+   "pensamento": "Agora coloco preço e descrição curta.",
+   "saida": {
+    "html": "<section class='cardapio' style='background:#2A9D8F;color:#ffffff;padding:20px'>\n  <h2 style='color:#E9C46A'>Cardápio</h2>\n  <ul>\n    <li>Pão de queijo — R$ 6,00 — quentinho</li>\n    <li>Bolo de milho — R$ 8,00 — caseiro</li>\n    <li>Suco de caju — R$ 5,00 — gelado</li>\n  </ul>\n</section>"
+   }
+  },
+  {
+   "id": "9-revisar-cardapio-2",
+   "agente": "revisor",
+   "secao": "cardapio",
+   "duracao": 5,
+   "explicacao": "Revisor aprova o cardápio corrigido.",
+   "perguntaPublico": "O cardápio agora está completo?",
+   "pensamento": "Ficou claro e completo, aprovado.",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "10-codar-contato",
+   "agente": "programador",
+   "secao": "contato",
+   "duracao": 6,
+   "explicacao": "Programador cria contato com endereço e horário.",
+   "perguntaPublico": "O contato tem tudo que o cliente precisa?",
+   "pensamento": "Endereço e horário não podem faltar.",
+   "saida": {
+    "html": "<section class='contato' style='background:#264653;color:#ffffff;padding:20px'>\n  <h2 style='color:#E9C46A'>Contato</h2>\n  <p>Rua do Sertão, 123 — Centro</p>\n  <p>Horário: 8h às 20h</p>\n  <p>Telefone: (00) 1234-5678</p>\n</section>"
+   }
+  },
+  {
+   "id": "11-revisar-contato",
+   "agente": "revisor",
+   "secao": "contato",
+   "duracao": 5,
+   "explicacao": "Revisor confere contato e aprova a seção.",
+   "perguntaPublico": "Você achou o contato simples de usar?",
+   "pensamento": "Contato simples e direto, aprovado.",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "12-entrega",
+   "agente": "gerente",
+   "duracao": 6,
+   "explicacao": "Gerente entrega o site pronto para o cliente.",
+   "perguntaPublico": "O site está pronto para a feira de ciências?",
+   "pensamento": "Site pronto para mostrar na feira.",
+   "saida": {
+    "texto": "Site da Sabor do Sertão pronto e aprovado para a feira."
+   }
+  }
+ ],
+ "htmlFinal": "<!DOCTYPE html>\n<html lang='pt-BR'>\n<head>\n<meta charset='UTF-8'>\n<meta name='viewport' content='width=device-width, initial-scale=1'>\n<title>Sabor do Sertão</title>\n<style>\nbody{font-family:Arial,sans-serif;margin:0;background:#ffffff;color:#264653}\n.topo,.cardapio,.contato{padding:20px}\nh1,h2{color:#E9C46A}\nul{padding-left:20px}\n</style>\n</head>\n<body>\n<section class='topo' style='background:#264653;color:#ffffff;padding:20px;text-align:center'>\n  <h1 style='color:#E9C46A'>Sabor do Sertão</h1>\n  <p>Comida caseira e lanches do sertão.</p>\n</section>\n<section class='cardapio' style='background:#2A9D8F;color:#ffffff;padding:20px'>\n  <h2 style='color:#E9C46A'>Cardápio</h2>\n  <ul>\n    <li>Pão de queijo — R$ 6,00 — quentinho</li>\n    <li>Bolo de milho — R$ 8,00 — caseiro</li>\n    <li>Suco de caju — R$ 5,00 — gelado</li>\n  </ul>\n</section>\n<section class='contato' style='background:#264653;color:#ffffff;padding:20px'>\n  <h2 style='color:#E9C46A'>Contato</h2>\n  <p>Rua do Sertão, 123 — Centro</p>\n  <p>Horário: 8h às 20h</p>\n  <p>Telefone: (00) 1234-5678</p>\n</section>\n</body>\n</html>"
+}
