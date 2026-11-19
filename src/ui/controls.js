@@ -10,8 +10,9 @@ const ROTULOS_VELOCIDADE = {
 };
 const CENARIOS = [
   ['lanchonete', 'Lanchonete'],
-  ['pizzaria', 'Pizzaria'],
-  ['barbearia', 'Barbearia'],
+  ['petshop', 'Pet Shop'],
+  ['escola', 'Escola'],
+  ['banda', 'Banda'],
 ];
 const CLASSES_STATUS = {
   offline: 'ctrl-bolinha-offline',

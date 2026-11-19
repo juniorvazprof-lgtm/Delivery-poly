@@ -1,0 +1,161 @@
+{
+ "id": "banda",
+ "nome": "Banda Trovão do Sul",
+ "pedido": "Quero um site para minha banda de forró, a Trovão do Sul.",
+ "etapas": [
+  {
+   "id": "1-pedido",
+   "agente": "cliente",
+   "duracao": 5,
+   "explicacao": "Cliente explica o pedido do site da banda.",
+   "perguntaPublico": "Qual música você pediria na Trovão do Sul?",
+   "pensamento": "Vou explicar o que preciso sem complicar.",
+   "saida": {
+    "texto": "Quero um site simples para minha banda de forró, a Trovão do Sul."
+   }
+  },
+  {
+   "id": "2-planejar",
+   "agente": "gerente",
+   "duracao": 6,
+   "explicacao": "Gerente divide o trabalho em tarefas simples.",
+   "perguntaPublico": "Quais tarefas vocês fariam primeiro?",
+   "pensamento": "Vamos dividir em partes pequenas.",
+   "saida": {
+    "tarefas": [
+     "Montar topo com nome e chamada",
+     "Criar serviços com shows e preços",
+     "Fazer contato com local e horário"
+    ]
+   }
+  },
+  {
+   "id": "3-design",
+   "agente": "designer",
+   "duracao": 5,
+   "explicacao": "Designer escolhe cores e título do site.",
+   "perguntaPublico": "Essas cores combinam com um show de forró?",
+   "pensamento": "Vermelho e laranja lembram palco e fogueira.",
+   "saida": {
+    "cores": [
+     "#D62828",
+     "#F77F00",
+     "#FCBF49"
+    ],
+    "titulo": "Trovão do Sul"
+   }
+  },
+  {
+   "id": "4-codar-topo",
+   "agente": "programador",
+   "secao": "topo",
+   "duracao": 7,
+   "explicacao": "Programador monta o topo com nome e chamada.",
+   "perguntaPublico": "O topo já mostra o nome da banda?",
+   "pensamento": "Primeiro o topo precisa causar boa impressão.",
+   "saida": {
+    "html": "<section class='topo' style='background:#D62828;color:#ffffff;padding:20px;text-align:center'>\n  <h1 style='color:#FCBF49'>Trovão do Sul</h1>\n  <p>Forró forte que faz o chão tremer.</p>\n</section>"
+   }
+  },
+  {
+   "id": "5-revisar-topo",
+   "agente": "revisor",
+   "secao": "topo",
+   "duracao": 5,
+   "explicacao": "Revisor confere se o topo está claro e bonito.",
+   "perguntaPublico": "O topo ficou fácil de entender?",
+   "pensamento": "Título e chamada estão claros?",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "6-codar-servicos",
+   "agente": "programador",
+   "secao": "servicos",
+   "duracao": 6,
+   "explicacao": "Programador monta os serviços com shows principais.",
+   "perguntaPublico": "Quais shows não podem faltar na lista?",
+   "pensamento": "Vou listar os shows mais pedidos.",
+   "saida": {
+    "html": "<section class='servicos' style='background:#F77F00;color:#ffffff;padding:20px'>\n  <h2 style='color:#FCBF49'>Serviços</h2>\n  <ul>\n    <li>Show completo</li>\n    <li>Pocket show</li>\n    <li>Aula de forró</li>\n  </ul>\n</section>"
+   }
+  },
+  {
+   "id": "7-revisar-servicos-1",
+   "agente": "revisor",
+   "secao": "servicos",
+   "duracao": 5,
+   "explicacao": "Revisor pede preços e descrições curtas nos serviços.",
+   "perguntaPublico": "O que falta para os serviços ficarem completos?",
+   "pensamento": "Faltou preço e descrição curta.",
+   "saida": {
+    "aprovado": false,
+    "correcao": "Inclua preços e descrições curtas."
+   }
+  },
+  {
+   "id": "8-codar-servicos-corrigido",
+   "agente": "programador",
+   "secao": "servicos",
+   "duracao": 7,
+   "explicacao": "Programador corrige os serviços com preços e descrições.",
+   "perguntaPublico": "Os preços ficaram fáceis de ler?",
+   "pensamento": "Agora coloco preço e descrição curta.",
+   "saida": {
+    "html": "<section class='servicos' style='background:#F77F00;color:#ffffff;padding:20px'>\n  <h2 style='color:#FCBF49'>Serviços</h2>\n  <ul>\n    <li>Show completo — R$ 3.000 — 2h de forró</li>\n    <li>Pocket show — R$ 1.500 — 1h animada</li>\n    <li>Aula de forró — R$ 500 — 1h de dança</li>\n  </ul>\n</section>"
+   }
+  },
+  {
+   "id": "9-revisar-servicos-2",
+   "agente": "revisor",
+   "secao": "servicos",
+   "duracao": 5,
+   "explicacao": "Revisor aprova os serviços corrigidos.",
+   "perguntaPublico": "Os serviços agora estão completos?",
+   "pensamento": "Ficou claro e completo, aprovado.",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "10-codar-contato",
+   "agente": "programador",
+   "secao": "contato",
+   "duracao": 6,
+   "explicacao": "Programador cria contato com local e horário.",
+   "perguntaPublico": "O contato tem tudo que o cliente precisa?",
+   "pensamento": "Local e horário não podem faltar.",
+   "saida": {
+    "html": "<section class='contato' style='background:#D62828;color:#ffffff;padding:20px'>\n  <h2 style='color:#FCBF49'>Contato</h2>\n  <p>Rua do Forró, 456 — Centro</p>\n  <p>Horário: 18h às 23h</p>\n  <p>Telefone: (00) 9876-5432</p>\n</section>"
+   }
+  },
+  {
+   "id": "11-revisar-contato",
+   "agente": "revisor",
+   "secao": "contato",
+   "duracao": 5,
+   "explicacao": "Revisor confere contato e aprova a seção.",
+   "perguntaPublico": "Você achou o contato simples de usar?",
+   "pensamento": "Contato simples e direto, aprovado.",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "12-entrega",
+   "agente": "gerente",
+   "duracao": 6,
+   "explicacao": "Gerente entrega o site pronto para o cliente.",
+   "perguntaPublico": "O site está pronto para a feira de ciências?",
+   "pensamento": "Site pronto para mostrar na feira.",
+   "saida": {
+    "texto": "Site da Trovão do Sul pronto e aprovado para a feira."
+   }
+  }
+ ],
+ "htmlFinal": "<!DOCTYPE html>\n<html lang='pt-BR'>\n<head>\n<meta charset='UTF-8'>\n<meta name='viewport' content='width=device-width, initial-scale=1'>\n<title>Trovão do Sul</title>\n<style>\nbody{font-family:Arial,sans-serif;margin:0;background:#ffffff;color:#D62828}\n.topo,.servicos,.contato{padding:20px}\nh1,h2{color:#FCBF49}\nul{padding-left:20px}\n</style>\n</head>\n<body>\n<section class='topo' style='background:#D62828;color:#ffffff;padding:20px;text-align:center'>\n  <h1 style='color:#FCBF49'>Trovão do Sul</h1>\n  <p>Forró forte que faz o chão tremer.</p>\n</section>\n<section class='servicos' style='background:#F77F00;color:#ffffff;padding:20px'>\n  <h2 style='color:#FCBF49'>Serviços</h2>\n  <ul>\n    <li>Show completo — R$ 3.000 — 2h de forró</li>\n    <li>Pocket show — R$ 1.500 — 1h animada</li>\n    <li>Aula de forró — R$ 500 — 1h de dança</li>\n  </ul>\n</section>\n<section class='contato' style='background:#D62828;color:#ffffff;padding:20px'>\n  <h2 style='color:#FCBF49'>Contato</h2>\n  <p>Rua do Forró, 456 — Centro</p>\n  <p>Horário: 18h às 23h</p>\n  <p>Telefone: (00) 9876-5432</p>\n</section>\n</body>\n</html>"
+}

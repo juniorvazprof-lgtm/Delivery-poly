@@ -92,6 +92,10 @@ export function criarTelao({ camada, telao, relogio, acoes }) {
 
   return {
     get aberto() { return !cheia.hidden; },
+    /** Abre a tela cheia com o site já pronto (sem selos de revisão). */
+    abrirSitePronto(cenario) {
+      html = cenario.htmlFinal; $c('.tc-etapa').textContent = 'RESULTADO'; $c('.tc-nome').textContent = `SITE PRONTO · ${cenario.nome}`; $c('.tc-fala').textContent = 'Este é o site que os agentes construíram.'; abrir();
+    },
     /** Mostra o site como está na etapa i. */
     mostrar(cenario, i, etapa, ag) {
       html = siteNaEtapa(cenario, i); fMini.srcdoc = html; if (!cheia.hidden) fCheia.srcdoc = html;

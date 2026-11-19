@@ -95,3 +95,29 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #F4EEE4; fon
   #telaCheia .tc-fala { font-size: 12px; } #telaCheia button { height: 38px; padding: 0 14px; font-size: 13px; } #telaCheia .tc-play { min-width: 120px; }
   #telaCheia .tc-fechar { height: 34px; width: 34px; }
 }
+
+/* ---------- extras: apresentação, quiz, site pronto, pedido online ---------- */
+#extras { position: fixed; left: max(14px, env(safe-area-inset-left, 0px)); top: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 30; }
+#extras button { padding: 10px 14px; border: 0; border-radius: 12px; background: #FFFFFFE6; box-shadow: 0 2px 8px #0002; font: 600 16px system-ui, sans-serif; color: #1E2333; cursor: pointer; text-align: left; }
+#extras button:hover, #extras button:focus-visible { background: #fff; outline: 2px solid #3B82F6; }
+#extras button.ligado { background: #3B82F6; color: #fff; }
+#extras button.novo { animation: pulsa 1.1s infinite; background: #FDE68A; }
+@keyframes pulsa { 50% { transform: scale(1.07); } }
+#quiz, #pedido { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; background: #0F172ACC; padding: 16px; }
+#quiz[hidden] { display: none; }
+.q-caixa, .p-caixa { width: min(520px, 100%); padding: 24px; border-radius: 18px; background: #fff; box-shadow: 0 10px 40px #0006; text-align: center; max-height: 100%; overflow: auto; }
+.q-caixa h2, .p-caixa h2 { margin: 0 0 12px; font-size: 24px; }
+.q-nome { margin: 8px 0 16px; font-size: 40px; font-weight: 800; }
+.q-botoes { display: flex; gap: 12px; justify-content: center; }
+.q-caixa button, .p-caixa button { min-height: 52px; padding: 0 22px; border: 0; border-radius: 12px; background: #3B82F6; color: #fff; font: 700 18px system-ui, sans-serif; cursor: pointer; }
+.q-caixa .q-fechar, .p-caixa .p-cancelar { background: #64748B; }
+.q-caixa button[data-r="bot"] { background: #6B7280; }
+.q-caixa button:hover, .p-caixa button:hover { filter: brightness(1.1); } .q-caixa button:focus-visible, .p-caixa button:focus-visible { outline: 3px solid #93C5FD; }
+.q-fb { min-height: 3em; margin: 14px 0; font-size: 18px; } .q-rodape { display: flex; gap: 10px; justify-content: center; }
+.p-caixa input { width: 100%; height: 52px; padding: 0 14px; border: 2px solid #CBD5E1; border-radius: 12px; font: 18px system-ui, sans-serif; }
+.p-caixa p { margin: 8px 0; font-size: 16px; } .p-aviso { font-size: 14px !important; color: #64748B; } .p-status { min-height: 1.5em; font-weight: 600; }
+@media (max-height: 520px) {
+  #extras { top: 38px; gap: 4px; } #extras button { padding: 5px 9px; font-size: 11px; border-radius: 8px; }
+  .q-caixa, .p-caixa { padding: 12px; } .q-caixa h2, .p-caixa h2 { font-size: 16px; margin-bottom: 4px; } .q-nome { font-size: 24px; margin: 2px 0 8px; }
+  .q-caixa button, .p-caixa button { min-height: 40px; font-size: 14px; } .q-fb { font-size: 13px; margin: 6px 0; } .p-caixa p { font-size: 12px; margin: 4px 0; } .p-caixa input { height: 40px; }
+}

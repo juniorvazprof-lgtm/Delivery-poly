@@ -1,0 +1,161 @@
+{
+ "id": "escola",
+ "nome": "Escola Pequeno Saber",
+ "pedido": "Quero um site para a nossa escola de bairro, a Pequeno Saber.",
+ "etapas": [
+  {
+   "id": "1-pedido",
+   "agente": "cliente",
+   "duracao": 5,
+   "explicacao": "Cliente explica o pedido do site da escola.",
+   "perguntaPublico": "O que você gostaria de ver no site da escola?",
+   "pensamento": "Vou explicar o que preciso sem complicar.",
+   "saida": {
+    "texto": "Quero um site simples para a nossa escola de bairro, a Pequeno Saber."
+   }
+  },
+  {
+   "id": "2-planejar",
+   "agente": "gerente",
+   "duracao": 6,
+   "explicacao": "Gerente divide o trabalho em tarefas simples.",
+   "perguntaPublico": "Quais tarefas vocês fariam primeiro?",
+   "pensamento": "Vamos dividir em partes pequenas.",
+   "saida": {
+    "tarefas": [
+     "Montar topo com nome e chamada",
+     "Criar serviços com atividades e horários",
+     "Fazer contato com endereço e telefone"
+    ]
+   }
+  },
+  {
+   "id": "3-design",
+   "agente": "designer",
+   "duracao": 5,
+   "explicacao": "Designer escolhe cores e título do site.",
+   "perguntaPublico": "Essas cores combinam com uma escola alegre?",
+   "pensamento": "Cores vivas lembram crianças e aprendizado.",
+   "saida": {
+    "cores": [
+     "#F4A261",
+     "#2A9D8F",
+     "#E9C46A"
+    ],
+    "titulo": "Escola Pequeno Saber"
+   }
+  },
+  {
+   "id": "4-codar-topo",
+   "agente": "programador",
+   "secao": "topo",
+   "duracao": 7,
+   "explicacao": "Programador monta o topo com nome e chamada.",
+   "perguntaPublico": "O topo já mostra o nome da escola?",
+   "pensamento": "Primeiro o topo precisa causar boa impressão.",
+   "saida": {
+    "html": "<section class='topo' style='background:#F4A261;color:#ffffff;padding:20px;text-align:center'>\n  <h1 style='color:#2A9D8F'>Escola Pequeno Saber</h1>\n  <p>Educação com carinho para o bairro.</p>\n</section>"
+   }
+  },
+  {
+   "id": "5-revisar-topo",
+   "agente": "revisor",
+   "secao": "topo",
+   "duracao": 5,
+   "explicacao": "Revisor confere se o topo está claro e bonito.",
+   "perguntaPublico": "O topo ficou fácil de entender?",
+   "pensamento": "Título e chamada estão claros?",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "6-codar-servicos",
+   "agente": "programador",
+   "secao": "servicos",
+   "duracao": 6,
+   "explicacao": "Programador monta os serviços com atividades principais.",
+   "perguntaPublico": "Quais atividades não podem faltar na escola?",
+   "pensamento": "Vou listar as atividades mais importantes.",
+   "saida": {
+    "html": "<section class='servicos' style='background:#2A9D8F;color:#ffffff;padding:20px'>\n  <h2 style='color:#E9C46A'>Serviços</h2>\n  <ul>\n    <li>Educação infantil</li>\n    <li>Ensino fundamental</li>\n    <li>Atividades extras</li>\n  </ul>\n</section>"
+   }
+  },
+  {
+   "id": "7-revisar-servicos-1",
+   "agente": "revisor",
+   "secao": "servicos",
+   "duracao": 5,
+   "explicacao": "Revisor pede horários e descrições curtas nos serviços.",
+   "perguntaPublico": "O que falta para os serviços ficarem completos?",
+   "pensamento": "Faltou horário e descrição curta.",
+   "saida": {
+    "aprovado": false,
+    "correcao": "Inclua horários e descrições curtas."
+   }
+  },
+  {
+   "id": "8-codar-servicos-corrigido",
+   "agente": "programador",
+   "secao": "servicos",
+   "duracao": 7,
+   "explicacao": "Programador corrige os serviços com horários e descrições.",
+   "perguntaPublico": "Os horários ficaram fáceis de ler?",
+   "pensamento": "Agora coloco horário e descrição curta.",
+   "saida": {
+    "html": "<section class='servicos' style='background:#2A9D8F;color:#ffffff;padding:20px'>\n  <h2 style='color:#E9C46A'>Serviços</h2>\n  <ul>\n    <li>Educação infantil — 7h às 12h — crianças de 3 a 5 anos</li>\n    <li>Ensino fundamental — 7h às 12h — 1º ao 5º ano</li>\n    <li>Atividades extras — 13h às 17h — arte e música</li>\n  </ul>\n</section>"
+   }
+  },
+  {
+   "id": "9-revisar-servicos-2",
+   "agente": "revisor",
+   "secao": "servicos",
+   "duracao": 5,
+   "explicacao": "Revisor aprova os serviços corrigidos.",
+   "perguntaPublico": "Os serviços agora estão completos?",
+   "pensamento": "Ficou claro e completo, aprovado.",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "10-codar-contato",
+   "agente": "programador",
+   "secao": "contato",
+   "duracao": 6,
+   "explicacao": "Programador cria contato com endereço e telefone.",
+   "perguntaPublico": "O contato tem tudo que os pais precisam?",
+   "pensamento": "Endereço e telefone não podem faltar.",
+   "saida": {
+    "html": "<section class='contato' style='background:#F4A261;color:#ffffff;padding:20px'>\n  <h2 style='color:#2A9D8F'>Contato</h2>\n  <p>Rua do Bairro, 45 — Centro</p>\n  <p>Horário: 7h às 17h</p>\n  <p>Telefone: (00) 1234-5678</p>\n</section>"
+   }
+  },
+  {
+   "id": "11-revisar-contato",
+   "agente": "revisor",
+   "secao": "contato",
+   "duracao": 5,
+   "explicacao": "Revisor confere contato e aprova a seção.",
+   "perguntaPublico": "Você achou o contato simples de usar?",
+   "pensamento": "Contato simples e direto, aprovado.",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "12-entrega",
+   "agente": "gerente",
+   "duracao": 6,
+   "explicacao": "Gerente entrega o site pronto para o cliente.",
+   "perguntaPublico": "O site está pronto para a feira de ciências?",
+   "pensamento": "Site pronto para mostrar na feira.",
+   "saida": {
+    "texto": "Site da Escola Pequeno Saber pronto e aprovado para a feira."
+   }
+  }
+ ],
+ "htmlFinal": "<!DOCTYPE html>\n<html lang='pt-BR'>\n<head>\n<meta charset='UTF-8'>\n<meta name='viewport' content='width=device-width, initial-scale=1'>\n<title>Escola Pequeno Saber</title>\n<style>\nbody{font-family:Arial,sans-serif;margin:0;background:#ffffff;color:#2A9D8F}\n.topo,.servicos,.contato{padding:20px}\nh1,h2{color:#2A9D8F}\nul{padding-left:20px}\n</style>\n</head>\n<body>\n<section class='topo' style='background:#F4A261;color:#ffffff;padding:20px;text-align:center'>\n  <h1 style='color:#2A9D8F'>Escola Pequeno Saber</h1>\n  <p>Educação com carinho para o bairro.</p>\n</section>\n<section class='servicos' style='background:#2A9D8F;color:#ffffff;padding:20px'>\n  <h2 style='color:#E9C46A'>Serviços</h2>\n  <ul>\n    <li>Educação infantil — 7h às 12h — crianças de 3 a 5 anos</li>\n    <li>Ensino fundamental — 7h às 12h — 1º ao 5º ano</li>\n    <li>Atividades extras — 13h às 17h — arte e música</li>\n  </ul>\n</section>\n<section class='contato' style='background:#F4A261;color:#ffffff;padding:20px'>\n  <h2 style='color:#2A9D8F'>Contato</h2>\n  <p>Rua do Bairro, 45 — Centro</p>\n  <p>Horário: 7h às 17h</p>\n  <p>Telefone: (00) 1234-5678</p>\n</section>\n</body>\n</html>"
+}

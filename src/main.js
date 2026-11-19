@@ -6,11 +6,16 @@ import { criarRotulos } from './ui/rotulos.js';
 import { criarRelogio } from './engine/clock.js';
 import { criarDiretor } from './engine/director.js';
 import { criarTelao } from './ui/telao.js';
+import { criarKanban } from './scene/kanban.js';
+import { criarQuiz } from './ui/quiz.js';
+import { servidorOnline, gerarCenario } from './ui/online.js';
+import { validarCenario, limparCenario } from './engine/validate.js';
 import { criarControles, setStatusModo } from './ui/controls.js';
 
 const carregar = url => fetch(url).then(r => { if (!r.ok) throw new Error(url); return r.json(); });
-const [falas, lanchonete] = await Promise.all([carregar('src/data/botLines.json'), carregar('src/data/scenarios/lanchonete.json')]);
-const CENARIOS = { lanchonete };
+const NOMES = ['lanchonete', 'petshop', 'escola', 'banda'];
+const [falas, ...lista] = await Promise.all([carregar('src/data/botLines.json'), ...NOMES.map(n => carregar(`src/data/scenarios/${n}.json`))]);
+const CENARIOS = Object.fromEntries(NOMES.map((n, k) => [n, lista[k]]));
 
 // ---------- cena ----------
 const renderer = new T.WebGLRenderer({ antialias: true });
@@ -39,7 +44,7 @@ const agentes = AGENTES.map((d, i) => { const a = criarAgente(d, i); scene.add(a
 const $ = id => document.getElementById(id);
 function mostrarEtapa(e, i, total) {
   const ag = AGENTES.find(a => a.id === e.agente);
-  telao?.mostrar(CENARIOS[cenarioAtual], i, e, ag);
+  telao?.mostrar(CENARIOS[cenarioAtual], i, e, ag); kanban.estado(i);
   $('gEtapa').textContent = `ETAPA ${i + 1} de ${total}`; $('gBarra').style.width = `${((i + 1) / total) * 100}%`;
   $('gNome').textContent = e.id.replace(/^\d+-/, '').replace(/-/g, ' ').replace('codar', 'programar').replace('cardapio', 'cardápio').replace(/ \d$/, '').toUpperCase();
   $('gQuem').textContent = ''; const b = document.createElement('b'); b.textContent = ag.nome; const t = document.createElement('span');
@@ -48,27 +53,73 @@ function mostrarEtapa(e, i, total) {
   $('gPensa').textContent = `> ${e.pensamento}`;
 }
 
-// ---------- relógio, diretor e controles ----------
+// ---------- relógio, diretor, controles e extras ----------
 const relogio = criarRelogio();
-let telao = null;
-let diretor = criarDiretor({ agentes, rotulos, falas, escritorio, relogio, aoEtapa: mostrarEtapa });
-let cenarioAtual = 'lanchonete';
+const kanban = criarKanban(scene);
+const ORDEM = ['lanchonete', 'petshop', 'escola', 'banda'];
+let telao = null, diretor = null, cenarioAtual = 'lanchonete', apresentacao = false;
+const quiz = criarQuiz(agentes);
+const aviso = txt => { const a = $('aviso'); a.textContent = txt; a.hidden = false; clearTimeout(aviso.t); aviso.t = setTimeout(() => { a.hidden = true; }, 4000); };
+
+/** Troca (ou reinicia) o cenário: encerra o diretor antigo e monta tudo de novo. */
+function trocarCenario(id) {
+  const c = CENARIOS[id]; if (!c) { aviso('Esse cenário ainda não existe.'); return; }
+  diretor?.encerrar(); cenarioAtual = id;
+  diretor = criarDiretor({ agentes, rotulos, falas, escritorio, relogio, aoEtapa: mostrarEtapa, aoFim });
+  kanban.montar(c); telao.mostrar(c, -1, { id: '0-inicio' }, null); $('bQuiz').classList.remove('novo');
+  diretor.montar(c);
+}
+function aoFim() {
+  if (apresentacao) relogio.depois(6, () => { if (apresentacao) { const id = ORDEM[(ORDEM.indexOf(cenarioAtual) + 1) % ORDEM.length]; if (ctrl.seletores.cenario) ctrl.seletores.cenario.value = id; trocarCenario(id); } });
+  else $('bQuiz').classList.add('novo');
+}
 telao = criarTelao({ camada: $('telaoCamada'), telao: escritorio.telao, relogio, acoes: { proxima: () => diretor.proxima(), anterior: () => diretor.anterior() } });
-telao.mostrar(CENARIOS[cenarioAtual], -1, { id: '0-inicio' }, null);
-diretor.montar(CENARIOS[cenarioAtual]);
+
+function voltarOffline(falhou) {
+  if (ctrl.seletores.modo) ctrl.seletores.modo.value = 'offline';
+  setStatusModo(falhou ? 'falha' : 'offline'); if (falhou) setTimeout(() => setStatusModo('offline'), 3000);
+}
+function abrirPedido() {
+  const d = document.createElement('div'); d.id = 'pedido';
+  d.innerHTML = '<form class="p-caixa"><h2>O que o cliente quer?</h2><p>Escreva o pedido do site. A IA vai ler só este texto.</p><input id="pedidoTexto" maxlength="140" autocomplete="off" placeholder="Ex.: um site para a minha banda de forró"><p class="p-aviso">🔒 Não escreva nomes, telefones ou endereços de pessoas: o texto é enviado para um serviço de IA fora do Brasil.</p><p class="p-status" aria-live="polite"></p><div><button type="submit">Gerar com IA</button> <button type="button" class="p-cancelar">Cancelar</button></div></form>';
+  document.body.append(d); const inp = d.querySelector('input'), st = d.querySelector('.p-status'); inp.focus();
+  const fechar = () => d.remove();
+  d.querySelector('.p-cancelar').addEventListener('click', () => { fechar(); voltarOffline(false); });
+  d.querySelector('form').addEventListener('submit', async e => {
+    e.preventDefault(); const pedido = inp.value.trim(); if (pedido.length < 3) { st.textContent = 'Escreva um pouco mais.'; return; }
+    inp.disabled = true; d.querySelector('button[type=submit]').disabled = true; st.textContent = '🤖 Os agentes estão lendo o pedido… (até 1 minuto)';
+    try { const c = await gerarCenario(pedido); const ruim = validarCenario(c); if (ruim) throw new Error('a IA respondeu algo estranho'); CENARIOS.online = limparCenario(c); fechar(); trocarCenario('online'); }
+    catch (err) { fechar(); aviso(`Não deu certo (${err.message}). Voltando ao modo offline.`); voltarOffline(true); }
+  });
+}
 const ctrl = criarControles(relogio, {
   proxima: () => diretor.proxima(), anterior: () => diretor.anterior(),
-  reiniciar: () => { diretor = criarDiretor({ agentes, rotulos, falas, escritorio, relogio, aoEtapa: mostrarEtapa }); diretor.montar(CENARIOS[cenarioAtual]); },
-  cenario: id => { if (!CENARIOS[id]) { aviso('Esse cenário entra na próxima versão.'); return; } cenarioAtual = id; diretor.montar(CENARIOS[id]); },
-  modo: m => { if (m === 'online') { aviso('Modo online entra na próxima versão (por enquanto, só offline).'); setStatusModo('falha'); } else setStatusModo('offline'); },
+  reiniciar: () => trocarCenario(cenarioAtual),
+  cenario: id => trocarCenario(id),
+  modo: async m => {
+    if (m !== 'online') { setStatusModo('offline'); return; }
+    if (!(await servidorOnline())) { aviso('O modo online precisa do servidor com a chave de IA (npm start). Voltando ao offline.'); voltarOffline(true); return; }
+    setStatusModo('online'); abrirPedido();
+  },
   seguir: v => { seguir = v; },
 });
 if (!ctrl.elemento.isConnected) document.body.append(ctrl.elemento);
-function aviso(txt) { const a = $('aviso'); a.textContent = txt; a.hidden = false; relogio.depois(3, () => { a.hidden = true; }); }
+trocarCenario(cenarioAtual);
+
+// botões extras
+const alternarApresentacao = () => { apresentacao = !apresentacao; $('bApres').setAttribute('aria-pressed', String(apresentacao)); $('bApres').classList.toggle('ligado', apresentacao); aviso(apresentacao ? 'Modo apresentação: os 4 cenários passam sozinhos, em loop.' : 'Modo apresentação desligado.'); };
+$('bApres').addEventListener('click', alternarApresentacao);
+$('bQuiz').addEventListener('click', () => { $('bQuiz').classList.remove('novo'); quiz.abrir(); });
+$('bSite').addEventListener('click', () => telao.abrirSitePronto(CENARIOS[cenarioAtual]));
+$('bBaixar').addEventListener('click', () => {
+  const c = CENARIOS[cenarioAtual], url = URL.createObjectURL(new Blob([c.htmlFinal], { type: 'text/html' })), a = document.createElement('a');
+  a.href = url; a.download = `site-${c.id}.html`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+  aviso('Se o download não começar, use "Site pronto" e copie o código.');
+});
 { const gu = $('guia'), bt = $('gToggle'); if (innerHeight <= 520) gu.classList.add('recolhido');
   const marca = () => { bt.textContent = gu.classList.contains('recolhido') ? '▸' : '▾'; }; marca();
   bt.addEventListener('click', () => { gu.classList.toggle('recolhido'); marca(); }); }
-addEventListener('keydown', e => { if (e.key.toLowerCase() === 'g') girar = !girar; });
+addEventListener('keydown', e => { if (e.target.closest?.('input, select, textarea')) return; const t = e.key.toLowerCase(); if (t === 'g') girar = !girar; if (t === 'p') alternarApresentacao(); });
 
 // ---------- laço ----------
 let ultimo = performance.now(), ang = Math.PI / 4;
@@ -85,7 +136,7 @@ function quadro(agora) {
   if (girar) ang += dt * 0.05;
   cam.position.set(foco.x + Math.sin(ang) * 30, 24, foco.z + Math.cos(ang) * 30); cam.lookAt(foco);
   renderer.render(scene, cam);
-  telao.posicionar(cam, innerWidth, innerHeight);
+  telao.posicionar(cam, innerWidth, innerHeight); kanban.passo(dt);
   rotulos.atualizar(cam, innerWidth, innerHeight, relogio.tempo);
 }
 requestAnimationFrame(quadro);

@@ -24,6 +24,8 @@ export function criarRotulos(camada) {
       else it.balao.textContent = texto;
       it.balao.hidden = false; it.ate = agora + seg;
     },
+    /** Há algum balão visível agora? */
+    ocupado(agora) { for (const it of itens.values()) if (!it.balao.hidden && agora < it.ate) return true; return false; },
     atualizar(camera, larg, alt, agora) {
       for (const [a, it] of itens) {
         v.copy(a.g.position); v.y += 2.35; v.project(camera);

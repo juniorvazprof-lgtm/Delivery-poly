@@ -1,0 +1,161 @@
+{
+ "id": "petshop",
+ "nome": "Pet Shop Amigo Fiel",
+ "pedido": "Quero um site para meu pet shop, a Amigo Fiel.",
+ "etapas": [
+  {
+   "id": "1-pedido",
+   "agente": "cliente",
+   "duracao": 5,
+   "explicacao": "Cliente explica o pedido do site do pet shop.",
+   "perguntaPublico": "Qual serviço você levaria seu pet na Amigo Fiel?",
+   "pensamento": "Vou explicar o que preciso sem complicar.",
+   "saida": {
+    "texto": "Quero um site simples para meu pet shop, a Amigo Fiel."
+   }
+  },
+  {
+   "id": "2-planejar",
+   "agente": "gerente",
+   "duracao": 6,
+   "explicacao": "Gerente divide o trabalho em tarefas simples.",
+   "perguntaPublico": "Quais tarefas vocês fariam primeiro?",
+   "pensamento": "Vamos dividir em partes pequenas.",
+   "saida": {
+    "tarefas": [
+     "Montar topo com nome e chamada",
+     "Criar serviços com preços",
+     "Fazer contato com endereço e horário"
+    ]
+   }
+  },
+  {
+   "id": "3-design",
+   "agente": "designer",
+   "duracao": 5,
+   "explicacao": "Designer escolhe cores e título do site.",
+   "perguntaPublico": "Essas cores combinam com cuidado animal?",
+   "pensamento": "Laranja e marrom lembram carinho e aconchego.",
+   "saida": {
+    "cores": [
+     "#8B4513",
+     "#FF8C42",
+     "#FFD23F"
+    ],
+    "titulo": "Amigo Fiel"
+   }
+  },
+  {
+   "id": "4-codar-topo",
+   "agente": "programador",
+   "secao": "topo",
+   "duracao": 7,
+   "explicacao": "Programador monta o topo com nome e chamada.",
+   "perguntaPublico": "O topo já mostra o nome do pet shop?",
+   "pensamento": "Primeiro o topo precisa causar boa impressão.",
+   "saida": {
+    "html": "<section class='topo' style='background:#8B4513;color:#ffffff;padding:20px;text-align:center'>\n  <h1 style='color:#FFD23F'>Amigo Fiel</h1>\n  <p>Cuidado e carinho para o seu pet.</p>\n</section>"
+   }
+  },
+  {
+   "id": "5-revisar-topo",
+   "agente": "revisor",
+   "secao": "topo",
+   "duracao": 5,
+   "explicacao": "Revisor confere se o topo está claro e bonito.",
+   "perguntaPublico": "O topo ficou fácil de entender?",
+   "pensamento": "Título e chamada estão claros?",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "6-codar-servicos",
+   "agente": "programador",
+   "secao": "servicos",
+   "duracao": 6,
+   "explicacao": "Programador monta os serviços principais.",
+   "perguntaPublico": "Quais serviços não podem faltar no pet shop?",
+   "pensamento": "Vou listar os serviços mais procurados.",
+   "saida": {
+    "html": "<section class='servicos' style='background:#FF8C42;color:#ffffff;padding:20px'>\n  <h2 style='color:#FFD23F'>Serviços</h2>\n  <ul>\n    <li>Banho e tosa</li>\n    <li>Consulta veterinária</li>\n    <li>Ração e petiscos</li>\n  </ul>\n</section>"
+   }
+  },
+  {
+   "id": "7-revisar-servicos-1",
+   "agente": "revisor",
+   "secao": "servicos",
+   "duracao": 5,
+   "explicacao": "Revisor pede preços e descrições curtas nos serviços.",
+   "perguntaPublico": "O que falta para os serviços ficarem completos?",
+   "pensamento": "Faltou preço e descrição curta.",
+   "saida": {
+    "aprovado": false,
+    "correcao": "Inclua preços e descrições curtas."
+   }
+  },
+  {
+   "id": "8-codar-servicos-corrigido",
+   "agente": "programador",
+   "secao": "servicos",
+   "duracao": 7,
+   "explicacao": "Programador corrige os serviços com preços e descrições.",
+   "perguntaPublico": "Os preços ficaram fáceis de ler?",
+   "pensamento": "Agora coloco preço e descrição curta.",
+   "saida": {
+    "html": "<section class='servicos' style='background:#FF8C42;color:#ffffff;padding:20px'>\n  <h2 style='color:#FFD23F'>Serviços</h2>\n  <ul>\n    <li>Banho e tosa — R$ 40,00 — com carinho</li>\n    <li>Consulta veterinária — R$ 80,00 — atenciosa</li>\n    <li>Ração e petiscos — a partir de R$ 15,00 — qualidade</li>\n  </ul>\n</section>"
+   }
+  },
+  {
+   "id": "9-revisar-servicos-2",
+   "agente": "revisor",
+   "secao": "servicos",
+   "duracao": 5,
+   "explicacao": "Revisor aprova os serviços corrigidos.",
+   "perguntaPublico": "Os serviços agora estão completos?",
+   "pensamento": "Ficou claro e completo, aprovado.",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "10-codar-contato",
+   "agente": "programador",
+   "secao": "contato",
+   "duracao": 6,
+   "explicacao": "Programador cria contato com endereço e horário.",
+   "perguntaPublico": "O contato tem tudo que o cliente precisa?",
+   "pensamento": "Endereço e horário não podem faltar.",
+   "saida": {
+    "html": "<section class='contato' style='background:#8B4513;color:#ffffff;padding:20px'>\n  <h2 style='color:#FFD23F'>Contato</h2>\n  <p>Rua dos Bichos, 456 — Centro</p>\n  <p>Horário: 9h às 18h</p>\n  <p>Telefone: (00) 9876-5432</p>\n</section>"
+   }
+  },
+  {
+   "id": "11-revisar-contato",
+   "agente": "revisor",
+   "secao": "contato",
+   "duracao": 5,
+   "explicacao": "Revisor confere contato e aprova a seção.",
+   "perguntaPublico": "Você achou o contato simples de usar?",
+   "pensamento": "Contato simples e direto, aprovado.",
+   "saida": {
+    "aprovado": true,
+    "correcao": ""
+   }
+  },
+  {
+   "id": "12-entrega",
+   "agente": "gerente",
+   "duracao": 6,
+   "explicacao": "Gerente entrega o site pronto para o cliente.",
+   "perguntaPublico": "O site está pronto para a feira de ciências?",
+   "pensamento": "Site pronto para mostrar na feira.",
+   "saida": {
+    "texto": "Site da Amigo Fiel pronto e aprovado para a feira."
+   }
+  }
+ ],
+ "htmlFinal": "<!DOCTYPE html>\n<html lang='pt-BR'>\n<head>\n<meta charset='UTF-8'>\n<meta name='viewport' content='width=device-width, initial-scale=1'>\n<title>Amigo Fiel</title>\n<style>\nbody{font-family:Arial,sans-serif;margin:0;background:#ffffff;color:#8B4513}\n.topo,.servicos,.contato{padding:20px}\nh1,h2{color:#FFD23F}\nul{padding-left:20px}\n</style>\n</head>\n<body>\n<section class='topo' style='background:#8B4513;color:#ffffff;padding:20px;text-align:center'>\n  <h1 style='color:#FFD23F'>Amigo Fiel</h1>\n  <p>Cuidado e carinho para o seu pet.</p>\n</section>\n<section class='servicos' style='background:#FF8C42;color:#ffffff;padding:20px'>\n  <h2 style='color:#FFD23F'>Serviços</h2>\n  <ul>\n    <li>Banho e tosa — R$ 40,00 — com carinho</li>\n    <li>Consulta veterinária — R$ 80,00 — atenciosa</li>\n    <li>Ração e petiscos — a partir de R$ 15,00 — qualidade</li>\n  </ul>\n</section>\n<section class='contato' style='background:#8B4513;color:#ffffff;padding:20px'>\n  <h2 style='color:#FFD23F'>Contato</h2>\n  <p>Rua dos Bichos, 456 — Centro</p>\n  <p>Horário: 9h às 18h</p>\n  <p>Telefone: (00) 9876-5432</p>\n</section>\n</body>\n</html>"
+}
