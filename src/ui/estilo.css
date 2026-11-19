@@ -41,3 +41,30 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #F4EEE4; fon
 #guia .pensa { font-family: ui-monospace, Menlo, monospace; font-size: 15px; color: #15803D; }
 .mini { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; background: #9CA3AF; }
 #aviso { position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%); padding: 10px 18px; border-radius: 12px; background: #1E2333; color: #fff; font-size: 16px; }
+
+/* ---------- celular na horizontal (tela baixa) ---------- */
+#gToggle { display: none; }
+@media (max-height: 520px) {
+  #legenda { top: 6px; gap: 12px; padding: 4px 10px; font-size: 11px; border-radius: 9px; z-index: 40; }
+  #legenda .q { width: 10px; height: 10px; }
+  .etiqueta { font-size: 9px; padding: 1px 6px 1px 2px; gap: 3px; }
+  .etiqueta b { font-size: 8px; padding: 1px 4px; }
+  .balao { bottom: 18px; max-width: 150px; padding: 4px 7px; font-size: 10px; border-radius: 9px; }
+  .balao::after { border-width: 5px; bottom: -5px; }
+  .balao.pensando { padding: 6px 8px; } .balao.pensando i { width: 5px; height: 5px; }
+  #guia { top: 6px; right: max(6px, env(safe-area-inset-right, 0px)); bottom: 52px; width: min(210px, 30vw); padding: 8px 10px; border-radius: 10px; }
+  #gEtapa { font-size: 10px; } .barra { height: 5px; margin: 3px 0 5px; }
+  #guia h2 { font-size: 14px; margin-bottom: 4px; }
+  #guia small { font-size: 9px; margin-top: 5px; } #guia p { font-size: 11px; }
+  #guia .explica { font-size: 12px; } #guia .pergunta { font-size: 11px; } #guia .pensa { font-size: 10px; }
+  .mini { font-size: 9px; padding: 1px 5px; }
+  #guia.recolhido > :not(#gToggle):not(#gEtapa):not(.barra):not(h2) { display: none; }
+  #guia.recolhido { bottom: auto; }
+  #gToggle { display: block; position: absolute; top: 4px; right: 6px; border: 0; background: none; font-size: 14px; cursor: pointer; color: #64748B; }
+  #aviso { bottom: 58px; font-size: 12px; padding: 6px 12px; }
+  /* barra de controles compacta e rolável na horizontal */
+  html body #controles.ctrl-barra { padding: 4px max(6px, env(safe-area-inset-left, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)); gap: 4px; overflow-x: auto; font-size: 12px; scrollbar-width: none; }
+  html body #controles .ctrl-btn { height: 36px; min-width: 36px; padding: 0 8px; font-size: 12px; border-radius: 8px; flex-shrink: 0; }
+  html body #controles .ctrl-grupo, #controles .ctrl-campo, #controles .ctrl-toggle { flex-shrink: 0; }
+  html body #controles .ctrl-select { height: 32px; font-size: 12px; }
+}

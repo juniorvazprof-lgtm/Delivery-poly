@@ -1,6 +1,7 @@
 // Boneco low poly (corpo, cabeça, braços e pernas) com animações simples: andar, digitar e pensar.
 // A etiqueta "IA"/"ROTEIRO" e o balão de fala são camadas HTML (ver ui/rotulos.js), nítidas de qualquer ângulo.
 import * as T from '../three.module.js';
+import { rota } from '../engine/nav.js';
 
 export const AGENTES = [
   { id: 'gerente', nome: 'Gerente', tipo: 'ia', cor: '#3B82F6', roupa: '#2F5DA8', cabelo: '#3A2A1E' },
@@ -36,13 +37,17 @@ export function criarAgente(def, i) {
   const a = {
     def, g, alvo: null, rota: [], acao: 'parado', ativo: false, t: Math.random() * 6, fala: null,
     /** Anda até o ponto [x, z]; chegando, faz `depois` ('parado', 'digitando', 'sentado'). */
-    irPara(x, z, depois = 'parado') { a.alvo = new T.Vector3(x, 0, z); a.depois = depois; a.acao = 'andando'; },
+    irPara(x, z, depois = 'parado') {
+      a.rota = rota(a.g.position.x, a.g.position.z, x, z); a.depois = depois;
+      if (!a.rota.length) { a.alvo = null; a.acao = depois; return; }
+      a.alvo = new T.Vector3(a.rota[0][0], 0, a.rota[0][1]); a.acao = 'andando';
+    },
     olharPara(x, z) { a.g.rotation.y = Math.atan2(x - a.g.position.x, z - a.g.position.z); },
     animar(dt) {
       a.t += dt;
       if (a.acao === 'andando' && a.alvo) {
         const d = a.alvo.clone().sub(a.g.position); d.y = 0; const dist = d.length(), v = 1.6;
-        if (dist < 0.05) { a.g.position.copy(a.alvo); a.alvo = null; a.acao = a.depois; }
+        if (dist < 0.05) { a.g.position.copy(a.alvo); a.rota.shift(); if (a.rota.length) a.alvo.set(a.rota[0][0], 0, a.rota[0][1]); else { a.alvo = null; a.acao = a.depois; } }
         else { d.normalize(); a.g.position.addScaledVector(d, Math.min(dist, v * dt)); let ang = Math.atan2(d.x, d.z) - a.g.rotation.y; ang = Math.atan2(Math.sin(ang), Math.cos(ang)); a.g.rotation.y += ang * Math.min(1, dt * 10); }
       }
       const s = Math.sin(a.t * 8);

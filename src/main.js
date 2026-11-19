@@ -60,6 +60,9 @@ const ctrl = criarControles(relogio, {
 });
 if (!ctrl.elemento.isConnected) document.body.append(ctrl.elemento);
 function aviso(txt) { const a = $('aviso'); a.textContent = txt; a.hidden = false; relogio.depois(3, () => { a.hidden = true; }); }
+{ const gu = $('guia'), bt = $('gToggle'); if (innerHeight <= 520) gu.classList.add('recolhido');
+  const marca = () => { bt.textContent = gu.classList.contains('recolhido') ? '▸' : '▾'; }; marca();
+  bt.addEventListener('click', () => { gu.classList.toggle('recolhido'); marca(); }); }
 addEventListener('keydown', e => { if (e.key.toLowerCase() === 'g') girar = !girar; });
 
 // ---------- laço ----------
@@ -71,7 +74,7 @@ function quadro(agora) {
   diretor.passo(dt);
   // câmera: isométrica; seguindo o agente ativo, aproxima e centraliza nele
   const ativo = agentes.find(a => a.ativo);
-  focoAlvo.set(2.2, 0, -1.6); let zAlvo = ZOOM.normal;
+  const baixo = innerHeight <= 520; focoAlvo.set(baixo ? 3.2 : 2.2, 0, baixo ? -2.2 : -1.6); let zAlvo = baixo ? 10 : ZOOM.normal;
   if (seguir && ativo) { focoAlvo.copy(ativo.g.position); zAlvo = ZOOM.perto; }
   foco.lerp(focoAlvo, 1 - Math.exp(-Math.min(dtReal, 0.1) * 3)); zoom += (zAlvo - zoom) * (1 - Math.exp(-Math.min(dtReal, 0.1) * 3)); tamanho();
   if (girar) ang += dt * 0.05;
