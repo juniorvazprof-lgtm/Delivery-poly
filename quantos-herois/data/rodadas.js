@@ -11,16 +11,23 @@ export const RODADAS = [
   { n: 9,  nome: 'Mistura nojenta',     inimigos: [['slime', 5], ['goblin', 16]] },
   { n: 10, nome: 'O Rei Slime',         inimigos: [['reiSlime', 1], ['goblin', 18]], chefe: true },
 ];
-// Economia da run (valores iniciais; o simulador de runs ajusta estes números)
+// Economia da run — configuração "Q" do relatório design/balance/relatorio-economia.md
 export const ECONOMIA = {
   ouroInicial: 40,
   elencoInicial: { guerreiro: 2, guardiao: 1, piromante: 1 },
-  vidas: 3,                                   // perder uma rodada custa 1 vida e repete a rodada
-  multAbate: 1.0,                             // ouro de cada monstro morto = VILOES[tipo].ouro × multAbate
-  bonusVitoria: (rodada) => 10 + 4 * rodada,  // bônus ao vencer, × multiplicador das estrelas
-  multEstrelas: { 1: 1.0, 2: 1.3, 3: 1.7 },
-  inflacao: 0.10,                             // cada herói recrutado da mesma classe fica 10% mais caro
+  vidaBase: 30,                               // perder tira vida da base conforme os monstros que sobraram
+  danoBase: { goblin: 1, slimePequeno: 1, slimeMedio: 2, slime: 3, reiSlime: 10 }, // dano à base por monstro restante
+  danoBaseMinimo: 3,
+  multAbate: 0.2,                             // moedas dos monstros enchem o POTE: VILOES[tipo].ouro × multAbate
+  bonusVitoria: (rodada) => 16 + 6 * rodada,  // somado ao pote ao vencer
+  multEstrelas: { 1: 0.4, 2: 1.2, 3: 3.0 },   // o pote inteiro é multiplicado pelas estrelas
+  soldo: 2,                                   // ouro por herói enviado, pago antes da luta
+  inflacao: 0.25,                             // cada herói recrutado da mesma classe fica 25% mais caro
   rodadasDesmaio: 2,
-  // estrelas: 3★ se enviou até o ideal; 2★ até 150% do ideal; 1★ só vencer
-  limiteEstrelas: { tres: 1.0, duas: 1.5 },
+  limiteEstrelas: { tres: 1.0, duas: 1.5 },   // 3★ até o ideal; 2★ até 150% do ideal; 1★ só vencer
+  // duas lutas por rodada: a "perigosa" tem mais monstros e paga mais
+  perigosa: { multInimigos: 1.5, multPremio: 1.8, multIdeal: 1.4 },
+  // baú de relíquias (escolha 1 de 3, grátis): sempre depois de R3, R6 e R9; 30% de chance ao vencer com 3★
+  bau: { rodadas: [3, 6, 9], chance3Estrelas: 0.3 },
+  reliquiaNaLoja: 1,                          // relíquias à venda no acampamento
 };

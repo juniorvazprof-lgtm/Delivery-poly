@@ -1,0 +1,789 @@
+:root{
+  --pergaminho:#f3e2b8;
+  --pergaminho-escuro:#e6cf98;
+  --tinta:#2a1a12;
+  --vinho:#8e2b2b;
+  --vinho-escuro:#6b1f1f;
+  --dourado:#e3a92b;
+  --dourado-escuro:#b8841c;
+  --roxo:#5b3b8c;
+  --roxo-escuro:#3f2863;
+  --verde:#4f9d4a;
+  --verde-escuro:#3a7536;
+  --vermelho:#d94a3a;
+  --vermelho-escuro:#a83428;
+  --sombra:0 4px 0 var(--tinta);
+  --sombra-alta:0 6px 0 var(--tinta);
+  --borda:3px solid var(--tinta);
+  --raio:8px;
+  --toque:52px;
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-r:env(safe-area-inset-right,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px);
+  --fonte-titulo:'Lilita One', 'Nunito', system-ui, sans-serif;
+  --fonte-texto:'Nunito', system-ui, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--tinta);}
+body{
+  font-family:var(--fonte-texto);
+  color:var(--tinta);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(227,169,43,.15), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(91,59,140,.2), transparent 45%),
+    linear-gradient(160deg,#3a2418,#1e120b);
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:manipulation;
+}
+#app{
+  position:fixed;
+  inset:0;
+  padding:var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+h1,h2,h3,h4{font-family:var(--fonte-titulo);font-weight:400;margin:0;letter-spacing:.5px;}
+.titulo-contorno{
+  color:var(--dourado);
+  text-shadow:
+    -2px -2px 0 var(--tinta), 2px -2px 0 var(--tinta),
+    -2px 2px 0 var(--tinta), 2px 2px 0 var(--tinta),
+    0 3px 0 var(--tinta), 0 5px 0 rgba(0,0,0,.35);
+}
+button{
+  font-family:var(--fonte-titulo);
+  font-size:1.05rem;
+  letter-spacing:.5px;
+  color:var(--tinta);
+  background:var(--dourado);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra);
+  min-height:var(--toque);
+  padding:.5rem 1rem;
+  cursor:pointer;
+  transition:transform .06s ease, box-shadow .06s ease, filter .15s;
+  touch-action:manipulation;
+}
+button:active:not(:disabled){
+  transform:translateY(4px);
+  box-shadow:0 0 0 var(--tinta);
+}
+button:disabled{
+  filter:grayscale(.7) brightness(.85);
+  cursor:not-allowed;
+  opacity:.75;
+}
+button.secundario{background:var(--pergaminho);}
+button.perigo{background:var(--vermelho);color:#fff;}
+button.arcano{background:var(--roxo);color:#fff;}
+button.principal{background:var(--dourado);}
+button.grande{font-size:1.5rem;padding:.8rem 2rem;min-height:64px;}
+button.icone{min-width:var(--toque);padding:.4rem .6rem;font-size:1.2rem;}
+
+/* ===== Tela girar ===== */
+#girar{display:none;}
+@media (orientation: portrait){
+  #girar{
+    display:flex;
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    background:linear-gradient(160deg,#3a2418,#1e120b);
+    color:var(--pergaminho);
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:1.2rem;
+    padding:2rem;
+    text-align:center;
+  }
+  .girar-celular{
+    width:80px;height:130px;
+    border:4px solid var(--dourado);
+    border-radius:14px;
+    position:relative;
+    animation:girarAnim 2s ease-in-out infinite;
+    background:rgba(227,169,43,.1);
+  }
+  .girar-tela{
+    position:absolute;inset:8px;
+    background:var(--dourado);
+    border-radius:6px;
+    opacity:.5;
+  }
+  .girar-texto{font-family:var(--fonte-titulo);font-size:1.8rem;color:var(--dourado);}
+  .girar-sub{font-family:var(--fonte-texto);font-size:1rem;opacity:.8;}
+  @keyframes girarAnim{
+    0%,20%{transform:rotate(0deg);}
+    50%,70%{transform:rotate(90deg);}
+    100%{transform:rotate(0deg);}
+  }
+}
+
+/* ===== Layout base ===== */
+.tela{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
+}
+.barra-topo{
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  padding:.5rem .8rem;
+  background:var(--vinho);
+  border-bottom:var(--borda);
+  color:var(--pergaminho);
+  flex-shrink:0;
+  min-height:56px;
+}
+.barra-topo .chip{
+  display:flex;align-items:center;gap:.35rem;
+  background:var(--pergaminho);
+  color:var(--tinta);
+  border:var(--borda);
+  border-radius:var(--raio);
+  padding:.25rem .6rem;
+  font-family:var(--fonte-titulo);
+  font-size:1rem;
+  box-shadow:0 3px 0 var(--tinta);
+  white-space:nowrap;
+}
+.barra-topo .chip.vida{color:var(--vermelho-escuro);}
+.barra-topo .chip.ouro{color:var(--dourado-escuro);margin-left:auto;}
+.barra-topo .chip.rodada{background:var(--dourado);}
+.coracao{color:var(--vermelho);font-size:1.1rem;}
+
+.conteudo{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:.8rem;
+  display:flex;
+  flex-direction:column;
+  gap:.8rem;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* ===== Menu inicial ===== */
+.menu-inicial{
+  flex:1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1rem;
+  padding:1rem;
+  align-items:center;
+}
+.menu-esq{
+  display:flex;
+  flex-direction:column;
+  gap:.8rem;
+  justify-content:center;
+}
+.menu-titulo{
+  font-size:clamp(2rem,6vw,3.5rem);
+  line-height:1;
+  color:var(--dourado);
+  text-shadow:
+    -3px -3px 0 var(--tinta), 3px -3px 0 var(--tinta),
+    -3px 3px 0 var(--tinta), 3px 3px 0 var(--tinta),
+    0 6px 0 rgba(0,0,0,.4);
+  margin-bottom:.5rem;
+}
+.menu-sub{
+  font-family:var(--fonte-texto);
+  font-weight:700;
+  color:var(--pergaminho);
+  opacity:.85;
+  font-size:.95rem;
+  margin-bottom:.5rem;
+}
+.menu-botoes{display:flex;flex-direction:column;gap:.6rem;max-width:320px;}
+.menu-botoes button{font-size:1.15rem;}
+.menu-dir{
+  display:flex;align-items:center;justify-content:center;
+  height:100%;
+}
+.ilustracao{width:100%;max-width:420px;height:auto;filter:drop-shadow(0 8px 0 rgba(0,0,0,.35));}
+
+/* ===== Cartões ===== */
+.cartoes{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:.8rem;
+  flex:1;
+  align-content:start;
+}
+.cartao{
+  background:var(--pergaminho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra-alta);
+  padding:.8rem;
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+  position:relative;
+  cursor:pointer;
+  transition:transform .08s;
+}
+.cartao:active{transform:translateY(3px);}
+.cartao h3{font-size:1.3rem;color:var(--vinho);}
+.cartao .inimigos{display:flex;flex-wrap:wrap;gap:.4rem;}
+.inimigo-tag{
+  display:inline-flex;align-items:center;gap:.25rem;
+  background:var(--pergaminho-escuro);
+  border:2px solid var(--tinta);
+  border-radius:6px;
+  padding:.2rem .5rem;
+  font-weight:700;
+  font-size:.9rem;
+}
+.cartao .meta{display:flex;justify-content:space-between;font-weight:700;font-size:.9rem;color:var(--tinta);}
+.cartao .meta .ideal{color:var(--roxo-escuro);}
+.cartao .meta .premio{color:var(--dourado-escuro);}
+.selo-perigoso{
+  position:absolute;top:-10px;right:-6px;
+  background:var(--vermelho);
+  color:#fff;
+  font-family:var(--fonte-titulo);
+  font-size:.8rem;
+  padding:.2rem .6rem;
+  border:var(--borda);
+  border-radius:6px;
+  transform:rotate(6deg);
+  box-shadow:0 3px 0 var(--tinta);
+}
+.selo-chefe{background:var(--roxo);}
+
+/* ===== Escolha do time ===== */
+.escolha-time{
+  flex:1;
+  display:grid;
+  grid-template-columns:1fr 1.3fr;
+  gap:.8rem;
+  overflow:hidden;
+}
+.painel-inimigos{
+  background:var(--vinho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra-alta);
+  padding:.8rem;
+  color:var(--pergaminho);
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+  overflow-y:auto;
+}
+.painel-inimigos h3{color:var(--dourado);font-size:1.2rem;}
+.painel-inimigos .inimigo-tag{background:var(--pergaminho);color:var(--tinta);}
+.painel-time{
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+  overflow-y:auto;
+  padding-right:.2rem;
+}
+.linha-classe{
+  background:var(--pergaminho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra);
+  padding:.5rem .7rem;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:.6rem;
+  align-items:center;
+}
+.linha-classe .info{display:flex;flex-direction:column;gap:.1rem;min-width:0;}
+.linha-classe .nome{font-family:var(--fonte-titulo);font-size:1.05rem;color:var(--vinho);}
+.linha-classe .papel{font-size:.8rem;font-weight:700;opacity:.75;}
+.linha-classe .disp{font-size:.8rem;font-weight:700;}
+.linha-classe .disp .dorme{color:var(--roxo-escuro);}
+.contador{display:flex;align-items:center;gap:.4rem;}
+.contador button{
+  min-width:var(--toque);min-height:var(--toque);
+  font-size:1.5rem;padding:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.contador .valor{
+  font-family:var(--fonte-titulo);
+  font-size:1.6rem;
+  min-width:2.2rem;
+  text-align:center;
+  color:var(--tinta);
+}
+.rodape-time{
+  background:var(--vinho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra-alta);
+  padding:.6rem .8rem;
+  color:var(--pergaminho);
+  display:flex;
+  flex-wrap:wrap;
+  gap:.6rem;
+  align-items:center;
+  flex-shrink:0;
+}
+.rodape-time .stat{display:flex;flex-direction:column;gap:.1rem;}
+.rodape-time .stat .rotulo{font-size:.75rem;opacity:.8;font-weight:700;}
+.rodape-time .stat .valor{font-family:var(--fonte-titulo);font-size:1.2rem;color:var(--dourado);}
+.rodape-time .estrelas{font-size:1.4rem;letter-spacing:2px;color:var(--dourado);}
+.rodape-time .estrelas .off{opacity:.3;}
+.rodape-time .acoes{margin-left:auto;display:flex;gap:.5rem;align-items:center;}
+.interruptor{
+  display:flex;align-items:center;gap:.4rem;
+  background:var(--roxo);
+  border:var(--borda);
+  border-radius:var(--raio);
+  padding:.3rem .6rem;
+  color:#fff;
+  font-weight:700;
+  font-size:.85rem;
+  cursor:pointer;
+  min-height:44px;
+}
+.interruptor .bolinha{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--pergaminho);
+  border:2px solid var(--tinta);
+  transition:background .15s;
+}
+.interruptor.ligado .bolinha{background:var(--dourado);}
+.motivo{font-size:.8rem;color:#ffd7d0;font-weight:700;}
+
+/* ===== Batalha ===== */
+.tela-batalha{
+  position:fixed;
+  inset:0;
+  padding:0;
+  background:#1a0f08;
+}
+.tela-batalha canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  image-rendering:pixelated;
+}
+.hud-batalha{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  padding:calc(var(--safe-t) + 6px) calc(var(--safe-r) + 6px) calc(var(--safe-b) + 6px) calc(var(--safe-l) + 6px);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.hud-batalha > *{pointer-events:auto;}
+.hud-topo{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.barra-forca{
+  flex:1;
+  height:22px;
+  background:rgba(0,0,0,.5);
+  border:var(--borda);
+  border-radius:6px;
+  overflow:hidden;
+  position:relative;
+}
+.barra-forca .preench{
+  height:100%;
+  width:0%;
+  transition:width .2s;
+}
+.barra-forca.herois .preench{background:var(--verde);}
+.barra-forca.viloes .preench{background:var(--vermelho);float:right;}
+.hud-tempo{
+  background:var(--pergaminho);
+  border:var(--borda);
+  border-radius:6px;
+  padding:.15rem .6rem;
+  font-family:var(--fonte-titulo);
+  font-size:1rem;
+  min-width:60px;
+  text-align:center;
+  box-shadow:0 3px 0 var(--tinta);
+}
+.hud-pote{
+  position:absolute;
+  top:calc(var(--safe-t) + 40px);
+  right:calc(var(--safe-r) + 10px);
+  background:var(--dourado);
+  border:var(--borda);
+  border-radius:var(--raio);
+  padding:.3rem .7rem;
+  font-family:var(--fonte-titulo);
+  font-size:1.3rem;
+  color:var(--tinta);
+  box-shadow:0 4px 0 var(--tinta);
+  display:flex;align-items:center;gap:.3rem;
+  transition:transform .12s;
+}
+.hud-pote.pulo{transform:scale(1.18);}
+.hud-pote .moeda{font-size:1.1rem;}
+.mais-flutuante{
+  position:absolute;
+  font-family:var(--fonte-titulo);
+  color:var(--dourado);
+  font-size:1.2rem;
+  text-shadow:-2px -2px 0 var(--tinta),2px -2px 0 var(--tinta),-2px 2px 0 var(--tinta),2px 2px 0 var(--tinta);
+  pointer-events:none;
+  animation:subirMoeda 1s ease-out forwards;
+}
+@keyframes subirMoeda{
+  0%{opacity:1;transform:translateY(0) scale(1);}
+  100%{opacity:0;transform:translateY(-50px) scale(1.3);}
+}
+.hud-painel-herois{
+  position:absolute;
+  top:calc(var(--safe-t) + 40px);
+  left:calc(var(--safe-l) + 10px);
+  background:rgba(42,26,18,.85);
+  border:var(--borda);
+  border-radius:var(--raio);
+  padding:.4rem .5rem;
+  color:var(--pergaminho);
+  display:flex;
+  flex-direction:column;
+  gap:.3rem;
+  min-width:130px;
+  max-width:170px;
+}
+.hud-linha-classe{display:flex;flex-direction:column;gap:2px;}
+.hud-linha-classe .topo{display:flex;justify-content:space-between;font-size:.75rem;font-weight:700;}
+.hud-linha-classe .topo .nome{color:var(--dourado);}
+.hud-mini-barras{display:flex;gap:2px;flex-wrap:wrap;}
+.mini-barra{
+  width:10px;height:6px;
+  background:var(--verde);
+  border:1px solid var(--tinta);
+  border-radius:2px;
+}
+.mini-barra.morta{background:#555;}
+.hud-reliquias{
+  position:absolute;
+  top:calc(var(--safe-t) + 90px);
+  right:calc(var(--safe-r) + 10px);
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.hud-reliquias .rel{
+  width:36px;height:36px;
+  background:var(--roxo);
+  border:var(--borda);
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;
+  box-shadow:0 3px 0 var(--tinta);
+}
+.hud-rodape{
+  margin-top:auto;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.hud-rodape .grupo{
+  display:flex;
+  gap:4px;
+  background:rgba(42,26,18,.85);
+  border:var(--borda);
+  border-radius:var(--raio);
+  padding:4px;
+}
+.hud-rodape button{
+  min-height:44px;
+  min-width:44px;
+  font-size:.95rem;
+  padding:.3rem .6rem;
+}
+.hud-rodape button.ativo{background:var(--dourado);}
+.hud-rodape .consumivel{position:relative;}
+.hud-rodape .consumivel .qtd{
+  position:absolute;top:-6px;right:-6px;
+  background:var(--vermelho);
+  color:#fff;
+  font-size:.7rem;
+  border:2px solid var(--tinta);
+  border-radius:50%;
+  width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fonte-titulo);
+}
+
+/* ===== Resultado ===== */
+.resultado{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:.8rem;
+  padding:1rem;
+  overflow-y:auto;
+  align-items:center;
+  position:relative;
+}
+.resultado h1{font-size:clamp(2rem,7vw,3.5rem);}
+.resultado .subtitulo{font-family:var(--fonte-titulo);font-size:1.3rem;color:var(--pergaminho);}
+.estrelas-grandes{
+  display:flex;gap:.5rem;font-size:clamp(2.5rem,8vw,4rem);
+  color:var(--dourado);
+  text-shadow:-2px -2px 0 var(--tinta),2px -2px 0 var(--tinta),-2px 2px 0 var(--tinta),2px 2px 0 var(--tinta);
+}
+.estrelas-grandes .estrela{opacity:0;transform:scale(0);}
+.estrelas-grandes .estrela.acesa{animation:acender .4s ease-out forwards;}
+@keyframes acender{
+  0%{opacity:0;transform:scale(0) rotate(-90deg);}
+  70%{opacity:1;transform:scale(1.3) rotate(10deg);}
+  100%{opacity:1;transform:scale(1) rotate(0);}
+}
+.conta-pote{
+  background:var(--pergaminho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra-alta);
+  padding:.8rem 1.2rem;
+  font-family:var(--fonte-titulo);
+  font-size:1.2rem;
+  color:var(--tinta);
+  text-align:center;
+  max-width:520px;
+}
+.conta-pote .ouro-total{font-size:1.8rem;color:var(--dourado-escuro);}
+.tabela-classe{
+  width:100%;
+  max-width:600px;
+  border-collapse:collapse;
+  background:var(--pergaminho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  overflow:hidden;
+  box-shadow:var(--sombra-alta);
+  font-size:.85rem;
+}
+.tabela-classe th,.tabela-classe td{
+  padding:.35rem .5rem;
+  border-bottom:2px solid rgba(42,26,18,.2);
+  text-align:center;
+}
+.tabela-classe th{background:var(--vinho);color:var(--pergaminho);font-family:var(--fonte-titulo);font-weight:400;}
+.tabela-classe td:first-child{text-align:left;font-weight:700;color:var(--vinho);}
+.chuva-moedas{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.chuva-moedas .moeda-cai{
+  position:absolute;
+  font-size:1.5rem;
+  animation:cair 1.8s linear forwards;
+}
+@keyframes cair{
+  0%{transform:translateY(-40px) rotate(0);opacity:1;}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:.6;}
+}
+
+/* ===== Baú ===== */
+.bau-tela{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:.8rem;
+  padding:1rem;
+  align-items:center;
+  overflow-y:auto;
+}
+.bau-tela h1{font-size:clamp(1.8rem,6vw,2.8rem);}
+.cartas-bau{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:.8rem;
+  width:100%;
+  max-width:800px;
+}
+.carta-reliquia{
+  background:var(--pergaminho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra-alta);
+  padding:.8rem;
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+  align-items:center;
+  text-align:center;
+}
+.carta-reliquia h3{font-size:1.1rem;color:var(--vinho);}
+.carta-reliquia .classe{font-size:.8rem;font-weight:700;opacity:.75;}
+.carta-reliquia .raridade{
+  font-family:var(--fonte-titulo);
+  font-size:.8rem;
+  padding:.15rem .5rem;
+  border-radius:6px;
+  border:2px solid var(--tinta);
+}
+.raridade.comum{background:var(--pergaminho-escuro);}
+.raridade.rara{background:var(--roxo);color:#fff;}
+.carta-reliquia .desc{font-size:.85rem;font-weight:700;flex:1;}
+
+/* ===== Acampamento ===== */
+.acampamento{
+  flex:1;
+  overflow-y:auto;
+  padding:.8rem;
+  display:flex;
+  flex-direction:column;
+  gap:.8rem;
+}
+.secao{
+  background:var(--pergaminho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra-alta);
+  padding:.7rem;
+}
+.secao h2{
+  font-size:1.3rem;
+  color:var(--vinho);
+  margin-bottom:.5rem;
+  border-bottom:3px solid var(--tinta);
+  padding-bottom:.3rem;
+}
+.grade-cartas{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:.6rem;
+}
+.carta-heroi{
+  background:var(--pergaminho-escuro);
+  border:var(--borda);
+  border-radius:var(--raio);
+  padding:.6rem;
+  display:flex;
+  flex-direction:column;
+  gap:.3rem;
+}
+.carta-heroi h4{font-size:1rem;color:var(--vinho);}
+.carta-heroi .atributos{font-size:.8rem;font-weight:700;display:flex;flex-wrap:wrap;gap:.4rem;}
+.carta-heroi .atributos span{background:var(--pergaminho);padding:.1rem .4rem;border-radius:4px;border:1px solid var(--tinta);}
+.carta-heroi .preco{font-family:var(--fonte-titulo);color:var(--dourado-escuro);font-size:1.1rem;}
+.carta-heroi button{width:100%;}
+.lista-enfermaria{display:flex;flex-direction:column;gap:.4rem;}
+.linha-enfermaria{
+  display:flex;align-items:center;gap:.5rem;
+  background:var(--pergaminho-escuro);
+  border:2px solid var(--tinta);
+  border-radius:6px;
+  padding:.4rem .6rem;
+  flex-wrap:wrap;
+}
+.linha-enfermaria .nome{font-family:var(--fonte-titulo);color:var(--vinho);flex:1;}
+.linha-enfermaria .volta{font-size:.8rem;font-weight:700;color:var(--roxo-escuro);}
+.linha-enfermaria button{min-height:44px;font-size:.85rem;padding:.3rem .6rem;}
+.carta-item{
+  background:var(--pergaminho-escuro);
+  border:var(--borda);
+  border-radius:var(--raio);
+  padding:.6rem;
+  display:flex;
+  flex-direction:column;
+  gap:.3rem;
+}
+.carta-item h4{font-size:1rem;color:var(--vinho);}
+.carta-item .desc{font-size:.8rem;font-weight:700;flex:1;}
+.carta-item .rodape-item{display:flex;justify-content:space-between;align-items:center;gap:.4rem;}
+.carta-item .preco{font-family:var(--fonte-titulo);color:var(--dourado-escuro);}
+.carta-item .qtd{font-size:.8rem;font-weight:700;}
+.reliquias-lista{display:flex;flex-wrap:wrap;gap:.4rem;}
+.reliquias-lista .rel-tag{
+  background:var(--roxo);
+  color:#fff;
+  border:2px solid var(--tinta);
+  border-radius:6px;
+  padding:.2rem .5rem;
+  font-size:.8rem;
+  font-weight:700;
+}
+
+/* ===== Fim de jornada ===== */
+.fim-jornada{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:.8rem;
+  padding:1rem;
+  align-items:center;
+  overflow-y:auto;
+}
+.fim-jornada h1{font-size:clamp(2rem,7vw,3.2rem);}
+.pontuacao-grande{
+  font-family:var(--fonte-titulo);
+  font-size:clamp(2rem,6vw,3rem);
+  color:var(--dourado);
+  text-shadow:-2px -2px 0 var(--tinta),2px -2px 0 var(--tinta),-2px 2px 0 var(--tinta),2px 2px 0 var(--tinta);
+}
+.lista-recordes{
+  background:var(--pergaminho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra-alta);
+  padding:.6rem;
+  width:100%;
+  max-width:500px;
+}
+.lista-recordes .rec{
+  display:flex;justify-content:space-between;
+  padding:.3rem .4rem;
+  border-bottom:2px solid rgba(42,26,18,.15);
+  font-weight:700;
+}
+.lista-recordes .rec:last-child{border-bottom:none;}
+.lista-recordes .rec .pos{color:var(--vinho);font-family:var(--fonte-titulo);}
+
+/* ===== Modal ===== */
+.modal-fundo{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.7);
+  display:flex;align-items:center;justify-content:center;
+  padding:1rem;
+  z-index:100;
+}
+.modal{
+  background:var(--pergaminho);
+  border:var(--borda);
+  border-radius:var(--raio);
+  box-shadow:var(--sombra-alta);
+  max-width:560px;
+  width:100%;
+  max-height:90vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.modal-topo{
+  background:var(--vinho);
+  color:var(--pergaminho);
+  padding:.6rem 1rem;
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:var(--borda);
+}
+.modal-topo h2{font-size:1.3rem;color:var(--dourado);}
+.modal-corpo{padding:1rem;overflow-y:auto;flex:1;font-weight:700;line-height:1.5;}
+.modal-corpo p{margin:.5rem 0;}
+.modal-rodape{padding:.6rem 1rem;display:flex;justify-content:space-between;gap:.5rem;border-top:var(--borda);}
+.paginas{display:flex;gap:.3rem;justify-content:center;margin-top:.5rem;}
+.paginas .pt{width:10px;height:10px;border-radius:50%;background:var(--pergaminho-escuro);border:2px solid var(--tinta);}
+.paginas .pt.ativo{background:var(--dourado);}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+}

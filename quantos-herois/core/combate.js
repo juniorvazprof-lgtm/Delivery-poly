@@ -6,7 +6,12 @@ import { CONSUMIVEIS } from '../data/consumiveis.js';
 import { criarRng } from './rng.js';
 import { modsPorClasse } from './efeitos.js';
 
-export const ARENA = { largura: 90, altura: 140 };
+// Arena DEITADA: heróis à esquerda, monstros à direita.
+export const ARENA = { largura: 140, altura: 90 };
+// As posições de nascimento são calculadas no layout original (90 x 140, heróis embaixo)
+// e transpostas: mesma geometria, então o balanceamento medido continua valendo.
+const LADO = 90, PROF = 140;
+const deitar = (x, y) => [PROF - y, x];
 export const DT = 0.05;          // 20 passos por segundo
 export const TEMPO_MAX = 90;     // depois disso, conta como derrota
 const VARIACAO = 0.1;            // ±10% de dano por golpe
@@ -33,7 +38,7 @@ export function criarBatalha({ herois = {}, inimigos = [], reliquias = [], chave
   const b = {
     t: 0, rng: criarRng(semente), mods: modsPorClasse(reliquias, chaves),
     unidades: [], projeteis: [], eventos: [], fim: null,
-    consumiveis: { ...consumiveis }, usado: {}, stats: { danoPorClasse: {}, acertosArea: [] },
+    consumiveis: { ...consumiveis }, usado: {}, stats: { danoPorClasse: {}, acertosArea: [], porClasse: {} },
   };
   // heróis embaixo: guardiões na frente, guerreiros no meio, piromantes atrás
   const filas = [['guardiao', 108], ['guerreiro', 114], ['piromante', 126]];
@@ -41,21 +46,22 @@ export function criarBatalha({ herois = {}, inimigos = [], reliquias = [], chave
     const n = herois[tipo] || 0;
     for (let i = 0; i < n; i++) {
       const col = i % 6, lin = Math.floor(i / 6);
-      const x = ARENA.largura / 2 + (col - (Math.min(n, 6) - 1) / 2) * 11 + b.rng.entre(-1.5, 1.5);
-      criarUnidade(b, 'h', tipo, x, y0 + lin * 5 + b.rng.entre(-1, 1));
+      const x = LADO / 2 + (col - (Math.min(n, 6) - 1) / 2) * 11 + b.rng.entre(-1.5, 1.5);
+      criarUnidade(b, 'h', tipo, ...deitar(x, y0 + lin * 5 + b.rng.entre(-1, 1)));
     }
   }
   // inimigos em cima, em bandos
   for (const [tipo, qtd, opc = {}] of inimigos) {
-    const cx = tipo === 'reiSlime' ? ARENA.largura / 2 : b.rng.entre(20, 70);
+    const cx = tipo === 'reiSlime' ? LADO / 2 : b.rng.entre(20, 70);
     for (let i = 0; i < qtd; i++) {
       // goblins chegam espalhados e em levas; slimes em grupo
       const goblin = tipo === 'goblin';
-      const x = goblin ? b.rng.entre(8, ARENA.largura - 8) : clamp(cx + b.rng.entre(-18, 18), 6, ARENA.largura - 6);
-      criarUnidade(b, 'v', tipo, x, tipo === 'reiSlime' ? 20 : b.rng.entre(6, 36),
+      const x = goblin ? b.rng.entre(8, LADO - 8) : clamp(cx + b.rng.entre(-18, 18), 6, LADO - 6);
+      criarUnidade(b, 'v', tipo, ...deitar(x, tipo === 'reiSlime' ? 20 : b.rng.entre(6, 36)),
         { geracao: 0, atraso: opc.chegada ? b.rng.entre(...opc.chegada) : goblin ? b.rng.entre(0, 3) : 0 });
     }
   }
+  for (const u of b.unidades) if (u.lado === 'h') est(b, u.tipo).enviados++;
   return b;
 }
 
@@ -75,7 +81,8 @@ function causarDano(b, fonte, alvo, valor, tipoGolpe = 'golpe', emArea = false) 
   }
   v = Math.max(1, Math.round(v));
   alvo.pv -= v;
-  if (fonte && fonte.lado === 'h') b.stats.danoPorClasse[fonte.tipo] = (b.stats.danoPorClasse[fonte.tipo] || 0) + v;
+  if (fonte && fonte.lado === 'h') { b.stats.danoPorClasse[fonte.tipo] = (b.stats.danoPorClasse[fonte.tipo] || 0) + v; est(b, fonte.tipo).dano += v; }
+  if (alvo.lado === 'h') est(b, alvo.tipo).danoRecebido += v;
   emitir(b, { tipo: 'dano', fonte: fonte ? fonte.id : null, alvo: alvo.id, valor: v, x: alvo.x, y: alvo.y, golpe: tipoGolpe });
   if (emArea && alvo.base.respingo && (alvo.respingos || 0) < alvo.base.respingo.max) {
     // dano em área espalha o slime: solta um filhote extra
@@ -84,12 +91,15 @@ function causarDano(b, fonte, alvo, valor, tipoGolpe = 'golpe', emArea = false) 
     const f = criarUnidade(b, 'v', alvo.base.respingo.em, clamp(alvo.x + Math.cos(ang) * 5, 4, ARENA.largura - 4), clamp(alvo.y + Math.sin(ang) * 5, 4, ARENA.altura - 4), { geracao: 2 });
     f.cd = 0.6; emitir(b, { tipo: 'respingo', x: alvo.x, y: alvo.y });
   }
-  if (alvo.pv <= 0) morrer(b, alvo);
+  if (alvo.pv <= 0) morrer(b, alvo, fonte);
   return v;
 }
 
-function morrer(b, u) {
+function est(b, classe) { return (b.stats.porClasse[classe] ||= { enviados: 0, caidos: 0, abates: 0, dano: 0, cura: 0, danoRecebido: 0 }); }
+function morrer(b, u, assassino) {
   u.morto = true; u.pv = 0;
+  if (u.lado === 'h') est(b, u.tipo).caidos++;
+  else if (assassino && assassino.lado === 'h') est(b, assassino.tipo).abates++;
   emitir(b, { tipo: 'morte', alvo: u.id, x: u.x, y: u.y, lado: u.lado, unidade: u.tipo });
   const div = u.base.divide;
   if (div) {
@@ -173,7 +183,7 @@ function explodir(b, p) {
 }
 
 function usarConsumiveis(b) {
-  if (b.consumiveis.pergaminhoMeteoro && !b.usado.meteoro && b.t >= 1.5) {
+  if (b.consumiveis.pergaminhoMeteoro && !b.usado.meteoro && (b.t >= 1.5 || b.meteoroAgora)) {
     b.usado.meteoro = true;
     const ef = CONSUMIVEIS.pergaminhoMeteoro.efeito;
     const vs = vivos(b, 'v');
@@ -188,13 +198,18 @@ function usarConsumiveis(b) {
   if (b.consumiveis.tonicoCura && !b.usado.tonico) {
     const hs = vivos(b, 'h');
     const pct = hs.reduce((s, h) => s + h.pv / h.pvMax, 0) / Math.max(1, hs.length);
-    if (hs.length && pct < 0.5) {
+    if (hs.length && (pct < 0.5 || b.tonicoAgora)) {
       b.usado.tonico = true;
       const cura = CONSUMIVEIS.tonicoCura.efeito.curaPct;
-      for (const h of hs) { const v = Math.round(h.pvMax * cura); h.pv = Math.min(h.pvMax, h.pv + v); emitir(b, { tipo: 'cura', alvo: h.id, valor: v, x: h.x, y: h.y }); }
+      for (const h of hs) { const v = Math.round(h.pvMax * cura); h.pv = Math.min(h.pvMax, h.pv + v); est(b, h.tipo).cura += v; emitir(b, { tipo: 'cura', alvo: h.id, valor: v, x: h.x, y: h.y }); }
     }
   }
 }
+
+// Consumíveis acionados pelo jogador durante a batalha (botões do HUD).
+// Marcar a flag faz o efeito disparar no próximo passo (o tônico cura na hora, sem esperar vida baixa).
+export function usarTonico(b) { if (b.fim || b.usado.tonico) return false; b.consumiveis.tonicoCura = true; b.tonicoAgora = true; return true; }
+export function usarMeteoro(b) { if (b.fim || b.usado.meteoro) return false; b.consumiveis.pergaminhoMeteoro = true; b.meteoroAgora = true; return true; }
 
 export function passo(b, dt = DT) {
   if (b.fim) return b;
@@ -242,7 +257,7 @@ export function passo(b, dt = DT) {
     u.invT = (u.invT ?? inv.primeiro ?? inv.intervalo) - dt;
     if (u.invT <= 0) {
       u.invT = inv.intervalo;
-      for (let i = 0; i < inv.qtd; i++) criarUnidade(b, 'v', inv.tipo, b.rng.entre(8, ARENA.largura - 8), b.rng.entre(4, 14), { geracao: 0, atraso: b.t + b.rng.entre(0, 1.5) });
+      for (let i = 0; i < inv.qtd; i++) criarUnidade(b, 'v', inv.tipo, ...deitar(b.rng.entre(8, LADO - 8), b.rng.entre(4, 14)), { geracao: 0, atraso: b.t + b.rng.entre(0, 1.5) });
       emitir(b, { tipo: 'invocar', fonte: u.id, x: u.x, y: u.y, qtd: inv.qtd });
     }
   }
@@ -266,6 +281,15 @@ export function passo(b, dt = DT) {
   if (!v) b.fim = 'vitoria'; else if (!h) b.fim = 'derrota'; else if (b.t >= TEMPO_MAX) b.fim = 'tempo';
   if (b.fim) emitir(b, { tipo: 'fim', resultado: b.fim });
   return b;
+}
+
+// Resumo de uma batalha terminada (usado pelo simulador e pela tela de resultado).
+export function resumo(b) {
+  const sobreviventes = {}, mortos = {};
+  for (const u of b.unidades.filter((x) => x.lado === 'h')) (u.morto ? mortos : sobreviventes)[u.tipo] = ((u.morto ? mortos : sobreviventes)[u.tipo] || 0) + 1;
+  const restantes = b.unidades.filter((u) => u.lado === 'v' && !u.morto && !(u.atraso && b.t < u.atraso)).map((u) => u.tipo);
+  return { vitoria: b.fim === 'vitoria', fim: b.fim, tempo: +b.t.toFixed(2), sobreviventes, mortos, restantes, porClasse: b.stats.porClasse,
+    ouroAbates: b.unidades.filter((u) => u.lado === 'v' && u.morto).reduce((t, u) => t + (u.base.ouro || 0), 0) };
 }
 
 // Roda uma batalha inteira e devolve o resumo.

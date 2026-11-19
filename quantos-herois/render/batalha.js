@@ -1,9 +1,11 @@
 import { passo, DT, ARENA } from '../core/combate.js';
 import { desenharUnidade, corDoTipo } from './sprites.js';
+import { VILOES } from '../data/viloes.js';
+import { ECONOMIA } from '../data/rodadas.js';
 
 // Motor visual da batalha: loop com passo fixo, interpolação, particulas e efeitos.
 export function criarVisual(canvas, batalha, opcoes = {}) {
-  const cfg = Object.assign({ velocidade: 1, aoFim: null }, opcoes);
+  const cfg = Object.assign({ velocidade: 1, aoFim: null, aoMoeda: null, alvoMoeda: null }, opcoes);
   const ctx = canvas.getContext('2d', { alpha: false });
 
   // ----- Configurações base -----
@@ -39,6 +41,8 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
   let fimAgendado = false;
   let tempoFimAte = 0; // acumular tempo visual até chamar aoFim
   let aoFimChamado = false;
+  let esperandoMoedas = false;
+  let tempoEsperaMoedas = 0;
 
   // Tempo visual (usado para animações que não dependem do batalha.t)
   let tVisual = 0;
@@ -47,9 +51,7 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
   let tremorForca = 0;
 
   // ----- Estado visual por unidade -----
-  // Map: id -> { x, y (posições do passo anterior), flash, avanco, dir, mortoEm (tVisual), nasceuEm, poeiraFeita, glowCajado, barraVisivel }
   const estados = new Map();
-  // Unidades já conhecidas (para detectar aparecimento / morte)
   const conhecidas = new Set();
 
   // ----- Pools de particulas e textos -----
@@ -63,11 +65,11 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       vida: 0, vidaMax: 0,
       tam: 1, tamFinal: 1,
       cor: '#fff', corFinal: '#fff',
-      tipo: 0, // 0=bolinha, 1=estrela, 2=fumaça, 3=anel, 4=faísca, 5=gota, 6=arco
+      tipo: 0,
       gravidade: 0,
       arrasto: 0.9,
       rot: 0, rotVel: 0,
-      raioIni: 0, raioFim: 0, // para anel
+      raioIni: 0, raioFim: 0,
       larguraLinha: 2,
       composite: 'source-over',
     });
@@ -101,6 +103,44 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     return null;
   }
 
+  // ----- Pool de moedas -----
+  const MAX_MOEDAS = 150;
+  const moedas = [];
+  for (let i = 0; i < MAX_MOEDAS; i++) {
+    moedas.push({
+      ativo: false,
+      // posição em metros (mundo)
+      x: 0, y: 0, vx: 0, vy: 0,
+      // estado
+      fase: 0, // 0=quique, 1=voo
+      t: 0,
+      quiques: 0,
+      // voo
+      vooIniX: 0, vooIniY: 0,
+      vooCtrX: 0, vooCtrY: 0,
+      vooFimX: 0, vooFimY: 0,
+      vooT: 0,
+      vooDur: 0.45,
+      // visual
+      valor: 0,
+      rot: 0,
+      rotVel: 0,
+      brilho: 0,
+      squash: 0,
+      escalaX: 1,
+      // posição em pixels (para desenho final)
+      px: 0, py: 0,
+    });
+  }
+  let moedasAtivas = 0;
+  function alocarMoeda() {
+    if (moedasAtivas >= MAX_MOEDAS) return null;
+    for (let i = 0; i < moedas.length; i++) {
+      if (!moedas[i].ativo) { moedasAtivas++; return moedas[i]; }
+    }
+    return null;
+  }
+
   // ----- Tremor -----
   function tremer(forca) {
     if (prefereSemMovimento) return;
@@ -117,15 +157,14 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX);
     canvas.width = Math.max(1, Math.round(larguraPx * dpr));
     canvas.height = Math.max(1, Math.round(alturaPx * dpr));
-    // Escala mantendo proporção 90x140 (letterbox)
+    // Escala mantendo proporção da arena (deitada)
     const escalaX = larguraPx / arenaL;
     const escalaY = alturaPx / arenaA;
     escala = Math.min(escalaX, escalaY);
     const desenhoW = arenaL * escala;
     const desenhoH = arenaA * escala;
     offsetX = (larguraPx - desenhoW) / 2;
-    // Alinha a arena ao TOPO quando sobrar altura (letterbox embaixo)
-    offsetY = 0;
+    offsetY = (alturaPx - desenhoH) / 2;
     fundoValido = false;
   }
 
@@ -142,53 +181,56 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     fundoCanvas.height = H;
     const f = fundoCtx;
 
-    // base: faixa superior (vilões) mais escura, inferior mais clara
-    const grad = f.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#3f7a3c');
-    grad.addColorStop(0.45, '#5fa84f');
-    grad.addColorStop(0.55, '#7abf5c');
-    grad.addColorStop(1, '#9ad96f');
+    // base: gradiente horizontal — esquerda (heróis) mais claro, direita (monstros) mais escuro
+    const grad = f.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0, '#9ad96f');
+    grad.addColorStop(0.45, '#7abf5c');
+    grad.addColorStop(0.55, '#4f8f45');
+    grad.addColorStop(1, '#2f5a30');
     f.fillStyle = grad;
     f.fillRect(0, 0, W, H);
 
     // faixa de transição de tom (grama mais escura no topo)
-    f.fillStyle = 'rgba(20,60,20,0.28)';
+    f.fillStyle = 'rgba(20,60,20,0.22)';
     f.fillRect(0, 0, W, H * 0.22);
-    f.fillStyle = 'rgba(255,255,200,0.06)';
+    f.fillStyle = 'rgba(255,255,200,0.05)';
     f.fillRect(0, H * 0.78, W, H * 0.22);
 
-    // trilha de terra serpenteando ao centro
-    const trail = f.createLinearGradient(0, H * 0.35, 0, H * 0.65);
-    trail.addColorStop(0, '#a8804d');
-    trail.addColorStop(1, '#c39a63');
+    // trilha de terra cruzando da esquerda para a direita
+    const trail = f.createLinearGradient(0, 0, W, 0);
+    trail.addColorStop(0, '#c39a63');
+    trail.addColorStop(0.5, '#a8804d');
+    trail.addColorStop(1, '#7a5a34');
     f.strokeStyle = trail;
     f.lineCap = 'round';
     f.lineJoin = 'round';
-    f.lineWidth = Math.max(6, W * 0.14);
+    f.lineWidth = Math.max(6, H * 0.16);
     f.beginPath();
-    f.moveTo(W * 0.5, H * 0.18);
-    f.bezierCurveTo(W * 0.3, H * 0.35, W * 0.7, H * 0.5, W * 0.45, H * 0.72);
-    f.bezierCurveTo(W * 0.3, H * 0.85, W * 0.55, H * 0.95, W * 0.5, H);
+    f.moveTo(0, H * 0.5);
+    f.bezierCurveTo(W * 0.25, H * 0.32, W * 0.55, H * 0.68, W * 0.78, H * 0.5);
+    f.bezierCurveTo(W * 0.88, H * 0.42, W * 0.95, H * 0.55, W, H * 0.5);
     f.stroke();
     // pontinhos na trilha
     f.fillStyle = 'rgba(120,80,40,0.35)';
     for (let i = 0; i < 40; i++) {
       const tt = i / 40;
-      const px = W * (0.5 + Math.sin(tt * 6.28) * 0.08 + (Math.random() - 0.5) * 0.12);
-      const py = H * (0.18 + tt * 0.82);
+      const px = W * tt;
+      const py = H * (0.5 + Math.sin(tt * 6.28) * 0.06 + (Math.random() - 0.5) * 0.12);
       f.beginPath();
       f.arc(px, py, Math.max(1, escala * 0.6 + Math.random() * 1.5), 0, Math.PI * 2);
       f.fill();
     }
 
     // tufos de grama
-    for (let i = 0; i < 140; i++) {
+    for (let i = 0; i < 160; i++) {
       const px = Math.random() * W;
       const py = Math.random() * H;
-      // desvia da trilha central
-      if (Math.abs(px - W * 0.5) < W * 0.12) continue;
+      if (Math.abs(py - H * 0.5) < H * 0.1) continue;
       const h = (1 + Math.random() * 2.2) * Math.max(1, escala * 0.5);
-      f.strokeStyle = Math.random() < 0.5 ? 'rgba(40,90,40,0.7)' : 'rgba(120,170,80,0.8)';
+      const ladoEscuro = px > W * 0.5;
+      f.strokeStyle = ladoEscuro
+        ? (Math.random() < 0.5 ? 'rgba(20,50,20,0.8)' : 'rgba(70,120,60,0.8)')
+        : (Math.random() < 0.5 ? 'rgba(40,90,40,0.7)' : 'rgba(120,170,80,0.8)');
       f.lineWidth = Math.max(1, escala * 0.15);
       f.beginPath();
       f.moveTo(px, py);
@@ -203,7 +245,7 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     for (let i = 0; i < 40; i++) {
       const px = Math.random() * W;
       const py = Math.random() * H;
-      if (Math.abs(px - W * 0.5) < W * 0.12) continue;
+      if (Math.abs(py - H * 0.5) < H * 0.1) continue;
       const r = Math.max(1.5, escala * 0.35 + Math.random() * escala * 0.4);
       f.fillStyle = coresFlores[(Math.random() * coresFlores.length) | 0];
       for (let k = 0; k < 5; k++) {
@@ -222,7 +264,7 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     for (let i = 0; i < 30; i++) {
       const px = Math.random() * W;
       const py = Math.random() * H;
-      if (Math.abs(px - W * 0.5) < W * 0.12) continue;
+      if (Math.abs(py - H * 0.5) < H * 0.1) continue;
       const r = Math.max(1.2, escala * 0.3 + Math.random() * escala * 0.5);
       f.fillStyle = '#8b8f96';
       f.strokeStyle = '#3b3f45';
@@ -238,7 +280,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
 
   // ----- Utilitários -----
   function corComAlpha(cor, a) {
-    // cor pode ser hex #rrggbb; retorna rgba
     if (cor[0] === '#') {
       const r = parseInt(cor.slice(1, 3), 16);
       const g = parseInt(cor.slice(3, 5), 16);
@@ -256,7 +297,7 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
         x: u.x, y: u.y,
         prevX: u.x, prevY: u.y,
         flash: 0,
-        avanco: 0, // 0..1, "pop" vertical
+        avanco: 0,
         dir: 1,
         mortoEm: -1,
         nasceuEm: -1,
@@ -280,6 +321,122 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     }
   }
 
+  // ----- Moedas -----
+  function criarMoedasDeMorte(x, y, tipo) {
+    const dados = VILOES[tipo];
+    if (!dados) return;
+    const ouro = dados.ouro || 0;
+    if (ouro <= 0) return;
+    const multAbate = (ECONOMIA && ECONOMIA.multAbate) || 1;
+    const total = ouro * multAbate;
+    let qtd = Math.round(ouro);
+    if (qtd < 1) qtd = 1;
+    if (qtd > 8) qtd = 8;
+    const valorCada = total / qtd; // total já inclui multAbate
+    for (let i = 0; i < qtd; i++) {
+      const m = alocarMoeda();
+      if (!m) break;
+      m.ativo = true;
+      m.fase = 0;
+      m.t = 0;
+      m.quiques = 0;
+      m.x = x + (Math.random() - 0.5) * 1.5;
+      m.y = y + (Math.random() - 0.5) * 1.0;
+      const ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.6;
+      const sp = 12 + Math.random() * 10;
+      m.vx = Math.cos(ang) * sp;
+      m.vy = Math.sin(ang) * sp;
+      m.valor = valorCada;
+      m.rot = Math.random() * Math.PI * 2;
+      m.rotVel = 6 + Math.random() * 6;
+      m.brilho = 0;
+      m.squash = 0;
+      m.escalaX = 1;
+      m.vooT = 0;
+      m.vooDur = 0.45;
+      m.px = 0; m.py = 0;
+      // física em metros: (gx, gy) = ponto no chão; h = altura acima do chão
+      m.gx = x + (Math.random() - 0.5) * 1.5;
+      m.gy = y + (Math.random() - 0.5) * 1.0;
+      m.h = 0.6;
+      m.vh = 9 + Math.random() * 6;
+      m.vx = (Math.random() - 0.5) * 12;
+      m.vy = (Math.random() - 0.5) * 6;
+    }
+  }
+  // posição da moeda em pixels CSS (mesmo sistema do alvo do pote)
+  function moedaPx(m) { return [offsetX + m.gx * escala, offsetY + (m.gy - m.h) * escala]; }
+
+  function atualizarMoedas(dtV) {
+    for (let i = 0; i < moedas.length; i++) {
+      const m = moedas[i];
+      if (!m.ativo) continue;
+      m.t += dtV;
+      m.rot += m.rotVel * dtV;
+      m.brilho = Math.max(0, m.brilho - dtV * 2);
+      if (m.squash > 0) m.squash = Math.max(0, m.squash - dtV * 4);
+
+      if (m.fase === 0) {
+        // quique no chão (metros)
+        m.vh -= 45 * dtV;
+        m.h += m.vh * dtV;
+        m.gx += m.vx * dtV; m.gy += m.vy * dtV;
+        m.vx *= Math.max(0, 1 - 2.5 * dtV); m.vy *= Math.max(0, 1 - 2.5 * dtV);
+        if (m.h < 0) {
+          m.h = 0;
+          if (m.quiques < 2) { m.vh = -m.vh * 0.45; m.quiques++; m.squash = 1; m.brilho = 1; }
+          else m.vh = 0;
+        }
+        // após ~0.7 s, começa o voo
+        if (m.t >= 0.7) {
+          const alvo = (typeof cfg.alvoMoeda === 'function') ? cfg.alvoMoeda() : null;
+          if (alvo) {
+            m.fase = 1;
+            m.vooT = 0;
+            [m.vooIniX, m.vooIniY] = moedaPx(m);
+            m.vooFimX = alvo.x;
+            m.vooFimY = alvo.y;
+            // ponto de controle: acima do meio
+            m.vooCtrX = (m.vooIniX + m.vooFimX) / 2 + (Math.random() - 0.5) * 20;
+            m.vooCtrY = Math.min(m.vooIniY, m.vooFimY) - 30 - Math.random() * 20;
+            m.vooDur = 0.45;
+          } else {
+            // sem alvo: some
+            m.ativo = false;
+            moedasAtivas--;
+          }
+        }
+      } else {
+        // voo em curva de Bézier até o alvo (em pixels)
+        m.vooT += dtV;
+        const k = Math.min(1, m.vooT / m.vooDur);
+        // acelera no final
+        const kk = k * k * (3 - 2 * k);
+        const u = 1 - kk;
+        const bx = u * u * m.vooIniX + 2 * u * kk * m.vooCtrX + kk * kk * m.vooFimX;
+        const by = u * u * m.vooIniY + 2 * u * kk * m.vooCtrY + kk * kk * m.vooFimY;
+        m.px = bx;
+        m.py = by;
+        if (k >= 1) {
+          // chegou
+          if (typeof cfg.aoMoeda === 'function') {
+            try { cfg.aoMoeda(m.valor); } catch (err) { console.error(err); }
+          }
+          // brilhinho
+          for (let j = 0; j < 4; j++) {
+            const p = alocarParticula();
+            if (!p) break;
+            const ang = Math.random() * Math.PI * 2;
+            iniciarParticula(p, m.px, m.py, Math.cos(ang) * 8, Math.sin(ang) * 8 - 4,
+              0.3, 0.8, 0.1, '#ffe066', 0, 30);
+          }
+          m.ativo = false;
+          moedasAtivas--;
+        }
+      }
+    }
+  }
+
   // ----- Entrada de eventos (por passo) -----
   function processarEventos() {
     const evs = batalha.eventos;
@@ -293,7 +450,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
             const ef = estados.get(ev.fonte);
             if (ef) ef.avanco = Math.min(1, ef.avanco + 0.9);
           }
-          // texto flutuante
           const tx = ev.x != null ? ev.x : (e ? e.x : 45);
           const ty = ev.y != null ? ev.y : (e ? e.y : 70);
           let txt = '' + Math.round(ev.valor);
@@ -309,8 +465,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
             case 'meteoro': cor = '#ff3b30'; tam = 5.6; pop = true; break;
           }
           criarTexto(tx, ty - 4, txt, cor, tam, pop);
-          // particulas de impacto
-          // (cor das faíscas vem de corPosImpacto, conforme o tipo de golpe)
           for (let k = 0; k < 4; k++) {
             const p = alocarParticula();
             if (!p) break;
@@ -337,7 +491,7 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
         }
         case 'morte': {
           const e = estados.get(ev.alvo);
-          const tipo = (ev.unidade && ev.unidade.tipo) || 'guerreiro';
+          const tipo = ev.unidade || 'guerreiro'; // no evento, unidade = tipo (texto)
           const cor = corDoTipo(tipo) || '#ff5b5b';
           if (e) {
             e.mortoEm = tVisual;
@@ -345,7 +499,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
           }
           const x = ev.x, y = ev.y;
           const ehSlime = tipo && tipo.indexOf('slime') >= 0;
-          // estouro de particulas
           const qtd = ehSlime ? 16 : 12;
           for (let k = 0; k < qtd; k++) {
             const p = alocarParticula();
@@ -356,13 +509,16 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
               0.4 + Math.random() * 0.3, ehSlime ? 1.4 : 1.0 + Math.random() * 0.8, 0.4,
               ehSlime ? (Math.random() < 0.5 ? '#7fe08a' : '#c9ff8a') : cor, ehSlime ? 120 : 40, 220);
           }
-          // estrelinhas
           for (let k = 0; k < 3; k++) {
             const p = alocarParticula();
             if (!p) break;
             const ang = Math.random() * Math.PI * 2;
             iniciarParticula(p, x, y, Math.cos(ang) * 10, Math.sin(ang) * 10 - 15,
               0.5, 1.0, 0.3, '#fff6a0', 0, 320, 1);
+          }
+          // moedas para mortes de vilões
+          if (ev.lado === 'v') { // no evento, unidade = tipo (texto) e lado vem em ev.lado
+            criarMoedasDeMorte(x, y, tipo);
           }
           break;
         }
@@ -383,7 +539,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
         case 'disparo': {
           const e = estados.get(ev.fonte);
           if (e) { e.avanco = Math.min(1, e.avanco + 0.8); e.glow = 0.18; }
-          // faísca no ponto de origem
           for (let k = 0; k < 3; k++) {
             const p = alocarParticula();
             if (!p) break;
@@ -415,7 +570,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
           break;
         }
         case 'fim': {
-          // processado pelo loop
           break;
         }
       }
@@ -451,7 +605,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     return p;
   }
 
-  // Anel (explosão/provocar)
   function iniciarAnel(x, y, raioFim, cor, vida, largura) {
     const p = alocarParticula();
     if (!p) return;
@@ -461,7 +614,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     p.tam = 1;
   }
 
-  // Arco (giro)
   function iniciarArco(x, y, raio, cor, vida) {
     const p = alocarParticula();
     if (!p) return;
@@ -510,19 +662,17 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
   function efeitoProvocar(x, y, raio) {
     iniciarAnel(x, y, raio, '#ffe14d', 0.55, 4);
     iniciarAnel(x, y, raio * 0.7, 'rgba(255,235,120,0.8)', 0.45, 2);
-    // "!" grande sobre o guardião
     const txt = alocarTexto();
     if (txt) {
       txt.ativo = true; textosAtivos++;
       txt.x = x; txt.y = y - 8; txt.vx = 0; txt.vy = -6;
-      txt.vida = 0.6; txt.vidaMax = 0.6;
+      txt.vida = 0.6; txt.vidaMax= 0.6;
       txt.texto = '!'; txt.cor = '#ffe14d'; txt.tamBase = 12; txt.tam = 12;
       txt.arco = 0; txt.fase = 0;
     }
   }
 
   function efeitoMeteoro(x, y, raio) {
-    // sombra rápida já que visual (o motor manda o evento na queda)
     iniciarAnel(x, y, raio, 'rgba(255,60,40,0.9)', 0.5, 4);
     iniciarAnel(x, y, raio * 0.6, 'rgba(255,200,60,0.9)', 0.4, 3);
     for (let k = 0; k < 24; k++) {
@@ -546,7 +696,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
   }
 
   function efeitoInvocar(x, y) {
-    // redemoinho roxo
     for (let k = 0; k < 3; k++) {
       iniciarAnel(x, y, 5 + k * 2, 'rgba(160,80,220,0.8)', 0.5, 2);
     }
@@ -612,11 +761,9 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       if (t.vida <= 0) { t.ativo = false; textosAtivos--; continue; }
       t.x += t.vx * dtV;
       t.y += t.vy * dtV;
-      t.vy += 18 * dtV; // desacelera a subida (gravidade leve)
+      t.vy += 18 * dtV;
       t.vx *= Math.pow(0.9, dtV * 60);
-      // arco
       t.x += Math.sin((1 - t.vida / t.vidaMax) * Math.PI) * t.arco * dtV;
-      // escala do "pop"
       if (t.vida > t.vidaMax - 0.08) {
         const k = (t.vidaMax - t.vida) / 0.08;
         t.tam = t.tamBase * (1.6 - 0.6 * k);
@@ -624,14 +771,12 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
         t.tam += (t.tamBase - t.tam) * Math.min(1, dtV * 12);
       }
     }
-    // decaimentos
     for (const u of batalha.unidades) {
       const e = estados.get(u.id);
       if (!e) continue;
       if (e.flash > 0) e.flash = Math.max(0, e.flash - dtV);
       if (e.avanco > 0) e.avanco = Math.max(0, e.avanco - dtV / 0.2);
       if (e.glow > 0) e.glow = Math.max(0, e.glow - dtV);
-      // squash dos slimes pulsando (se moverem)
       const vel = Math.hypot(e.x - e.prevX, e.y - e.prevY);
       if (u.morto) {
         e.squash += (1.3 - e.squash) * Math.min(1, dtV * 6);
@@ -647,11 +792,9 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
   function desenhar() {
     if (larguraPx < 1 || alturaPx < 1) return;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    // Preenche toda a tela com a cor da grama mais escura (letterbox)
-    ctx.fillStyle = '#3f7a3c';
+    ctx.fillStyle = '#2f5a30';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Tremor
     let sx = 0, sy = 0;
     if (tremorForca > 0.05 && !prefereSemMovimento) {
       sx = (Math.random() * 2 - 1) * tremorForca * dpr;
@@ -662,19 +805,15 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     ctx.save();
     ctx.translate(offsetX + sx / dpr, offsetY + sy / dpr);
 
-    // Fundo
     construirFundo();
     if (fundoCanvas) {
       ctx.drawImage(fundoCanvas, 0, 0, arenaL * escala, arenaA * escala);
     }
 
-    // Escala para metros
     ctx.scale(escala, escala);
 
-    // Projéteis (atrás das unidades)
     desenharProjeteis();
 
-    // Unidades ordenadas por y
     const visiveis = [];
     for (let i = 0; i < batalha.unidades.length; i++) {
       const u = batalha.unidades[i];
@@ -687,15 +826,14 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       desenharUnidadeVisual(visiveis[i]);
     }
 
-    // Partículas (por cima)
     desenharParticulas();
-
-    // Textos
     desenharTextos();
 
     ctx.restore();
 
-    // Decaimento do tremor
+    // Moedas desenhadas em pixels (por cima de tudo)
+    desenharMoedas();
+
     if (tremorForca > 0) {
       tremorForca *= Math.pow(0.001, 1 / 60);
       if (tremorForca < 0.05) tremorForca = 0;
@@ -708,7 +846,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     ctx.save();
     for (let i = 0; i < projs.length; i++) {
       const p = projs[i];
-      // Halo (lighter) raio 2.4 m
       ctx.globalCompositeOperation = 'lighter';
       const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 2.4);
       g.addColorStop(0, 'rgba(255,220,120,0.9)');
@@ -719,23 +856,19 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
-      // Corpo laranja raio 1.1 m
       ctx.fillStyle = '#ff8c1a';
       ctx.beginPath();
       ctx.arc(p.x, p.y, 1.1, 0, Math.PI * 2);
       ctx.fill();
-      // Núcleo amarelo raio 0.6 m
       ctx.fillStyle = '#ffe066';
       ctx.beginPath();
       ctx.arc(p.x, p.y, 0.6, 0, Math.PI * 2);
       ctx.fill();
-      // Contorno escuro fino (1.5 px de tela)
       ctx.strokeStyle = '#3a1a00';
       ctx.lineWidth = 1.5 / escala;
       ctx.beginPath();
       ctx.arc(p.x, p.y, 1.1, 0, Math.PI * 2);
       ctx.stroke();
-      // Rastro: 2 partículas por frame laranja/amarela que encolhem
       for (let k = 0; k < 2; k++) {
         const pt = alocarParticula();
         if (!pt) break;
@@ -755,31 +888,27 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     const e = estados.get(u.id);
     if (!e) return;
 
-    // Interpolação
     const alpha = Math.min(1, acumulador / DT);
     const ix = e.prevX + (e.x - e.prevX) * alpha;
     const iy = e.prevY + (e.y - e.prevY) * alpha;
 
-    // Morte
     let escalaMorte = 1;
     let alphaMorte = 1;
     if (u.morto) {
       if (e.mortoEm < 0) e.mortoEm = tVisual;
       const dt = tVisual - e.mortoEm;
-      if (dt > 0.4) return; // some
+      if (dt > 0.4) return;
       const k = dt / 0.4;
       escalaMorte = 1 + k * 0.3;
       alphaMorte = 1 - k;
     }
 
-    // Aparecimento (pop)
     let escalaPop = 1;
     if (e.nasceuEm < 0) e.nasceuEm = tVisual;
     const dtNasc = tVisual - e.nasceuEm;
     if (dtNasc < 0.2) {
       const k = dtNasc / 0.2;
       escalaPop = k < 0.7 ? (k / 0.7) * 1.15 : 1.15 - ((k - 0.7) / 0.3) * 0.15;
-      // poeira ao aparecer
       if (!e.poeira) {
         e.poeira = true;
         for (let i = 0; i < 6; i++) {
@@ -792,13 +921,8 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       }
     }
 
-    // Avanço (pop vertical)
     const avancoY = -e.avanco * 0.6;
-
-    // Flash
     const flash = e.flash > 0;
-
-    // Provocado / queimando
     const provocado = u.provocadoAte && batalha.t < u.provocadoAte;
     const queimando = u.queima && batalha.t < u.queima.ate;
 
@@ -807,13 +931,11 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     ctx.translate(ix, iy + avancoY);
     ctx.scale(escalaPop * escalaMorte, escalaPop * escalaMorte);
 
-    // Sombra no chão
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();
     ctx.ellipse(0, u.raio * 0.9, u.raio * 0.9, u.raio * 0.35, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Aura de provocado
     if (provocado) {
       ctx.strokeStyle = 'rgba(255,225,80,0.7)';
       ctx.lineWidth = 2 / escala;
@@ -822,7 +944,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       ctx.stroke();
     }
 
-    // Chamas se queimando
     if (queimando) {
       for (let i = 0; i < 3; i++) {
         const p = alocarParticula();
@@ -834,7 +955,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       }
     }
 
-    // Glow do cajado
     if (e.glow > 0) {
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
@@ -848,9 +968,7 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       ctx.restore();
     }
 
-    // Desenha a unidade via sprites.js
     const squash = (u.tipo && u.tipo.indexOf('slime') >= 0) ? e.squash : 0;
-    // sprites.js desenha em PIXELS: desfaz a escala de metros e passa a escala como 4º argumento
     ctx.scale(1 / escala, 1 / escala);
     desenharUnidade(ctx, u, {
       dir: e.dir || 1,
@@ -865,22 +983,16 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
 
     ctx.restore();
 
-    // Barra de vida (fora da transformação de escala, mas em metros)
     if (!u.morto && u.pv < u.pvMax && u.pv > 0) {
-      // Largura mínima 22 px de tela, altura 4 px de tela
       const bw = Math.max(22 / escala, u.raio * 2.2);
       const bh = 4 / escala;
       const bx = ix - bw / 2;
-      // Sprites desenhados 1.7× maiores: altura visual ≈ 2.6*raio*1.7 acima do pé
       const by = iy - (2.6 * u.raio * 1.7) - bh - 2 / escala;
       const frac = Math.max(0, u.pv / u.pvMax);
-      // fundo
       ctx.fillStyle = 'rgba(0,0,0,0.7)';
       ctx.fillRect(bx - 1 / escala, by - 1 / escala, bw + 2 / escala, bh + 2 / escala);
-      // preenchimento
       ctx.fillStyle = u.lado === 'h' ? '#3ee0ff' : '#ff4d4d';
       ctx.fillRect(bx, by, bw * frac, bh);
-      // contorno
       ctx.strokeStyle = 'rgba(0,0,0,0.9)';
       ctx.lineWidth = 1 / escala;
       ctx.strokeRect(bx, by, bw, bh);
@@ -897,7 +1009,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       const tam = p.tam + (p.tamFinal - p.tam) * (1 - k);
 
       if (p.tipo === 3) {
-        // anel
         const r = p.raioIni + (p.raioFim - p.raioIni) * (1 - k);
         ctx.globalAlpha = a;
         ctx.strokeStyle = p.cor;
@@ -906,7 +1017,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
         ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
         ctx.stroke();
       } else if (p.tipo === 6) {
-        // arco girando
         ctx.globalAlpha = a;
         ctx.strokeStyle = p.cor;
         ctx.lineWidth = 2 / escala;
@@ -914,7 +1024,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
         ctx.arc(p.x, p.y, tam, p.rot, p.rot + Math.PI * 1.2);
         ctx.stroke();
       } else if (p.tipo === 1) {
-        // estrela
         ctx.globalAlpha = a;
         ctx.fillStyle = p.cor;
         ctx.save();
@@ -923,21 +1032,18 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
         desenharEstrela(ctx, tam);
         ctx.restore();
       } else if (p.tipo === 2) {
-        // fumaça
         ctx.globalAlpha = a * 0.7;
         ctx.fillStyle = p.cor;
         ctx.beginPath();
         ctx.arc(p.x, p.y, tam, 0, Math.PI * 2);
         ctx.fill();
       } else if (p.tipo === 5) {
-        // gota
         ctx.globalAlpha = a;
         ctx.fillStyle = p.cor;
         ctx.beginPath();
         ctx.ellipse(p.x, p.y, tam * 0.7, tam, 0, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        // bolinha/faísca
         ctx.globalAlpha = a;
         ctx.fillStyle = p.cor;
         ctx.beginPath();
@@ -972,15 +1078,74 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       const k = t.vida / t.vidaMax;
       const a = k < 0.3 ? k / 0.3 : 1;
       ctx.globalAlpha = a;
-      // Fonte mínima equivalente a 13 px na tela
       const tamTela = Math.max(t.tam, 13 / escala);
       ctx.font = `900 ${tamTela}px system-ui, sans-serif`;
-      // Contorno proporcional (3 px de tela)
       ctx.lineWidth = 3 / escala;
       ctx.strokeStyle = 'rgba(0,0,0,0.85)';
       ctx.strokeText(t.texto, t.x, t.y);
       ctx.fillStyle = t.cor;
       ctx.fillText(t.texto, t.x, t.y);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // ----- Desenho de moedas (em pixels, por cima de tudo) -----
+  function desenharMoedas() {
+    if (moedasAtivas === 0) return;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (let i = 0; i < moedas.length; i++) {
+      const m = moedas[i];
+      if (!m.ativo) continue;
+      let px, py;
+      if (m.fase === 1) {
+        px = m.px;
+        py = m.py;
+      } else {
+        [px, py] = moedaPx(m);
+      }
+      // brilho
+      if (m.brilho > 0) {
+        ctx.globalCompositeOperation = 'lighter';
+        const g = ctx.createRadialGradient(px, py, 0, px, py, 14);
+        g.addColorStop(0, `rgba(255,240,150,${m.brilho * 0.8})`);
+        g.addColorStop(1, 'rgba(255,200,50,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(px, py, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      // escala X oscilando (efeito de moeda girando)
+      const escalaX = Math.abs(Math.cos(m.rot));
+      const escalaY = 1 + m.squash * 0.4;
+      const raio = 9;
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.scale(Math.max(0.15, escalaX), escalaY);
+      // corpo dourado
+      ctx.fillStyle = '#ffd447';
+      ctx.strokeStyle = '#7a4a00';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, raio, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      // brilho interno
+      ctx.fillStyle = '#fff2a8';
+      ctx.beginPath();
+      ctx.arc(-raio * 0.3, -raio * 0.3, raio * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      // símbolo "$"
+      if (escalaX > 0.35) {
+        ctx.fillStyle = '#7a4a00';
+        ctx.font = 'bold 9px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('$', 0, 0.5);
+      }
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -994,23 +1159,20 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     if (ultimoTempo === 0) ultimoTempo = agora;
     let dtReal = (agora - ultimoTempo) / 1000;
     ultimoTempo = agora;
-    if (dtReal > 0.1) dtReal = 0.1; // clamp
+    if (dtReal > 0.1) dtReal = 0.1;
     if (dtReal < 0) dtReal = 0;
 
     if (pausadoManual || pausadoPorOculto) {
-      // Ainda desenha para manter o quadro
       desenhar();
       return;
     }
 
     tVisual += dtReal;
 
-    // Acumulador de passo fixo
     acumulador += dtReal * velocidade;
     let passos = 0;
     const maxPassos = 8;
     while (acumulador >= DT && passos < maxPassos) {
-      // guarda posições anteriores
       for (let i = 0; i < batalha.unidades.length; i++) {
         const u = batalha.unidades[i];
         const e = obterEstado(u);
@@ -1024,9 +1186,8 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       acumulador -= DT;
       passos++;
     }
-    if (passos >= maxPassos) acumulador = 0; // evita espiral
+    if (passos >= maxPassos) acumulador = 0;
 
-    // Atualiza posições atuais (para interpolação)
     for (let i = 0; i < batalha.unidades.length; i++) {
       const u = batalha.unidades[i];
       const e = obterEstado(u);
@@ -1035,17 +1196,30 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     }
     atualizarDirEstados();
 
-    // Atualiza efeitos com dt real (visual)
     atualizarEfeitos(dtReal);
+    atualizarMoedas(dtReal);
 
     // Fim de batalha
     if (batalha.fim && !fimAgendado) {
       fimAgendado = true;
       tempoFimAte = 1.2;
+      esperandoMoedas = true;
+      tempoEsperaMoedas = 1.5;
     }
     if (fimAgendado && !aoFimChamado) {
       tempoFimAte -= dtReal;
-      if (tempoFimAte <= 0) {
+      // espera moedas em voo pousarem (no máximo +1.5 s)
+      if (esperandoMoedas) {
+        tempoEsperaMoedas -= dtReal;
+        let temMoedaVoando = false;
+        for (let i = 0; i < moedas.length; i++) {
+          if (moedas[i].ativo && moedas[i].fase === 1) { temMoedaVoando = true; break; }
+        }
+        if (!temMoedaVoando || tempoEsperaMoedas <= 0) {
+          esperandoMoedas = false;
+        }
+      }
+      if (tempoFimAte <= 0 && !esperandoMoedas) {
         aoFimChamado = true;
         if (typeof cfg.aoFim === 'function') {
           try { cfg.aoFim(batalha.fim); } catch (err) { console.error(err); }
@@ -1069,13 +1243,34 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     return { herois, viloes };
   }
 
+  // ----- Força para HUD -----
+  function forca() {
+    let hp = 0, hpMax = 0;
+    let hv = 0, hvMax = 0;
+    for (let i = 0; i < batalha.unidades.length; i++) {
+      const u = batalha.unidades[i];
+      if (batalha.t < u.atraso) continue;
+      if (u.lado === 'h') {
+        hp += Math.max(0, u.pv);
+        hpMax += u.pvMax;
+      } else {
+        hv += Math.max(0, u.pv);
+        hvMax += u.pvMax;
+      }
+    }
+    return {
+      herois: hpMax > 0 ? hp / hpMax : 0,
+      viloes: hvMax > 0 ? hv / hvMax : 0,
+    };
+  }
+
   // ----- Visibilidade -----
   function aoMudarVisibilidade() {
     if (document.hidden) {
       pausadoPorOculto = true;
     } else {
       pausadoPorOculto = false;
-      ultimoTempo = 0; // reseta para não acumular dt gigante
+      ultimoTempo = 0;
     }
   }
 
@@ -1095,7 +1290,6 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     iniciar() {
       if (rodando || destruido) return;
       redimensionar();
-      // inicializa estados das unidades existentes
       for (let i = 0; i < batalha.unidades.length; i++) {
         const u = batalha.unidades[i];
         obterEstado(u);
@@ -1114,7 +1308,9 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       if (!pausadoManual) ultimoTempo = 0;
     },
     setVelocidade(v) {
-      velocidade = Math.max(0.1, Math.min(4, v || 1));
+      // aceita apenas 0.5, 1, 2
+      if (v === 0.5 || v === 1 || v === 2) velocidade = v;
+      else velocidade = 1;
     },
     destruir() {
       destruido = true;
@@ -1128,10 +1324,13 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       conhecidas.clear();
       particulasAtivas = 0;
       textosAtivos = 0;
+      moedasAtivas = 0;
       for (let i = 0; i < particulas.length; i++) particulas[i].ativo = false;
       for (let i = 0; i < textos.length; i++) textos[i].ativo = false;
+      for (let i = 0; i < moedas.length; i++) moedas[i].ativo = false;
     },
     contagem,
+    forca,
   };
 
   return visual;
