@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "skills": {
+    "2d-games": {
+      "source": "sickn33/agentic-awesome-skills",
+      "commit": "444f05edf05566b0880ad34e8eba6e9034905483",
+      "sourceType": "github",
+      "skillPath": "plugins/agentic-bundle-indie-game-dev/skills/2d-games/SKILL.md",
+      "computedHash": "3d4f520b0bd7393e6b13646415fafe5f15283a45989138362f6f779135b289e7"
+    },
+    "game-design": {
+      "source": "sickn33/agentic-awesome-skills",
+      "commit": "444f05edf05566b0880ad34e8eba6e9034905483",
+      "sourceType": "github",
+      "skillPath": "plugins/agentic-bundle-indie-game-dev/skills/game-design/SKILL.md",
+      "computedHash": "a5e01857dd9b3abf9da306e05aeba21d6b12440549ebe820f63863351e99d952"
+    },
+    "game-development": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "commit": "444f05edf05566b0880ad34e8eba6e9034905483",
+      "sourceType": "github",
+      "skillPath": "skills/game-development/SKILL.md",
+      "computedHash": "d2b8038854fd3641f324f96a11a4bccb4594c17cd010563efe944174a0ee3900"
+    }
+  }
+}
