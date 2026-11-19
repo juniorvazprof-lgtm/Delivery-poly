@@ -8,7 +8,7 @@ import { criarDiretor } from './engine/director.js';
 import { criarTelao } from './ui/telao.js';
 import { criarKanban } from './scene/kanban.js';
 import { criarQuiz } from './ui/quiz.js';
-import { servidorOnline, gerarCenario } from './ui/online.js';
+import { fonteOnline, gerarCenario } from './ui/online.js';
 import { validarCenario, limparCenario } from './engine/validate.js';
 import { criarControles, setStatusModo } from './ui/controls.js';
 
@@ -79,18 +79,31 @@ function voltarOffline(falhou) {
   if (ctrl.seletores.modo) ctrl.seletores.modo.value = 'offline';
   setStatusModo(falhou ? 'falha' : 'offline'); if (falhou) setTimeout(() => setStatusModo('offline'), 3000);
 }
-function abrirPedido() {
+const SUGESTOES = ['uma padaria de bairro', 'minha loja de skates', 'um canal de games', 'um time de futebol da escola'];
+function abrirPedido(fonte) {
   const d = document.createElement('div'); d.id = 'pedido';
-  d.innerHTML = '<form class="p-caixa"><h2>O que o cliente quer?</h2><p>Escreva o pedido do site. A IA vai ler só este texto.</p><input id="pedidoTexto" maxlength="140" autocomplete="off" placeholder="Ex.: um site para a minha banda de forró"><p class="p-aviso">🔒 Não escreva nomes, telefones ou endereços de pessoas: o texto é enviado para um serviço de IA fora do Brasil.</p><p class="p-status" aria-live="polite"></p><div><button type="submit">Gerar com IA</button> <button type="button" class="p-cancelar">Cancelar</button></div></form>';
-  document.body.append(d); const inp = d.querySelector('input'), st = d.querySelector('.p-status'); inp.focus();
+  const aviso2 = fonte === 'gemini' ? '🔒 O texto vai para o Google Gemini. Não escreva nomes, telefones ou endereços.' : fonte === 'claude' ? '🔒 O texto vai para o Claude, usando a conta de quem está com a tela aberta. Não escreva nomes, telefones ou endereços.' : '🔒 Não escreva nomes, telefones ou endereços de pessoas: o texto é enviado para um serviço de IA fora do Brasil.';
+  d.innerHTML = '<form class="p-caixa"><h2>O que o cliente quer?</h2><p>Escreva o pedido do site. A IA lê só este texto.</p><input id="pedidoTexto" maxlength="140" autocomplete="off" enterkeyhint="send" placeholder="Ex.: um site para a minha banda de forró"><div class="p-chips"></div><p class="p-aviso"></p><p class="p-status" aria-live="polite"></p><div class="p-botoes"><button type="submit">✨ Gerar com IA</button><button type="button" class="p-cancelar">Cancelar</button></div></form>';
+  d.querySelector('.p-aviso').textContent = aviso2;
+  document.body.append(d); const inp = d.querySelector('input'), st = d.querySelector('.p-status'), chips = d.querySelector('.p-chips'); inp.focus();
+  for (const t of SUGESTOES) { const b = document.createElement('button'); b.type = 'button'; b.className = 'p-chip'; b.textContent = t; b.addEventListener('click', () => { inp.value = `um site para ${t.replace(/^(uma?|minha|meu) /, '')}`; inp.focus(); }); chips.append(b); }
   const fechar = () => d.remove();
   d.querySelector('.p-cancelar').addEventListener('click', () => { fechar(); voltarOffline(false); });
   d.querySelector('form').addEventListener('submit', async e => {
     e.preventDefault(); const pedido = inp.value.trim(); if (pedido.length < 3) { st.textContent = 'Escreva um pouco mais.'; return; }
-    inp.disabled = true; d.querySelector('button[type=submit]').disabled = true; st.textContent = '🤖 Os agentes estão lendo o pedido… (até 1 minuto)';
-    try { const c = await gerarCenario(pedido); const ruim = validarCenario(c); if (ruim) throw new Error('a IA respondeu algo estranho'); CENARIOS.online = limparCenario(c); fechar(); trocarCenario('online'); }
-    catch (err) { fechar(); aviso(`Não deu certo (${err.message}). Voltando ao modo offline.`); voltarOffline(true); }
+    inp.disabled = true; for (const b of d.querySelectorAll('button')) b.disabled = true; st.textContent = '🤖 Os agentes estão lendo o pedido…';
+    try {
+      const c = await gerarCenario(pedido, fonte, CENARIOS.lanchonete, p => { st.textContent = `🤖 Os agentes estão escrevendo o roteiro… ${Math.round(p * 100)}%`; });
+      const ruim = validarCenario(c); if (ruim) throw new Error('a IA respondeu algo fora do formato, tente de novo');
+      CENARIOS.online = limparCenario(c); fechar(); trocarCenario('online'); setStatusModo('online');
+    } catch (err) { fechar(); aviso(`Não deu certo (${err.message}). Voltando ao modo offline.`); voltarOffline(true); }
   });
+}
+async function iniciarOnline() {
+  aviso('Procurando a IA…');
+  const fonte = await fonteOnline();
+  if (!fonte) { aviso('IA indisponível aqui: abra pelo servidor (npm start) ou pelo artefato no Claude. Voltando ao offline.'); voltarOffline(true); return; }
+  setStatusModo('online'); abrirPedido(fonte);
 }
 const ctrl = criarControles(relogio, {
   proxima: () => diretor.proxima(), anterior: () => diretor.anterior(),
@@ -98,8 +111,7 @@ const ctrl = criarControles(relogio, {
   cenario: id => trocarCenario(id),
   modo: async m => {
     if (m !== 'online') { setStatusModo('offline'); return; }
-    if (!(await servidorOnline())) { aviso('O modo online precisa do servidor com a chave de IA (npm start). Voltando ao offline.'); voltarOffline(true); return; }
-    setStatusModo('online'); abrirPedido();
+    iniciarOnline();
   },
   seguir: v => { seguir = v; },
 });
@@ -109,6 +121,7 @@ trocarCenario(cenarioAtual);
 // botões extras
 const alternarApresentacao = () => { apresentacao = !apresentacao; $('bApres').setAttribute('aria-pressed', String(apresentacao)); $('bApres').classList.toggle('ligado', apresentacao); aviso(apresentacao ? 'Modo apresentação: os 4 cenários passam sozinhos, em loop.' : 'Modo apresentação desligado.'); };
 $('bApres').addEventListener('click', alternarApresentacao);
+$('bIA').addEventListener('click', () => { if (!document.getElementById('pedido')) iniciarOnline(); });
 $('bQuiz').addEventListener('click', () => { $('bQuiz').classList.remove('novo'); quiz.abrir(); });
 $('bSite').addEventListener('click', () => telao.abrirSitePronto(CENARIOS[cenarioAtual]));
 $('bBaixar').addEventListener('click', () => {

@@ -121,3 +121,17 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #F4EEE4; fon
   .q-caixa, .p-caixa { padding: 12px; } .q-caixa h2, .p-caixa h2 { font-size: 16px; margin-bottom: 4px; } .q-nome { font-size: 24px; margin: 2px 0 8px; }
   .q-caixa button, .p-caixa button { min-height: 40px; font-size: 14px; } .q-fb { font-size: 13px; margin: 6px 0; } .p-caixa p { font-size: 12px; margin: 4px 0; } .p-caixa input { height: 40px; }
 }
+
+/* pedido por texto: confortável no celular (fonte 16px evita zoom do teclado) */
+#extras button.destaque { background: #3B82F6; color: #fff; }
+#pedido { align-items: center; }
+.p-caixa input { font-size: 16px; }
+.p-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 10px 0 4px; }
+.p-caixa .p-chip { min-height: 38px; padding: 0 14px; border-radius: 999px; background: #E0E7FF; color: #1E3A8A; font-size: 14px; font-weight: 600; }
+.p-botoes { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+@media (max-height: 520px) {
+  #pedido { align-items: start; padding: 6px; }
+  .p-caixa { padding: 10px 14px; } .p-caixa h2 { display: none; }
+  .p-caixa .p-chip { min-height: 30px; padding: 0 10px; font-size: 12px; } .p-chips { margin: 6px 0 2px; gap: 5px; }
+  .p-aviso { display: none; } .p-botoes { margin-top: 6px; }
+}
