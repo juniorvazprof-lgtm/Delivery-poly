@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Galeria de personagens</title>
+<style>
+  body { margin: 0; background: #6fae4a; font: 14px system-ui, sans-serif; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1200" height="640"></canvas>
+<script type="module">
+// Ferramenta de desenvolvimento: desenha cada tipo de unidade grande, em vários estados de animação.
+import { desenharUnidade } from '../render/sprites.js';
+import { HEROIS } from '../data/herois.js';
+import { VILOES } from '../data/viloes.js';
+const ctx = document.getElementById('c').getContext('2d');
+const tipos = [...Object.keys(HEROIS), ...Object.keys(VILOES)];
+const estados = [
+  { nome: 'parado', anim: {} },
+  { nome: 'atacando', anim: { avanco: 1 } },
+  { nome: 'dano', anim: { flash: 0.8 } },
+  { nome: 'provocado/queimando', anim: { provocado: true, queimando: true } },
+];
+const escala = 22;
+tipos.forEach((tipo, i) => {
+  const base = HEROIS[tipo] || VILOES[tipo];
+  estados.forEach((est, j) => {
+    const x = 70 + i * 140, y = 120 + j * 150;
+    const u = { id: i * 10 + j, tipo, lado: HEROIS[tipo] ? 'h' : 'v', raio: Math.min(base.raio, 3.2), geracao: 0 };
+    ctx.save(); ctx.translate(x, y);
+    desenharUnidade(ctx, u, { t: 1.3, dir: 1, ...est.anim }, escala);
+    ctx.restore();
+    if (i === 0) { ctx.fillStyle = '#123'; ctx.fillText(est.nome, 4, y + 60); }
+  });
+  ctx.fillStyle = '#000'; ctx.fillText(tipo, 40 + i * 140, 20);
+});
+</script>
+</body>
+</html>

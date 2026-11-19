@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Laboratório de Batalha — Quantos Heróis?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Tokens de cor — estilo cartoon/pergaminho */
+    --pergaminho: #f6e3b4;
+    --pergaminho-escuro: #e8cf94;
+    --madeira: #6b3f1d;
+    --madeira-escura: #4a2912;
+    --madeira-clara: #8a5a2b;
+    --contorno: #241202;
+    --texto: #2a1a08;
+    --texto-claro: #fff4d6;
+    --verde: #4fae4a;
+    --verde-escuro: #357a32;
+    --vermelho: #d0442e;
+    --vermelho-escuro: #a12a1a;
+    --dourado: #ffce4a;
+    --dourado-escuro: #c9962a;
+    --sombra: 0 4px 0 rgba(36,18,2,0.55);
+    --sombra-forte: 0 6px 0 rgba(36,18,2,0.6);
+    --raio: 14px;
+    --toque-min: 56px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%; width: 100%;
+    overflow: hidden;
+    background: #2b1a0c;
+    color: var(--texto);
+    font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, .titulo { font-family: "Lilita One", "Nunito", system-ui, sans-serif; letter-spacing: 0.5px; }
+
+  #app {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    padding:
+      env(safe-area-inset-top)
+      max(16px, env(safe-area-inset-right))
+      env(safe-area-inset-bottom)
+      max(16px, env(safe-area-inset-left));
+    gap: 8px;
+  }
+
+  /* Barra superior */
+  .topo {
+    display: flex; gap: 8px; align-items: center;
+    flex-wrap: nowrap;
+  }
+  .topo .campo {
+    flex: 1 1 auto;
+    display: flex; flex-direction: column; gap: 2px;
+    min-width: 0;
+  }
+  .topo label {
+    font-size: 11px; font-weight: 900; text-transform: uppercase;
+    color: var(--texto-claro); opacity: 0.85;
+    padding-left: 6px;
+  }
+  select, button, .botao {
+    font-family: inherit;
+    font-weight: 900;
+    border: 3px solid var(--contorno);
+    border-radius: var(--raio);
+    background: var(--pergaminho);
+    color: var(--texto);
+    box-shadow: var(--sombra);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  select {
+    width: 100%;
+    min-height: 44px;
+    padding: 6px 10px;
+    font-size: 16px;
+    appearance: none;
+    background-image: linear-gradient(180deg, var(--pergaminho) 0%, var(--pergaminho-escuro) 100%);
+    background-image: linear-gradient(180deg, var(--pergaminho) 0%, var(--pergaminho-escuro) 100%), none;
+  }
+  button:active, .botao:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(36,18,2,0.55); }
+  button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 3px solid var(--dourado);
+    outline-offset: 2px;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #btnSemente {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 13px;
+    background: linear-gradient(180deg, var(--madeira-clara), var(--madeira));
+    color: var(--texto-claro);
+    white-space: nowrap;
+  }
+
+  /* Área central (canvas) */
+  .arena-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    border: 4px solid var(--contorno);
+    border-radius: var(--raio);
+    background: linear-gradient(180deg, #2b4a1f 0%, #1a3011 100%);
+    overflow: hidden;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.6);
+  }
+  #arena {
+    display: block;
+    width: 100%; height: 100%;
+    touch-action: none;
+  }
+  .hud-topo {
+    position: absolute;
+    left: 6px; right: 6px; top: 6px;
+    display: flex; justify-content: space-between; gap: 6px;
+    pointer-events: none;
+    font-family: "Lilita One", system-ui, sans-serif;
+    font-size: 14px;
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.7);
+    letter-spacing: 1px;
+  }
+  .hud-chip {
+    background: rgba(20,10,2,0.55);
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 10px;
+    padding: 2px 8px;
+  }
+
+  /* Cartão de fim (overlay) */
+  .cartao-fim {
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    z-index: 20;
+  }
+  .cartao-fim.oculto { display: none; }
+  .cartao-fim .cartao {
+    pointer-events: auto;
+    width: min(340px, 88%);
+    background: var(--pergaminho);
+    border: 4px solid var(--contorno);
+    border-radius: 20px;
+    padding: 18px 16px 14px;
+    text-align: center;
+    box-shadow: var(--sombra-forte);
+  }
+  .cartao h2 { margin: 0 0 6px; font-size: 30px; }
+  .cartao h2.vitoria { color: var(--verde-escuro); }
+  .cartao h2.derrota { color: var(--vermelho-escuro); }
+  .cartao p { margin: 4px 0; font-size: 16px; font-weight: 700; }
+  .cartao .botoes { display: flex; gap: 8px; margin-top: 12px; }
+  .cartao .botoes button { flex: 1; min-height: var(--toque-min); font-size: 15px; }
+
+  /* Painel inferior */
+  .painel {
+    flex: 0 0 auto;
+    border: 4px solid var(--contorno);
+    border-radius: var(--raio);
+    background: linear-gradient(180deg, var(--pergaminho) 0%, var(--pergaminho-escuro) 100%);
+    box-shadow: var(--sombra-forte);
+    padding: 10px;
+    overflow: auto;
+    max-height: 46dvh;
+    -webkit-overflow-scrolling: touch;
+  }
+  .painel .linha-heroi {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 2px dashed rgba(74,41,18,0.25);
+  }
+  .painel .linha-heroi:last-child { border-bottom: none; }
+  .heroi-info { min-width: 0; }
+  .heroi-nome { font-family: "Lilita One", system-ui, sans-serif; font-size: 17px; line-height: 1.1; }
+  .heroi-desc { font-size: 12px; font-weight: 700; opacity: 0.75; line-height: 1.2; }
+
+  .contador {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .contador button {
+    width: var(--toque-min);
+    height: var(--toque-min);
+    font-size: 28px;
+    line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    pad: 0;
+    padding: 0;
+  }
+  .contador button.menos { background: linear-gradient(180deg,#f0968a,#d0442e); color: #fff; }
+  .contador button.mais  { background: linear-gradient(180deg,#8ada7e,#4fae4a); color: #fff; }
+  .contador .num {
+    min-width: 40px;
+    text-align: center;
+    font-family: "Lilita One", system-ui, sans-serif;
+    font-size: 26px;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+  }
+
+  .total-linha {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 8px; padding-top: 8px;
+    border-top: 2px solid var(--madeira-escura);
+    font-family: "Lilita One", system-ui, sans-serif;
+    font-size: 18px;
+  }
+  .total-linha .num-total {
+    background: var(--madeira);
+    color: var(--dourado);
+    padding: 2px 12px;
+    border-radius: 10px;
+    border: 2px solid var(--contorno);
+    min-width: 44px; text-align: center;
+  }
+
+  /* Lista de relíquias */
+  .reliquias {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .check-rel {
+    display: flex; align-items: center; gap: 8px;
+    min-height: 52px;
+    padding: 6px 8px;
+    border: 3px solid var(--contorno);
+    border-radius: var(--raio);
+    background: #fff8e2;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: var(--sombra);
+    line-height: 1.1;
+  }
+  .check-rel:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(36,18,2,0.55); }
+  .check-rel input { display: none; }
+  .check-rel .caixa {
+    width: 26px; height: 26px;
+    flex: 0 0 auto;
+    border: 3px solid var(--contorno);
+    border-radius: 7px;
+    background: #fff;
+    position: relative;
+  }
+  .check-rel input:checked + .caixa {
+    background: var(--verde);
+  }
+  .check-rel input:checked + .caixa::after {
+    content: "";
+    position: absolute;
+    left: 5px; top: 1px;
+    width: 8px; height: 14px;
+    border-right: 4px solid #fff;
+    border-bottom: 4px solid #fff;
+    transform: rotate(45deg);
+  }
+  .check-rel.chama-ativa input:checked + .caixa { background: var(--dourado-escuro); }
+  .reliquias .col-full { grid-column: 1 / -1; }
+
+  .chama-toggle { display: none; }
+  .chama-toggle.visivel { display: flex; }
+
+  /* Botão principal LUTAR */
+  .btn-lutar {
+    width: 100%;
+    min-height: 64px;
+    margin-top: 12px;
+    font-size: 26px;
+    font-family: "Lilita One", system-ui, sans-serif;
+    background: linear-gradient(180deg, #ffb648, var(--vermelho));
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.5);
+    box-shadow: 0 6px 0 var(--vermelho-escuro);
+    letter-spacing: 2px;
+  }
+
+  /* Painel durante batalha */
+  .painel-batalha {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 8px;
+  }
+  .painel-batalha button {
+    min-height: var(--toque-min);
+    font-size: 14px;
+    background: linear-gradient(180deg, var(--pergaminho), var(--pergaminho-escuro));
+  }
+  .painel-batalha button.primario {
+    background: linear-gradient(180deg, #8ada7e, var(--verde));
+    color: #fff;
+  }
+
+  .oculto { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Barra superior -->
+  <div class="topo">
+    <div class="campo">
+      <label for="selRodada">Rodada</label>
+      <select id="selRodada" aria-label="Selecionar rodada"></select>
+    </div>
+    <button id="btnSemente" aria-label="Gerar nova semente">Semente: —</button>
+  </div>
+
+  <!-- Arena -->
+  <div class="arena-wrap">
+    <canvas id="arena" aria-label="Arena de batalha"></canvas>
+    <div class="hud-topo">
+      <span class="hud-chip" id="hudContagem" aria-live="polite">Heróis 0 · Monstros 0</span>
+      <span class="hud-chip" id="hudTempo">0.0s</span>
+    </div>
+    <div class="cartao-fim oculto" id="cartaoFim">
+      <div class="cartao">
+        <h2 id="cartaoTitulo">Vitória!</h2>
+        <p id="cartaoTempo">Tempo: 0.0s</p>
+        <p id="cartaoVivos">Heróis vivos: 0</p>
+        <div class="botoes">
+          <button id="btnDeNovo">Jogar de novo</button>
+          <button id="btnAjustar">Ajustar time</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Painel inferior -->
+  <div class="painel" id="painel">
+    <div id="painelSetup">
+      <div id="listaHerois"></div>
+
+      <div class="total-linha">
+        <span>Heróis enviados</span>
+        <span class="num-total" id="totalHerois">0</span>
+      </div>
+
+      <div class="reliquias" id="listaReliquias"></div>
+
+      <button class="btn-lutar" id="btnLutar" aria-label="Iniciar batalha">LUTAR!</button>
+    </div>
+
+    <div id="painelBatalha" class="painel-batalha oculto">
+      <button id="btnPausar" aria-label="Pausar ou continuar">⏸ Pausar</button>
+      <button id="btnVel" aria-label="Alternar velocidade">1x</button>
+      <button id="btnRecomecar" class="primario" aria-label="Recomeçar batalha">Recomeçar</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { criarBatalha } from './core/combate.js';
+import { criarVisual } from './render/batalha.js';
+import { HEROIS } from './data/herois.js';
+import { RODADAS } from './data/rodadas.js';
+import { VILOES } from './data/viloes.js';
+
+// ---------- Elementos ----------
+const $ = (sel) => document.querySelector(sel);
+const canvas = $('#arena');
+const hudContagem = $('#hudContagem');
+const hudTempo = $('#hudTempo');
+const selRodada = $('#selRodada');
+const btnSemente = $('#btnSemente');
+const painelSetup = $('#painelSetup');
+const painelBatalha = $('#painelBatalha');
+const cartaoFim = $('#cartaoFim');
+const cartaoTitulo = $('#cartaoTitulo');
+const cartaoTempo = $('#cartaoTempo');
+const cartaoVivos = $('#cartaoVivos');
+const btnLutar = $('#btnLutar');
+const btnDeNovo = $('#btnDeNovo');
+const btnAjustar = $('#btnAjustar');
+const btnPausar = $('#btnPausar');
+const btnVel = $('#btnVel');
+const btnRecomecar = $('#btnRecomecar');
+
+// ---------- Estado ----------
+const ORDEM_HEROIS = ['guerreiro', 'guardiao', 'piromante'];
+const listaHerois = $('#listaHerois');
+const listaReliquias = $('#listaReliquias');
+
+const reliquiasDisponiveis = [
+  { id: 'espadaAfiada', nome: 'Espada Afiada' },
+  { id: 'golpeGiratorio', nome: 'Golpe Giratório' },
+  { id: 'provocacaoLonga', nome: 'Provocação Longa' },
+  { id: 'muralha', nome: 'Muralha' },
+  { id: 'brasaViva', nome: 'Brasa Viva' },
+  { id: 'focoArcano', nome: 'Foco Arcano' },
+  { id: 'chamaConcentrada', nome: 'Chama Concentrada' }
+];
+
+const contagem = { guerreiro: 0, guardiao: 0, piromante: 0 };
+const reliquiasMarcadas = new Set();
+
+let sementeAtual = Math.floor(Math.random() * 1e9);
+let batalhaAtual = null;
+let visualAtual = null;
+let terminou = false;
+
+// ---------- Popula seletor de rodadas ----------
+RODADAS.forEach((r) => {
+  const opt = document.createElement('option');
+  opt.value = String(r.n);
+  opt.textContent = `R${r.n} — ${r.nome}`;
+  selRodada.appendChild(opt);
+});
+
+function rodadaSelecionada() {
+  const n = Number(selRodada.value);
+  return RODADAS.find((r) => r.n === n) || RODADAS[0];
+}
+
+// ---------- Monta painel de heróis ----------
+ORDEM_HEROIS.forEach((tipo) => {
+  const h = HEROIS[tipo];
+  const linha = document.createElement('div');
+  linha.className = 'linha-heroi';
+
+  const info = document.createElement('div');
+  info.className = 'heroi-info';
+  const nome = document.createElement('div');
+  nome.className = 'heroi-nome';
+  nome.textContent = h.nome || tipo;
+  const desc = document.createElement('div');
+  desc.className = 'heroi-desc';
+  desc.textContent = h.custo != null ? `Custo ${h.custo}` : '';
+  info.appendChild(nome);
+  if (desc.textContent) info.appendChild(desc);
+
+  const cont = document.createElement('div');
+  cont.className = 'contador';
+  cont.dataset.tipo = tipo;
+
+  const btnMenos = document.createElement('button');
+  btnMenos.className = 'menos';
+  btnMenos.type = 'button';
+  btnMenos.textContent = '−';
+  btnMenos.setAttribute('aria-label', `Tirar um ${h.nome || tipo}`);
+  btnMenos.addEventListener('click', () => ajustarHeroi(tipo, -1));
+
+  const num = document.createElement('span');
+  num.className = 'num';
+  num.textContent = '0';
+  num.id = 'num-' + tipo;
+
+  const btnMais = document.createElement('button');
+  btnMais.className = 'mais';
+  btnMais.type = 'button';
+  btnMais.textContent = '+';
+  btnMais.setAttribute('aria-label', `Adicionar um ${h.nome || tipo}`);
+  btnMais.addEventListener('click', () => ajustarHeroi(tipo, 1));
+
+  cont.appendChild(btnMenos);
+  cont.appendChild(num);
+  cont.appendChild(btnMais);
+
+  linha.appendChild(info);
+  linha.appendChild(cont);
+  listaHerois.appendChild(linha);
+});
+
+function ajustarHeroi(tipo, delta) {
+  const novo = Math.max(0, Math.min(9, contagem[tipo] + delta));
+  contagem[tipo] = novo;
+  document.getElementById('num-' + tipo).textContent = String(novo);
+  atualizarTotal();
+}
+
+function totalHeroisEnviados() {
+  return contagem.guerreiro + contagem.guardiao + contagem.piromante;
+}
+function atualizarTotal() {
+  $('#totalHerois').textContent = String(totalHeroisEnviados());
+}
+
+// ---------- Relíquias ----------
+reliquiasDisponiveis.forEach((r) => {
+  const label = document.createElement('label');
+  label.className = 'check-rel';
+  if (r.id === 'chamaConcentrada') label.classList.add('chama-ativa');
+
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.value = r.id;
+  input.id = 'rel-' + r.id;
+  input.addEventListener('change', () => {
+    if (input.checked) reliquiasMarcadas.add(r.id);
+    else reliquiasMarcadas.delete(r.id);
+    atualizarChamaToggle();
+  });
+
+  const caixa = document.createElement('span');
+  caixa.className = 'caixa';
+
+  const txt = document.createElement('span');
+  txt.textContent = r.nome;
+
+  label.appendChild(input);
+  label.appendChild(caixa);
+  label.appendChild(txt);
+  listaReliquias.appendChild(label);
+
+  // Interruptor "Chama ligada nesta batalha"
+  if (r.id === 'chamaConcentrada') {
+    const wrap = document.createElement('label');
+    wrap.className = 'check-rel chama-toggle col-full';
+    wrap.id = 'chamaToggle';
+    const inp2 = document.createElement('input');
+    inp2.type = 'checkbox';
+    inp2.id = 'chamaLigada';
+    const cx2 = document.createElement('span');
+    cx2.className = 'caixa';
+    const t2 = document.createElement('span');
+    t2.textContent = 'Chama ligada nesta batalha';
+    wrap.appendChild(inp2);
+    wrap.appendChild(cx2);
+    wrap.appendChild(t2);
+    listaReliquias.appendChild(wrap);
+  }
+});
+
+function atualizarChamaToggle() {
+  const toggle = document.getElementById('chamaToggle');
+  if (!toggle) return;
+  if (reliquiasMarcadas.has('chamaConcentrada')) toggle.classList.add('visivel');
+  else toggle.classList.remove('visivel');
+}
+
+// ---------- Semente ----------
+btnSemente.addEventListener('click', () => {
+  sementeAtual = Math.floor(Math.random() * 1e9);
+  btnSemente.textContent = `Semente: ${sementeAtual}`;
+});
+btnSemente.textContent = `Semente: ${sementeAtual}`;
+
+// ---------- Construção da batalha ----------
+function construirInimigos() {
+  // o motor espera a lista [tipo, quantidade, opções] da rodada (opções = janela de chegada)
+  return rodadaSelecionada().inimigos.map((item) => [...item]);
+}
+
+function iniciarBatalha() {
+  if (visualAtual) { visualAtual.destruir(); visualAtual = null; }
+  terminou = false;
+  cartaoFim.classList.add('oculto');
+
+  const heroisCfg = {
+    guerreiro: contagem.guerreiro,
+    guardiao: contagem.guardiao,
+    piromante: contagem.piromante
+  };
+
+  const chamaLigada = document.getElementById('chamaLigada')?.checked === true &&
+    reliquiasMarcadas.has('chamaConcentrada');
+
+  batalhaAtual = criarBatalha({
+    herois: heroisCfg,
+    inimigos: construirInimigos(),
+    chaves: { chamaConcentrada: chamaLigada },
+    reliquias: Array.from(reliquiasMarcadas),
+    semente: sementeAtual
+  });
+
+  visualAtual = criarVisual(canvas, batalhaAtual, {
+    velocidade: 1,
+    aoFim: (resultado) => mostrarFim(resultado)
+  });
+  visualAtual.iniciar();
+
+  painelSetup.classList.add('oculto');
+  painelBatalha.classList.remove('oculto');
+  btnPausar.textContent = '⏸ Pausar';
+  btnVel.textContent = '1x';
+  btnVel.dataset.v = '1';
+
+  iniciarLoopHud();
+}
+
+// ---------- Loop de HUD (para os contadores) ----------
+let loopHud = null;
+function iniciarLoopHud() {
+  if (loopHud) cancelAnimationFrame(loopHud);
+  const tick = () => {
+    if (!visualAtual || !batalhaAtual) return;
+    const c = visualAtual.contagem();
+    hudContagem.textContent = `Heróis ${c.herois} · Monstros ${c.viloes}`;
+    hudTempo.textContent = `${batalhaAtual.t.toFixed(1)}s`;
+    if (!terminou) loopHud = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function pararLoopHud() {
+  if (loopHud) { cancelAnimationFrame(loopHud); loopHud = null; }
+}
+
+// ---------- Fim de batalha ----------
+function mostrarFim(resultado) {
+  terminou = true;
+  pararLoopHud();
+  const vitoria = resultado === 'vitoria';
+  cartaoTitulo.textContent = vitoria ? 'Vitória!' : 'Derrota';
+  cartaoTitulo.className = vitoria ? 'vitoria' : 'derrota';
+
+  let vivos = 0;
+  if (batalhaAtual) {
+    vivos = batalhaAtual.unidades.filter((u) => u.lado === 'h' && !u.morto).length;
+    hudContagem.textContent = `Heróis ${vivos} · Monstros ${contarViloesVivos()}`;
+    hudTempo.textContent = `${batalhaAtual.t.toFixed(1)}s`;
+  }
+  cartaoTempo.textContent = `Tempo: ${batalhaAtual ? batalhaAtual.t.toFixed(1) : '0.0'}s`;
+  cartaoVivos.textContent = `Heróis vivos: ${vivos}`;
+  cartaoFim.classList.remove('oculto');
+}
+
+function contarViloesVivos() {
+  if (!batalhaAtual) return 0;
+  return batalhaAtual.unidades.filter((u) => u.lado === 'v' && !u.morto).length;
+}
+
+// ---------- Controles durante a batalha ----------
+btnPausar.addEventListener('click', () => {
+  if (!visualAtual) return;
+  if (btnPausar.dataset.pausado === '1') {
+    visualAtual.iniciar();
+    btnPausar.dataset.pausado = '0';
+    btnPausar.textContent = '⏸ Pausar';
+  } else {
+    visualAtual.pausar();
+    btnPausar.dataset.pausado = '1';
+    btnPausar.textContent = '▶ Continuar';
+  }
+});
+
+btnVel.addEventListener('click', () => {
+  if (!visualAtual) return;
+  const v = btnVel.dataset.v === '2' ? 1 : 2;
+  btnVel.dataset.v = String(v);
+  btnVel.textContent = `${v}x`;
+  visualAtual.setVelocidade(v);
+});
+
+btnRecomecar.addEventListener('click', () => {
+  iniciarBatalha();
+});
+
+btnLutar.addEventListener('click', () => {
+  if (totalHeroisEnviados() === 0) {
+    btnLutar.animate(
+      [{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }],
+      { duration: 220, iterations: 2 }
+    );
+    return;
+  }
+  iniciarBatalha();
+});
+
+// ---------- Ajustar time ----------
+function voltarSetup() {
+  pararLoopHud();
+  if (visualAtual) { visualAtual.destruir(); visualAtual = null; }
+  batalhaAtual = null;
+  terminou = false;
+  cartaoFim.classList.add('oculto');
+  painelBatalha.classList.add('oculto');
+  painelSetup.classList.remove('oculto');
+}
+
+btnAjustar.addEventListener('click', voltarSetup);
+
+btnDeNovo.addEventListener('click', () => {
+  iniciarBatalha();
+});
+
+// ---------- Reflow em rotação / resize ----------
+window.addEventListener('resize', () => {
+  // O canvas se autoajusta via CSS; alguns visuais podem querer saber.
+  if (visualAtual && typeof visualAtual.redimensionar === 'function') {
+    visualAtual.redimensionar();
+  }
+});
+
+atualizarTotal();
+atualizarChamaToggle();
+</script>
+</body>
+</html>

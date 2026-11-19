@@ -76,7 +76,7 @@ function causarDano(b, fonte, alvo, valor, tipoGolpe = 'golpe', emArea = false) 
   v = Math.max(1, Math.round(v));
   alvo.pv -= v;
   if (fonte && fonte.lado === 'h') b.stats.danoPorClasse[fonte.tipo] = (b.stats.danoPorClasse[fonte.tipo] || 0) + v;
-  emitir(b, { tipo: 'dano', alvo: alvo.id, valor: v, x: alvo.x, y: alvo.y, golpe: tipoGolpe });
+  emitir(b, { tipo: 'dano', fonte: fonte ? fonte.id : null, alvo: alvo.id, valor: v, x: alvo.x, y: alvo.y, golpe: tipoGolpe });
   if (emArea && alvo.base.respingo && (alvo.respingos || 0) < alvo.base.respingo.max) {
     // dano em área espalha o slime: solta um filhote extra
     alvo.respingos = (alvo.respingos || 0) + 1;
