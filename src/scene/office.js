@@ -8,10 +8,10 @@ const caixa = (w, h, d, m, x, y, z) => { const b = new T.Mesh(new T.BoxGeometry(
 // lugares do escritório (o diretor usa estes pontos para mover os bonecos)
 export const MESAS = {
   gerente: [-6, -3], designer: [0, -3], programador: [6, -3],
-  revisor: [-6, 2], analista: [0, 2], suporte: [6, 2],
+  revisor: [0, 2.2],
 };
 export const PONTOS = {
-  cafe: [0.5, 6.4], reuniao: [-7.6, 6.2], recepcao: [8.2, 5.6], entrada: [11.2, 6.6], telao: [-5, -6.2], kanban: [5, -6.2],
+  cafe: [0.5, 6.4], reuniao: [-7.6, 6.2], recepcao: [8.2, 5.6], entrada: [11.2, 6.6], telao: [-3, -6.2], kanban: [5, -6.2],
 };
 
 export function criarEscritorio(scene) {
@@ -58,7 +58,8 @@ export function criarEscritorio(scene) {
     const f = new T.Mesh(new T.IcosahedronGeometry(0.6, 0), M.planta); f.position.set(x, 1.0, z); f.castShadow = true; g.add(f);
   }
   // telão na parede do fundo (o site aparece numa camada HTML posicionada sobre ele) e kanban
-  const telao = caixa(6.2, 3.4, 0.12, M.tela, -5, 2.0, -8.8); g.add(telao);
+  const telao = caixa(10, 5.2, 0.12, M.tela, -3, 2.9, -8.8); telao.userData.tela = { cx: -3, cy: 2.9, z: -8.73, w: 9.6, h: 5.0 };
+  g.add(caixa(10.4, 5.6, 0.08, M.metal, -3, 2.9, -8.86)); g.add(telao);
   const kanban = caixa(5.4, 2.6, 0.08, M.branco, 5, 1.9, -8.8); g.add(kanban);
   const coluna = (x, c) => g.add(caixa(1.6, 2.3, 0.02, mat(c), x, 1.9, -8.74));
   coluna(3.3, '#FDE9E7'); coluna(5, '#FEF6DA'); coluna(6.7, '#E3F5E1');

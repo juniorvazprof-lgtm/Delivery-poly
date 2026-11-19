@@ -68,3 +68,30 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #F4EEE4; fon
   html body #controles .ctrl-grupo, #controles .ctrl-campo, #controles .ctrl-toggle { flex-shrink: 0; }
   html body #controles .ctrl-select { height: 32px; font-size: 12px; }
 }
+
+/* ---------- telão com o site ---------- */
+#telaCheia[hidden] { display: none; }
+#telaoCamada { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.telao-site { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: #fff; }
+.telao-site iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+.telao-capa { position: absolute; inset: 0; border: 0; padding: 0; background: transparent; cursor: zoom-in; pointer-events: auto; display: flex; align-items: flex-end; justify-content: center; }
+.telao-capa span { margin-bottom: 18px; padding: 10px 22px; border-radius: 999px; background: #1E2333CC; color: #fff; font: 600 26px system-ui, sans-serif; opacity: .85; }
+.telao-capa:hover span, .telao-capa:focus-visible span { opacity: 1; background: #3B82F6; }
+#telaCheia { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; gap: 10px; background: #0F172A;
+  padding: max(10px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); color: #E2E8F0; }
+#telaCheia header { display: flex; align-items: center; gap: 14px; font-size: 18px; }
+#telaCheia .tc-etapa { color: #94A3B8; letter-spacing: .08em; font-size: 15px; }
+#telaCheia .tc-nome { font-weight: 800; font-size: 22px; flex: 1; }
+#telaCheia .tc-quadro { flex: 1; min-height: 0; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 0 0 6px #334155; }
+#telaCheia iframe { width: 100%; height: 100%; border: 0; display: block; }
+#telaCheia .tc-fala { margin: 0; font-size: 18px; text-align: center; color: #CBD5E1; }
+#telaCheia nav { display: flex; gap: 12px; justify-content: center; }
+#telaCheia button { height: 54px; padding: 0 24px; border: 0; border-radius: 12px; background: #334155; color: #fff; font: 700 18px system-ui, sans-serif; cursor: pointer; }
+#telaCheia button:hover, #telaCheia button:focus-visible { background: #475569; outline: 2px solid #93C5FD; }
+#telaCheia .tc-play { background: #3B82F6; min-width: 170px; }
+#telaCheia .tc-fechar { height: 44px; width: 44px; padding: 0; font-size: 20px; }
+@media (max-height: 520px) {
+  #telaCheia { gap: 6px; } #telaCheia header { font-size: 13px; } #telaCheia .tc-nome { font-size: 15px; } #telaCheia .tc-etapa { font-size: 11px; }
+  #telaCheia .tc-fala { font-size: 12px; } #telaCheia button { height: 38px; padding: 0 14px; font-size: 13px; } #telaCheia .tc-play { min-width: 120px; }
+  #telaCheia .tc-fechar { height: 34px; width: 34px; }
+}

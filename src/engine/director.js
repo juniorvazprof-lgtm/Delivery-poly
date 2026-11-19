@@ -8,8 +8,7 @@ const perto = ([x, z], r = 0.6) => [x + (Math.random() - 0.5) * r * 2, z + (Math
 export function criarDiretor({ agentes, rotulos, falas, escritorio, relogio, aoEtapa }) {
   const porId = Object.fromEntries(agentes.map(a => [a.def.id, a]));
   const bots = agentes.filter(a => a.def.tipo === 'bot' && a.def.id !== 'cliente');
-  const destinos = { estagiario: ['gerente', 'designer', 'programador', 'revisor', 'cafe', 'kanban'], suporte: ['suporte', 'cafe', 'suporte'],
-    analista: ['analista', 'reuniao', 'analista'], faxineiro: ['cafe', 'reuniao', 'recepcao', 'telao', 'kanban', 'entrada'], recepcionista: ['recepcao'] };
+  const destinos = { estagiario: ['gerente', 'designer', 'programador', 'revisor', 'cafe', 'kanban'], recepcionista: ['recepcao'] };
   const lugar = id => MESAS[id] ? [MESAS[id][0], MESAS[id][1] + 1.05] : PONTOS[id];
   let cenario = null, i = -1, fimEtapa = 0;
   const d = {

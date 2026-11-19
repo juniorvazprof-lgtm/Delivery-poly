@@ -11,9 +11,6 @@ export const AGENTES = [
   { id: 'cliente', nome: 'Cliente', tipo: 'bot', cor: '#9CA3AF', roupa: '#B45309', cabelo: '#111827' },
   { id: 'estagiario', nome: 'Estagiário', tipo: 'bot', cor: '#9CA3AF', roupa: '#0EA5E9', cabelo: '#92400E' },
   { id: 'recepcionista', nome: 'Recepcionista', tipo: 'bot', cor: '#9CA3AF', roupa: '#DB2777', cabelo: '#451A03' },
-  { id: 'suporte', nome: 'Suporte', tipo: 'bot', cor: '#9CA3AF', roupa: '#475569', cabelo: '#000000' },
-  { id: 'analista', nome: 'Analista', tipo: 'bot', cor: '#9CA3AF', roupa: '#0F766E', cabelo: '#78350F' },
-  { id: 'faxineiro', nome: 'Copeiro', tipo: 'bot', cor: '#9CA3AF', roupa: '#65A30D', cabelo: '#374151' },
 ];
 const PELES = ['#F2C9A0', '#D9A066', '#A86B3C', '#7A4A2A', '#F5D7B8'];
 

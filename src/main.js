@@ -5,6 +5,7 @@ import { AGENTES, criarAgente } from './scene/agentModel.js';
 import { criarRotulos } from './ui/rotulos.js';
 import { criarRelogio } from './engine/clock.js';
 import { criarDiretor } from './engine/director.js';
+import { criarTelao } from './ui/telao.js';
 import { criarControles, setStatusModo } from './ui/controls.js';
 
 const carregar = url => fetch(url).then(r => { if (!r.ok) throw new Error(url); return r.json(); });
@@ -38,8 +39,9 @@ const agentes = AGENTES.map((d, i) => { const a = criarAgente(d, i); scene.add(a
 const $ = id => document.getElementById(id);
 function mostrarEtapa(e, i, total) {
   const ag = AGENTES.find(a => a.id === e.agente);
+  telao?.mostrar(CENARIOS[cenarioAtual], i, e, ag);
   $('gEtapa').textContent = `ETAPA ${i + 1} de ${total}`; $('gBarra').style.width = `${((i + 1) / total) * 100}%`;
-  $('gNome').textContent = e.id.replace(/^\d+-/, '').replace(/-/g, ' ').toUpperCase();
+  $('gNome').textContent = e.id.replace(/^\d+-/, '').replace(/-/g, ' ').replace('codar', 'programar').replace('cardapio', 'cardápio').replace(/ \d$/, '').toUpperCase();
   $('gQuem').textContent = ''; const b = document.createElement('b'); b.textContent = ag.nome; const t = document.createElement('span');
   t.className = `mini ${ag.tipo}`; t.textContent = ag.tipo === 'ia' ? 'IA' : 'ROTEIRO'; if (ag.tipo === 'ia') t.style.background = ag.cor; $('gQuem').append(b, ' ', t);
   $('gExplica').textContent = `“${e.explicacao || ''}”`; $('gPergunta').textContent = e.perguntaPublico || '';
@@ -48,8 +50,11 @@ function mostrarEtapa(e, i, total) {
 
 // ---------- relógio, diretor e controles ----------
 const relogio = criarRelogio();
+let telao = null;
 let diretor = criarDiretor({ agentes, rotulos, falas, escritorio, relogio, aoEtapa: mostrarEtapa });
 let cenarioAtual = 'lanchonete';
+telao = criarTelao({ camada: $('telaoCamada'), telao: escritorio.telao, relogio, acoes: { proxima: () => diretor.proxima(), anterior: () => diretor.anterior() } });
+telao.mostrar(CENARIOS[cenarioAtual], -1, { id: '0-inicio' }, null);
 diretor.montar(CENARIOS[cenarioAtual]);
 const ctrl = criarControles(relogio, {
   proxima: () => diretor.proxima(), anterior: () => diretor.anterior(),
@@ -80,6 +85,7 @@ function quadro(agora) {
   if (girar) ang += dt * 0.05;
   cam.position.set(foco.x + Math.sin(ang) * 30, 24, foco.z + Math.cos(ang) * 30); cam.lookAt(foco);
   renderer.render(scene, cam);
+  telao.posicionar(cam, innerWidth, innerHeight);
   rotulos.atualizar(cam, innerWidth, innerHeight, relogio.tempo);
 }
 requestAnimationFrame(quadro);
