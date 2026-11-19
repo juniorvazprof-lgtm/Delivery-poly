@@ -29,9 +29,9 @@ function criarUnidade(b, lado, tipo, x, y, extra = {}) {
   return u;
 }
 
-export function criarBatalha({ herois = {}, inimigos = [], reliquias = [], consumiveis = {}, semente = 1 }) {
+export function criarBatalha({ herois = {}, inimigos = [], reliquias = [], chaves = {}, consumiveis = {}, semente = 1 }) {
   const b = {
-    t: 0, rng: criarRng(semente), mods: modsPorClasse(reliquias),
+    t: 0, rng: criarRng(semente), mods: modsPorClasse(reliquias, chaves),
     unidades: [], projeteis: [], eventos: [], fim: null,
     consumiveis: { ...consumiveis }, usado: {}, stats: { danoPorClasse: {}, acertosArea: [] },
   };
@@ -46,14 +46,14 @@ export function criarBatalha({ herois = {}, inimigos = [], reliquias = [], consu
     }
   }
   // inimigos em cima, em bandos
-  for (const [tipo, qtd] of inimigos) {
+  for (const [tipo, qtd, opc = {}] of inimigos) {
     const cx = tipo === 'reiSlime' ? ARENA.largura / 2 : b.rng.entre(20, 70);
     for (let i = 0; i < qtd; i++) {
       // goblins chegam espalhados e em levas; slimes em grupo
       const goblin = tipo === 'goblin';
       const x = goblin ? b.rng.entre(8, ARENA.largura - 8) : clamp(cx + b.rng.entre(-18, 18), 6, ARENA.largura - 6);
       criarUnidade(b, 'v', tipo, x, tipo === 'reiSlime' ? 20 : b.rng.entre(6, 36),
-        { geracao: 0, atraso: goblin ? b.rng.entre(0, 3) : 0 });
+        { geracao: 0, atraso: opc.chegada ? b.rng.entre(...opc.chegada) : goblin ? b.rng.entre(0, 3) : 0 });
     }
   }
   return b;
@@ -69,7 +69,6 @@ function causarDano(b, fonte, alvo, valor, tipoGolpe = 'golpe', emArea = false) 
   if (alvo.morto) return 0;
   let v = valor;
   if (alvo.base.reducaoDano) v *= 1 - alvo.base.reducaoDano;
-  if (emArea && alvo.base.resisteArea) v *= 1 - alvo.base.resisteArea; // gelatinosos absorvem explosões
   if (alvo.lado === 'h') { // Muralha: aliados perto de um Guardião com a relíquia recebem menos dano
     const red = b.mods.guardiao?.auraReducao;
     if (red && vivos(b, 'h').some((g) => g.tipo === 'guardiao' && dist(g, alvo) <= (b.mods.guardiao.auraRaio || 12))) v *= 1 - red;
@@ -213,12 +212,13 @@ export function passo(b, dt = DT) {
     const prov = u.base.habilidades?.find((h) => h.tipo === 'provocar');
     if (prov) {
       u.provCd -= dt;
-      const perto = vivos(b, 'v').filter((o) => dist(o, u) <= prov.raio);
+      const raioProv = prov.raio + (u.m.provocarRaioMais || 0);
+      const perto = vivos(b, 'v').filter((o) => dist(o, u) <= raioProv);
       if (u.provCd <= 0 && perto.length) {
         const dur = prov.duracao + (u.m.provocarDuracaoMais || 0);
         for (const o of perto) { o.provocadoPor = u; o.provocadoAte = b.t + dur; o.alvo = u; }
         u.provCd = prov.recarga;
-        emitir(b, { tipo: 'provocar', fonte: u.id, x: u.x, y: u.y, raio: prov.raio });
+        emitir(b, { tipo: 'provocar', fonte: u.id, x: u.x, y: u.y, raio: raioProv });
       }
     }
     // alvo
@@ -233,6 +233,17 @@ export function passo(b, dt = DT) {
     } else {
       const k = Math.min(1, (u.vel * dt) / d);
       u.x += (a.x - u.x) * k; u.y += (a.y - u.y) * k;
+    }
+  }
+  // chefes que invocam ondas
+  for (const u of b.unidades) {
+    const inv = u.base.invoca;
+    if (!inv || u.morto) continue;
+    u.invT = (u.invT ?? inv.primeiro ?? inv.intervalo) - dt;
+    if (u.invT <= 0) {
+      u.invT = inv.intervalo;
+      for (let i = 0; i < inv.qtd; i++) criarUnidade(b, 'v', inv.tipo, b.rng.entre(8, ARENA.largura - 8), b.rng.entre(4, 14), { geracao: 0, atraso: b.t + b.rng.entre(0, 1.5) });
+      emitir(b, { tipo: 'invocar', fonte: u.id, x: u.x, y: u.y, qtd: inv.qtd });
     }
   }
   // separação simples para não empilhar

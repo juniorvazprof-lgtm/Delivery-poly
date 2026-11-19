@@ -17,6 +17,6 @@ export const HEROIS = {
     nome: 'Piromante', familia: 'Arcano', papel: 'à distância, área',
     pv: 65, dano: 25, intervalo: 1.8, alcance: 40, velocidade: 10, raio: 2.0, custo: 30,
     projetil: { velocidade: 60 },
-    habilidades: [{ tipo: 'bolaDeFogo', raio: 7.5 }],
+    habilidades: [{ tipo: 'bolaDeFogo', raio: 8 }],
   },
 };

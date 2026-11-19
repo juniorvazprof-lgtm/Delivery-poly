@@ -22,10 +22,14 @@ Desafio (mostra inimigos) → escolha (+/− por classe) → batalha automática
 | Guardião: tempo sobrevivendo sozinho contra 6 goblins | ≥ 15 s |
 | Piromante sozinho contra 6 goblins | vence |
 | Piromantes puros contra slimes | pior que guerreiros puros (precisam de mais heróis ou perdem) |
-| Duração das batalhas R3–R10 | 12–45 s (R1–R2 rápidas de propósito, vitórias cedo) |
+| Duração das batalhas R3–R10 | só goblins: 8–45 s; demais: 12–45 s (R1–R2 rápidas de propósito, vitórias cedo) |
 | Número ideal por rodada (R1 → R10) | cresce de ~2 até ~9–12, sem degraus de mais de +3 entre rodadas |
 | Nenhuma classe sozinha (só um tipo de herói) | deve ser ideal em todas as rodadas — senão é estratégia degenerada |
-| Relíquia Chama Concentrada | deve reduzir o número ideal contra slimes para o Piromante |
+| Relíquia Chama Concentrada | é uma chave ligada antes da batalha; deve reduzir o número de Piromantes contra slimes |
+| Relíquias raras | cada uma reduz o número ideal em pelo menos 1 em alguma rodada |
+| Rodada 6 | só Piromantes pede no máximo 2× o ideal |
+| Piromante tardio | aparece na formação ideal de pelo menos uma rodada R7–R10 |
+| Guardião | comparar ideal com e sem armadura; não deve aparecer em todas as formações |
 
 ## Economia (alvos)
 | Item | Alvo |
