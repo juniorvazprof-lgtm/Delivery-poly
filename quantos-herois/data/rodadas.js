@@ -18,6 +18,7 @@ export const ECONOMIA = {
   vidaBase: 30,                               // perder tira vida da base conforme os monstros que sobraram
   danoBase: { goblin: 1, slimePequeno: 1, slimeMedio: 2, slime: 3, reiSlime: 10 }, // dano à base por monstro restante
   danoBaseMinimo: 3,
+  danoBaseMaximo: 12,                         // uma derrota nunca tira mais que isso (são ~3 derrotas para perder a jornada)
   multAbate: 0.2,                             // moedas dos monstros enchem o POTE: VILOES[tipo].ouro × multAbate
   bonusVitoria: (rodada) => 16 + 6 * rodada,  // somado ao pote ao vencer
   multEstrelas: { 1: 0.4, 2: 1.2, 3: 3.0 },   // o pote inteiro é multiplicado pelas estrelas

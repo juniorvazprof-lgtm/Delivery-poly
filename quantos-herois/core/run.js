@@ -243,7 +243,7 @@ export function concluirBatalha(run, opcao, enviados, resumo) {
     for (const tipo of (resumo.restantes || [])) {
       soma += ECONOMIA.danoBase[tipo] || 0;
     }
-    danoBase = Math.max(ECONOMIA.danoBaseMinimo, soma);
+    danoBase = Math.min(ECONOMIA.danoBaseMaximo ?? Infinity, Math.max(ECONOMIA.danoBaseMinimo, soma));
     run.baseVida -= danoBase;
   }
 
