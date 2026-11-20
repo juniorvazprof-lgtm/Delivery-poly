@@ -480,7 +480,7 @@ if (!isMainThread) {
     multAbate: parseFloat(arg('--multAbate', String(ECONOMIA.multAbate))),
     soldo: parseFloat(arg('--soldo', String(ECONOMIA.soldo || 0))),
     inflacao: parseFloat(arg('--inflacao', String(ECONOMIA.inflacao))),
-    vidas: parseInt(arg('--vidas', String(ECONOMIA.vidas)), 10),
+    vidas: parseInt(arg('--vidas', String(ECONOMIA.vidas ?? Math.ceil(ECONOMIA.vidaBase / ECONOMIA.danoBaseMaximo))), 10),
     rodadasDesmaio: ECONOMIA.rodadasDesmaio,
     multEstrelas: {
       1: parseFloat(arg('--m1', String(ECONOMIA.multEstrelas[1]))),
