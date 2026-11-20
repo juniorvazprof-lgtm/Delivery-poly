@@ -123,7 +123,7 @@ function irTime(){
     opcao: opcaoAtual,
     disponiveis: disp,
     estrelasCalc: (op, env) => estrelas(op, env),
-    custoSoldo: (n) => custoSoldo(n),
+    custoSoldo: (env) => custoSoldo(env),
     validar: (op, env) => validarEnvio(run, op, env),
     aoMudar: (env) => { enviadosAtual = env; },
     aoLutar: (env) => { enviadosAtual = env; irBatalha(); },

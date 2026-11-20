@@ -22,7 +22,7 @@ function rngEscolha(run, arr) {
 // ---------- Criação ----------
 export function criarRun({ semente, ideais }) {
   const s = (semente >>> 0) || 1;
-  const elenco = { guerreiro: 0, guardiao: 0, piromante: 0 };
+  const elenco = Object.fromEntries(Object.keys(HEROIS).map((c) => [c, 0]));
   for (const c of Object.keys(ECONOMIA.elencoInicial)) {
     elenco[c] = ECONOMIA.elencoInicial[c];
   }
@@ -44,7 +44,7 @@ export function criarRun({ semente, ideais }) {
       bandagem: 0,
       tonicoCura: 0,
     },
-    recrutados: { guerreiro: 0, guardiao: 0, piromante: 0 },
+    recrutados: Object.fromEntries(Object.keys(HEROIS).map((c) => [c, 0])),
     ideais: ideais || {},
     historico: [],
     fim: null,
@@ -100,7 +100,7 @@ export function opcoesDaRodada(run) {
 
 // ---------- Disponibilidade / preços ----------
 export function disponiveis(run) {
-  const out = { guerreiro: 0, guardiao: 0, piromante: 0 };
+  const out = Object.fromEntries(Object.keys(HEROIS).map((c) => [c, 0])); // todas as classes, inclusive as recrutadas depois
   for (const c of Object.keys(out)) {
     const total = run.elenco[c] || 0;
     let fora = 0;

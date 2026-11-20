@@ -1,7 +1,7 @@
 import { HEROIS } from '../data/herois.js';
 const EMOJI_INIMIGO = { goblin:'👺', slime:'🟢', slimeMedio:'🟢', slimePequeno:'🟢', reiSlime:'👑' };
 const NOME_INIMIGO = { goblin:'Goblin', slime:'Slime', slimeMedio:'Slime Médio', slimePequeno:'Slime Pequeno', reiSlime:'Rei Slime' };
-const EMOJI_CLASSE = { guerreiro:'⚔️', guardiao:'🛡️', piromante:'🔥' };
+const EMOJI_CLASSE = { guerreiro:'⚔️', guardiao:'🛡️', piromante:'🔥', arqueiro:'🏹', clerigo:'✨' };
 
 function el(tag, attrs, ...filhos){
   const e = document.createElement(tag);
@@ -169,9 +169,11 @@ export function telaTime(app, { run, opcao, disponiveis, estrelasCalc, custoSold
     const btnMenos = el('button', { class:'secundario', onclick: () => { if (enviados[classe] > 0){ enviados[classe]--; atualizar(); } } }, '−');
     const valor = el('div', { class:'valor' }, '0');
     const btnMais = el('button', { class:'principal', onclick: () => { if (enviados[classe] < info.disponiveis){ enviados[classe]++; atualizar(); } } }, '+');
+    const btnMax = el('button', { class:'secundario mini', 'aria-label': `Mandar todos os ${info.nome} disponíveis`, onclick: () => { enviados[classe] = info.disponiveis; atualizar(); } }, 'Máx');
     contador.appendChild(btnMenos);
     contador.appendChild(valor);
     contador.appendChild(btnMais);
+    contador.appendChild(btnMax);
     linha.appendChild(contador);
     painelTime.appendChild(linha);
     linha._atualizar = () => { valor.textContent = String(enviados[classe]); };
@@ -206,6 +208,10 @@ export function telaTime(app, { run, opcao, disponiveis, estrelasCalc, custoSold
   }
   const motivo = el('div', { class:'motivo' }, '');
   acoes.appendChild(motivo);
+  const btnTodos = el('button', { class:'secundario', onclick: () => { for (const c in disponiveis) enviados[c] = disponiveis[c].disponiveis; atualizar(); } }, 'Todos no máx');
+  const btnZerar = el('button', { class:'secundario', onclick: () => { for (const c in enviados) enviados[c] = 0; atualizar(); } }, 'Zerar');
+  acoes.appendChild(btnTodos);
+  acoes.appendChild(btnZerar);
   const btnVoltar = el('button', { class:'secundario', onclick: aoVoltar }, 'Voltar');
   acoes.appendChild(btnVoltar);
   const btnLutar = el('button', { class:'grande principal', onclick: () => aoLutar(enviados) }, 'LUTAR!');
@@ -224,7 +230,7 @@ export function telaTime(app, { run, opcao, disponiveis, estrelasCalc, custoSold
     for (let i = 0; i < 3; i++){
       valEstrelas.appendChild(el('span', { class: i < est ? '' : 'off' }, '★'));
     }
-    const soldo = custoSoldo(total);
+    const soldo = custoSoldo(enviados); // a função espera o objeto {classe: n}
     valSoldo.textContent = `${soldo} 🪙`;
     const v = validar(opcao, enviados);
     btnLutar.disabled = !v.ok;

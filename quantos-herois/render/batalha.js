@@ -54,6 +54,10 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
   const estados = new Map();
   const conhecidas = new Set();
 
+  // ----- Rastreio de projéteis para orientação (flechas) -----
+  // Guarda última posição vista por objeto de projétil.
+  const rastroProj = new WeakMap();
+
   // ----- Pools de particulas e textos -----
   const MAX_PARTICULAS = 500;
   const MAX_TEXTOS = 80;
@@ -463,6 +467,9 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
             case 'fogo': cor = '#ff8c1a'; tam = 3.8; break;
             case 'queima': cor = '#ff9a3c'; tam = 2.4; break;
             case 'meteoro': cor = '#ff3b30'; tam = 5.6; pop = true; break;
+            case 'flecha': cor = '#ffffff'; tam = 2.6; break;
+            case 'certeiro': cor = '#ffe14d'; tam = 4.8; txt = txt + '!'; pop = true; tremer(1.2); break;
+            case 'luz': cor = '#ffe9a8'; tam = 2.8; break;
           }
           criarTexto(tx, ty - 4, txt, cor, tam, pop);
           for (let k = 0; k < 4; k++) {
@@ -480,12 +487,32 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
           const tx = ev.x != null ? ev.x : (e ? e.x : 45);
           const ty = ev.y != null ? ev.y : (e ? e.y : 70);
           criarTexto(tx, ty - 4, '+' + Math.round(ev.valor), '#6eff7a', 3.6, false);
-          for (let k = 0; k < 6; k++) {
+          // raio de luz dourada curvo do clérigo até o alvo
+          if (ev.fonte != null) {
+            const ef = estados.get(ev.fonte);
+            if (ef) {
+              const fx = ef.x, fy = ef.y;
+              const mx = (fx + tx) / 2;
+              const my = Math.min(fy, ty) - 6 - Math.random() * 3;
+              const p = alocarParticula();
+              if (p) {
+                iniciarParticula(p, fx, fy, 0, 0, 0.25, 1, 1, '#ffe9a8', 0, 0, 7);
+                p.raioIni = 0; p.raioFim = 0;
+                p.rot = 0; p.rotVel = 0;
+                // guarda pontos da curva nos campos disponíveis
+                p.x = fx; p.y = fy;
+                p.vx = mx; p.vy = my;
+                p.tam = tx; p.tamFinal = ty;
+              }
+            }
+          }
+          // partículas "+" verdes subindo do alvo
+          for (let k = 0; k < 5; k++) {
             const p = alocarParticula();
             if (!p) break;
             const ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
             iniciarParticula(p, tx + (Math.random() - 0.5) * 2, ty, Math.cos(ang) * 6, Math.sin(ang) * 14,
-              0.4 + Math.random() * 0.2, 0.8, 0.3, '#6eff7a', -20, 20);
+              0.4 + Math.random() * 0.2, 0.8, 0.3, '#6eff7a', -20, 20, 8);
           }
           break;
         }
@@ -538,13 +565,40 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
         }
         case 'disparo': {
           const e = estados.get(ev.fonte);
-          if (e) { e.avanco = Math.min(1, e.avanco + 0.8); e.glow = 0.18; }
-          for (let k = 0; k < 3; k++) {
-            const p = alocarParticula();
-            if (!p) break;
-            const ang = Math.random() * Math.PI * 2;
-            iniciarParticula(p, ev.x, ev.y, Math.cos(ang) * 6, Math.sin(ang) * 6 - 5,
-              0.2, 0.6, 0, '#ffcc66', 0, 20);
+          if (e) { e.avanco = Math.min(1, e.avanco + 0.8); }
+          // brilho de cajado apenas para bola de fogo (sem tipo)
+          if (!ev.projetil) {
+            if (e) e.glow = 0.18;
+            for (let k = 0; k < 3; k++) {
+              const p = alocarParticula();
+              if (!p) break;
+              const ang = Math.random() * Math.PI * 2;
+              iniciarParticula(p, ev.x, ev.y, Math.cos(ang) * 6, Math.sin(ang) * 6 - 5,
+                0.2, 0.6, 0, '#ffcc66', 0, 20);
+            }
+          } else if (ev.projetil === 'flecha') {
+            // "twang" visual: 2 linhas curtas atrás do arqueiro
+            if (e) {
+              const dir = e.dir || 1;
+              const bx = e.x - dir * 0.6;
+              const by = e.y - 0.4;
+              for (let k = 0; k < 2; k++) {
+                const p = alocarParticula();
+                if (!p) break;
+                iniciarParticula(p, bx + (Math.random() - 0.5) * 0.3, by + (Math.random() - 0.5) * 0.3,
+                  -dir * (10 + Math.random() * 6), (Math.random() - 0.5) * 4,
+                  0.18, 0.5, 0.05, '#f5e6c8', 0, 40, 9);
+              }
+            }
+          } else if (ev.projetil === 'luz') {
+            // pequeno flash dourado na fonte
+            for (let k = 0; k < 3; k++) {
+              const p = alocarParticula();
+              if (!p) break;
+              const ang = Math.random() * Math.PI * 2;
+              iniciarParticula(p, ev.x, ev.y, Math.cos(ang) * 5, Math.sin(ang) * 5 - 4,
+                0.22, 0.7, 0.05, '#ffe9a8', 0, 20);
+            }
           }
           break;
         }
@@ -583,6 +637,9 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       case 'queima': return '#ffb347';
       case 'firme': return '#ffe14d';
       case 'meteoro': return '#ff5b3b';
+      case 'flecha': return '#f5e6c8';
+      case 'certeiro': return '#ffe14d';
+      case 'luz': return '#ffe9a8';
       default: return '#ffffff';
     }
   }
@@ -846,42 +903,179 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     ctx.save();
     for (let i = 0; i < projs.length; i++) {
       const p = projs[i];
+      if (p.tipo === 'flecha') {
+        desenharFlecha(p);
+      } else if (p.tipo === 'luz') {
+        desenharLuz(p);
+      } else {
+        // bola de fogo (comportamento original)
+        ctx.globalCompositeOperation = 'lighter';
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 2.4);
+        g.addColorStop(0, 'rgba(255,220,120,0.9)');
+        g.addColorStop(0.5, 'rgba(255,140,40,0.55)');
+        g.addColorStop(1, 'rgba(255,80,20,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#ff8c1a';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffe066';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 0.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#3a1a00';
+        ctx.lineWidth = 1.5 / escala;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.1, 0, Math.PI * 2);
+        ctx.stroke();
+        for (let k = 0; k < 2; k++) {
+          const pt = alocarParticula();
+          if (!pt) break;
+          iniciarParticula(pt,
+            p.x + (Math.random() - 0.5) * 0.6,
+            p.y + (Math.random() - 0.5) * 0.6,
+            (Math.random() - 0.5) * 4,
+            (Math.random() - 0.5) * 4,
+            0.28, 0.9, 0.05,
+            Math.random() < 0.5 ? '#ffb347' : '#ffe066', 0, 20);
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  // Desenha uma flecha orientada na direção do movimento
+  function desenharFlecha(p) {
+    const ant = rastroProj.get(p);
+    let ang = 0;
+    if (ant) {
+      const dx = p.x - ant.x;
+      const dy = p.y - ant.y;
+      if (dx * dx + dy * dy > 1e-6) ang = Math.atan2(dy, dx);
+      else if (ant.ang !== undefined) ang = ant.ang;
+    } else if (p.vx !== undefined || p.vy !== undefined) {
+      const vx = p.vx || 0, vy = p.vy || 0;
+      if (vx * vx + vy * vy > 1e-6) ang = Math.atan2(vy, vx);
+    }
+    rastroProj.set(p, { x: p.x, y: p.y, ang });
+
+    const perfura = (p.perfura || 0) > 0;
+    const comp = 3.0; // comprimento em metros
+    const meia = comp / 2;
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(ang);
+
+    // rastro brilhante para flecha perfurante
+    if (perfura) {
       ctx.globalCompositeOperation = 'lighter';
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 2.4);
-      g.addColorStop(0, 'rgba(255,220,120,0.9)');
-      g.addColorStop(0.5, 'rgba(255,140,40,0.55)');
-      g.addColorStop(1, 'rgba(255,80,20,0)');
+      const g = ctx.createLinearGradient(-meia - 2, 0, meia, 0);
+      g.addColorStop(0, 'rgba(255,220,120,0)');
+      g.addColorStop(0.6, 'rgba(255,220,120,0.55)');
+      g.addColorStop(1, 'rgba(255,240,180,0.9)');
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
+      ctx.moveTo(-meia - 2, -0.35);
+      ctx.lineTo(meia, 0);
+      ctx.lineTo(-meia - 2, 0.35);
+      ctx.closePath();
       ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = '#ff8c1a';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 1.1, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ffe066';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 0.6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#3a1a00';
-      ctx.lineWidth = 1.5 / escala;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 1.1, 0, Math.PI * 2);
-      ctx.stroke();
+    }
+
+    // haste de madeira
+    ctx.strokeStyle = perfura ? '#c9a24a' : '#8a5a2b';
+    ctx.lineWidth = 0.28;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-meia, 0);
+    ctx.lineTo(meia - 0.5, 0);
+    ctx.stroke();
+
+    // ponta metálica
+    ctx.fillStyle = perfura ? '#fff2a8' : '#d9dde3';
+    ctx.strokeStyle = perfura ? '#a07a20' : '#5a5f66';
+    ctx.lineWidth = 0.12;
+    ctx.beginPath();
+    ctx.moveTo(meia, 0);
+    ctx.lineTo(meia - 0.7, -0.32);
+    ctx.lineTo(meia - 0.7, 0.32);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // penas na traseira
+    ctx.fillStyle = perfura ? '#ffe066' : '#e8e2d0';
+    ctx.strokeStyle = perfura ? '#a07a20' : '#8a8470';
+    ctx.lineWidth = 0.1;
+    ctx.beginPath();
+    ctx.moveTo(-meia, 0);
+    ctx.lineTo(-meia + 0.7, -0.45);
+    ctx.lineTo(-meia + 0.55, 0);
+    ctx.lineTo(-meia + 0.7, 0.45);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+
+    // rastro de faíscas douradas para flecha perfurante
+    if (perfura) {
       for (let k = 0; k < 2; k++) {
         const pt = alocarParticula();
         if (!pt) break;
         iniciarParticula(pt,
-          p.x + (Math.random() - 0.5) * 0.6,
-          p.y + (Math.random() - 0.5) * 0.6,
-          (Math.random() - 0.5) * 4,
-          (Math.random() - 0.5) * 4,
-          0.28, 0.9, 0.05,
-          Math.random() < 0.5 ? '#ffb347' : '#ffe066', 0, 20);
+          p.x - Math.cos(ang) * meia + (Math.random() - 0.5) * 0.4,
+          p.y - Math.sin(ang) * meia + (Math.random() - 0.5) * 0.4,
+          -Math.cos(ang) * (4 + Math.random() * 4) + (Math.random() - 0.5) * 3,
+          -Math.sin(ang) * (4 + Math.random() * 4) + (Math.random() - 0.5) * 3,
+          0.25, 0.7, 0.05, '#ffe066', 0, 30);
       }
     }
+  }
+
+  // Desenha uma esfera de luz dourada-clara com halo e faíscas
+  function desenharLuz(p) {
+    const raio = 0.7;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, raio * 3.2);
+    g.addColorStop(0, 'rgba(255,245,200,0.95)');
+    g.addColorStop(0.35, 'rgba(255,225,140,0.6)');
+    g.addColorStop(1, 'rgba(255,200,80,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, raio * 3.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#fff6d0';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, raio, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(180,140,40,0.8)';
+    ctx.lineWidth = 1.2 / escala;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, raio, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
+
+    // rastro de faíscas douradas
+    for (let k = 0; k < 2; k++) {
+      const pt = alocarParticula();
+      if (!pt) break;
+      iniciarParticula(pt,
+        p.x + (Math.random() - 0.5) * 0.6,
+        p.y + (Math.random() - 0.5) * 0.6,
+        (Math.random() - 0.5) * 4,
+        (Math.random() - 0.5) * 4 - 2,
+        0.3, 0.6, 0.05,
+        Math.random() < 0.5 ? '#ffe9a8' : '#fff6d0', 0, 20);
+    }
   }
 
   function desenharUnidadeVisual(u) {
@@ -1022,6 +1216,50 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
         ctx.lineWidth = 2 / escala;
         ctx.beginPath();
         ctx.arc(p.x, p.y, tam, p.rot, p.rot + Math.PI * 1.2);
+        ctx.stroke();
+      } else if (p.tipo === 7) {
+        // raio de luz dourada curvo (cura)
+        const kk = 1 - k;
+        const x0 = p.x, y0 = p.y;
+        const cx = p.vx, cy = p.vy;
+        const x1 = p.tam, y1 = p.tamFinal;
+        ctx.globalAlpha = a * 0.9;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = p.cor;
+        ctx.lineWidth = (3 * k) / escala;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.quadraticCurveTo(cx, cy, x1, y1);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,220,0.9)';
+        ctx.lineWidth = (1.2 * k) / escala;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.quadraticCurveTo(cx, cy, x1, y1);
+        ctx.stroke();
+        ctx.globalCompositeOperation = 'source-over';
+      } else if (p.tipo === 8) {
+        // partícula "+" verde subindo
+        ctx.globalAlpha = a;
+        ctx.strokeStyle = p.cor;
+        ctx.lineWidth = (1.6 * k) / escala;
+        ctx.lineCap = 'round';
+        const s = tam * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(p.x - s, p.y);
+        ctx.lineTo(p.x + s, p.y);
+        ctx.moveTo(p.x, p.y - s);
+        ctx.lineTo(p.x, p.y + s);
+        ctx.stroke();
+      } else if (p.tipo === 9) {
+        // "twang" — linha curta atrás do arqueiro
+        ctx.globalAlpha = a;
+        ctx.strokeStyle = p.cor;
+        ctx.lineWidth = (1.4 * k) / escala;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x + p.vx * 0.04, p.y + p.vy * 0.04);
         ctx.stroke();
       } else if (p.tipo === 1) {
         ctx.globalAlpha = a;

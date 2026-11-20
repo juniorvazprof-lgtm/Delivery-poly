@@ -19,4 +19,16 @@ export const HEROIS = {
     projetil: { velocidade: 60 },
     habilidades: [{ tipo: 'bolaDeFogo', raio: 8 }],
   },
+  arqueiro: {
+    nome: 'Arqueiro', familia: 'Marcial', papel: 'à distância, alvo único',
+    pv: 70, dano: 9, intervalo: 1.0, alcance: 34, velocidade: 12, raio: 2.0, custo: 25,
+    projetil: { velocidade: 90, tipo: 'flecha' },
+    habilidades: [{ tipo: 'tiroCerteiro', aCada: 4, mult: 1.6, perfura: 2 }],
+  },
+  clerigo: {
+    nome: 'Clérigo', familia: 'Divino', papel: 'cura os aliados',
+    pv: 80, dano: 3, intervalo: 1.5, alcance: 22, velocidade: 10, raio: 2.2, custo: 35,
+    projetil: { velocidade: 70, tipo: 'luz' },
+    habilidades: [{ tipo: 'curar', valor: 18, alcance: 30, recarga: 3.0 }], // não cura a si mesmo
+  },
 };

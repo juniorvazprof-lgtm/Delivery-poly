@@ -15,6 +15,8 @@ export function corDoTipo(tipo) {
     case 'guerreiro':   return '#3d6fd1';
     case 'guardiao':    return '#e0a92b';
     case 'piromante':   return '#7d3fb8';
+    case 'arqueiro':    return '#3f7d3a';
+    case 'clerigo':     return '#f2e6c8';
     case 'goblin':      return '#5cc04a';
     case 'slime':       return '#8fdc4a';
     case 'slimeMedio':  return '#7ad13a';
@@ -124,6 +126,8 @@ function desenharCorpo(ctx, u, anim, rPix, lw, alturaPix, t, avanco, squash, fas
     case 'guerreiro':  desenharGuerreiro(ctx, rPix, alturaPix, t, avanco, fase, lw, dir); break;
     case 'guardiao':   desenharGuardiao(ctx, rPix, alturaPix, t, avanco, fase, lw, dir); break;
     case 'piromante':  desenharPiromante(ctx, rPix, alturaPix, t, avanco, fase, lw, dir); break;
+    case 'arqueiro':   desenharArqueiro(ctx, rPix, alturaPix, t, avanco, fase, lw, dir); break;
+    case 'clerigo':    desenharClerigo(ctx, rPix, alturaPix, t, avanco, fase, lw, dir); break;
     case 'goblin':     desenharGoblin(ctx, rPix, alturaPix, t, avanco, fase, lw, dir); break;
     case 'slime':
     case 'slimeMedio':
@@ -420,6 +424,300 @@ function desenharPiromante(ctx, r, h, t, avanco, fase, lw, dir) {
     ctx.fill();
     ctx.restore();
   }
+}
+
+function desenharArqueiro(ctx, r, h, t, avanco, fase, lw, dir) {
+  const headR = r * 0.72;
+  const headY = -h + headR;
+  const bodyW = r * 0.88;
+  const bodyH = h * 0.5;
+  const bodyTopY = headY + headR * 0.55;
+
+  // Aljava nas costas (do lado oposto ao arco)
+  ctx.save();
+  ctx.translate(-dir * bodyW * 0.35, bodyTopY + bodyH * 0.15);
+  ctx.rotate(-dir * 0.35);
+  ctx.fillStyle = '#6b3a1e';
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.rect(-r * 0.18, -r * 0.1, r * 0.36, r * 0.9);
+  ctx.fill();
+  ctx.stroke();
+  // 3 flechas saindo da aljava
+  for (let i = 0; i < 3; i++) {
+    const fx = (i - 1) * r * 0.12;
+    ctx.strokeStyle = '#c9d3dc';
+    ctx.lineWidth = Math.max(1, lw * 0.8);
+    ctx.beginPath();
+    ctx.moveTo(fx, -r * 0.1);
+    ctx.lineTo(fx, -r * 0.75);
+    ctx.stroke();
+    // penas
+    ctx.fillStyle = i === 1 ? '#d63030' : '#e0e0e0';
+    ctx.beginPath();
+    ctx.moveTo(fx, -r * 0.75);
+    ctx.lineTo(fx - r * 0.08, -r * 0.6);
+    ctx.lineTo(fx + r * 0.08, -r * 0.6);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Pernas
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = lw;
+  ctx.fillStyle = '#5a3a1e';
+  ctx.beginPath();
+  ctx.rect(-bodyW * 0.28, bodyTopY + bodyH * 0.6, bodyW * 0.22, h * 0.14);
+  ctx.rect(bodyW * 0.06, bodyTopY + bodyH * 0.6, bodyW * 0.22, h * 0.14);
+  ctx.fill();
+  ctx.stroke();
+
+  // Túnica marrom-clara
+  corpoArredondado(ctx, -bodyW * 0.5, bodyTopY, bodyW, bodyH, '#a67c52', r, lw);
+  // Faixa/cinto
+  ctx.fillStyle = '#3f7d3a';
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.rect(-bodyW * 0.5, bodyTopY + bodyH * 0.55, bodyW, bodyH * 0.14);
+  ctx.fill();
+  ctx.stroke();
+
+  // Braço de trás
+  ctx.fillStyle = '#a67c52';
+  ctx.beginPath();
+  ctx.rect(-dir * bodyW * 0.72, bodyTopY + bodyH * 0.2, bodyW * 0.26, bodyH * 0.5);
+  ctx.fill();
+  ctx.stroke();
+
+  // Cabeça
+  ctx.fillStyle = '#f2c79a';
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.arc(0, headY, headR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Capuz verde-floresta com sombra no rosto
+  ctx.fillStyle = '#3f7d3a';
+  ctx.beginPath();
+  ctx.arc(0, headY - headR * 0.08, headR * 1.08, Math.PI * 0.95, Math.PI * 2.05);
+  ctx.lineTo(headR * 1.05, headY + headR * 0.55);
+  ctx.lineTo(headR * 0.55, headY + headR * 0.35);
+  ctx.lineTo(-headR * 0.55, headY + headR * 0.35);
+  ctx.lineTo(-headR * 1.05, headY + headR * 0.55);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Sombra interna do capuz (sobre a testa)
+  ctx.fillStyle = 'rgba(20,30,20,0.55)';
+  ctx.beginPath();
+  ctx.ellipse(0, headY - headR * 0.15, headR * 0.85, headR * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  olhos(ctx, 0, headY + headR * 0.12, headR, dir, '#1b1020', '#ffffff', 0, lw);
+
+  // Braço da frente + arco grande de madeira
+  const arcoX = dir * bodyW * 0.55;
+  const arcoY = bodyTopY + bodyH * 0.35;
+  // Braço da frente
+  ctx.fillStyle = '#a67c52';
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.rect(dir * bodyW * 0.45, bodyTopY + bodyH * 0.2, bodyW * 0.28, bodyH * 0.5);
+  ctx.fill();
+  ctx.stroke();
+
+  // Arco: desenhado no lado de dir, com corda que puxa para trás com avanco
+  ctx.save();
+  ctx.translate(arcoX, arcoY);
+  ctx.rotate(dir * (0.05 + avanco * 0.15));
+  const arcoR = r * 1.15;
+  // Madeira do arco
+  ctx.strokeStyle = '#6b3a1e';
+  ctx.lineWidth = Math.max(2, lw * 1.4);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(0, 0, arcoR, -Math.PI * 0.55, Math.PI * 0.55);
+  ctx.stroke();
+  ctx.lineCap = 'butt';
+  // Corda: puxa para trás (lado oposto ao dir) com avanco
+  const pux = avanco * arcoR * 0.9;
+  const topX = Math.cos(-Math.PI * 0.55) * arcoR;
+  const topY = Math.sin(-Math.PI * 0.55) * arcoR;
+  const botX = Math.cos(Math.PI * 0.55) * arcoR;
+  const botY = Math.sin(Math.PI * 0.55) * arcoR;
+  ctx.strokeStyle = '#e8e0c8';
+  ctx.lineWidth = Math.max(1, lw * 0.8);
+  ctx.beginPath();
+  ctx.moveTo(topX, topY);
+  ctx.lineTo(-pux, 0);
+  ctx.lineTo(botX, botY);
+  ctx.stroke();
+  // Flecha engatilhada quando tensionado
+  if (avanco > 0.05) {
+    ctx.strokeStyle = '#c9d3dc';
+    ctx.lineWidth = Math.max(1, lw * 0.9);
+    ctx.beginPath();
+    ctx.moveTo(-pux, 0);
+    ctx.lineTo(arcoR * 0.9, 0);
+    ctx.stroke();
+    // ponta
+    ctx.fillStyle = '#c9d3dc';
+    ctx.beginPath();
+    ctx.moveTo(arcoR * 0.9, 0);
+    ctx.lineTo(arcoR * 0.75, -r * 0.08);
+    ctx.lineTo(arcoR * 0.75, r * 0.08);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function desenharClerigo(ctx, r, h, t, avanco, fase, lw, dir) {
+  const headR = r * 0.72;
+  const headY = -h + headR + r * 0.1;
+  const bodyW = r * 0.9;
+  const bodyH = h * 0.5;
+  const bodyTopY = headY + headR * 0.55;
+
+  // Manto branco-creme
+  ctx.fillStyle = '#f2e6c8';
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.moveTo(-bodyW * 0.5, bodyTopY);
+  ctx.lineTo(bodyW * 0.5, bodyTopY);
+  ctx.lineTo(bodyW * 0.58, bodyTopY + bodyH);
+  ctx.lineTo(-bodyW * 0.58, bodyTopY + bodyH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Faixa dourada central
+  ctx.fillStyle = '#e0b83a';
+  ctx.beginPath();
+  ctx.rect(-bodyW * 0.08, bodyTopY, bodyW * 0.16, bodyH);
+  ctx.fill();
+  ctx.stroke();
+  // Faixa dourada na cintura
+  ctx.beginPath();
+  ctx.rect(-bodyW * 0.5, bodyTopY + bodyH * 0.55, bodyW, bodyH * 0.12);
+  ctx.fill();
+  ctx.stroke();
+
+  // Cajado com sol dourado
+  ctx.save();
+  ctx.translate(dir * r * 0.55, bodyTopY + bodyH * 0.3);
+  ctx.rotate(dir * (0.1 - avanco * 0.35));
+  // haste
+  ctx.strokeStyle = '#8a6a3a';
+  ctx.lineWidth = lw + 1;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, -r * 1.7);
+  ctx.stroke();
+  ctx.lineCap = 'butt';
+  // halo suave (brilha mais com avanco)
+  const brilho = 0.35 + avanco * 0.55;
+  const haloR = r * (0.55 + avanco * 0.25);
+  const grad = ctx.createRadialGradient(0, -r * 1.85, r * 0.05, 0, -r * 1.85, haloR);
+  grad.addColorStop(0, 'rgba(255,240,150,' + brilho.toFixed(3) + ')');
+  grad.addColorStop(1, 'rgba(255,240,150,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(0, -r * 1.85, haloR, 0, Math.PI * 2);
+  ctx.fill();
+  // sol dourado
+  ctx.fillStyle = '#ffd24a';
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.arc(0, -r * 1.85, r * 0.28, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // raios do sol
+  const raios = 8;
+  ctx.strokeStyle = '#ffd24a';
+  ctx.lineWidth = Math.max(1, lw * 0.8);
+  for (let i = 0; i < raios; i++) {
+    const ang = (i / raios) * Math.PI * 2 + t * 0.6;
+    const r1 = r * 0.34, r2 = r * 0.46;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(ang) * r1, -r * 1.85 + Math.sin(ang) * r1);
+    ctx.lineTo(Math.cos(ang) * r2, -r * 1.85 + Math.sin(ang) * r2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Braço do lado oposto ao cajado
+  ctx.fillStyle = '#f2e6c8';
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.rect(-dir * bodyW * 0.72, bodyTopY + bodyH * 0.2, bodyW * 0.26, bodyH * 0.5);
+  ctx.fill();
+  ctx.stroke();
+
+  // Cabeça
+  ctx.fillStyle = '#f2c79a';
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.arc(0, headY, headR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Mitra/capuz branco baixo
+  ctx.fillStyle = '#f7f2e0';
+  ctx.beginPath();
+  ctx.arc(0, headY - headR * 0.1, headR * 1.05, Math.PI * 0.92, Math.PI * 2.08);
+  ctx.lineTo(headR * 1.0, headY + headR * 0.15);
+  ctx.lineTo(-headR * 1.0, headY + headR * 0.15);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Detalhe dourado na mitra
+  ctx.strokeStyle = '#e0b83a';
+  ctx.lineWidth = Math.max(1, lw * 0.9);
+  ctx.beginPath();
+  ctx.moveTo(-headR * 0.9, headY - headR * 0.05);
+  ctx.lineTo(headR * 0.9, headY - headR * 0.05);
+  ctx.stroke();
+
+  // Cruz/sol dourado na testa da mitra
+  ctx.fillStyle = '#ffd24a';
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = Math.max(1, lw * 0.7);
+  ctx.beginPath();
+  ctx.rect(-headR * 0.06, headY - headR * 0.75, headR * 0.12, headR * 0.4);
+  ctx.rect(-headR * 0.2, headY - headR * 0.62, headR * 0.4, headR * 0.12);
+  ctx.fill();
+  ctx.stroke();
+
+  // Rosto gentil
+  olhos(ctx, 0, headY + headR * 0.15, headR, dir, '#1b1020', '#ffffff', 0, lw);
+  // Sorriso gentil
+  ctx.strokeStyle = CONTORNO;
+  ctx.lineWidth = Math.max(1, lw * 0.8);
+  ctx.beginPath();
+  ctx.moveTo(-headR * 0.22, headY + headR * 0.55);
+  ctx.quadraticCurveTo(0, headY + headR * 0.72, headR * 0.22, headY + headR * 0.55);
+  ctx.stroke();
+
+  // Pequeno halo dourado acima da cabeça
+  ctx.save();
+  ctx.globalAlpha *= 0.85;
+  ctx.strokeStyle = '#ffd24a';
+  ctx.lineWidth = Math.max(1.5, lw * 1.1);
+  ctx.beginPath();
+  ctx.ellipse(0, headY - headR * 1.35, headR * 0.55, headR * 0.18, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 }
 
 // --- Vilões --------------------------------------------------------------

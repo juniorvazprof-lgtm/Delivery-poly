@@ -787,3 +787,6 @@ button.icone{min-width:var(--toque);padding:.4rem .6rem;font-size:1.2rem;}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
 }
+
+/* botão pequeno "Máx" ao lado do contador */
+.contador button.mini { min-width: 52px; font-size: .85rem; padding-inline: 8px; }

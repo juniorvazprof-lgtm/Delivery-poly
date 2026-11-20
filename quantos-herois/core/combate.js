@@ -41,7 +41,7 @@ export function criarBatalha({ herois = {}, inimigos = [], reliquias = [], chave
     consumiveis: { ...consumiveis }, usado: {}, stats: { danoPorClasse: {}, acertosArea: [], porClasse: {} },
   };
   // heróis embaixo: guardiões na frente, guerreiros no meio, piromantes atrás
-  const filas = [['guardiao', 108], ['guerreiro', 114], ['piromante', 126]];
+  const filas = [['guardiao', 108], ['guerreiro', 114], ['arqueiro', 121], ['piromante', 126], ['clerigo', 131]];
   for (const [tipo, y0] of filas) {
     const n = herois[tipo] || 0;
     for (let i = 0; i < n; i++) {
@@ -153,6 +153,15 @@ function atacar(b, u, alvo) {
     emitir(b, { tipo: 'disparo', fonte: u.id, x: u.x, y: u.y });
     return;
   }
+  if (u.base.projetil) { // flecha / raio de luz: projétil de alvo único
+    const tiro = hab.find((h) => h.tipo === 'tiroCerteiro');
+    const certeiro = tiro && u.golpes % tiro.aCada === 0;
+    b.projeteis.push({ x: u.x, y: u.y - 1, alvo, tx: alvo.x, ty: alvo.y, vel: u.base.projetil.velocidade,
+      dano: danoDoGolpe(b, u) * (certeiro ? tiro.mult : 1), raio: 0, fonte: u, tipo: u.base.projetil.tipo || 'flecha',
+      perfura: certeiro ? tiro.perfura : 0 });
+    emitir(b, { tipo: 'disparo', fonte: u.id, x: u.x, y: u.y, projetil: u.base.projetil.tipo || 'flecha' });
+    return;
+  }
   let d = danoDoGolpe(b, u);
   const firme = hab.find((h) => h.tipo === 'golpeFirme');
   if (firme && u.golpes % firme.aCada === 0) {
@@ -169,7 +178,22 @@ function atacar(b, u, alvo) {
   causarDano(b, u, alvo, d);
 }
 
+function acertarProjetil(b, p) {
+  // flecha / luz: acerta o alvo; o Tiro Certeiro atravessa e acerta mais inimigos logo atrás
+  const golpe = p.tipo === 'luz' ? 'luz' : p.perfura ? 'certeiro' : 'flecha';
+  const alvo = p.alvo && !p.alvo.morto ? p.alvo : null;
+  if (!alvo) return;
+  const x = alvo.x, y = alvo.y;
+  causarDano(b, p.fonte, alvo, p.dano, golpe);
+  if (p.perfura) {
+    const atras = vivos(b, 'v').filter((o) => o !== alvo && Math.hypot(o.x - x, o.y - y) <= 9)
+      .sort((a, c) => Math.hypot(a.x - x, a.y - y) - Math.hypot(c.x - x, c.y - y)).slice(0, p.perfura);
+    for (const o of atras) causarDano(b, p.fonte, o, p.dano * 0.7, golpe);
+  }
+}
+
 function explodir(b, p) {
+  if (p.tipo) return acertarProjetil(b, p);
   const x = p.alvo && !p.alvo.morto ? p.alvo.x : p.tx, y = p.alvo && !p.alvo.morto ? p.alvo.y : p.ty;
   const m = p.fonte.m;
   const alvos = p.raio > 0 ? vivos(b, 'v').filter((o) => Math.hypot(o.x - x, o.y - y) <= p.raio + o.raio)
@@ -224,6 +248,20 @@ export function passo(b, dt = DT) {
       if (u.queima.acc >= 1) { const v = Math.floor(u.queima.acc); u.queima.acc -= v; causarDano(b, u.queima.fonte, u, v, 'queima'); if (u.morto) continue; }
     }
     // provocação do Guardião
+    // cura do Clérigo: cura o aliado mais ferido dentro do alcance
+    const cur = u.base.habilidades?.find((h) => h.tipo === 'curar');
+    if (cur) {
+      u.curaCd = (u.curaCd ?? 1) - dt;
+      if (u.curaCd <= 0) {
+        let alvoCura = null, pior = 0.92;
+        for (const h of vivos(b, 'h')) { if (h === u && !cur.siMesmo) continue; const f = h.pv / h.pvMax; if (f < pior && dist(h, u) <= cur.alcance) { pior = f; alvoCura = h; } }
+        if (alvoCura) {
+          const v = Math.min(alvoCura.pvMax - alvoCura.pv, Math.round(cur.valor * (u.m.curaMult ?? 1)));
+          alvoCura.pv += v; est(b, u.tipo).cura += v; u.curaCd = cur.recarga;
+          emitir(b, { tipo: 'cura', fonte: u.id, alvo: alvoCura.id, valor: v, x: alvoCura.x, y: alvoCura.y });
+        } else u.curaCd = 0.3;
+      }
+    }
     const prov = u.base.habilidades?.find((h) => h.tipo === 'provocar');
     if (prov) {
       u.provCd -= dt;
@@ -302,5 +340,5 @@ export function simular(cfg) {
   return { vitoria: b.fim === 'vitoria', fim: b.fim, tempo: +b.t.toFixed(2), sobreviventes, mortos,
     danoPorClasse: b.stats.danoPorClasse, mediaAcertosArea: ah.length ? ah.reduce((s, x) => s + x, 0) / ah.length : 0,
     slimesGerados: b.unidades.filter((u) => u.tipo.startsWith('slime') && u.geracao > 0).length,
-    ouroAbates: b.unidades.filter((u) => u.lado === 'v' && u.morto).reduce((t, u) => t + (u.base.ouro || 0), 0) };
+    ouroAbates: b.unidades.filter((u) => u.lado === 'v' && u.morto).reduce((t, u) => t + (u.base.ouro || 0), 0), porClasse: b.stats.porClasse };
 }
