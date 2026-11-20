@@ -24,7 +24,7 @@ function criarUnidade(b, lado, tipo, x, y, extra = {}) {
   const pv = Math.round(base.pv * (m.pvMult ?? 1));
   const u = {
     id: proxId++, lado, tipo, x, y, pv, pvMax: pv,
-    dano: base.dano, intervalo: base.intervalo, alcance: base.alcance,
+    dano: base.dano, intervalo: base.intervalo * (m.intervaloMult ?? 1), alcance: base.alcance * (m.alcanceMult ?? 1),
     vel: base.velocidade, raio: base.raio,
     cd: b.rng.entre(0.2, base.intervalo), golpes: 0, alvo: null, reAlvo: 0,
     provocadoPor: null, provocadoAte: 0, provCd: 1, queima: null, morto: false,
@@ -97,6 +97,11 @@ function causarDano(b, fonte, alvo, valor, tipoGolpe = 'golpe', emArea = false) 
 
 function est(b, classe) { return (b.stats.porClasse[classe] ||= { enviados: 0, caidos: 0, abates: 0, dano: 0, cura: 0, danoRecebido: 0 }); }
 function morrer(b, u, assassino) {
+  // Ressurreição Divina: o primeiro herói a cair volta com parte da vida (uma vez por batalha, se houver Clérigo vivo)
+  if (u.lado === 'h' && !b.usado.reviver) {
+    const cler = vivos(b, 'h').find((h) => h !== u && h.m.reviverUmaVez);
+    if (cler) { b.usado.reviver = true; u.pv = Math.round(u.pvMax * cler.m.reviverUmaVez); emitir(b, { tipo: 'cura', fonte: cler.id, alvo: u.id, valor: u.pv, x: u.x, y: u.y, reviveu: true }); return; }
+  }
   u.morto = true; u.pv = 0;
   if (u.lado === 'h') est(b, u.tipo).caidos++;
   else if (assassino && assassino.lado === 'h') est(b, assassino.tipo).abates++;
@@ -155,7 +160,7 @@ function atacar(b, u, alvo) {
   }
   if (u.base.projetil) { // flecha / raio de luz: projétil de alvo único
     const tiro = hab.find((h) => h.tipo === 'tiroCerteiro');
-    const certeiro = tiro && u.golpes % tiro.aCada === 0;
+    const certeiro = tiro && u.golpes % Math.max(2, tiro.aCada - (u.m.certeiroMenos || 0)) === 0;
     b.projeteis.push({ x: u.x, y: u.y - 1, alvo, tx: alvo.x, ty: alvo.y, vel: u.base.projetil.velocidade,
       dano: danoDoGolpe(b, u) * (certeiro ? tiro.mult : 1), raio: 0, fonte: u, tipo: u.base.projetil.tipo || 'flecha',
       perfura: certeiro ? tiro.perfura : 0 });
@@ -185,6 +190,8 @@ function acertarProjetil(b, p) {
   if (!alvo) return;
   const x = alvo.x, y = alvo.y;
   causarDano(b, p.fonte, alvo, p.dano, golpe);
+  const m = p.fonte.m;
+  if (m.queimaDps && !alvo.morto) alvo.queima = { dps: m.queimaDps, ate: b.t + (m.queimaDur || 3), fonte: p.fonte, acc: 0 };
   if (p.perfura) {
     const atras = vivos(b, 'v').filter((o) => o !== alvo && Math.hypot(o.x - x, o.y - y) <= 9)
       .sort((a, c) => Math.hypot(a.x - x, a.y - y) - Math.hypot(c.x - x, c.y - y)).slice(0, p.perfura);
@@ -240,6 +247,8 @@ export function passo(b, dt = DT) {
   b.t += dt;
   usarConsumiveis(b);
   const us = b.unidades.filter((u) => !u.morto);
+  // Relicário Sagrado: vale para o time todo enquanto houver um Clérigo vivo com a relíquia
+  b.regenPct = (us.find((h) => h.lado === 'h' && h.m.regenPct) || {}).m?.regenPct || 0;
   for (const u of us) {
     if (u.morto || (u.atraso && b.t < u.atraso)) continue;
     // queimadura
@@ -248,6 +257,8 @@ export function passo(b, dt = DT) {
       if (u.queima.acc >= 1) { const v = Math.floor(u.queima.acc); u.queima.acc -= v; causarDano(b, u.queima.fonte, u, v, 'queima'); if (u.morto) continue; }
     }
     // provocação do Guardião
+    // regeneração (relíquia de família Divina): recupera uma fração da vida por segundo
+    if (u.lado === 'h' && b.regenPct && u.pv < u.pvMax) { u.regAcc = (u.regAcc || 0) + u.pvMax * b.regenPct * dt; if (u.regAcc >= 1) { const v = Math.floor(u.regAcc); u.regAcc -= v; u.pv = Math.min(u.pvMax, u.pv + v); } }
     // cura do Clérigo: cura o aliado mais ferido dentro do alcance
     const cur = u.base.habilidades?.find((h) => h.tipo === 'curar');
     if (cur) {
@@ -256,9 +267,17 @@ export function passo(b, dt = DT) {
         let alvoCura = null, pior = 0.92;
         for (const h of vivos(b, 'h')) { if (h === u && !cur.siMesmo) continue; const f = h.pv / h.pvMax; if (f < pior && dist(h, u) <= cur.alcance) { pior = f; alvoCura = h; } }
         if (alvoCura) {
-          const v = Math.min(alvoCura.pvMax - alvoCura.pv, Math.round(cur.valor * (u.m.curaMult ?? 1)));
-          alvoCura.pv += v; est(b, u.tipo).cura += v; u.curaCd = cur.recarga;
-          emitir(b, { tipo: 'cura', fonte: u.id, alvo: alvoCura.id, valor: v, x: alvoCura.x, y: alvoCura.y });
+          const valor = Math.round(cur.valor * (u.m.curaMult ?? 1));
+          // Bênção em Área: a cura também alcança aliados perto do alvo (metade do valor)
+          const alvos = [[alvoCura, valor]];
+          if (u.m.curaArea) for (const h of vivos(b, 'h')) if (h !== alvoCura && dist(h, alvoCura) <= u.m.curaArea) alvos.push([h, Math.round(valor * 0.5)]);
+          for (const [h, val] of alvos) {
+            const v = Math.min(h.pvMax - h.pv, val);
+            if (v <= 0) continue;
+            h.pv += v; est(b, u.tipo).cura += v;
+            emitir(b, { tipo: 'cura', fonte: u.id, alvo: h.id, valor: v, x: h.x, y: h.y });
+          }
+          u.curaCd = cur.recarga;
         } else u.curaCd = 0.3;
       }
     }

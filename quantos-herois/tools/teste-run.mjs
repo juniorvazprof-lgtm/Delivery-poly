@@ -2,6 +2,8 @@
 // Uso: node tools/teste-run.mjs [semente]
 import { readFileSync } from 'node:fs';
 import * as R from '../core/run.js';
+import { HEROIS } from '../data/herois.js';
+const CLASSES = Object.keys(HEROIS);
 import { criarBatalha, passo, resumo } from '../core/combate.js';
 
 const ideais = JSON.parse(readFileSync(new URL('../data/ideais.json', import.meta.url)));
@@ -16,9 +18,9 @@ while (!run.fim && guarda++ < 40) {
   const op = opcoes[0];
   // manda o ideal + 1 do que estiver disponível
   const disp = R.disponiveis(run);
-  const enviados = { guerreiro: 0, guardiao: 0, piromante: 0 };
+  const enviados = Object.fromEntries(CLASSES.map((c) => [c, 0]));
   let falta = op.ideal + 1;
-  for (const c of ['guerreiro', 'guardiao', 'piromante']) { const q = Math.min(disp[c] || 0, falta); enviados[c] = q; falta -= q; }
+  for (const c of CLASSES) { const q = Math.min(disp[c] || 0, falta); enviados[c] = q; falta -= q; }
   const v = R.validarEnvio(run, op, enviados);
   if (!v.ok) { console.log(`R${run.rodada}: não pode enviar (${v.motivo}); ouro ${run.ouro}`); break; }
   const ouroAntes = run.ouro;
@@ -38,7 +40,7 @@ while (!run.fim && guarda++ < 40) {
     const prox = R.opcoesDaRodada(run)[0];
     let g = 0;
     while (Object.values(R.disponiveis(run)).reduce((a, b) => a + b, 0) < prox.ideal + 1 && g++ < 10) {
-      const c = ['guerreiro', 'guardiao', 'piromante'][g % 3];
+      const c = CLASSES[g % CLASSES.length];
       if (!R.recrutar(run, c)) break;
     }
   }

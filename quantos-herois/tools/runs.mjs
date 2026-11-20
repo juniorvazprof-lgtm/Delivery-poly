@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import { simular } from '../core/combate.js';
 import { HEROIS } from '../data/herois.js';
+const CLASSES = Object.keys(HEROIS);
 import { RELIQUIAS } from '../data/reliquias.js';
 import { CONSUMIVEIS } from '../data/consumiveis.js';
 import { RODADAS, ECONOMIA } from '../data/rodadas.js';
@@ -31,10 +32,10 @@ function somaComp(c) { return (c.guerreiro | 0) + (c.guardiao | 0) + (c.piromant
 function distribuicaoProporcional(comp, total) {
   // distribui `total` mantendo proporção da comp; resto vai para a classe mais numerosa
   const base = somaComp(comp);
-  const out = { guerreiro: 0, guardiao: 0, piromante: 0 };
+  const out = Object.fromEntries(CLASSES.map((c) => [c, 0]));
   if (base === 0 || total <= 0) return out;
   let acumulado = 0;
-  const classes = ['guerreiro', 'guardiao', 'piromante'];
+  const classes = CLASSES;
   for (const c of classes) {
     const v = Math.floor((comp[c] | 0) * total / base);
     out[c] = v; acumulado += v;
@@ -59,8 +60,8 @@ function disponiveis(elenco, desmaiados, rodada) {
 
 function completarFaltando(pedido, disp) {
   // nunca manda mais do que tem; completa faltando com outras disponíveis
-  const out = { guerreiro: 0, guardiao: 0, piromante: 0 };
-  const classes = ['guerreiro', 'guardiao', 'piromante'];
+  const out = Object.fromEntries(CLASSES.map((c) => [c, 0]));
+  const classes = CLASSES;
   let faltando = 0;
   for (const c of classes) {
     const q = Math.min(pedido[c] | 0, disp[c] | 0);
@@ -122,12 +123,12 @@ function criarPerfilCauteloso() {
       const pedido = distribuicaoProporcional(ideal.comp, total);
       let comprouAlgo = false;
       // tenta cobrir pedido
-      for (const c of ['guerreiro', 'guardiao', 'piromante']) {
+      for (const c of CLASSES) {
         // compara com os DISPONÍVEIS na próxima rodada (desmaiados não contam)
         while (dispProx(ctx, prox)[c] < pedido[c]) {
           const preco = precoRecrutar(c, ctx.recrutados, ctx.economia);
           // guarda o soldo da próxima batalha antes de recrutar
-          if (ctx.ouro - preco < (ctx.economia.soldo || 0) * somaComp(pedido)) { ctx.aperto = ctx.aperto ?? prox; break; }
+          if (ctx.ouro < preco) { ctx.aperto = ctx.aperto ?? prox; break; }
           ctx.ouro -= preco; ctx.recrutados[c]++; ctx.elenco[c]++; ctx.gastos.herois += preco; comprouAlgo = true;
         }
       }
@@ -145,7 +146,7 @@ function criarPerfilCauteloso() {
 }
 
 function criarPerfilEsperto(extra = 1, nome = 'esperto') {
-  const prioridadeReliquias = ['golpeGiratorio', 'muralha', 'provocacaoLonga', 'escudoReforcado', 'focoArcano', 'brasaViva', 'chamaConcentrada', 'espadaAfiada', 'irmaosDeArmas'];
+  const prioridadeReliquias = ['golpeGiratorio', 'estandarteDeGuerra', 'bencaoEmArea', 'aljavaFarta', 'muralha', 'ressurreicaoDivina', 'relicarioSagrado', 'provocacaoLonga', 'flechasEnvenenadas', 'escudoReforcado', 'focoArcano', 'grimorioAntigo', 'olhoDeAguia', 'preceFervorosa', 'brasaViva', 'chamaConcentrada', 'espadaAfiada', 'irmaosDeArmas'];
   return {
     nome,
     escolherFormacao(ctx) {
@@ -172,7 +173,7 @@ function criarPerfilEsperto(extra = 1, nome = 'esperto') {
       }
       // usa poção de ressurreição se faltar herói para a comp
       const disp = disponiveis(ctx.elenco, ctx.desmaiados, prox);
-      for (const c of ['guerreiro', 'guardiao', 'piromante']) {
+      for (const c of CLASSES) {
         while (disp[c] < pedido[c] && ctx.inventario.pocaoRessurreicao > 0) {
           // tira um desmaiado dessa classe
           const idx = ctx.desmaiados.findIndex(d => d.classe === c);
@@ -183,12 +184,12 @@ function criarPerfilEsperto(extra = 1, nome = 'esperto') {
         }
       }
       // compra heróis para cobrir
-      for (const c of ['guerreiro', 'guardiao', 'piromante']) {
+      for (const c of CLASSES) {
         // compara com os DISPONÍVEIS na próxima rodada (desmaiados não contam)
         while (dispProx(ctx, prox)[c] < pedido[c]) {
           const preco = precoRecrutar(c, ctx.recrutados, ctx.economia);
           // guarda o soldo da próxima batalha antes de recrutar
-          if (ctx.ouro - preco < (ctx.economia.soldo || 0) * somaComp(pedido)) { ctx.aperto = ctx.aperto ?? prox; break; }
+          if (ctx.ouro < preco) { ctx.aperto = ctx.aperto ?? prox; break; }
           ctx.ouro -= preco; ctx.recrutados[c]++; ctx.elenco[c]++; ctx.gastos.herois += preco;
         }
       }
@@ -198,7 +199,7 @@ function criarPerfilEsperto(extra = 1, nome = 'esperto') {
       disponiveisCompra.sort((a, b) => prioridadeReliquias.indexOf(a) - prioridadeReliquias.indexOf(b));
       for (const id of disponiveisCompra) {
         const preco = precoReliquia(id);
-        if (ctx.ouro >= preco + 20 + (ctx.economia.soldo || 0) * somaComp(pedido)) {
+        if (ctx.ouro >= preco + 20) {
           ctx.ouro -= preco; ctx.reliquias.push(id); ctx.gastos.reliquias += preco;
           break;
         }
@@ -227,12 +228,12 @@ function criarPerfilExagerado() {
       if (prox > 10) return;
       const ideal = IDEIAS[String(prox)];
       const pedido = distribuicaoProporcional(ideal.comp, 2 * ideal.n);
-      for (const c of ['guerreiro', 'guardiao', 'piromante']) {
+      for (const c of CLASSES) {
         // compara com os DISPONÍVEIS na próxima rodada (desmaiados não contam)
         while (dispProx(ctx, prox)[c] < pedido[c]) {
           const preco = precoRecrutar(c, ctx.recrutados, ctx.economia);
           // guarda o soldo da próxima batalha antes de recrutar
-          if (ctx.ouro - preco < (ctx.economia.soldo || 0) * somaComp(pedido)) { ctx.aperto = ctx.aperto ?? prox; break; }
+          if (ctx.ouro < preco) { ctx.aperto = ctx.aperto ?? prox; break; }
           ctx.ouro -= preco; ctx.recrutados[c]++; ctx.elenco[c]++; ctx.gastos.herois += preco;
         }
       }
@@ -259,7 +260,7 @@ function simularRun(perfilNome, semente, economia) {
     reliquias: [],
     inventario: { pocaoRessurreicao: 0, pergaminhoMeteoro: 0, bandagem: 0, tonicoCura: 0 },
     vidas: economia.vidas,
-    recrutados: { guerreiro: 0, guardiao: 0, piromante: 0 },
+    recrutados: Object.fromEntries(CLASSES.map((c) => [c, 0])),
     rodada: 1,
   };
 
@@ -291,7 +292,7 @@ function simularRun(perfilNome, semente, economia) {
     if (perfilNome === 'esperto') {
       const disp = disponiveis(estado.elenco, estado.desmaiados, r);
       const pedido = distribuicaoProporcional(ideal.comp, ideal.n);
-      for (const c of ['guerreiro', 'guardiao', 'piromante']) {
+      for (const c of CLASSES) {
         while (disp[c] < pedido[c] && estado.inventario.pocaoRessurreicao > 0) {
           const idx = estado.desmaiados.findIndex(d => d.classe === c);
           if (idx < 0) break;
@@ -317,13 +318,11 @@ function simularRun(perfilNome, semente, economia) {
     };
     const enviados = perfil.escolherFormacao(ctxForm);
     // Soldo: cada herói enviado custa `soldo` de ouro antes da batalha; sem ouro, manda só quem dá para pagar
-    if (economia.soldo > 0) {
-      let podem = Math.floor(estado.ouro / economia.soldo);
-      for (const c of ['piromante', 'guardiao', 'guerreiro']) { while (somaComp(enviados) > podem && enviados[c] > 0) enviados[c]--; }
+    if (economia.soldo > 0) { // regra do jogo (core/run.js): o soldo sai do ganho da rodada; nunca impede de lutar
       const custo = somaComp(enviados) * economia.soldo;
-      if (somaComp(enviados) < somaComp(perfil.escolherFormacao(ctxForm))) stats.faltouSoldo = (stats.faltouSoldo || 0) + 1;
       estado.ouro -= custo; stats.gastoSoldo = (stats.gastoSoldo || 0) + custo;
     }
+
 
     if (somaComp(enviados) === 0) {
       // derrota sem batalha
@@ -378,7 +377,7 @@ function simularRun(perfilNome, semente, economia) {
 
     // mortos viram desmaiados
     if (res.mortos) {
-      for (const c of ['guerreiro', 'guardiao', 'piromante']) {
+      for (const c of CLASSES) {
         const n = res.mortos[c] | 0;
         for (let i = 0; i < n; i++) {
           estado.desmaiados.push({ classe: c, voltaNaRodada: r + 1 + economia.rodadasDesmaio });
@@ -413,6 +412,7 @@ function simularRun(perfilNome, semente, economia) {
 }
 
 function fazerAcampamento(perfil, estado, rodadaAtual, economia, rng, stats) {
+  estado.ouro = Math.max(0, estado.ouro); // o ouro nunca fica negativo depois do soldo
   // sorteia 3 relíquias ainda não compradas
   const todas = Object.keys(RELIQUIAS);
   const naoCompradas = todas.filter(id => !estado.reliquias.includes(id));

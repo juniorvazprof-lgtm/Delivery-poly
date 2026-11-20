@@ -64,6 +64,17 @@ metas.push(['Piromante sozinho contra 6 goblins', 'vence', pct(piro6.taxa), piro
 
 log('ideal por rodada...');
 const ideais = (await Promise.all(RODADAS.map((r) => ideal(r.inimigos)))).map((i, j) => { const r = RODADAS[j]; log(`R${r.n}: ${i.n} (${compTxt(i.c)})`); return { rod: r, ...i }; });
+// "Atalho perigoso": mesma regra de core/run.js (cada quantidade × multInimigos, mínimo +1)
+const perigosa = (inim) => inim.map(([t, q, o]) => [t, Math.max(q + 1, Math.round(q * ECONOMIA.perigosa.multInimigos)), o]);
+const ideaisPerigosa = await Promise.all(RODADAS.slice(0, 9).map((r) => ideal(perigosa(r.inimigos))));
+ideaisPerigosa.forEach((i, j) => log(`R${j + 1} perigosa: ${i.n} (${compTxt(i.c)})`));
+// grava os ideais medidos nos dados do jogo (data/ideais.json e data/ideais.js)
+{
+  const obj = {};
+  ideais.forEach((i, j) => { obj[j + 1] = { n: i.n, comp: i.c, ...(ideaisPerigosa[j] ? { perigosa: ideaisPerigosa[j].n } : {}) }; });
+  writeFileSync(new URL('../data/ideais.json', import.meta.url), JSON.stringify({ _fonte: SAIDA, ...obj }, null, 2) + '\n');
+  writeFileSync(new URL('../data/ideais.js', import.meta.url), `// Número ideal de heróis por rodada (gerado por tools/balance.mjs; relatório: ${SAIDA}).\n// n = opção segura; perigosa = "Atalho perigoso" medido.\nexport const IDEAIS = ${JSON.stringify(obj, null, 2)};\n`);
+}
 const puros = {};
 for (const k of ['guerreiro', 'piromante']) { puros[k] = (await Promise.all(RODADAS.map((r) => ideal(r.inimigos, [], [k])))).map((x) => x.n); log('só', k, puros[k].join(',')); }
 
@@ -148,6 +159,10 @@ out();
 out('### Número ideal por rodada');
 out('| Rodada | Inimigos | Ideal | Melhor formação | Vitórias | Duração | Só Guerreiros | Só Piromantes |'); out('|---|---|--:|---|--:|--:|--:|--:|');
 for (const [j, i] of ideais.entries()) out(`| R${i.rod.n} ${i.rod.nome} | ${i.rod.inimigos.map(([t, q]) => `${q} ${VILOES[t].nome}`).join(' + ')} | **${nTxt(i.n)}** | ${compTxt(i.c)} | ${pct(i.r.taxa)} | ${f1(i.r.tempo)} s | ${nTxt(puros.guerreiro[j])} | ${nTxt(puros.piromante[j])} |`);
+out();
+out('### Atalho perigoso: ideal medido x estimativa antiga (ideal × ' + ECONOMIA.perigosa.multIdeal + ')');
+out('| Rodada | Inimigos | Ideal medido | Estimativa antiga | Melhor formação |'); out('|---|---|--:|--:|---|');
+ideaisPerigosa.forEach((i, j) => out(`| R${j + 1} | ${perigosa(RODADAS[j].inimigos).map(([t, q]) => `${q} ${VILOES[t].nome}`).join(' + ')} | **${nTxt(i.n)}** | ${Math.ceil(ideais[j].n * ECONOMIA.perigosa.multIdeal)} | ${compTxt(i.c)} |`));
 out();
 out('### Relíquias: número ideal com cada relíquia (sem relíquia na primeira linha; em negrito onde reduz)');
 out('| Relíquia | Raridade | ' + RODADAS.map((r) => `R${r.n}`).join(' | ') + ' | Maior redução |'); out('|---|---|' + RODADAS.map(() => '--:').join('|') + '|--:|');

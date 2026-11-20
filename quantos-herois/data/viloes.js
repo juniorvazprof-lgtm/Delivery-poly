@@ -5,6 +5,6 @@ export const VILOES = {
   slimeMedio: { nome: 'Slime médio', pv: 45, dano: 7, intervalo: 1.2, alcance: 4.5, velocidade: 10, raio: 2.4, ouro: 2,
             divide: { em: 'slimePequeno', qtd: 2 }, respingo: { em: 'slimePequeno', max: 3 } },
   slimePequeno: { nome: 'Slime pequeno', pv: 30, dano: 4, intervalo: 1.0, alcance: 4, velocidade: 12, raio: 1.6, ouro: 1 },
-  reiSlime: { nome: 'Rei Slime', pv: 1600, dano: 58, intervalo: 1.6, alcance: 7, velocidade: 6, raio: 6, ouro: 40, chefe: true,
+  reiSlime: { nome: 'Rei Slime', pv: 1400, dano: 58, intervalo: 1.6, alcance: 7, velocidade: 6, raio: 6, ouro: 40, chefe: true,
             divide: { em: 'slime', qtd: 3 }, invoca: { tipo: 'goblin', qtd: 7, intervalo: 8, primeiro: 5 } }, // o Rei não respinga; chama ondas de goblins
 };

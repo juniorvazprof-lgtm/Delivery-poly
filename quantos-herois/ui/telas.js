@@ -332,7 +332,8 @@ export function telaBatalha(app, { run, cfg, aoFim, aoConsumivel, aoSair }){
         aoFim: (res) => aoFim(res),
         aoMoeda: (valor) => {
           poteAcumulado += valor;
-          poteVal.textContent = String(Math.ceil(poteAcumulado));
+          // abaixo de 10 mostra uma casa decimal, para cada moedinha fazer o número subir
+          poteVal.textContent = poteAcumulado < 10 ? poteAcumulado.toFixed(1).replace('.', ',') : String(Math.floor(poteAcumulado));
           pote.classList.add('pulo');
           setTimeout(() => pote.classList.remove('pulo'), 120);
           const flut = el('div', { class:'mais-flutuante', style:`right:${20 + Math.random()*40}px;top:${60 + Math.random()*40}px;` }, "+🪙");

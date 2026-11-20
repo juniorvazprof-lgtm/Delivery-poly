@@ -91,7 +91,7 @@ export function opcoesDaRodada(run) {
       const q = Math.max(qtd + 1, Math.round(qtd * multIni));
       return opc ? [tipo, q, opc] : [tipo, q];
     }),
-    ideal: Math.ceil(idealSeguro * ECONOMIA.perigosa.multIdeal),
+    ideal: run.ideais[String(r)]?.perigosa ?? Math.ceil(idealSeguro * ECONOMIA.perigosa.multIdeal), // medido pelo simulador; estimativa só se faltar
     premioBase: Math.round(ECONOMIA.bonusVitoria(r) * ECONOMIA.perigosa.multPremio),
   };
 
