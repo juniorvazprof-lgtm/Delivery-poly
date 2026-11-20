@@ -609,7 +609,7 @@ export function telaFim(app, { run, pontuacao, recordes, aoNova, aoMenu }){
   const cont = el('div', { class:'fim-jornada' });
   const vitoria = run.fim === 'vitoria';
   cont.appendChild(el('h1', { class:'titulo-contorno' }, vitoria ? 'Jornada Completa!' : 'Fim da Jornada'));
-  cont.appendChild(el('div', { class:'subtitulo', style:'color:var(--pergaminho);font-family:var(--fonte-titulo);font-size:1.3rem;' }, `Rodada alcançada: ${run.rodada}/10`));
+  cont.appendChild(el('div', { class:'subtitulo', style:'color:var(--pergaminho);font-family:var(--fonte-titulo);font-size:1.3rem;' }, `Rodada alcançada: ${Math.min(run.rodada, 10)}/10`));
   cont.appendChild(el('div', { class:'pontuacao-grande' }, `${pontuacao} pts`));
 
   if (run.historico && run.historico.length){
