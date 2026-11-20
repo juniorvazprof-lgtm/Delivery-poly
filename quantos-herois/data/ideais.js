@@ -1,54 +1,82 @@
-// Número ideal de heróis por rodada (opção segura), medido em design/balance/relatorio-5classes.md.
-// Também existe como data/ideais.json para as ferramentas em Node.
+// Número ideal de heróis por rodada (gerado por tools/balance.mjs; relatório: design/balance/relatorio-5classes.md).
+// n = opção segura; perigosa = "Atalho perigoso" medido.
 export const IDEAIS = {
   "1": {
     "n": 1,
     "comp": {
-      "piromante": 1
-    }
+      "guerreiro": 0,
+      "guardiao": 0,
+      "piromante": 1,
+      "arqueiro": 0,
+      "clerigo": 0
+    },
+    "perigosa": 2
   },
   "2": {
     "n": 2,
     "comp": {
-      "guerreiro": 2
-    }
+      "guerreiro": 2,
+      "guardiao": 0,
+      "piromante": 0,
+      "arqueiro": 0,
+      "clerigo": 0
+    },
+    "perigosa": 3
   },
   "3": {
     "n": 3,
     "comp": {
+      "guerreiro": 0,
+      "guardiao": 0,
       "piromante": 2,
-      "arqueiro": 1
-    }
+      "arqueiro": 1,
+      "clerigo": 0
+    },
+    "perigosa": 4
   },
   "4": {
     "n": 3,
     "comp": {
       "guerreiro": 1,
       "guardiao": 1,
-      "arqueiro": 1
-    }
+      "piromante": 0,
+      "arqueiro": 1,
+      "clerigo": 0
+    },
+    "perigosa": 4
   },
   "5": {
     "n": 4,
     "comp": {
       "guerreiro": 3,
-      "piromante": 1
-    }
+      "guardiao": 0,
+      "piromante": 1,
+      "arqueiro": 0,
+      "clerigo": 0
+    },
+    "perigosa": 6
   },
   "6": {
     "n": 4,
     "comp": {
       "guerreiro": 3,
-      "guardiao": 1
-    }
+      "guardiao": 1,
+      "piromante": 0,
+      "arqueiro": 0,
+      "clerigo": 0
+    },
+    "perigosa": 6
   },
   "7": {
     "n": 5,
     "comp": {
       "guerreiro": 3,
       "guardiao": 1,
-      "arqueiro": 1
-    }
+      "piromante": 0,
+      "arqueiro": 1,
+      "clerigo": 0
+    },
+    "perigosa": 7
   },
   "8": {
     "n": 6,
@@ -56,25 +84,30 @@ export const IDEAIS = {
       "guerreiro": 3,
       "guardiao": 1,
       "piromante": 1,
-      "arqueiro": 1
-    }
+      "arqueiro": 1,
+      "clerigo": 0
+    },
+    "perigosa": 9
   },
   "9": {
     "n": 7,
     "comp": {
       "guerreiro": 3,
       "guardiao": 1,
+      "piromante": 0,
       "arqueiro": 2,
       "clerigo": 1
-    }
+    },
+    "perigosa": 11
   },
   "10": {
-    "n": 9,
+    "n": 8,
     "comp": {
-      "guerreiro": 3,
-      "guardiao": 3,
+      "guerreiro": 4,
+      "guardiao": 2,
       "piromante": 1,
-      "clerigo": 2
+      "arqueiro": 0,
+      "clerigo": 1
     }
   }
 };
