@@ -1,5 +1,7 @@
 // As 10 rodadas da run. inimigos: [tipo, quantidade, { chegada: [min, max] segundos }]
-export const RODADAS = [
+import { RODADAS_NOVAS } from './viloes-novos.js';
+// Rodadas antigas (só goblins e slimes), mantidas para referência
+export const RODADAS_ANTIGAS = [
   { n: 1,  nome: 'Patrulha goblin',     inimigos: [['goblin', 6]] },
   { n: 2,  nome: 'Gosma no caminho',    inimigos: [['slime', 1]] },
   { n: 3,  nome: 'Bando goblin',        inimigos: [['goblin', 14, { chegada: [0, 5.5] }]] },
@@ -11,6 +13,9 @@ export const RODADAS = [
   { n: 9,  nome: 'Mistura nojenta',     inimigos: [['slime', 5], ['goblin', 16]] },
   { n: 10, nome: 'O Rei Slime',         inimigos: [['reiSlime', 1], ['goblin', 18]], chefe: true },
 ];
+// Rodadas em uso: as novas, com goblins arqueiros, ogros, morcegos e xamãs
+export const RODADAS = RODADAS_NOVAS;
+
 // Economia da run — configuração "Q" do relatório design/balance/relatorio-economia.md
 export const ECONOMIA = {
   ouroInicial: 40,

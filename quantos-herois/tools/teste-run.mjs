@@ -34,7 +34,7 @@ while (!run.fim && guarda++ < 40) {
   checar(Number.isFinite(run.ouro), 'ouro inválido');
   if (rel.vitoria) checar(run.rodada === rodadaAntes + 1 || run.fim, 'não avançou a rodada');
   else checar(run.rodada === rodadaAntes, 'avançou depois de derrota');
-  if (run.bauPendente) { checar(run.bauPendente.length >= 1, 'baú vazio'); R.escolherReliquiaBau(run, run.bauPendente[0]); }
+  if (run.bauPendente) { checar(run.bauPendente.length >= 1, 'baú vazio'); R.escolherBau(run, 0); }
   // acampamento: repõe heróis até ideal+1 da próxima
   if (!run.fim) {
     const prox = R.opcoesDaRodada(run)[0];

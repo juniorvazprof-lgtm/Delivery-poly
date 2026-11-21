@@ -1,7 +1,12 @@
 // Motor de combate: simulação pura (sem tela), passo fixo, determinística por semente.
 // A batalha visual (render/) lê `b.unidades`, `b.projeteis` e consome `b.eventos`.
-import { HEROIS } from '../data/herois.js';
-import { VILOES } from '../data/viloes.js';
+import { HEROIS as HEROIS_BASE } from '../data/herois.js';
+import { VILOES as VILOES_BASE } from '../data/viloes.js';
+import { HEROIS_EVOLUIDOS } from '../data/evolucoes.js';
+import { VILOES_NOVOS } from '../data/viloes-novos.js';
+// heróis evoluídos e monstros novos entram no mesmo dicionário de unidades
+const HEROIS = { ...HEROIS_BASE, ...HEROIS_EVOLUIDOS };
+const VILOES = { ...VILOES_BASE, ...VILOES_NOVOS };
 import { CONSUMIVEIS } from '../data/consumiveis.js';
 import { criarRng } from './rng.js';
 import { modsPorClasse } from './efeitos.js';
@@ -34,15 +39,18 @@ function criarUnidade(b, lado, tipo, x, y, extra = {}) {
   return u;
 }
 
-export function criarBatalha({ herois = {}, inimigos = [], reliquias = [], chaves = {}, consumiveis = {}, semente = 1 }) {
+export function criarBatalha({ herois = {}, inimigos = [], reliquias = [], chaves = {}, consumiveis = {}, semente = 1, bonus = [] }) {
   const b = {
-    t: 0, rng: criarRng(semente), mods: modsPorClasse(reliquias, chaves),
+    t: 0, rng: criarRng(semente), mods: modsPorClasse(reliquias, chaves, bonus), zonas: [],
     unidades: [], projeteis: [], eventos: [], fim: null,
     consumiveis: { ...consumiveis }, usado: {}, stats: { danoPorClasse: {}, acertosArea: [], porClasse: {} },
   };
   // heróis embaixo: guardiões na frente, guerreiros no meio, piromantes atrás
   const filas = [['guardiao', 108], ['guerreiro', 114], ['arqueiro', 121], ['piromante', 126], ['clerigo', 131]];
-  for (const [tipo, y0] of filas) {
+  const filaDe = (t) => (filas.find(([c]) => c === t) || filas.find(([c]) => c === HEROIS[t]?.evolucaoDe) || ['', 118])[1];
+  const tiposH = Object.keys(herois).filter((t) => herois[t] > 0).sort((a, c) => filaDe(a) - filaDe(c));
+  for (const tipo of tiposH) {
+    const y0 = filaDe(tipo);
     const n = herois[tipo] || 0;
     for (let i = 0; i < n; i++) {
       const col = i % 6, lin = Math.floor(i / 6);
@@ -74,7 +82,8 @@ function emitir(b, ev) { b.eventos.push({ t: b.t, ...ev }); }
 function causarDano(b, fonte, alvo, valor, tipoGolpe = 'golpe', emArea = false) {
   if (alvo.morto) return 0;
   let v = valor;
-  if (alvo.base.reducaoDano) v *= 1 - alvo.base.reducaoDano;
+  const armadura = Math.min(0.75, (alvo.base.reducaoDano || 0) + (alvo.m.reducaoDanoMais || 0));
+  if (armadura) v *= 1 - armadura;
   if (alvo.lado === 'h') { // Muralha: aliados perto de um Guardião com a relíquia recebem menos dano
     const red = b.mods.guardiao?.auraReducao;
     if (red && vivos(b, 'h').some((g) => g.tipo === 'guardiao' && dist(g, alvo) <= (b.mods.guardiao.auraRaio || 12))) v *= 1 - red;
@@ -171,9 +180,10 @@ function atacar(b, u, alvo) {
   const firme = hab.find((h) => h.tipo === 'golpeFirme');
   if (firme && u.golpes % firme.aCada === 0) {
     d *= firme.mult;
-    const raio = u.m.golpeFirmeRaio || 0;
+    const raio = u.m.golpeFirmeRaio || firme.raioArea || 0;
     if (raio) {
-      for (const o of vivos(b, 'v')) if (dist(o, alvo) <= raio) causarDano(b, u, o, d, 'firme', true);
+      const raioArea = raio || firme.raioArea; // monstros podem ter golpe em área nativo (ogro)
+      for (const o of vivos(b, u.lado === 'h' ? 'v' : 'h')) if (dist(o, alvo) <= raioArea) causarDano(b, u, o, d, 'firme', true);
       emitir(b, { tipo: 'giro', x: alvo.x, y: alvo.y, raio });
       return;
     }
@@ -193,7 +203,7 @@ function acertarProjetil(b, p) {
   const m = p.fonte.m;
   if (m.queimaDps && !alvo.morto) alvo.queima = { dps: m.queimaDps, ate: b.t + (m.queimaDur || 3), fonte: p.fonte, acc: 0 };
   if (p.perfura) {
-    const atras = vivos(b, 'v').filter((o) => o !== alvo && Math.hypot(o.x - x, o.y - y) <= 9)
+    const atras = vivos(b, p.fonte.lado === 'h' ? 'v' : 'h').filter((o) => o !== alvo && Math.hypot(o.x - x, o.y - y) <= 9)
       .sort((a, c) => Math.hypot(a.x - x, a.y - y) - Math.hypot(c.x - x, c.y - y)).slice(0, p.perfura);
     for (const o of atras) causarDano(b, p.fonte, o, p.dano * 0.7, golpe);
   }
@@ -203,7 +213,7 @@ function explodir(b, p) {
   if (p.tipo) return acertarProjetil(b, p);
   const x = p.alvo && !p.alvo.morto ? p.alvo.x : p.tx, y = p.alvo && !p.alvo.morto ? p.alvo.y : p.ty;
   const m = p.fonte.m;
-  const alvos = p.raio > 0 ? vivos(b, 'v').filter((o) => Math.hypot(o.x - x, o.y - y) <= p.raio + o.raio)
+  const alvos = p.raio > 0 ? vivos(b, p.fonte.lado === 'h' ? 'v' : 'h').filter((o) => Math.hypot(o.x - x, o.y - y) <= p.raio + o.raio)
     : (p.alvo && !p.alvo.morto ? [p.alvo] : []);
   b.stats.acertosArea.push(alvos.length);
   for (const o of alvos) {
@@ -211,6 +221,8 @@ function explodir(b, p) {
     if (m.queimaDps && !o.morto) o.queima = { dps: m.queimaDps, ate: b.t + (m.queimaDur || 3), fonte: p.fonte, acc: 0 };
   }
   emitir(b, { tipo: 'explosao', x, y, raio: p.raio || 2 });
+  const tornado = p.fonte.base.habilidades?.find((h) => h.tipo === 'bolaDeFogo')?.tornado;
+  if (tornado && p.raio > 0) { b.zonas.push({ x, y, raio: tornado.raio, dps: tornado.dps, ate: b.t + tornado.duracao, fonte: p.fonte, acc: new Map() }); emitir(b, { tipo: 'tornado', x, y, raio: tornado.raio, duracao: tornado.duracao }); }
 }
 
 function usarConsumiveis(b) {
@@ -265,16 +277,16 @@ export function passo(b, dt = DT) {
       u.curaCd = (u.curaCd ?? 1) - dt;
       if (u.curaCd <= 0) {
         let alvoCura = null, pior = 0.92;
-        for (const h of vivos(b, 'h')) { if (h === u && !cur.siMesmo) continue; const f = h.pv / h.pvMax; if (f < pior && dist(h, u) <= cur.alcance) { pior = f; alvoCura = h; } }
+        for (const h of vivos(b, u.lado)) { if (h === u && !cur.siMesmo) continue; const f = h.pv / h.pvMax; if (f < pior && dist(h, u) <= cur.alcance) { pior = f; alvoCura = h; } }
         if (alvoCura) {
           const valor = Math.round(cur.valor * (u.m.curaMult ?? 1));
           // Bênção em Área: a cura também alcança aliados perto do alvo (metade do valor)
           const alvos = [[alvoCura, valor]];
-          if (u.m.curaArea) for (const h of vivos(b, 'h')) if (h !== alvoCura && dist(h, alvoCura) <= u.m.curaArea) alvos.push([h, Math.round(valor * 0.5)]);
+          if (u.m.curaArea) for (const h of vivos(b, u.lado)) if (h !== alvoCura && dist(h, alvoCura) <= u.m.curaArea) alvos.push([h, Math.round(valor * 0.5)]);
           for (const [h, val] of alvos) {
             const v = Math.min(h.pvMax - h.pv, val);
             if (v <= 0) continue;
-            h.pv += v; est(b, u.tipo).cura += v;
+            h.pv += v; if (u.lado === 'h') est(b, u.tipo).cura += v;
             emitir(b, { tipo: 'cura', fonte: u.id, alvo: h.id, valor: v, x: h.x, y: h.y });
           }
           u.curaCd = cur.recarga;
@@ -307,6 +319,15 @@ export function passo(b, dt = DT) {
       u.x += (a.x - u.x) * k; u.y += (a.y - u.y) * k;
     }
   }
+  // zonas de fogo (tornado): dano contínuo em quem estiver dentro
+  for (const z of b.zonas) {
+    if (b.t > z.ate) continue;
+    for (const o of vivos(b, 'v')) if (Math.hypot(o.x - z.x, o.y - z.y) <= z.raio + o.raio) {
+      const acc = (z.acc.get(o.id) || 0) + z.dps * dt;
+      if (acc >= 1) { const v = Math.floor(acc); z.acc.set(o.id, acc - v); causarDano(b, z.fonte, o, v, 'queima'); } else z.acc.set(o.id, acc);
+    }
+  }
+  b.zonas = b.zonas.filter((z) => b.t <= z.ate);
   // chefes que invocam ondas
   for (const u of b.unidades) {
     const inv = u.base.invoca;

@@ -869,6 +869,7 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
 
     ctx.scale(escala, escala);
 
+    desenharZonas();
     desenharProjeteis();
 
     const visiveis = [];
@@ -895,6 +896,39 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
       tremorForca *= Math.pow(0.001, 1 / 60);
       if (tremorForca < 0.05) tremorForca = 0;
     }
+  }
+
+  // Tornado de fogo: redemoinho no chão (zonas do motor, em metros)
+  function desenharZonas() {
+    const zs = batalha.zonas;
+    if (!zs || !zs.length) return;
+    ctx.save();
+    for (const z of zs) {
+      const resta = Math.max(0, z.ate - batalha.t);
+      const a = Math.min(1, resta / 0.6);
+      ctx.globalCompositeOperation = 'lighter';
+      const g = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, z.raio);
+      g.addColorStop(0, `rgba(255,170,60,${0.45 * a})`);
+      g.addColorStop(0.7, `rgba(255,90,20,${0.25 * a})`);
+      g.addColorStop(1, 'rgba(255,60,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.raio, 0, Math.PI * 2); ctx.fill();
+      // espirais girando
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = `rgba(255,210,90,${0.8 * a})`;
+      ctx.lineWidth = 2 / escala;
+      for (let k = 0; k < 3; k++) {
+        ctx.beginPath();
+        const giro = tVisual * 6 + (k * Math.PI * 2) / 3;
+        for (let i = 0; i <= 20; i++) {
+          const f = i / 20, ang = giro + f * Math.PI * 1.6, rr = z.raio * (0.15 + 0.8 * f);
+          const px = z.x + Math.cos(ang) * rr, py = z.y + Math.sin(ang) * rr * 0.6;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
   }
 
   function desenharProjeteis() {

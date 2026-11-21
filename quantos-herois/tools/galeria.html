@@ -16,8 +16,11 @@
 import { desenharUnidade } from '../render/sprites.js';
 import { HEROIS } from '../data/herois.js';
 import { VILOES } from '../data/viloes.js';
+import { HEROIS_EVOLUIDOS } from '../data/evolucoes.js';
 const ctx = document.getElementById('c').getContext('2d');
-const tipos = [...Object.keys(HEROIS), ...Object.keys(VILOES)];
+const pedidos = new URLSearchParams(location.search).get('tipos');
+const todos = { ...HEROIS, ...HEROIS_EVOLUIDOS, ...VILOES };
+const tipos = pedidos ? pedidos.split(',') : [...Object.keys(HEROIS), ...Object.keys(VILOES)];
 const estados = [
   { nome: 'parado', anim: {} },
   { nome: 'atacando', anim: { avanco: 1 } },
@@ -26,10 +29,10 @@ const estados = [
 ];
 const escala = 22;
 tipos.forEach((tipo, i) => {
-  const base = HEROIS[tipo] || VILOES[tipo];
+  const base = todos[tipo];
   estados.forEach((est, j) => {
     const x = 70 + i * 140, y = 120 + j * 150;
-    const u = { id: i * 10 + j, tipo, lado: HEROIS[tipo] ? 'h' : 'v', raio: Math.min(base.raio, 3.2), geracao: 0 };
+    const u = { id: i * 10 + j, tipo, lado: VILOES[tipo] ? 'v' : 'h', raio: Math.min(base.raio, 3.2), geracao: 0 };
     ctx.save(); ctx.translate(x, y);
     desenharUnidade(ctx, u, { t: 1.3, dir: 1, ...est.anim }, escala);
     ctx.restore();

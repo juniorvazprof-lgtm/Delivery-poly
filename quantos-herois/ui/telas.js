@@ -1,7 +1,14 @@
 import { HEROIS } from '../data/herois.js';
+import { HEROIS_EVOLUIDOS } from '../data/evolucoes.js';
+
 const EMOJI_INIMIGO = { goblin:'👺', slime:'🟢', slimeMedio:'🟢', slimePequeno:'🟢', reiSlime:'👑' };
 const NOME_INIMIGO = { goblin:'Goblin', slime:'Slime', slimeMedio:'Slime Médio', slimePequeno:'Slime Pequeno', reiSlime:'Rei Slime' };
-const EMOJI_CLASSE = { guerreiro:'⚔️', guardiao:'🛡️', piromante:'🔥', arqueiro:'🏹', clerigo:'✨' };
+const EMOJI_CLASSE = {
+  guerreiro:'⚔️', guardiao:'🛡️', piromante:'🔥', arqueiro:'🏹', clerigo:'✨',
+  magoTornado:'🌪️', campeao:'🗡️', paladino:'⚜️', atirador:'🎯', sumoSacerdote:'☀️'
+};
+
+function nomeClasse(c){ return HEROIS[c]?.nome ?? HEROIS_EVOLUIDOS[c]?.nome ?? c; }
 
 function el(tag, attrs, ...filhos){
   const e = document.createElement(tag);
@@ -43,7 +50,6 @@ function ilustracaoHerois(){
   <rect x="0" y="0" width="400" height="320" rx="16" fill="url(#bg)" stroke="#2a1a12" stroke-width="6"/>
   <circle cx="200" cy="60" r="30" fill="#e3a92b" opacity="0.15"/>
   <circle cx="200" cy="60" r="18" fill="#e3a92b" opacity="0.3"/>
-  <!-- Guerreiro -->
   <g transform="translate(80,180)">
     <ellipse cx="0" cy="70" rx="40" ry="8" fill="#000" opacity="0.4"/>
     <rect x="-22" y="20" width="44" height="50" rx="8" fill="#8e2b2b" stroke="#2a1a12" stroke-width="4"/>
@@ -55,7 +61,6 @@ function ilustracaoHerois(){
     <rect x="26" y="10" width="6" height="40" fill="#c0c0c0" stroke="#2a1a12" stroke-width="3"/>
     <rect x="20" y="6" width="18" height="10" fill="#e3a92b" stroke="#2a1a12" stroke-width="3"/>
   </g>
-  <!-- Guardião -->
   <g transform="translate(200,190)">
     <ellipse cx="0" cy="70" rx="40" ry="8" fill="#000" opacity="0.4"/>
     <rect x="-24" y="20" width="48" height="50" rx="8" fill="#4f9d4a" stroke="#2a1a12" stroke-width="4"/>
@@ -66,7 +71,6 @@ function ilustracaoHerois(){
     <path d="M-6 12 Q0 16 6 12" stroke="#2a1a12" stroke-width="3" fill="none" stroke-linecap="round"/>
     <path d="M-40 10 Q-40 -20 -30 -20 L-30 40 Q-40 40 -40 10 Z" fill="#e3a92b" stroke="#2a1a12" stroke-width="4"/>
   </g>
-  <!-- Piromante -->
   <g transform="translate(320,180)">
     <ellipse cx="0" cy="70" rx="40" ry="8" fill="#000" opacity="0.4"/>
     <rect x="-22" y="20" width="44" height="50" rx="8" fill="#5b3b8c" stroke="#2a1a12" stroke-width="4"/>
@@ -134,18 +138,24 @@ export function telaDesafio(app, { run, opcoes, aoEscolher, aoVoltar }){
 
 export function telaTime(app, { run, opcao, disponiveis, estrelasCalc, custoSoldo, validar, aoMudar, aoLutar, aoVoltar, aoToggleChama }){
   limpar(app);
-  const tela = el('div', { class:'tela' });
+  const tela = el('div', { class:'tela tela-time' });
   tela.appendChild(barraTopo({ rodada: run.rodada, vida: run.baseVida, vidaMax: run.baseVidaMax, ouro: run.ouro }));
-  const cont = el('div', { class:'conteudo' });
+
+  const cont = el('div', { class:'conteudo conteudo-time' });
   const grid = el('div', { class:'escolha-time' });
+
+  // Coluna esquerda: desafio
   const painelIni = el('div', { class:'painel-inimigos' });
   painelIni.appendChild(el('h3', null, opcao.titulo));
+  const listaIni = el('div', { class:'lista-inimigos' });
   for (const [tipo, qtd] of opcao.inimigos){
-    painelIni.appendChild(el('span', { class:'inimigo-tag' }, `${EMOJI_INIMIGO[tipo] || '👾'} ${NOME_INIMIGO[tipo] || tipo} ×${qtd}`));
+    listaIni.appendChild(el('span', { class:'inimigo-tag' }, `${EMOJI_INIMIGO[tipo] || '👾'} ${NOME_INIMIGO[tipo] || tipo} ×${qtd}`));
   }
-  painelIni.appendChild(el('div', { style:'margin-top:auto;font-size:.85rem;opacity:.85;font-weight:700;' }, `Ideal: ${opcao.ideal} heróis`));
+  painelIni.appendChild(listaIni);
+  painelIni.appendChild(el('div', { class:'ideal-info' }, `Ideal: ${opcao.ideal} heróis`));
   grid.appendChild(painelIni);
 
+  // Coluna central: lista de classes
   const painelTime = el('div', { class:'painel-time' });
   const enviados = {};
   for (const classe in disponiveis){
@@ -154,17 +164,14 @@ export function telaTime(app, { run, opcao, disponiveis, estrelasCalc, custoSold
     const linha = el('div', { class:'linha-classe' });
     const infoDiv = el('div', { class:'info' });
     infoDiv.appendChild(el('div', { class:'nome' }, `${EMOJI_CLASSE[classe] || '🛡️'} ${info.nome}`));
-    infoDiv.appendChild(el('div', { class:'papel' }, info.papel));
     const disp = el('div', { class:'disp' });
-    disp.appendChild(document.createTextNode(`Disponíveis: ${info.disponiveis}/${info.total}`));
+    disp.appendChild(document.createTextNode(`${info.disponiveis}/${info.total}`));
     if (info.desmaiados && info.desmaiados.length){
       disp.appendChild(document.createTextNode(' '));
-      disp.appendChild(el('span', { class:'dorme' }, `💤 ${info.desmaiados.map(d => `volta na rodada ${d.volta}`).join(', ')}`));
+      disp.appendChild(el('span', { class:'dorme' }, `💤 ${info.desmaiados.map(d => d.volta).join(',')}`));
     }
     infoDiv.appendChild(disp);
     linha.appendChild(infoDiv);
-    const espaco = el('div');
-    linha.appendChild(espaco);
     const contador = el('div', { class:'contador' });
     const btnMenos = el('button', { class:'secundario', onclick: () => { if (enviados[classe] > 0){ enviados[classe]--; atualizar(); } } }, '−');
     const valor = el('div', { class:'valor' }, '0');
@@ -179,45 +186,50 @@ export function telaTime(app, { run, opcao, disponiveis, estrelasCalc, custoSold
     linha._atualizar = () => { valor.textContent = String(enviados[classe]); };
   }
   grid.appendChild(painelTime);
-  cont.appendChild(grid);
-  tela.appendChild(cont);
 
-  const rodape = el('div', { class:'rodape-time' });
+  // Coluna direita: resumo + ações
+  const painelResumo = el('div', { class:'painel-resumo' });
   const statTotal = el('div', { class:'stat' });
   statTotal.appendChild(el('div', { class:'rotulo' }, 'Enviados'));
   const valTotal = el('div', { class:'valor' }, '0');
   statTotal.appendChild(valTotal);
-  rodape.appendChild(statTotal);
+  painelResumo.appendChild(statTotal);
   const statEstrelas = el('div', { class:'stat' });
-  statEstrelas.appendChild(el('div', { class:'rotulo' }, 'Estrelas previstas'));
+  statEstrelas.appendChild(el('div', { class:'rotulo' }, 'Estrelas'));
   const valEstrelas = el('div', { class:'estrelas' });
   statEstrelas.appendChild(valEstrelas);
-  rodape.appendChild(statEstrelas);
+  painelResumo.appendChild(statEstrelas);
   const statSoldo = el('div', { class:'stat' });
-  statSoldo.appendChild(el('div', { class:'rotulo' }, 'Soldo'));
+  statSoldo.appendChild(el('div', { class:'rotulo' }, 'Soldo' ));
   const valSoldo = el('div', { class:'valor' }, '0 🪙');
   statSoldo.appendChild(valSoldo);
-  rodape.appendChild(statSoldo);
+  painelResumo.appendChild(statSoldo);
 
-  const acoes = el('div', { class:'acoes' });
   if (run.reliquias && run.reliquias.includes('chamaConcentrada')){
     const inter = el('div', { class:'interruptor' + (run.chamaLigada ? ' ligado' : ''), onclick: () => { aoToggleChama(); } });
     inter.appendChild(el('div', { class:'bolinha' }));
-    inter.appendChild(el('span', null, 'Chama Concentrada'));
-    acoes.appendChild(inter);
+    inter.appendChild(el('span', null, 'Chama'));
+    painelResumo.appendChild(inter);
   }
+
   const motivo = el('div', { class:'motivo' }, '');
-  acoes.appendChild(motivo);
-  const btnTodos = el('button', { class:'secundario', onclick: () => { for (const c in disponiveis) enviados[c] = disponiveis[c].disponiveis; atualizar(); } }, 'Todos no máx');
+  painelResumo.appendChild(motivo);
+
+  const btnLutar = el('button', { class:'grande principal btn-lutar', onclick: () => aoLutar(enviados) }, 'LUTAR!');
+  painelResumo.appendChild(btnLutar);
+
+  const acoesSec = el('div', { class:'acoes-sec' });
+  const btnTodos = el('button', { class:'secundario', onclick: () => { for (const c in disponiveis) enviados[c] = disponiveis[c].disponiveis; atualizar(); } }, 'Todos');
   const btnZerar = el('button', { class:'secundario', onclick: () => { for (const c in enviados) enviados[c] = 0; atualizar(); } }, 'Zerar');
-  acoes.appendChild(btnTodos);
-  acoes.appendChild(btnZerar);
   const btnVoltar = el('button', { class:'secundario', onclick: aoVoltar }, 'Voltar');
-  acoes.appendChild(btnVoltar);
-  const btnLutar = el('button', { class:'grande principal', onclick: () => aoLutar(enviados) }, 'LUTAR!');
-  acoes.appendChild(btnLutar);
-  rodape.appendChild(acoes);
-  tela.appendChild(rodape);
+  acoesSec.appendChild(btnTodos);
+  acoesSec.appendChild(btnZerar);
+  acoesSec.appendChild(btnVoltar);
+  painelResumo.appendChild(acoesSec);
+
+  grid.appendChild(painelResumo);
+  cont.appendChild(grid);
+  tela.appendChild(cont);
   app.appendChild(tela);
 
   function atualizar(){
@@ -230,7 +242,7 @@ export function telaTime(app, { run, opcao, disponiveis, estrelasCalc, custoSold
     for (let i = 0; i < 3; i++){
       valEstrelas.appendChild(el('span', { class: i < est ? '' : 'off' }, '★'));
     }
-    const soldo = custoSoldo(enviados); // a função espera o objeto {classe: n}
+    const soldo = custoSoldo(enviados);
     valSoldo.textContent = `${soldo} 🪙`;
     const v = validar(opcao, enviados);
     btnLutar.disabled = !v.ok;
@@ -332,7 +344,6 @@ export function telaBatalha(app, { run, cfg, aoFim, aoConsumivel, aoSair }){
         aoFim: (res) => aoFim(res),
         aoMoeda: (valor) => {
           poteAcumulado += valor;
-          // abaixo de 10 mostra uma casa decimal, para cada moedinha fazer o número subir
           poteVal.textContent = poteAcumulado < 10 ? poteAcumulado.toFixed(1).replace('.', ',') : String(Math.floor(poteAcumulado));
           pote.classList.add('pulo');
           setTimeout(() => pote.classList.remove('pulo'), 120);
@@ -383,7 +394,7 @@ export function telaBatalha(app, { run, cfg, aoFim, aoConsumivel, aoSair }){
       const info = porClasse[classe];
       const linha = el('div', { class:'hud-linha-classe' });
       const topo = el('div', { class:'topo' });
-      topo.appendChild(el('span', { class:'nome' }, `${EMOJI_CLASSE[classe] || '🛡️'} ${HEROIS[classe]?.nome || classe}`));
+      topo.appendChild(el('span', { class:'nome' }, `${EMOJI_CLASSE[classe] || '🛡️'} ${nomeClasse(classe)}`));
       topo.appendChild(el('span', null, `${info.vivos}/${info.total}`));
       linha.appendChild(topo);
       const barras = el('div', { class:'hud-mini-barras' });
@@ -414,17 +425,19 @@ export function telaResultado(app, { relatorio, aoContinuar }){
   }
   cont.appendChild(estrelas);
 
+  const ganho = el('div', { class:'ganho-grande' }, '+0 🪙');
+  cont.appendChild(ganho);
+
+  const painelDetalhes = el('div', { class:'painel-detalhes escondido' });
   const conta = el('div', { class:'conta-pote' });
   const linha1 = el('div', null, relatorio.vitoria
     ? `Pote ${relatorio.pote} + Prêmio ${relatorio.premioBase} = ${relatorio.pote + relatorio.premioBase} × ${relatorio.multiplicador.toFixed(1).replace('.', ',')} ★`
     : `Sem prêmio na derrota: você fica só com o pote (${relatorio.pote})`);
   if (relatorio.soldo) linha1.appendChild(el('div', { style: 'font-size:.85em;opacity:.8' }, `Soldo pago: −${relatorio.soldo} 🪙`));
   conta.appendChild(linha1);
-  const total = el('div', { class:'ouro-total' }, '= 0 🪙');
-  conta.appendChild(total);
-  cont.appendChild(conta);
+  painelDetalhes.appendChild(conta);
 
-  if (!relatorio.vitoria) cont.appendChild(el('div', { class:'subtitulo' }, `A base levou ${relatorio.danoBase} de dano`));
+  if (!relatorio.vitoria) painelDetalhes.appendChild(el('div', { class:'subtitulo', style:'color:var(--pergaminho);' }, `A base levou ${relatorio.danoBase} de dano`));
 
   if (relatorio.porClasse){
     const tabela = el('table', { class:'tabela-classe' });
@@ -437,7 +450,7 @@ export function telaResultado(app, { relatorio, aoContinuar }){
     for (const classe in relatorio.porClasse){
       const d = relatorio.porClasse[classe];
       const tr = el('tr');
-      tr.appendChild(el('td', null, classe));
+      tr.appendChild(el('td', null, nomeClasse(classe)));
       tr.appendChild(el('td', null, String(d.enviados)));
       tr.appendChild(el('td', null, String(d.caidos)));
       tr.appendChild(el('td', null, String(d.abates)));
@@ -447,11 +460,19 @@ export function telaResultado(app, { relatorio, aoContinuar }){
       tbody.appendChild(tr);
     }
     tabela.appendChild(tbody);
-    cont.appendChild(tabela);
+    painelDetalhes.appendChild(tabela);
   }
+  cont.appendChild(painelDetalhes);
 
-  const btn = el('button', { class:'grande principal', onclick: aoContinuar }, 'Continuar');
-  cont.appendChild(btn);
+  const acoes = el('div', { class:'acoes-resultado' });
+  const btnDetalhes = el('button', { class:'secundario', onclick: () => {
+    painelDetalhes.classList.toggle('escondido');
+    btnDetalhes.textContent = painelDetalhes.classList.contains('escondido') ? 'Detalhes' : 'Fechar detalhes';
+  } }, 'Detalhes');
+  acoes.appendChild(btnDetalhes);
+  acoes.appendChild(el('button', { class:'grande principal', onclick: aoContinuar }, 'Continuar'));
+  cont.appendChild(acoes);
+
   tela.appendChild(cont);
   app.appendChild(tela);
 
@@ -460,7 +481,7 @@ export function telaResultado(app, { relatorio, aoContinuar }){
   const passo = Math.max(1, Math.ceil(alvo / 40));
   const iv = setInterval(() => {
     atual = Math.min(alvo, atual + passo);
-    total.textContent = `= ${atual} 🪙`;
+    ganho.textContent = `+${atual} 🪙`;
     if (atual >= alvo) clearInterval(iv);
   }, 40);
 
@@ -474,38 +495,142 @@ export function telaResultado(app, { relatorio, aoContinuar }){
   }
 }
 
-export function telaBau(app, { reliquias, aoEscolher, aoPular }){
+export function telaBau(app, { opcoes, aoEscolher, aoPular }){
   limpar(app);
-  const tela = el('div', { class:'tela' });
+  const tela = el('div', { class:'tela tela-bau' });
   const cont = el('div', { class:'bau-tela' });
-  cont.appendChild(el('h1', { class:'titulo-contorno' }, 'Você achou um baú!'));
-  const cartas = el('div', { class:'cartas-bau' });
-  for (const rel of reliquias){
-    const c = el('div', { class:'carta-reliquia' });
-    c.appendChild(el('h3', null, rel.nome));
-    c.appendChild(el('div', { class:'classe' }, rel.classe));
-    c.appendChild(el('div', { class:'raridade ' + rel.raridade }, rel.raridade.toUpperCase()));
-    c.appendChild(el('div', { class:'desc' }, rel.desc));
-    c.appendChild(el('button', { class:'principal', onclick: () => aoEscolher(rel.id) }, 'ESCOLHER'));
-    cartas.appendChild(c);
-  }
-  cont.appendChild(cartas);
-  cont.appendChild(el('button', { class:'secundario', onclick: aoPular }, 'Deixar para lá'));
+
+  const titulo = el('h1', { class:'titulo-contorno titulo-bau' }, 'Você achou um baú!');
+  cont.appendChild(titulo);
+
+  const palco = el('div', { class:'palco-bau' });
+
+  const raios = el('div', { class:'raios' });
+  palco.appendChild(raios);
+
+  const bau = el('div', { class:'bau' });
+  const tampa = el('div', { class:'bau-tampa' });
+  const corpo = el('div', { class:'bau-corpo' });
+  const fechadura = el('div', { class:'bau-fechadura' });
+  corpo.appendChild(fechadura);
+  bau.appendChild(corpo);
+  bau.appendChild(tampa);
+  palco.appendChild(bau);
+
+  const cartas = el('div', { class:'cartas-bau cartas-bau-nova' });
+  palco.appendChild(cartas);
+
+  cont.appendChild(palco);
+
+  const rodape = el('div', { class:'bau-rodape' });
+  const btnPular = el('button', { class:'secundario', onclick: aoPular }, 'Pular');
+  rodape.appendChild(btnPular);
+  cont.appendChild(rodape);
+
   tela.appendChild(cont);
   app.appendChild(tela);
+
+  const reduzido = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const cartasEl = [];
+  for (let i = 0; i < opcoes.length; i++){
+    const op = opcoes[i];
+    const c = el('div', { class:'carta-bau raridade-' + op.raridade });
+    const inner = el('div', { class:'carta-inner' });
+    const frente = el('div', { class:'carta-frente' });
+    frente.appendChild(el('div', { class:'icone' }, op.icone || '✦'));
+    frente.appendChild(el('h3', null, op.nome));
+    frente.appendChild(el('div', { class:'tipo' }, op.tipo === 'reliquia' ? 'Relíquia' : op.tipo === 'passiva' ? 'Passiva' : 'Melhoria'));
+    frente.appendChild(el('div', { class:'desc' }, op.desc));
+    const verso = el('div', { class:'carta-verso' });
+    inner.appendChild(frente);
+    inner.appendChild(verso);
+    c.appendChild(inner);
+    c._opcao = op;
+    c._inner = inner;
+    c.addEventListener('click', () => selecionar(i));
+    cartasEl.push(c);
+    cartas.appendChild(c);
+  }
+
+  let escolhida = -1;
+  const btnEscolher = el('button', { class:'grande principal btn-escolher', onclick: () => { if (escolhida >= 0) aoEscolher(escolhida); } }, 'Escolher');
+  btnEscolher.disabled = true;
+  rodape.appendChild(btnEscolher);
+
+  function selecionar(i){
+    escolhida = i;
+    cartasEl.forEach((c, idx) => c.classList.toggle('selecionada', idx === i));
+    btnEscolher.disabled = false;
+  }
+
+  if (reduzido){
+    bau.classList.add('aberto');
+    cartasEl.forEach(c => c.classList.add('revelada'));
+    return;
+  }
+
+  // Sequência: treme 3x → abre tampa → raios → cartas voam e viram
+  bau.classList.add('tremendo');
+  setTimeout(() => {
+    bau.classList.remove('tremendo');
+    bau.classList.add('aberto');
+    raios.classList.add('ativos');
+  }, 900);
+  setTimeout(() => {
+    cartasEl.forEach((c, i) => {
+      setTimeout(() => c.classList.add('revelada'), i * 180);
+    });
+  }, 1400);
 }
 
-export function telaAcampamento(app, { run, disponiveis, precos, aoRecrutar, aoComprarConsumivel, aoComprarReliquia, aoUsarPocao, aoUsarBandagem, aoSeguir, reliquiasInfo, consumiveisInfo }){
+export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, consumiveisInfo, passivasInfo, evolucoes, aoRecrutar, aoComprarConsumivel, aoComprarReliquia, aoComprarPassiva, aoEvoluir, aoUsarPocao, aoUsarBandagem, aoSeguir }){
   limpar(app);
-  const tela = el('div', { class:'tela' });
+  const tela = el('div', { class:'tela tela-acampamento' });
   tela.appendChild(barraTopo({ rodada: run.rodada, vida: run.baseVida, vidaMax: run.baseVidaMax, ouro: run.ouro }));
+
   const cont = el('div', { class:'acampamento' });
 
-  const secRec = el('div', { class:'secao' });
-  secRec.appendChild(el('h2', null, 'Recrutar'));
+  // Faixa de ícones: passivas e relíquias do jogador
+  const faixa = el('div', { class:'faixa-itens' });
+  const temAlgo = (run.passivas && run.passivas.length) || (run.reliquias && run.reliquias.length);
+  if (temAlgo){
+    if (run.passivas) for (const id of run.passivas){
+      const p = passivasInfo[id];
+      if (p) faixa.appendChild(el('span', { class:'item-tag passiva', title: p.nome }, p.icone || '✦'));
+    }
+    if (run.reliquias) for (const id of run.reliquias){
+      const r = reliquiasInfo[id];
+      if (r) faixa.appendChild(el('span', { class:'item-tag reliquia', title: r.nome }, '✦'));
+    }
+  }
+  if (temAlgo) cont.appendChild(faixa);
+
+  // Abas
+  const abas = el('div', { class:'abas' });
+  const nomesAbas = [
+    { id:'recrutar', label:'Recrutar' },
+    { id:'evoluir', label:'Evoluir' },
+    { id:'passivas', label:'Passivas' },
+    { id:'mercador', label:'Mercador' }
+  ];
+  const paineis = {};
+  let abaAtiva = 'recrutar';
+  for (const a of nomesAbas){
+    const btn = el('button', { class:'aba', onclick: () => trocarAba(a.id) }, a.label);
+    btn._id = a.id;
+    abas.appendChild(btn);
+  }
+  cont.appendChild(abas);
+
+  const corpo = el('div', { class:'corpo-abas' });
+  cont.appendChild(corpo);
+
+  // Painel Recrutar
+  const pRec = el('div', { class:'painel-aba' });
   const gradeRec = el('div', { class:'grade-cartas' });
-  for (const classe in disponiveis){
-    const info = disponiveis[classe];
+  for (const classe in classes){
+    const info = classes[classe];
     const preco = precos[classe];
     const c = el('div', { class:'carta-heroi' });
     c.appendChild(el('h4', null, `${EMOJI_CLASSE[classe] || '🛡️'} ${info.nome}`));
@@ -520,32 +645,59 @@ export function telaAcampamento(app, { run, disponiveis, precos, aoRecrutar, aoC
     c.appendChild(btn);
     gradeRec.appendChild(c);
   }
-  secRec.appendChild(gradeRec);
-  cont.appendChild(secRec);
+  pRec.appendChild(gradeRec);
+  paineis.recrutar = pRec;
 
-  if (run.desmaiados && run.desmaiados.length){
-    const secEnf = el('div', { class:'secao' });
-    secEnf.appendChild(el('h2', null, 'Enfermaria'));
-    const lista = el('div', { class:'lista-enfermaria' });
-    for (const d of run.desmaiados){
-      const linha = el('div', { class:'linha-enfermaria' });
-      linha.appendChild(el('span', { class:'nome' }, `${EMOJI_CLASSE[d.classe] || '🛡️'} ${HEROIS[d.classe]?.nome || d.classe}`));
-      linha.appendChild(el('span', { class:'volta' }, `💤 volta na rodada ${d.volta}`));
-      if ((run.inventario.pocaoRessurreicao || 0) > 0){
-        linha.appendChild(el('button', { class:'arcano', onclick: () => aoUsarPocao(d.classe) }, `Poção (${run.inventario.pocaoRessurreicao})`));
-      }
-      if ((run.inventario.bandagem || 0) > 0){
-        linha.appendChild(el('button', { class:'secundario', onclick: () => aoUsarBandagem(d.classe) }, `Bandagem (${run.inventario.bandagem})`));
-      }
-      lista.appendChild(linha);
+  // Painel Evoluir
+  const pEvo = el('div', { class:'painel-aba' });
+  if (!evolucoes || !evolucoes.length){
+    pEvo.appendChild(el('div', { class:'vazio' }, 'Nenhuma evolução disponível ainda.'));
+  } else {
+    const gradeEvo = el('div', { class:'grade-cartas' });
+    for (const evo of evolucoes){
+      const c = el('div', { class:'carta-evolucao' });
+      c.appendChild(el('h4', null, `${EMOJI_CLASSE[evo.de] || '🛡️'} ${evo.nomeDe} → ${EMOJI_CLASSE[evo.para] || '✨'} ${evo.nomePara}`));
+      const atr = el('div', { class:'atributos-evo' });
+      atr.appendChild(el('span', null, `❤ ${evo.antes.pv} → ${evo.depois.pv}`));
+      atr.appendChild(el('span', null, `⚔ ${evo.antes.dano} → ${evo.depois.dano}`));
+      c.appendChild(atr);
+      c.appendChild(el('div', { class:'preco' }, `${evo.preco} 🪙`));
+      if (evo.rodadaMin) c.appendChild(el('div', { class:'rodada-min' }, `A partir da rodada ${evo.rodadaMin}`));
+      const btn = el('button', { class:'principal', onclick: () => aoEvoluir(evo.de) }, 'Evoluir 1');
+      if (!evo.pode){ btn.disabled = true; if (evo.motivo) c.appendChild(el('div', { class:'motivo-evo' }, evo.motivo)); }
+      c.appendChild(btn);
+      gradeEvo.appendChild(c);
     }
-    secEnf.appendChild(lista);
-    cont.appendChild(secEnf);
+    pEvo.appendChild(gradeEvo);
   }
+  paineis.evoluir = pEvo;
 
-  const secMerc = el('div', { class:'secao' });
-  secMerc.appendChild(el('h2', null, 'Mercador'));
-  const gradeMerc = el('div', { class:'grade-cartas' });
+  // Painel Passivas
+  const pPas = el('div', { class:'painel-aba' });
+  const gradePas = el('div', { class:'grade-cartas' });
+  for (const id in passivasInfo){
+    const p = passivasInfo[id];
+    const comprada = run.passivas && run.passivas.includes(id);
+    const c = el('div', { class:'carta-passiva' });
+    c.appendChild(el('div', { class:'icone-passiva' }, p.icone || '✦'));
+    c.appendChild(el('h4', null, p.nome));
+    c.appendChild(el('div', { class:'desc' }, p.desc));
+    c.appendChild(el('div', { class:'preco' }, `${p.preco} 🪙`));
+    if (comprada){
+      c.appendChild(el('button', { class:'secundario', disabled:'disabled' }, '✓ Comprada'));
+    } else {
+      const btn = el('button', { class:'principal', onclick: () => aoComprarPassiva(id) }, 'Comprar');
+      if (run.ouro < p.preco) btn.disabled = true;
+      c.appendChild(btn);
+    }
+    gradePas.appendChild(c);
+  }
+  pPas.appendChild(gradePas);
+  paineis.passivas = pPas;
+
+  // Painel Mercador
+  const pMer = el('div', { class:'painel-aba' });
+  const gradeMer = el('div', { class:'grade-cartas' });
   for (const id in consumiveisInfo){
     const info = consumiveisInfo[id];
     const qtd = run.inventario[id] || 0;
@@ -559,7 +711,7 @@ export function telaAcampamento(app, { run, disponiveis, precos, aoRecrutar, aoC
     const btn = el('button', { class:'principal', onclick: () => aoComprarConsumivel(id) }, 'Comprar');
     if (run.ouro < info.preco) btn.disabled = true;
     c.appendChild(btn);
-    gradeMerc.appendChild(c);
+    gradeMer.appendChild(c);
   }
   if (run.lojaReliquias && run.lojaReliquias.length){
     for (const id of run.lojaReliquias){
@@ -576,31 +728,54 @@ export function telaAcampamento(app, { run, disponiveis, precos, aoRecrutar, aoC
       const btn = el('button', { class:'arcano', onclick: () => aoComprarReliquia(id) }, 'Comprar');
       if (run.ouro < rel.preco) btn.disabled = true;
       c.appendChild(btn);
-      gradeMerc.appendChild(c);
+      gradeMer.appendChild(c);
     }
   }
-  secMerc.appendChild(gradeMerc);
-  cont.appendChild(secMerc);
+  pMer.appendChild(gradeMer);
+  paineis.mercador = pMer;
 
-  if (run.reliquias && run.reliquias.length){
-    const secRel = el('div', { class:'secao' });
-    secRel.appendChild(el('h2', null, 'Suas relíquias'));
-    const lista = el('div', { class:'reliquias-lista' });
-    for (const id of run.reliquias){
-      const rel = reliquiasInfo[id];
-      if (rel) lista.appendChild(el('span', { class:'rel-tag' }, rel.nome));
+  for (const id in paineis) corpo.appendChild(paineis[id]);
+
+  // Enfermaria (sempre visível, abaixo das abas, se houver desmaiados)
+  if (run.desmaiados && run.desmaiados.length){
+    const secEnf = el('div', { class:'secao secao-enfermaria' });
+    secEnf.appendChild(el('h2', null, 'Enfermaria'));
+    const lista = el('div', { class:'lista-enfermaria' });
+    for (const d of run.desmaiados){
+      const linha = el('div', { class:'linha-enfermaria' });
+      linha.appendChild(el('span', { class:'nome' }, `${EMOJI_CLASSE[d.classe] || '🛡️'} ${nomeClasse(d.classe)}`));
+      linha.appendChild(el('span', { class:'volta' }, `💤 volta na rodada ${d.volta}`));
+      if ((run.inventario.pocaoRessurreicao || 0) > 0){
+        linha.appendChild(el('button', { class:'arcano', onclick: () => aoUsarPocao(d.classe) }, `Poção (${run.inventario.pocaoRessurreicao})`));
+      }
+      if ((run.inventario.bandagem || 0) > 0){
+        linha.appendChild(el('button', { class:'secundario', onclick: () => aoUsarBandagem(d.classe) }, `Bandagem (${run.inventario.bandagem})`));
+      }
+      lista.appendChild(linha);
     }
-    secRel.appendChild(lista);
-    cont.appendChild(secRel);
+    secEnf.appendChild(lista);
+    cont.appendChild(secEnf);
   }
 
-  const secProx = el('div', { class:'secao', style:'display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;' });
-  secProx.appendChild(el('h2', { style:'margin:0;border:none;padding:0;' }, `Próximo desafio: Rodada ${run.rodada}`));
+  // Rodapé com "Seguir viagem"
+  const secProx = el('div', { class:'secao secao-seguir' });
+  secProx.appendChild(el('h2', { style:'margin:0;border:none;padding:0;' }, `Próximo: Rodada ${run.rodada}`));
   secProx.appendChild(el('button', { class:'grande principal', onclick: aoSeguir }, 'Seguir viagem'));
   cont.appendChild(secProx);
 
   tela.appendChild(cont);
   app.appendChild(tela);
+
+  function trocarAba(id){
+    abaAtiva = id;
+    for (const btn of abas.children){
+      btn.classList.toggle('ativa', btn._id === id);
+    }
+    for (const pid in paineis){
+      paineis[pid].classList.toggle('ativa', pid === id);
+    }
+  }
+  trocarAba(abaAtiva);
 }
 
 export function telaFim(app, { run, pontuacao, recordes, aoNova, aoMenu }){

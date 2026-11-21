@@ -1,4 +1,7 @@
 import { IDEAIS } from '../data/ideais.js';
+import { PASSIVAS } from '../data/passivas.js';
+import { MELHORIAS } from '../data/melhorias.js';
+import { HEROIS_EVOLUIDOS } from '../data/evolucoes.js';
 import { HEROIS } from '../data/herois.js';
 import { VILOES } from '../data/viloes.js';
 import { RELIQUIAS } from '../data/reliquias.js';
@@ -10,7 +13,7 @@ import {
   criarRun, opcoesDaRodada, disponiveis, precoHeroi, recrutar,
   comprarConsumivel, comprarReliquiaLoja, usarPocao, usarBandagem,
   custoSoldo, validarEnvio, prepararBatalha, gastarConsumivel,
-  estrelas, concluirBatalha, escolherReliquiaBau, pularBau,
+  estrelas, concluirBatalha, escolherBau, pularBau, comprarPassiva, opcoesEvolucao, evoluir,
   pontuacao, serializar, restaurar
 } from '../core/run.js';
 import {
@@ -106,9 +109,11 @@ function irDesafio(){
 function infoClasses(run){
   const disp = disponiveis(run);
   const out = {};
-  for (const c of Object.keys(HEROIS)){
-    out[c] = { ...HEROIS[c], disponiveis: disp[c] || 0, total: run.elenco[c] || 0,
-      desmaiados: run.desmaiados.filter((d) => d.classe === c && d.volta > run.rodada), preco: precoHeroi(run, c) };
+  const todas = { ...HEROIS, ...HEROIS_EVOLUIDOS };
+  for (const c of Object.keys(todas)){
+    if (HEROIS_EVOLUIDOS[c] && !(run.elenco[c] > 0)) continue; // evoluídos só aparecem quando você tem
+    out[c] = { ...todas[c], disponiveis: disp[c] || 0, total: run.elenco[c] || 0,
+      desmaiados: run.desmaiados.filter((d) => d.classe === c && d.volta > run.rodada), preco: HEROIS[c] ? precoHeroi(run, c) : null };
   }
   return out;
 }
@@ -123,7 +128,7 @@ function irTime(){
     opcao: opcaoAtual,
     disponiveis: disp,
     estrelasCalc: (op, env) => estrelas(op, env),
-    custoSoldo: (env) => custoSoldo(env),
+    custoSoldo: (env) => custoSoldo(env, run),
     validar: (op, env) => validarEnvio(run, op, env),
     aoMudar: (env) => { enviadosAtual = env; },
     aoLutar: (env) => { enviadosAtual = env; irBatalha(); },
@@ -170,10 +175,13 @@ function finalizarBatalha(res){
 
 function irBau(){
   if (!run || !run.bauPendente) return irAcampamento();
-  const reliquias = run.bauPendente.map(id => ({ id, ...RELIQUIAS[id] })).filter(r => r.nome);
+  // 3 opções: relíquia (garantida nas rodadas 3, 6 e 9) ou melhorias sorteadas por raridade
+  const opcoes = run.bauPendente.map((op) => op.tipo === 'reliquia'
+    ? { tipo: 'reliquia', nome: RELIQUIAS[op.id].nome, icone: '💎', desc: RELIQUIAS[op.id].desc, raridade: RELIQUIAS[op.id].raridade === 'rara' ? 'epica' : 'rara' }
+    : { tipo: 'melhoria', nome: MELHORIAS[op.id].nome, icone: MELHORIAS[op.id].icone, desc: MELHORIAS[op.id].desc, raridade: MELHORIAS[op.id].raridade });
   telaBau(app, {
-    reliquias,
-    aoEscolher: (id) => { escolherReliquiaBau(run, id); salvarRun(); irAcampamento(); },
+    opcoes,
+    aoEscolher: (i) => { escolherBau(run, i); salvarRun(); irAcampamento(); },
     aoPular: () => { pularBau(run); salvarRun(); irAcampamento(); }
   });
 }
@@ -184,12 +192,19 @@ function irAcampamento(){
   const disp = infoClasses(run);
   const precos = {};
   for (const c in disp) precos[c] = precoHeroi(run, c);
+  // só as classes base são recrutáveis
+  const recrutaveis = Object.fromEntries(Object.entries(disp).filter(([c]) => HEROIS[c]));
   telaAcampamento(app, {
     run,
-    disponiveis: disp,
+    classes: recrutaveis,
+    disponiveis: recrutaveis,
     precos,
     reliquiasInfo: RELIQUIAS,
     consumiveisInfo: CONSUMIVEIS,
+    passivasInfo: PASSIVAS,
+    evolucoes: opcoesEvolucao(run),
+    aoComprarPassiva: (id) => { comprarPassiva(run, id); salvarRun(); irAcampamento(); },
+    aoEvoluir: (classe) => { evoluir(run, classe); salvarRun(); irAcampamento(); },
     aoRecrutar: (classe) => { recrutar(run, classe); salvarRun(); irAcampamento(); },
     aoComprarConsumivel: (id) => { comprarConsumivel(run, id); salvarRun(); irAcampamento(); },
     aoComprarReliquia: (id) => { comprarReliquiaLoja(run, id); salvarRun(); irAcampamento(); },

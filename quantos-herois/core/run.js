@@ -1,4 +1,9 @@
-import { HEROIS } from '../data/herois.js';
+import { HEROIS as HEROIS_BASE } from '../data/herois.js';
+import { HEROIS_EVOLUIDOS, EVOLUCOES } from '../data/evolucoes.js';
+import { PASSIVAS } from '../data/passivas.js';
+import { MELHORIAS } from '../data/melhorias.js';
+// todas as classes (base + evoluídas) para elenco e disponíveis; só as base são recrutáveis
+const HEROIS = { ...HEROIS_BASE, ...HEROIS_EVOLUIDOS };
 import { RELIQUIAS } from '../data/reliquias.js';
 import { CONSUMIVEIS } from '../data/consumiveis.js';
 import { RODADAS, ECONOMIA } from '../data/rodadas.js';
@@ -17,6 +22,84 @@ function rngInt(run, max) {
 }
 function rngEscolha(run, arr) {
   return arr[rngInt(run, arr.length)];
+}
+
+// ---------- Passivas e melhorias ----------
+// soma dos efeitos 'run' das passivas compradas (multPote multiplica; o resto soma)
+export function efeitosRun(run) {
+  const e = { multPote: 1, descontoRecrutar: 0, soldoMenos: 0, desmaioMenos: 0, curaBasePorRodada: 0, juros: 0 };
+  for (const id of run.passivas || []) {
+    const ef = PASSIVAS[id]?.efeito;
+    if (!ef || ef.tipo !== 'run') continue;
+    if (ef.chave === 'multPote') e.multPote *= ef.valor; else e[ef.chave] = (e[ef.chave] || 0) + ef.valor;
+  }
+  return e;
+}
+// bônus de batalha das passivas e melhorias: [{ alvo, mod }]
+export function bonusBatalha(run) {
+  const out = [];
+  for (const id of run.passivas || []) { const ef = PASSIVAS[id]?.efeito; if (ef?.tipo === 'batalha') out.push({ alvo: ef.alvo, mod: ef.mod }); }
+  for (const id of run.melhorias || []) { const ef = MELHORIAS[id]?.efeito; if (ef?.tipo === 'batalha') out.push({ alvo: ef.alvo, mod: ef.mod }); }
+  return out;
+}
+export function comprarPassiva(run, id) {
+  const p = PASSIVAS[id];
+  if (!p || run.passivas.includes(id) || run.ouro < p.preco) return false;
+  run.ouro -= p.preco; run.passivas.push(id);
+  return true;
+}
+// ---------- Evolução ----------
+export function opcoesEvolucao(run) {
+  const disp = disponiveis(run);
+  return Object.entries(EVOLUCOES).map(([de, ev]) => {
+    let motivo = '';
+    if (run.rodada < ev.rodadaMin) motivo = `Disponível na rodada ${ev.rodadaMin}`;
+    else if (!(disp[de] > 0)) motivo = `Precisa de um ${HEROIS[de].nome} disponível`;
+    else if (run.ouro < ev.preco) motivo = 'Ouro insuficiente';
+    const a = HEROIS[de], d = HEROIS[ev.para];
+    return { de, para: ev.para, nomeDe: a.nome, nomePara: d.nome, preco: ev.preco, rodadaMin: ev.rodadaMin, desc: ev.desc,
+      pode: !motivo, motivo, antes: { pv: a.pv, dano: a.dano }, depois: { pv: d.pv, dano: d.dano } };
+  });
+}
+export function evoluir(run, classe) {
+  const op = opcoesEvolucao(run).find((o) => o.de === classe);
+  if (!op || !op.pode) return false;
+  run.ouro -= op.preco; run.elenco[classe]--; run.elenco[op.para] = (run.elenco[op.para] || 0) + 1;
+  return true;
+}
+// ---------- Baú (depois de cada vitória: 3 opções) ----------
+function sortearMelhoria(run, excluir) {
+  const ids = Object.keys(MELHORIAS).filter((id) => !excluir.includes(id));
+  const total = ids.reduce((t, id) => t + (MELHORIAS[id].peso || 1), 0);
+  let x = rngProx(run) * total;
+  for (const id of ids) { x -= MELHORIAS[id].peso || 1; if (x <= 0) return id; }
+  return ids[ids.length - 1];
+}
+function sortearBau(run, rodadaBatalha) {
+  const opcoes = [];
+  const relicGarantida = (ECONOMIA.bau.rodadas || []).includes(rodadaBatalha);
+  if (relicGarantida) {
+    const pool = Object.keys(RELIQUIAS).filter((id) => !run.reliquias.includes(id));
+    if (pool.length) opcoes.push({ tipo: 'reliquia', id: pool[rngInt(run, pool.length)] });
+  }
+  const usados = [];
+  while (opcoes.length < 3) { const id = sortearMelhoria(run, usados); usados.push(id); opcoes.push({ tipo: 'melhoria', id }); }
+  return opcoes;
+}
+export function escolherBau(run, i) {
+  const op = run.bauPendente?.[i];
+  if (!op) return false;
+  if (op.tipo === 'reliquia') { if (!run.reliquias.includes(op.id)) run.reliquias.push(op.id); }
+  else {
+    const ef = MELHORIAS[op.id].efeito;
+    if (ef.tipo === 'batalha') run.melhorias.push(op.id);
+    else if (ef.tipo === 'ouro') run.ouro += ef.valor;
+    else if (ef.tipo === 'heroi') run.elenco[ef.classe] = (run.elenco[ef.classe] || 0) + ef.qtd;
+    else if (ef.tipo === 'consumivel') run.inventario[ef.id] = (run.inventario[ef.id] || 0) + ef.qtd;
+    else if (ef.tipo === 'curarBase') run.baseVida = Math.min(run.baseVidaMax, run.baseVida + ef.valor);
+  }
+  run.bauPendente = null;
+  return true;
 }
 
 // ---------- Criação ----------
@@ -50,6 +133,8 @@ export function criarRun({ semente, ideais }) {
     fim: null,
     bauPendente: null,
     lojaReliquias: [],
+    passivas: [],
+    melhorias: [],
   };
   run.lojaReliquias = sortearLojaReliquias(run);
   return run;
@@ -115,11 +200,11 @@ export function disponiveis(run) {
 export function precoHeroi(run, classe) {
   const base = HEROIS[classe].custo;
   const n = run.recrutados[classe] || 0;
-  return Math.round(base * Math.pow(1 + ECONOMIA.inflacao, n));
+  return Math.round(base * Math.pow(1 + ECONOMIA.inflacao, n) * (1 - efeitosRun(run).descontoRecrutar));
 }
 
 export function recrutar(run, classe) {
-  if (!HEROIS[classe]) return false;
+  if (!HEROIS_BASE[classe]) return false; // evoluídos não se recrutam, só por evolução
   const preco = precoHeroi(run, classe);
   if (run.ouro < preco) return false;
   run.ouro -= preco;
@@ -170,10 +255,10 @@ export function usarBandagem(run, classe) {
 }
 
 // ---------- Envio / batalha ----------
-export function custoSoldo(enviados) {
+export function custoSoldo(enviados, run) {
   let total = 0;
   for (const c of Object.keys(enviados)) total += enviados[c] || 0;
-  return total * ECONOMIA.soldo;
+  return total * Math.max(0, ECONOMIA.soldo - (run ? efeitosRun(run).soldoMenos : 0));
 }
 
 export function validarEnvio(run, opcao, enviados) {
@@ -203,6 +288,7 @@ export function prepararBatalha(run, opcao, enviados) {
     chaves: { chamaConcentrada: !!run.chamaLigada },
     consumiveis: {},
     semente: sementeBatalha,
+    bonus: bonusBatalha(run),
   };
 }
 
@@ -227,7 +313,8 @@ export function concluirBatalha(run, opcao, enviados, resumo) {
   const rodadaBatalha = run.rodada;
   const totalEnviado = Object.values(enviados).reduce((a, b) => a + (b || 0), 0);
   const est = estrelas(opcao, enviados);
-  const pote = Math.round((resumo.ouroAbates || 0) * ECONOMIA.multAbate);
+  const efRun = efeitosRun(run);
+  const pote = Math.round((resumo.ouroAbates || 0) * ECONOMIA.multAbate * efRun.multPote);
 
   let ouroGanho = 0;
   let danoBase = 0;
@@ -252,7 +339,7 @@ export function concluirBatalha(run, opcao, enviados, resumo) {
   for (const c of Object.keys(mortos)) {
     const q = mortos[c] || 0;
     for (let i = 0; i < q; i++) {
-      run.desmaiados.push({ classe: c, volta: rodadaBatalha + 1 + ECONOMIA.rodadasDesmaio });
+      run.desmaiados.push({ classe: c, volta: rodadaBatalha + 1 + Math.max(1, ECONOMIA.rodadasDesmaio - efRun.desmaioMenos) });
     }
   }
 
@@ -264,28 +351,9 @@ export function concluirBatalha(run, opcao, enviados, resumo) {
     run.fim = 'vitoria';
   }
 
-  // Baú
+  // Baú: depois de toda vitória (relíquia garantida nas rodadas de ECONOMIA.bau.rodadas)
   let bauAberto = false;
-  if (vitoria && !run.fim) {
-    const rodadasBau = ECONOMIA.bau.rodadas || [];
-    const ganhouBauRodada = rodadasBau.includes(rodadaBatalha);
-    const ganhouBauEstrela = est === 3 && rngProx(run) < ECONOMIA.bau.chance3Estrelas;
-    if (ganhouBauRodada || ganhouBauEstrela) {
-      const pool = Object.keys(RELIQUIAS).filter(id => !run.reliquias.includes(id));
-      if (pool.length > 0) {
-        const escolhidas = [];
-        const copia = pool.slice();
-        const n = Math.min(3, copia.length);
-        for (let i = 0; i < n; i++) {
-          const idx = rngInt(run, copia.length);
-          escolhidas.push(copia[idx]);
-          copia.splice(idx, 1);
-        }
-        run.bauPendente = escolhidas;
-        bauAberto = true;
-      }
-    }
-  }
+  if (vitoria && !run.fim) { run.bauPendente = sortearBau(run, rodadaBatalha); bauAberto = true; }
 
   // Loja de relíquias para o próximo acampamento
   run.lojaReliquias = sortearLojaReliquias(run);
@@ -293,8 +361,12 @@ export function concluirBatalha(run, opcao, enviados, resumo) {
   const faltaram = vitoria ? 0 : Math.max(1, (opcao.ideal || 1) - totalEnviado + 1);
 
   // soldo: pago com o ganho da rodada; o ouro nunca fica negativo
-  const soldo = custoSoldo(enviados);
+  const soldo = custoSoldo(enviados, run);
   run.ouro = Math.max(0, run.ouro + ouroGanho - soldo);
+  // passivas de run: cura da base ao vencer e juros sobre o ouro guardado (teto 15)
+  if (vitoria && efRun.curaBasePorRodada) run.baseVida = Math.min(run.baseVidaMax, run.baseVida + efRun.curaBasePorRodada);
+  const juros = efRun.juros ? Math.min(15, Math.floor(run.ouro * efRun.juros)) : 0;
+  run.ouro += juros;
 
   const relatorio = {
     vitoria,
