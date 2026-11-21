@@ -1,0 +1,312 @@
+# Contrato de uma cena (módulo ES) — vídeo vertical "tech thriller" 3D em Three.js
+
+Arquivo: `cenas/<nome>.js`. Exporta UMA função default:
+
+```js
+export default function criar(ctx) {
+  const g = new ctx.THREE.Group();   // TUDO da cena vai dentro de g (o motor adiciona g à cena e liga/desliga a visibilidade)
+  // ... montar objetos uma única vez aqui ...
+  return {
+    grupo: g,
+    update(t, k, dur) { /* chamado a cada quadro enquanto a cena está ativa */ }
+  };
+}
+```
+
+- `t` = tempo absoluto do vídeo em segundos; `k` = tempo desde o início da cena (0..dur); `dur` = duração da cena.
+- O motor renderiza quadro a quadro de forma DETERMINÍSTICA (pode pular ou voltar no tempo). Portanto:
+  - **Proibido** `Math.random`, `Date`, `performance.now`, `requestAnimationFrame`, setTimeout, GSAP, estado que acumula entre quadros. Todo movimento é função pura de `t`/`k`.
+  - Para aleatoriedade fixa use `const rnd = ctx.rnd(semente)` NA CRIAÇÃO (retorna função que dá 0..1).
+- Nada de imports. Use só o que vem no `ctx`.
+
+## O que vem no ctx
+- `ctx.THREE` (three r170), `ctx.RoundedBoxGeometry` (classe: `new ctx.RoundedBoxGeometry(w,h,d,segs,raio)`).
+- `ctx.cam`: PerspectiveCamera fov 40, aspecto 9:16. **Toda cena DEVE posicionar a câmera em todo update** (`ctx.cam.position.set(...)`, `ctx.cam.lookAt(...)`); zere `ctx.cam.rotation.z` não é preciso (lookAt resolve).
+- `ctx.fx`: objeto de efeitos que o motor zera a cada quadro; a cena pode escrever:
+  - `ctx.fx.shake` 0..1.5 (tremida de câmera), `ctx.fx.gl` 0..1 (glitch de faixas), `ctx.fx.red` 0..0.8 (tingir de vermelho),
+    `ctx.fx.ab` (aberração cromática, padrão 0.002, impacto ~0.02), `ctx.fx.flash` 0..1 (clarão branco), `ctx.fx.bloom` (padrão 1.1; use ~0.5 se houver telas/superfícies muito claras).
+- `ctx.ease(x)` easeOutCubic com clamp 0..1; `ctx.pulso(t, freq)` 0..1 senoidal; `ctx.clamp01(x)`.
+- `ctx.cores`: `{ verm:'#ff2b3d', azul:'#2fa8ff', amarelo:'#ffe14a', verde:'#25d366', fundo:'#03060d', branco:'#f2f4f8' }`.
+- `ctx.telaCanvas(w, h)` → `{ canvas, g2d, tex }`: canvas 2D já ligado a uma CanvasTexture sRGB. Depois de desenhar em `g2d`, faça `tex.needsUpdate = true`. Fontes disponíveis no canvas: `'Archivo'` (bold grossa) e `'Anton'` (condensada). Ex.: `g2d.font = '64px Archivo'`.
+- `ctx.textoPlano(texto, {tamanho=64, cor='#fff', fonte='Archivo', largura=2})` → Mesh (plano) com o texto desenhado, largura em unidades do mundo = `largura`. Bom para placas e letreiros.
+- Luzes: o motor já tem AmbientLight 0.6 e uma DirectionalLight azulada. Pode adicionar luzes DENTRO de g (PointLight com intensidade ≤ 8).
+- Névoa exponencial escura (densidade 0.035) e fundo `#03060d`: objetos a mais de ~25 unidades somem.
+
+## Regras de composição (vertical 1080x1920)
+- O terço inferior-meio da tela (de ~58% a ~72% da altura) é ocupado por LEGENDAS GRANDES desenhadas pelo motor. **O assunto principal deve ficar na metade de cima da tela** (enquadre com a câmera: ex. objeto em y=+1.5 e lookAt em y=0, ou câmera levemente baixa).
+- Estilo: escuro, neon, vermelho de alerta (#ff2b3d) contra azul (#2fa8ff), materiais `MeshStandardMaterial` metálicos escuros ou `MeshBasicMaterial` emissivos para neon (o bloom faz brilhar). Low-poly limpo, nada de texturas externas.
+- Movimento constante: câmera sempre se movendo (dolly/órbita lenta) e PELO MENOS um evento visual forte sincronizado com cada palavra-chave listada (tempos absolutos `t`). Entradas de objetos com "pop" (escala 0→1.15→1 em ~0.2s), impactos com `ctx.fx.shake`/`flash`.
+- Cada evento deve ser legível em celular: poucos objetos grandes, alto contraste.
+- Tamanho de referência: com a câmera a ~12 unidades, a largura visível é ~4.8 unidades.
+
+## Entrega
+Responda SOMENTE com o código JavaScript do arquivo (sem markdown, sem explicação). Código completo e funcional, ~150–300 linhas.
+
+## Sua cena (briefing original)
+Cena "regra" — de t=41.5 a t=45.6 (dur 4.1). Narração e tempos absolutos:
+- 41.58 "Por isso," 42.10 "a primeira regra" 42.84 "é" → túnel de anéis neon vermelhos (TorusGeometry) com a câmera voando por dentro (avançando em z); no fim do túnel um escudo 3D (forma de escudo extrudada com ExtrudeGeometry a partir de Shape) com "Nº 1" em canvas surge e vem para a frente.
+- 43.00 "Não espere" → impacto: flash 0.8, shake 1.2; o escudo para à frente da câmera; a câmera para.
+- 44.20 "a internet" 44.66 "voltar." → atrás do escudo, um ícone de Wi-Fi cinza com uma AMPULHETA 3D (dois cones unidos) que gira; em 44.66 um X vermelho grande risca ampulheta+wifi; red 0.35.
+Composição: escudo na metade de cima da tela. Estilo épico, muito bloom.
+
+## Código atual (seu, para corrigir)
+export default function criar(ctx) {
+  const T = ctx.THREE;
+  const g = new T.Group();
+  const C = ctx.cores;
+  const rnd = ctx.rnd(1337);
+
+  // ---------- TÚNEL DE ANÉIS ----------
+  const tuneis = [];
+  const N_ANEIS = 14;
+  const anelGeo = new T.TorusGeometry(1.9, 0.09, 8, 40);
+  const anelMat = new T.MeshStandardMaterial({
+    color: 0x1a0308, emissive: C.verm, emissiveIntensity: 2.2,
+    metalness: 0.6, roughness: 0.35
+  });
+  const anelMatB = new T.MeshStandardMaterial({
+    color: 0x0a0a12, emissive: C.azul, emissiveIntensity: 1.4,
+    metalness: 0.7, roughness: 0.4
+  });
+  for (let i = 0; i < N_ANEIS; i++) {
+    const m = new T.Mesh(anelGeo, i % 3 === 0 ? anelMatB : anelMat);
+    m.position.set(0, 0, -i * 2.2);
+    m.rotation.z = i * 0.35;
+    g.add(m);
+    tuneis.push(m);
+  }
+
+  // ---------- ESCUDO ----------
+  const shape = new T.Shape();
+  shape.moveTo(0, 1.15);
+  shape.lineTo(0.95, 0.85);
+  shape.lineTo(0.95, -0.15);
+  shape.quadraticCurveTo(0.95, -0.95, 0, -1.35);
+  shape.quadraticCurveTo(-0.95, -0.95, -0.95, -0.15);
+  shape.lineTo(-0.95, 0.85);
+  shape.lineTo(0, 1.15);
+  const escGeo = new T.ExtrudeGeometry(shape, {
+    depth: 0.22, bevelEnabled: true, bevelThickness: 0.06,
+    bevelSize: 0.06, bevelSegments: 3, curveSegments: 12
+  });
+  escGeo.center();
+  const escMat = new T.MeshStandardMaterial({
+    color: 0x12060a, emissive: C.verm, emissiveIntensity: 0.9,
+    metalness: 0.85, roughness: 0.28
+  });
+  const escudo = new T.Mesh(escGeo, escMat);
+  escudo.scale.setScalar(0.001);
+  g.add(escudo);
+
+  // borda neon do escudo
+  const bordaGeo = new T.TorusGeometry(1.05, 0.04, 8, 48);
+  const bordaMat = new T.MeshBasicMaterial({ color: C.verm });
+  const borda = new T.Mesh(bordaGeo, bordaMat);
+  borda.scale.set(1, 1.15, 1);
+  borda.position.z = 0.14;
+  escudo.add(borda);
+
+  // "Nº 1" em canvas
+  const tela1 = ctx.telaCanvas(512, 512);
+  const g2 = tela1.g2d;
+  g2.clearRect(0, 0, 512, 512);
+  g2.fillStyle = C.verm;
+  g2.font = 'bold 90px Archivo';
+  g2.textAlign = 'center';
+  g2.textBaseline = 'middle';
+  g2.fillText('Nº', 256, 190);
+  g2.font = 'bold 220px Anton';
+  g2.fillStyle = C.branco;
+  g2.fillText('1', 256, 340);
+  tela1.tex.needsUpdate = true;
+  const placa1 = new T.Mesh(
+    new T.PlaneGeometry(1.5, 1.5),
+    new T.MeshBasicMaterial({ map: tela1.tex, transparent: true })
+  );
+  placa1.position.z = 0.16;
+  escudo.add(placa1);
+
+  // luz do escudo
+  const luzEsc = new T.PointLight(C.verm, 6, 14, 2);
+  luzEsc.position.set(0, 0.4, 1.2);
+  escudo.add(luzEsc);
+
+  // ---------- WI-FI + AMPULHETA (atrás do escudo) ----------
+  const fundoGrupo = new T.Group();
+  fundoGrupo.position.set(0, 0, -2.2);
+  g.add(fundoGrupo);
+
+  // ícone wifi: 3 arcos
+  const wifiMat = new T.MeshStandardMaterial({
+    color: 0x2a2f38, emissive: 0x555a66, emissiveIntensity: 0.5,
+    metalness: 0.6, roughness: 0.5
+  });
+  const wifi = new T.Group();
+  for (let i = 0; i < 3; i++) {
+    const r = 0.35 + i * 0.32;
+    const arc = new T.Mesh(
+      new T.TorusGeometry(r, 0.05, 6, 24, Math.PI),
+      wifiMat
+    );
+    arc.rotation.z = Math.PI;
+    arc.position.y = 0.55;
+    wifi.add(arc);
+  }
+  const dot = new T.Mesh(new T.SphereGeometry(0.09, 10, 10), wifiMat);
+  dot.position.y = 0.55;
+  wifi.add(dot);
+  wifi.position.set(0, 0.55, 0);
+  fundoGrupo.add(wifi);
+
+  // ampulheta: dois cones unidos
+  const ampMat = new T.MeshStandardMaterial({
+    color: 0x1a1f28, emissive: 0x3a4250, emissiveIntensity: 0.7,
+    metalness: 0.8, roughness: 0.35
+  });
+  const ampulheta = new T.Group();
+  const coneTop = new T.Mesh(new T.ConeGeometry(0.42, 0.55, 16, 1, true), ampMat);
+  coneTop.position.y = 0.28;
+  coneTop.rotation.x = Math.PI;
+  const coneBot = new T.Mesh(new T.ConeGeometry(0.42, 0.55, 16, 1, true), ampMat);
+  coneBot.position.y = -0.28;
+  const areia = new T.Mesh(
+    new T.ConeGeometry(0.3, 0.35, 12),
+    new T.MeshBasicMaterial({ color: C.amarelo })
+  );
+  areia.position.y = -0.32;
+  ampulheta.add(coneTop, coneBot, areia);
+  ampulheta.position.y = -0.55;
+  fundoGrupo.add(ampulheta);
+
+  // ---------- X VERMELHO ----------
+  const xGrupo = new T.Group();
+  const xMat = new T.MeshBasicMaterial({ color: C.verm });
+  const barraGeo = new T.BoxGeometry(2.4, 0.22, 0.12);
+  const b1 = new T.Mesh(barraGeo, xMat);
+  b1.rotation.z = Math.PI / 4;
+  const b2 = new T.Mesh(barraGeo, xMat);
+  b2.rotation.z = -Math.PI / 4;
+  xGrupo.add(b1, b2);
+  xGrupo.position.set(0, 0, 0.6);
+  xGrupo.scale.setScalar(0.001);
+  fundoGrupo.add(xGrupo);
+
+  // luz ambiente da cena
+  const luzFundo = new T.PointLight(C.azul, 3, 12, 2);
+  luzFundo.position.set(0, 0, -1);
+  fundoGrupo.add(luzFundo);
+
+  // ---------- UPDATE ----------
+  return {
+    grupo: g,
+    update(t, k, dur) {
+      // ---- câmera: voa pelo túnel até 43.0, depois para ----
+      const tImpacto = 43.0;
+      const tFim = 44.66;
+      const kImp = tImpacto - 41.5; // 1.5
+      const kFim = tFim - 41.5;     // 3.16
+
+      // avanço em z: acelera até impacto, depois trava
+      let avanco;
+      if (k < kImp) {
+        const p = ctx.ease(k / kImp);
+        avanco = -p * 22;
+      } else {
+        avanco = -22;
+      }
+
+      // câmera dentro do túnel
+      const camZ = 6 + avanco;
+      const camY = 0.9 + Math.sin(k * 0.9) * 0.15;
+      const camX = Math.sin(k * 0.6) * 0.25;
+      ctx.cam.position.set(camX, camY, camZ);
+      ctx.cam.lookAt(0, 0.5, camZ - 6);
+
+      // anéis: reposiciona em loop conforme avanço (determinístico)
+      const baseZ = -((k * 6) % 2.2);
+      for (let i = 0; i < tuneis.length; i++) {
+        const m = tuneis[i];
+        let z = -i * 2.2 + baseZ;
+        // reentra no fundo
+        while (z > 6) z -= N_ANEIS * 2.2;
+        m.position.z = z;
+        m.rotation.z = i * 0.35 + k * 0.4;
+        const dist = Math.abs(z - camZ);
+        const vis = ctx.clamp01(1 - dist / 26);
+        m.scale.setScalar(0.6 + vis * 0.5);
+      }
+
+      // ---- escudo: pop em 42.10, vem à frente, para em 43.0 ----
+      const kPop = 42.10 - 41.5; // 0.6
+      const kChega = 43.0 - 41.5; // 1.5
+      let escScale = 0.001;
+      let escZ = -14;
+      if (k >= kPop) {
+        const p = ctx.clamp01((k - kPop) / 0.25);
+        // pop 0 -> 1.15 -> 1
+        let s;
+        if (p < 0.6) s = (p / 0.6) * 1.15;
+        else s = 1.15 - ((p - 0.6) / 0.4) * 0.15;
+        escScale = s;
+        // vem para frente
+        const q = ctx.ease(ctx.clamp01((k - kPop) / (kChega - kPop)));
+        escZ = -14 + q * 16.2; // chega em 2.2
+      }
+      escudo.scale.setScalar(escScale);
+      escudo.position.set(0, 1.4, escZ);
+      escudo.rotation.y = Math.sin(k * 0.8) * 0.15;
+      escudo.rotation.x = Math.sin(k * 0.5) * 0.05;
+
+      // brilho do escudo pulsa
+      escMat.emissiveIntensity = 0.9 + ctx.pulso(t, 2.5) * 0.6;
+      bordaMat.color.setHex(k >= kFim ? 0xffffff : 0xff2b3d);
+
+      // ---- impacto em 43.0 ----
+      if (k >= kChega && k < kChega + 0.35) {
+        const d = (k - kChega) / 0.35;
+        ctx.fx.flash = Math.max(ctx.fx.flash, 0.8 * (1 - d));
+        ctx.fx.shake = Math.max(ctx.fx.shake, 1.2 * (1 - d));
+        ctx.fx.ab = 0.02 * (1 - d);
+      }
+
+      // ---- fundo: wifi + ampulheta aparecem em 44.2 ----
+      const kFundo = 44.2 - 41.5; // 2.7
+      let fundoScale = 0.001;
+      if (k >= kFundo) {
+        const p = ctx.clamp01((k - kFundo) / 0.25);
+        let s;
+        if (p < 0.6) s = (p / 0.6) * 1.15;
+        else s = 1.15 - ((p - 0.6) / 0.4) * 0.15;
+        fundoScale = s;
+      }
+      fundoGrupo.scale.setScalar(fundoScale);
+      // ampulheta gira
+      ampulheta.rotation.y = k * 2.2;
+      ampulheta.rotation.z = Math.sin(k * 1.5) * 0.2;
+      // wifi pulsa
+      wifiMat.emissiveIntensity = 0.5 + ctx.pulso(t, 3) * 0.4;
+
+      // ---- X em 44.66 ----
+      const kX = 44.66 - 41.5; // 3.16
+      if (k >= kX) {
+        const p = ctx.clamp01((k - kX) / 0.18);
+        let s;
+        if (p < 0.6) s = (p / 0.6) * 1.15;
+        else s = 1.15 - ((p - 0.6) / 0.4) * 0.15;
+        xGrupo.scale.setScalar(s);
+        ctx.fx.red = Math.max(ctx.fx.red, 0.35);
+        if (k < kX + 0.2) {
+          ctx.fx.shake = Math.max(ctx.fx.shake, 0.6 * (1 - (k - kX) / 0.2));
+        }
+      } else {
+        xGrupo.scale.setScalar(0.001);
+      }
+
+      // bloom alto
+      ctx.fx.bloom = 1.4;
+    }
+  };
+}
+## Correções necessárias (revisão dos quadros renderizados)
+O bloom/luz ESTOURA a imagem: em t=43.3 e 45.0 a tela vira um brilho branco-rosado e o escudo não aparece. Defina ctx.fx.bloom=0.5 durante a cena toda, use cores menos saturadas nos anéis (opacity 0.5, raios mais finos tube 0.04) e afaste os anéis da câmera quando ela para (não deixe anéis entre a câmera e o escudo depois de t=43). O escudo deve ficar nítido, centralizado na metade de cima, com 'Nº 1' legível; X e ampulheta visíveis em 44.2–45.6.
+Responda com o arquivo COMPLETO corrigido.

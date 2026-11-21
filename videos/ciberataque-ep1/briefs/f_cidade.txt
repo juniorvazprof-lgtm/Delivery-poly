@@ -1,0 +1,380 @@
+# Contrato de uma cena (módulo ES) — vídeo vertical "tech thriller" 3D em Three.js
+
+Arquivo: `cenas/<nome>.js`. Exporta UMA função default:
+
+```js
+export default function criar(ctx) {
+  const g = new ctx.THREE.Group();   // TUDO da cena vai dentro de g (o motor adiciona g à cena e liga/desliga a visibilidade)
+  // ... montar objetos uma única vez aqui ...
+  return {
+    grupo: g,
+    update(t, k, dur) { /* chamado a cada quadro enquanto a cena está ativa */ }
+  };
+}
+```
+
+- `t` = tempo absoluto do vídeo em segundos; `k` = tempo desde o início da cena (0..dur); `dur` = duração da cena.
+- O motor renderiza quadro a quadro de forma DETERMINÍSTICA (pode pular ou voltar no tempo). Portanto:
+  - **Proibido** `Math.random`, `Date`, `performance.now`, `requestAnimationFrame`, setTimeout, GSAP, estado que acumula entre quadros. Todo movimento é função pura de `t`/`k`.
+  - Para aleatoriedade fixa use `const rnd = ctx.rnd(semente)` NA CRIAÇÃO (retorna função que dá 0..1).
+- Nada de imports. Use só o que vem no `ctx`.
+
+## O que vem no ctx
+- `ctx.THREE` (three r170), `ctx.RoundedBoxGeometry` (classe: `new ctx.RoundedBoxGeometry(w,h,d,segs,raio)`).
+- `ctx.cam`: PerspectiveCamera fov 40, aspecto 9:16. **Toda cena DEVE posicionar a câmera em todo update** (`ctx.cam.position.set(...)`, `ctx.cam.lookAt(...)`); zere `ctx.cam.rotation.z` não é preciso (lookAt resolve).
+- `ctx.fx`: objeto de efeitos que o motor zera a cada quadro; a cena pode escrever:
+  - `ctx.fx.shake` 0..1.5 (tremida de câmera), `ctx.fx.gl` 0..1 (glitch de faixas), `ctx.fx.red` 0..0.8 (tingir de vermelho),
+    `ctx.fx.ab` (aberração cromática, padrão 0.002, impacto ~0.02), `ctx.fx.flash` 0..1 (clarão branco), `ctx.fx.bloom` (padrão 1.1; use ~0.5 se houver telas/superfícies muito claras).
+- `ctx.ease(x)` easeOutCubic com clamp 0..1; `ctx.pulso(t, freq)` 0..1 senoidal; `ctx.clamp01(x)`.
+- `ctx.cores`: `{ verm:'#ff2b3d', azul:'#2fa8ff', amarelo:'#ffe14a', verde:'#25d366', fundo:'#03060d', branco:'#f2f4f8' }`.
+- `ctx.telaCanvas(w, h)` → `{ canvas, g2d, tex }`: canvas 2D já ligado a uma CanvasTexture sRGB. Depois de desenhar em `g2d`, faça `tex.needsUpdate = true`. Fontes disponíveis no canvas: `'Archivo'` (bold grossa) e `'Anton'` (condensada). Ex.: `g2d.font = '64px Archivo'`.
+- `ctx.textoPlano(texto, {tamanho=64, cor='#fff', fonte='Archivo', largura=2})` → Mesh (plano) com o texto desenhado, largura em unidades do mundo = `largura`. Bom para placas e letreiros.
+- Luzes: o motor já tem AmbientLight 0.6 e uma DirectionalLight azulada. Pode adicionar luzes DENTRO de g (PointLight com intensidade ≤ 8).
+- Névoa exponencial escura (densidade 0.035) e fundo `#03060d`: objetos a mais de ~25 unidades somem.
+
+## Regras de composição (vertical 1080x1920)
+- O terço inferior-meio da tela (de ~58% a ~72% da altura) é ocupado por LEGENDAS GRANDES desenhadas pelo motor. **O assunto principal deve ficar na metade de cima da tela** (enquadre com a câmera: ex. objeto em y=+1.5 e lookAt em y=0, ou câmera levemente baixa).
+- Estilo: escuro, neon, vermelho de alerta (#ff2b3d) contra azul (#2fa8ff), materiais `MeshStandardMaterial` metálicos escuros ou `MeshBasicMaterial` emissivos para neon (o bloom faz brilhar). Low-poly limpo, nada de texturas externas.
+- Movimento constante: câmera sempre se movendo (dolly/órbita lenta) e PELO MENOS um evento visual forte sincronizado com cada palavra-chave listada (tempos absolutos `t`). Entradas de objetos com "pop" (escala 0→1.15→1 em ~0.2s), impactos com `ctx.fx.shake`/`flash`.
+- Cada evento deve ser legível em celular: poucos objetos grandes, alto contraste.
+- Tamanho de referência: com a câmera a ~12 unidades, a largura visível é ~4.8 unidades.
+
+## Entrega
+Responda SOMENTE com o código JavaScript do arquivo (sem markdown, sem explicação). Código completo e funcional, ~150–300 linhas.
+
+## Sua cena (briefing original)
+Cena "cidade" — de t=28.0 a t=34.2 (dur 6.2). Narração e tempos absolutos:
+- 28.02 "Cai" 28.90 "o resto." → vista aérea em ângulo (câmera alta, ~45°) de uma cidade low-poly: grade 7x7 de prédios (caixas de alturas variadas, escuras com janelas emissivas pequenas = muitos planinhos amarelos ou InstancedMesh), ruas entre eles com linhas neon azuis. Em 28.90 uma onda de apagão: as janelas apagam em círculo a partir do centro (cada janela apaga quando dist < raio(t)), shake 0.8.
+- 29.64 "GPS," → um pino de GPS 3D grande (esfera+cone, vermelho) cai do céu sobre a cidade, quica e fica girando com um anel de "sinal perdido" (pontos de interrogação / anel pulsando cinza).
+- 30.56 "semáforos," → close em 2–3 semáforos 3D (caixa preta com 3 luzes): ciclam rapidamente e depois todos piscam amarelo em sincronia e apagam.
+- 31.64 "entregas." → caixas de entrega (cubos marrom com fita) / pequenas motos-caixa param no meio das ruas; ícone de relógio/ampulheta acima.
+- 32.58 "A cidade começa" 33.52 "a travar." → câmera volta ao plano geral; carrinhos (caixinhas coloridas) que andavam pelas ruas param; tudo fica vermelho escuro; em 33.52 congela com glitch 0.8 e flash.
+Câmera: plano aéreo orbitando devagar; aproximações nos momentos dos semáforos.
+
+## Código atual (seu, para corrigir)
+export default function criar(ctx) {
+  const T = ctx.THREE;
+  const g = new T.Group();
+  const C = ctx.cores;
+  const rnd = ctx.rnd(1337);
+
+  // ---------- Cidade ----------
+  const N = 7;
+  const passo = 2.2;
+  const offset = (N - 1) * passo * 0.5;
+
+  const predios = []; // {mesh, cx, cz, h}
+  const janelas = []; // {mesh, cx, cz, baseY, cor}
+  const janelaGeo = new T.PlaneGeometry(0.14, 0.18);
+
+  const matPredio = new T.MeshStandardMaterial({ color: 0x0a1220, metalness: 0.7, roughness: 0.55 });
+  const matPredio2 = new T.MeshStandardMaterial({ color: 0x0d1626, metalness: 0.6, roughness: 0.6 });
+
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const cx = i * passo - offset;
+      const cz = j * passo - offset;
+      const dist = Math.sqrt(cx * cx + cz * cz);
+      const h = 0.6 + rnd() * 2.4 + Math.max(0, 1.8 - dist * 0.25);
+      const w = 0.9 + rnd() * 0.4;
+      const d = 0.9 + rnd() * 0.4;
+      const geo = new ctx.RoundedBoxGeometry(w, h, d, 2, 0.05);
+      const m = new T.Mesh(geo, rnd() > 0.5 ? matPredio : matPredio2);
+      m.position.set(cx, h * 0.5, cz);
+      g.add(m);
+      predios.push({ mesh: m, cx, cz, h });
+
+      // janelas nas 4 faces
+      const cor = rnd() > 0.35 ? 0xffe14a : 0x2fa8ff;
+      const linhas = Math.max(2, Math.floor(h / 0.35));
+      const cols = 3;
+      for (let f = 0; f < 4; f++) {
+        for (let ly = 0; ly < linhas; ly++) {
+          for (let lx = 0; lx < cols; lx++) {
+            if (rnd() > 0.55) continue;
+            const jm = new T.Mesh(janelaGeo, new T.MeshBasicMaterial({ color: cor }));
+            const y = 0.18 + ly * (h - 0.3) / linhas;
+            const px = (lx - (cols - 1) / 2) * (w / cols) * 0.9;
+            const ang = f * Math.PI / 2;
+            const rx = Math.cos(ang), rz = Math.sin(ang);
+            const half = (f % 2 === 0) ? d * 0.5 + 0.01 : w * 0.5 + 0.01;
+            jm.position.set(cx + px * Math.cos(ang) - (f % 2 === 0 ? 0 : 0) + (f === 0 ? 0 : f === 2 ? 0 : (f === 1 ? w * 0.5 + 0.01 : -w * 0.5 - 0.01)),
+              y, cz + (f === 0 ? d * 0.5 + 0.01 : f === 2 ? -d * 0.5 - 0.01 : px * Math.sin(ang)));
+            if (f === 1) jm.position.x = cx + w * 0.5 + 0.01;
+            if (f === 3) jm.position.x = cx - w * 0.5 - 0.01;
+            if (f === 0) jm.position.z = cz + d * 0.5 + 0.01;
+            if (f === 2) jm.position.z = cz - d * 0.5 - 0.01;
+            jm.rotation.y = ang;
+            g.add(jm);
+            janelas.push({ mesh: jm, cx, cz, cor });
+          }
+        }
+      }
+    }
+  }
+
+  // ruas neon (linhas azuis no chão)
+  const matRua = new T.MeshBasicMaterial({ color: C.azul });
+  for (let i = 0; i <= N; i++) {
+    const p = i * passo - offset - passo * 0.5;
+    const linha1 = new T.Mesh(new T.PlaneGeometry(N * passo + 0.5, 0.04), matRua);
+    linha1.rotation.x = -Math.PI / 2;
+    linha1.position.set(0, 0.01, p);
+    g.add(linha1);
+    const linha2 = new T.Mesh(new T.PlaneGeometry(0.04, N * passo + 0.5), matRua);
+    linha2.rotation.x = -Math.PI / 2;
+    linha2.position.set(p, 0.01, 0);
+    g.add(linha2);
+  }
+
+  // chão escuro
+  const chao = new T.Mesh(new T.PlaneGeometry(30, 30), new T.MeshStandardMaterial({ color: 0x05070d, metalness: 0.3, roughness: 0.9 }));
+  chao.rotation.x = -Math.PI / 2;
+  chao.position.y = -0.01;
+  g.add(chao);
+
+  // ---------- Pino GPS ----------
+  const pino = new T.Group();
+  const esfera = new T.Mesh(new T.SphereGeometry(0.35, 20, 16), new T.MeshStandardMaterial({ color: C.verm, metalness: 0.4, roughness: 0.3, emissive: 0x330008 }));
+  esfera.position.y = 0.55;
+  const cone = new T.Mesh(new T.ConeGeometry(0.32, 0.7, 16), new T.MeshStandardMaterial({ color: C.verm, metalness: 0.4, roughness: 0.3, emissive: 0x330008 }));
+  cone.position.y = 0.05;
+  cone.rotation.x = Math.PI;
+  pino.add(esfera, cone);
+  pino.position.set(0, 8, 0);
+  pino.scale.setScalar(0.001);
+  g.add(pino);
+
+  // anel de sinal perdido
+  const anel = new T.Mesh(new T.RingGeometry(0.6, 0.75, 32), new T.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0.8, side: T.DoubleSide }));
+  anel.rotation.x = -Math.PI / 2;
+  anel.position.y = 0.02;
+  anel.scale.setScalar(0.001);
+  g.add(anel);
+
+  // ---------- Semáforos ----------
+  const semaforos = [];
+  const posSema = [[-1.1, 0, 1.1], [1.1, 0, -1.1], [0, 0, 0]];
+  for (let s = 0; s < 3; s++) {
+    const sg = new T.Group();
+    const caixa = new T.Mesh(new ctx.RoundedBoxGeometry(0.35, 0.9, 0.25, 2, 0.04), new T.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.8, roughness: 0.3 }));
+    caixa.position.y = 0.45;
+    sg.add(caixa);
+    const luzes = [];
+    const cores = [0xff2b3d, 0xffe14a, 0x25d366];
+    for (let l = 0; l < 3; l++) {
+      const luz = new T.Mesh(new T.SphereGeometry(0.09, 12, 10), new T.MeshBasicMaterial({ color: cores[l] }));
+      luz.position.set(0, 0.75 - l * 0.28, 0.14);
+      sg.add(luz);
+      luzes.push(luz);
+    }
+    const poste = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 1.2, 8), new T.MeshStandardMaterial({ color: 0x111111 }));
+    poste.position.y = -0.6;
+    sg.add(poste);
+    sg.position.set(posSema[s][0], 0, posSema[s][2]);
+    sg.scale.setScalar(0.001);
+    g.add(sg);
+    semaforos.push({ grupo: sg, luzes });
+  }
+
+  // ---------- Caixas de entrega ----------
+  const entregas = [];
+  const posEnt = [[-2.2, 0, 0], [2.2, 0, 0], [0, 0, 2.2]];
+  for (let e = 0; e < 3; e++) {
+    const eg = new T.Group();
+    const cubo = new T.Mesh(new ctx.RoundedBoxGeometry(0.5, 0.5, 0.5, 2, 0.04), new T.MeshStandardMaterial({ color: 0x8b5a2b, metalness: 0.2, roughness: 0.8 }));
+    cubo.position.y = 0.25;
+    eg.add(cubo);
+    const fita = new T.Mesh(new T.BoxGeometry(0.52, 0.12, 0.52), new T.MeshStandardMaterial({ color: 0xd4a373 }));
+    fita.position.y = 0.25;
+    eg.add(fita);
+    eg.position.set(posEnt[e][0], 0, posEnt[e][2]);
+    eg.scale.setScalar(0.001);
+    g.add(eg);
+    entregas.push(eg);
+  }
+
+  // ampulheta acima
+  const ampulheta = new T.Group();
+  const topo = new T.Mesh(new T.ConeGeometry(0.25, 0.35, 12), new T.MeshBasicMaterial({ color: C.amarelo }));
+  topo.position.y = 0.2;
+  topo.rotation.x = Math.PI;
+  const base = new T.Mesh(new T.ConeGeometry(0.25, 0.35, 12), new T.MeshBasicMaterial({ color: C.amarelo }));
+  base.position.y = -0.2;
+  ampulheta.add(topo, base);
+  ampulheta.position.set(0, 2.2, 0);
+  ampulheta.scale.setScalar(0.001);
+  g.add(ampulheta);
+
+  // ---------- Carrinhos ----------
+  const carrinhos = [];
+  for (let c = 0; c < 10; c++) {
+    const cor = [0x2fa8ff, 0xffe14a, 0xf2f4f8, 0x25d366][c % 4];
+    const car = new T.Mesh(new ctx.RoundedBoxGeometry(0.22, 0.14, 0.4, 1, 0.03), new T.MeshStandardMaterial({ color: cor, metalness: 0.5, roughness: 0.4 }));
+    const eixo = c % 2;
+    const linha = Math.floor(c / 2) - 2;
+    const pos = linha * passo;
+    car.position.set(eixo ? pos : -offset + 0.5, 0.07, eixo ? -offset + 0.5 : pos);
+    car.userData = { eixo, pos, vel: 0.6 + rnd() * 0.4, fase: rnd() * 10 };
+    g.add(car);
+    carrinhos.push(car);
+  }
+
+  // luz vermelha central
+  const luzVerm = new T.PointLight(0xff2b3d, 0, 20);
+  luzVerm.position.set(0, 3, 0);
+  g.add(luzVerm);
+
+  // ---------- update ----------
+  return {
+    grupo: g,
+    update(t, k, dur) {
+      // câmera aérea orbitando
+      const orb = 0.35 + k * 0.08;
+      const raio = 11 - Math.sin(k * 0.5) * 1.5;
+      const camY = 8.5 + Math.sin(k * 0.7) * 0.8;
+      let camX = Math.cos(orb) * raio;
+      let camZ = Math.sin(orb) * raio;
+      let lookY = 0.5;
+
+      // aproximação nos semáforos
+      const aprox = ctx.clamp01((k - 2.4) / 0.6) * (1 - ctx.clamp01((k - 3.6) / 0.5));
+      if (aprox > 0) {
+        camX = camX * (1 - aprox) + 2.5 * aprox;
+        camZ = camZ * (1 - aprox) + 2.5 * aprox;
+        lookY = 0.5 * (1 - aprox) + 0.6 * aprox;
+      }
+
+      // volta ao plano geral
+      const volta = ctx.clamp01((k - 4.5) / 0.6);
+      if (volta > 0) {
+        camX = camX * (1 - volta) + Math.cos(orb) * 10 * volta;
+        camZ = camZ * (1 - volta) + Math.sin(orb) * 10 * volta;
+      }
+
+      ctx.cam.position.set(camX, camY, camZ);
+      ctx.cam.lookAt(0, lookY, 0);
+
+      // ---- apagão em 28.90 (k=0.90) ----
+      const apagaoT = 0.90;
+      const raioApagao = Math.max(0, (k - apagaoT) * 6);
+      for (let i = 0; i < janelas.length; i++) {
+        const j = janelas[i];
+        const d = Math.sqrt(j.cx * j.cx + j.cz * j.cz);
+        const apagou = k > apagaoT && d < raioApagao;
+        j.mesh.visible = !apagou;
+      }
+      if (k > apagaoT && k < apagaoT + 0.3) {
+        ctx.fx.shake = Math.max(ctx.fx.shake, 0.8 * (1 - (k - apagaoT) / 0.3));
+      }
+
+      // ---- pino GPS em 29.64 (k=1.64) ----
+      const pinoT = 1.64;
+      if (k > pinoT) {
+        const kp = k - pinoT;
+        const queda = Math.min(1, kp / 0.5);
+        const y = 8 - ctx.ease(queda) * 7.6;
+        // quique
+        let yFinal = y;
+        if (kp > 0.5) {
+          const b = kp - 0.5;
+          yFinal = 0.4 + Math.abs(Math.sin(b * 8)) * 0.6 * Math.exp(-b * 4);
+        }
+        pino.position.set(0, yFinal, 0);
+        const pop = ctx.clamp01(kp / 0.15);
+        pino.scale.setScalar(pop * (1 + 0.15 * Math.sin(kp * 20) * Math.exp(-kp * 3)));
+        pino.rotation.y = kp * 3;
+        if (kp < 0.1) ctx.fx.shake = Math.max(ctx.fx.shake, 0.4);
+        if (kp > 0.5) {
+          anel.scale.setScalar(1 + (kp - 0.5) * 2);
+          anel.material.opacity = Math.max(0, 0.8 - (kp - 0.5) * 0.8);
+        }
+      }
+
+      // ---- semáforos em 30.56 (k=2.56) ----
+      const semT = 2.56;
+      for (let s = 0; s < semaforos.length; s++) {
+        const sg = semaforos[s];
+        if (k > semT) {
+          const ks = k - semT;
+          const pop = ctx.clamp01(ks / 0.2);
+          sg.grupo.scale.setScalar(pop * (1 + 0.15 * Math.sin(ks * 15) * Math.exp(-ks * 4)));
+          // ciclo rápido
+          const ciclo = Math.floor(ks * 8) % 3;
+          for (let l = 0; l < 3; l++) {
+            sg.luzes[l].material.color.setHex(l === ciclo ? [0xff2b3d, 0xffe14a, 0x25d366][l] : 0x111111);
+          }
+          // pisca amarelo e apaga
+          if (ks > 0.7) {
+            const pisca = Math.sin(ks * 20) > 0;
+            for (let l = 0; l < 3; l++) {
+              sg.luzes[l].material.color.setHex(l === 1 && pisca ? 0xffe14a : 0x111111);
+            }
+          }
+          if (ks > 1.1) {
+            for (let l = 0; l < 3; l++) sg.luzes[l].material.color.setHex(0x111111);
+          }
+        }
+      }
+
+      // ---- entregas em 31.64 (k=3.64) ----
+      const entT = 3.64;
+      for (let e = 0; e < entregas.length; e++) {
+        const eg = entregas[e];
+        if (k > entT) {
+          const ke = k - entT;
+          const pop = ctx.clamp01(ke / 0.2);
+          eg.scale.setScalar(pop * (1 + 0.15 * Math.sin(ke * 15) * Math.exp(-ke * 4)));
+        }
+      }
+      if (k > entT) {
+        const ke = k - entT;
+        const pop = ctx.clamp01(ke / 0.2);
+        ampulheta.scale.setScalar(pop);
+        ampulheta.rotation.y = ke * 2;
+        ampulheta.position.y = 2.2 + Math.sin(ke * 3) * 0.1;
+      }
+
+      // ---- carrinhos param em 32.58 (k=4.58) ----
+      const travaT = 4.58;
+      for (let c = 0; c < carrinhos.length; c++) {
+        const car = carrinhos[c];
+        const u = car.userData;
+        let pos;
+        if (k < travaT) {
+          pos = ((u.pos + k * u.vel + u.fase) % (N * passo)) - offset;
+        } else {
+          pos = ((u.pos + travaT * u.vel + u.fase) % (N * passo)) - offset;
+        }
+        if (u.eixo) {
+          car.position.z = pos;
+        } else {
+          car.position.x = pos;
+        }
+      }
+
+      // ---- tudo vermelho em 32.58 ----
+      if (k > travaT) {
+        const kr = ctx.clamp01((k - travaT) / 0.8);
+        luzVerm.intensity = kr * 6;
+        ctx.fx.red = Math.max(ctx.fx.red, kr * 0.6);
+      }
+
+      // ---- congelamento em 33.52 (k=5.52) ----
+      const congelaT = 5.52;
+      if (k > congelaT) {
+        const kc = k - congelaT;
+        ctx.fx.gl = Math.max(ctx.fx.gl, 0.8 * Math.exp(-kc * 2));
+        ctx.fx.flash = Math.max(ctx.fx.flash, Math.exp(-kc * 3));
+        ctx.fx.shake = Math.max(ctx.fx.shake, 0.6 * Math.exp(-kc * 2));
+        ctx.fx.ab = 0.02;
+      }
+
+      // bloom mais baixo por causa das janelas
+      ctx.fx.bloom = 0.7;
+    }
+  };
+}
+## Correções necessárias (revisão dos quadros renderizados)
+Em t=31.0 (semáforos) e t=33.7 (a travar) a tela fica quase VAZIA (só linhas azuis de rua): a câmera está olhando para o lugar errado ou perto demais. Corrija: os semáforos devem ficar grandes e centralizados na metade de cima no close de 30.56–31.6; e em 32.58–34.2 volte a um plano geral aéreo em que a cidade inteira (prédios + carrinhos) aparece ocupando a metade de cima da tela. Verifique que lookAt aponta para o centro da cidade e que a distância mostra a grade toda (largura visível ≈ 0.4×distância).
+Responda com o arquivo COMPLETO corrigido.

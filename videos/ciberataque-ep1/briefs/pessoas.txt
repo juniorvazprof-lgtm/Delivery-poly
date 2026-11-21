@@ -1,0 +1,6 @@
+Cena "pessoas" — de t=35.9 a t=41.5 (dur 5.6). Narração e tempos absolutos:
+- 36.02 "As pessoas" 36.54 "entendem" → multidão de ~40 pessoinhas low-poly (cápsula/cilindro + esfera de cabeça, cores dessaturadas, algumas com celular brilhando na mão) paradas numa praça escura; em 36.54 todas as cabeças viram ao mesmo tempo e um "!" vermelho aparece sobre várias (pop).
+- 37.86 "e correm para o mercado" (38.46) → aparece à esquerda/fundo uma fachada de supermercado (caixa larga + letreiro neon "MERCADO" via textoPlano, carrinho de compras simples); as pessoas correm (balanço de corrida: sobe/desce e inclinação) em direção a ele.
+- 38.84 "e para o posto." (39.20) → à direita, posto de combustível low-poly (cobertura plana sobre 2 pilares, 2 bombas, letreiro neon "POSTO"); parte da multidão desvia para lá.
+- 40.16 "As filas" 40.58 "começam." → as pessoas se organizam em duas FILAS longas e sinuosas na frente do mercado e do posto (posições interpoladas de "correndo" para "na fila"); câmera sobe para mostrar o tamanho das filas; em 40.58 shake 0.5, red 0.25.
+Câmera: começa no nível das pessoas, sobe para plano aéreo no final.

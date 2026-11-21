@@ -1,0 +1,7 @@
+Cena "cidade" — de t=28.0 a t=34.2 (dur 6.2). Narração e tempos absolutos:
+- 28.02 "Cai" 28.90 "o resto." → vista aérea em ângulo (câmera alta, ~45°) de uma cidade low-poly: grade 7x7 de prédios (caixas de alturas variadas, escuras com janelas emissivas pequenas = muitos planinhos amarelos ou InstancedMesh), ruas entre eles com linhas neon azuis. Em 28.90 uma onda de apagão: as janelas apagam em círculo a partir do centro (cada janela apaga quando dist < raio(t)), shake 0.8.
+- 29.64 "GPS," → um pino de GPS 3D grande (esfera+cone, vermelho) cai do céu sobre a cidade, quica e fica girando com um anel de "sinal perdido" (pontos de interrogação / anel pulsando cinza).
+- 30.56 "semáforos," → close em 2–3 semáforos 3D (caixa preta com 3 luzes): ciclam rapidamente e depois todos piscam amarelo em sincronia e apagam.
+- 31.64 "entregas." → caixas de entrega (cubos marrom com fita) / pequenas motos-caixa param no meio das ruas; ícone de relógio/ampulheta acima.
+- 32.58 "A cidade começa" 33.52 "a travar." → câmera volta ao plano geral; carrinhos (caixinhas coloridas) que andavam pelas ruas param; tudo fica vermelho escuro; em 33.52 congela com glitch 0.8 e flash.
+Câmera: plano aéreo orbitando devagar; aproximações nos momentos dos semáforos.

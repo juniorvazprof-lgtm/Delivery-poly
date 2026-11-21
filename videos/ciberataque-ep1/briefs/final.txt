@@ -1,0 +1,5 @@
+Cena "final" — de t=45.6 a t=50.05 (dur 4.45). Narração e tempos absolutos:
+- 45.74 "Na parte 2," → placa holográfica azul grande "PARTE 2" (textoPlano, fonte Anton) que monta com efeito de linhas de varredura (revelar de cima para baixo usando escala/clipping simples ou opacidade por faixas de planos).
+- 46.96 "as primeiras" 47.56 "24 horas." → abaixo, um relógio digital neon "24:00:00" (canvas) que começa a contar para baixo rápido; anel circular de progresso (RingGeometry com thetaLength animado) ao redor; em 47.56 pop forte + shake 0.6.
+- 48.90 "Segue" 49.42 "para ver." → um botão 3D vermelho arredondado "SEGUIR" (RoundedBox + texto) que pulsa e é "apertado" (afunda em z e volta) em 49.42 com flash 0.5 e partículas (pequenas esferas) saindo; um cursor/mão simples (cone) toca nele.
+Câmera: frontal, dolly in lento; fim com leve zoom out.

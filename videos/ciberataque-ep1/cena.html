@@ -132,45 +132,78 @@ const fx=new ShaderPass({uniforms:{tDiffuse:{value:null},t:{value:0},ab:{value:.
 comp.addPass(fx); comp.addPass(new OutputPass());
 
 // ---------- LEGENDAS ----------
-const CAPS=[ // [início, fim, html]
- [0.00,0.48,'ISSO É O QUE'],[0.48,0.92,'ACONTECE'],[0.92,1.66,'NA <span class="am">PRIMEIRA HORA</span>'],
- [1.66,1.88,'DE UM'],[1.88,2.95,'<span class="vm">CIBERATAQUE</span>'],
- [3.02,4.15,'PRESTA <span class="am">ATENÇÃO</span>'],[4.30,5.2,'MINUTO <span class="vm">1</span>']];
+const am=x=>`<span class="am">${x}</span>`, vm=x=>`<span class="vm">${x}</span>`;
+const CAPS=[
+ [0.00,'ISSO É O QUE'],[0.48,'ACONTECE'],[0.92,'NA '+am('PRIMEIRA HORA')],[1.66,'DE UM'],[1.88,vm('CIBERATAQUE')],[2.95,''],
+ [3.02,'PRESTA '+am('ATENÇÃO')],[4.0,''],[4.30,'MINUTO '+vm('1')],[4.95,''],
+ [5.38,'A INTERNET'],[5.92,vm('CAI')],[6.6,''],[6.96,'WHATSAPP'],[7.68,'INSTAGRAM'],[8.02,'E SITES'],[8.88,vm('PARAM JUNTOS')],[9.9,''],
+ [10.26,'NÃO ADIANTA'],[10.92,'REINICIAR'],[11.56,'O '+vm('ROTEADOR')],[12.4,''],
+ [12.72,'MINUTO '+vm('10')],[13.6,''],[13.90,'OS PAGAMENTOS'],[14.54,vm('PARAM')],[15.2,''],
+ [15.44,'PIX'],[16.10,'CARTÃO'],[16.52,'E MAQUININHA'],[17.3,''],[18.00,vm('SEM CONEXÃO')],[19.1,''],
+ [19.34,'SÓ FUNCIONA'],[19.94,am('DINHEIRO VIVO')],[20.9,''],
+ [21.10,'MINUTO '+vm('20')],[22.0,''],[22.32,'OS BANCOS'],[23.2,''],[23.52,'O APP'],[23.78,vm('NÃO ABRE')],[24.6,''],
+ [24.80,'O CAIXA ELETRÔNICO'],[25.76,vm('NÃO LIBERA')],[26.34,vm('DINHEIRO')],[27.0,''],
+ [27.22,'MINUTO '+vm('30')],[28.0,'CAI '+vm('O RESTO')],[29.4,''],
+ [29.64,'GPS'],[30.56,'SEMÁFOROS'],[31.64,'ENTREGAS'],[32.4,''],[32.58,'A CIDADE COMEÇA'],[33.24,'A '+vm('TRAVAR')],[34.15,''],
+ [34.30,'MINUTO '+vm('45')],[35.4,''],[36.02,'AS PESSOAS'],[36.54,'ENTENDEM'],[37.32,'E CORREM'],[38.30,'PARA O '+am('MERCADO')],[38.84,'E PARA O '+am('POSTO')],[39.9,''],
+ [40.16,'AS '+vm('FILAS')],[40.58,vm('COMEÇAM')],[41.4,''],
+ [41.58,'POR ISSO'],[42.06,'A '+am('PRIMEIRA REGRA')],[42.84,'É'],[43.0,'NÃO '+vm('ESPERE')],[44.08,'A INTERNET'],[44.66,vm('VOLTAR')],[45.5,''],
+ [45.74,'NA '+am('PARTE 2')],[46.96,'AS PRIMEIRAS'],[47.56,am('24 HORAS')],[48.7,''],[48.90,'SEGUE'],[49.24,'PRA '+am('VER')],[50.1,'']];
 const capEl=document.getElementById('cap'); let capAtual=-1;
 function legenda(t){
-  const i=CAPS.findIndex(c=>t>=c[0]&&t<c[1]);
-  if(i!==capAtual){capAtual=i;capEl.innerHTML=i<0?'':CAPS[i][2];}
-  if(i<0)return;
+  let i=-1; for(let j=0;j<CAPS.length;j++) if(t>=CAPS[j][0]) i=j;
+  const html=i<0?'':CAPS[i][1];
+  if(i!==capAtual){capAtual=i;capEl.innerHTML=html;}
+  if(!html){capEl.style.opacity=0;return;}
   const k=Math.min(1,(t-CAPS[i][0])/0.12); const s=k<1? 0.4+1.0*k - .25*Math.sin(k*3.14):1;
-  const shake=(i===4)?(Math.sin(t*90)*8):0;
-  capEl.style.transform=`translateX(${shake}px) scale(${s}) rotate(${i===4?Math.sin(t*50)*2:0}deg)`;
+  const forte=html.includes('vm'); const sh=forte&&t-CAPS[i][0]<0.5?Math.sin(t*90)*7:0;
+  capEl.style.transform=`translateX(${sh}px) scale(${s}) rotate(${forte?Math.sin(t*50)*1.5*(t-CAPS[i][0]<0.5):0}deg)`;
   capEl.style.opacity=k<0.3?k/0.3:1;
-  capEl.style.top=(i>=5? (i===6?760:770):770)+'px';
 }
 
-// ---------- LINHA DO TEMPO (por quadro) ----------
+// ---------- CONTEXTO PARA CENAS EXTERNAS ----------
 const ease=x=>1-Math.pow(1-Math.max(0,Math.min(1,x)),3);
+const FX={};
+const ctx={THREE,RoundedBoxGeometry,cam,fx:FX,ease,clamp01:x=>Math.max(0,Math.min(1,x)),pulso:(t,f)=>.5+.5*Math.sin(t*f*6.283),
+  cores:{verm:'#ff2b3d',vermel:'#ff2b3d',azul:'#2fa8ff',amarelo:'#ffe14a',verde:'#25d366',fundo:'#03060d',branco:'#f2f4f8'},
+  rnd:(s)=>{let x=(s|0)||1;return()=>(x=(x*16807)%2147483647)/2147483647;},
+  telaCanvas:(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;return{canvas:c,g2d:c.getContext('2d'),tex};},
+  textoPlano:(txt,o={})=>{const tam=o.tamanho||64,fonte=o.fonte||'Archivo';const c=document.createElement('canvas');const g=c.getContext('2d');g.font=`${tam}px ${fonte}`;
+    const w=Math.ceil(g.measureText(txt).width+tam*.6),h=Math.ceil(tam*1.5);c.width=w;c.height=h;g.font=`${tam}px ${fonte}`;g.fillStyle=o.cor||'#fff';g.textBaseline='middle';g.textAlign='center';g.fillText(txt,w/2,h/2);
+    const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const L=o.largura||2;
+    return new THREE.Mesh(new THREE.PlaneGeometry(L,L*h/w),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));}};
+
+const EXTERNAS=[['internet',4.95,12.6],['pagamentos',13.85,21.0],['bancos',22.25,27.15],['cidade',28.0,34.2],['pessoas',35.9,41.5],['regra',41.5,45.6],['final',45.6,50.1]];
+const ativas=[];
+for(const [nome,ini,fim] of EXTERNAS){
+  try{const m=await import(`./cenas/${nome}.js`);const o=m.default(ctx);o.grupo.visible=false;cena.add(o.grupo);ativas.push({nome,ini,fim,o});}
+  catch(e){console.error('cena '+nome+': '+e.message);}
+}
+const HUDS=[[4.25,4.95,1],[12.6,13.85,10],[21.0,22.25,20],[27.15,28.0,30],[34.2,35.9,45]];
+
+// ---------- QUADRO ----------
 const hud=document.getElementById('hud'), flash=document.getElementById('flash'), timer=document.getElementById('timer');
 function quadro(t){
-  fx.uniforms.t.value=t; let shake=0, gl=0, red=0, ab=.002;
-  const cena3=t>=4.25, cena2=t>=2.95&&!cena3, cena1=t<2.95;
-  globo.visible=cena1||cena3; cel.visible=cena2; grade.visible=grade2.visible=cena3; hud.style.opacity=cena3?1:0;
-  if(cena1){ bloom.strength=1.1;
+  fx.uniforms.t.value=t; let shake=0, gl=0, red=0, ab=.002, fl=0; bloom.strength=1.1;
+  cam.rotation.set(0,0,0);
+  const H=HUDS.find(h=>t>=h[0]&&t<h[1]);
+  const cena1=t<2.95, cena2=t>=2.95&&t<4.25;
+  const ext=H?null:ativas.find(a=>t>=a.ini&&t<a.fim);
+  globo.visible=cena1||!!H; cel.visible=cena2; grade.visible=grade2.visible=!!H; hud.style.opacity=H?1:0;
+  for(const a of ativas) a.o.grupo.visible=(a===ext);
+  if(cena1){
     globo.rotation.y=-0.9+t*.35; globo.rotation.x=.25;
     const z=THREE.MathUtils.lerp(30,19,ease(t/1.9)); cam.position.set(0,-1.5,z); cam.lookAt(0,-1.5,0); globo.position.y=2.2;
     arcos.forEach(a=>{const k=Math.max(0,Math.min(1,(t-a.ini)/a.dur)); const n=Math.floor(k*80);
       a.g.setDrawRange(Math.max(0,n-35),Math.min(35,n)); a.cab.visible=k>0&&k<1; a.cab.position.copy(a.p[Math.min(80,n)]);});
-    anel.scale.setScalar(1+((t*2)%1)*2.5); anel.material.opacity=1-((t*2)%1);
-    // impacto em "ciberataque"
+    anel.visible=true; anel.scale.setScalar(1+((t*2)%1)*2.5); anel.material.opacity=1-((t*2)%1);
     if(t>1.88){const k=(t-1.88);
       shake=Math.max(0,1-k*1.4); gl=Math.max(0,.9-k*1.1); red=Math.min(.8,k*3)*(1-Math.max(0,k-.8)*2);
       ab=.002+shake*.02; cam.position.z-=ease(k/0.4)*3.5;
-      // onda vermelha se espalhando pelo globo a partir do alvo
       const raio=k*7;
       for(let i=0;i<N;i++){const d=base[i].distanceTo(alvo); const c=d<raio?VERM:AZUL; const pis=d<raio&&((i+Math.floor(t*20))%7===0)?.2:1; cor[i*3]=c.r*pis;cor[i*3+1]=c.g*pis;cor[i*3+2]=c.b*pis;}
-      gPts.attributes.color.needsUpdate=true;
-      flash.style.opacity=Math.max(0,.85-k*5);
-    } else flash.style.opacity=0;
+      gPts.attributes.color.needsUpdate=true; fl=Math.max(0,.85-k*5);
+    } else { for(let i=0;i<N;i++) AZUL.toArray(cor,i*3); gPts.attributes.color.needsUpdate=true; }
   }
   if(cena2){const k=t-2.95;
     desenhaTela(t);
@@ -178,23 +211,35 @@ function quadro(t){
     cel.position.set(0,1.9+Math.sin(t*3)*.08,0);
     cam.position.set(0,0,13+(1-ease(k/0.35))*8 - k*1.2); cam.lookAt(0,0,0);
     lk.intensity=4+Math.sin(t*20)*2; bloom.strength=.45; gl=Math.max(0,.6-k*3)+(Math.floor(t*8)%5===0?.25:0); ab=.004+gl*.01;
-    flash.style.opacity=Math.max(0,.5-k*4);
+    fl=Math.max(0,.5-k*4);
     if(t>=3.36&&t<3.5) {shake=.6; red=.3;}
   }
-  if(cena3){const k=t-4.25;
+  if(H){const k=t-H[0];
+    anel.visible=false; arcos.forEach(a=>{a.g.setDrawRange(0,0);a.cab.visible=false;});
     globo.rotation.y=t*.6; for(let i=0;i<N;i++){VERM.toArray(cor,i*3);} gPts.attributes.color.needsUpdate=true;
-    bloom.strength=1.1; globo.position.y=-1; cam.position.set(Math.sin(t*.8)*.6,0,THREE.MathUtils.lerp(5,15,ease(k/.5))); cam.lookAt(0,0,0);
+    globo.position.y=-1; cam.position.set(Math.sin(t*.8)*.6,0,THREE.MathUtils.lerp(5,15,ease(k/.5))); cam.lookAt(0,0,0);
     grade.position.z=(t*6)%1.33; grade2.position.z=grade.position.z;
-    const ts=Math.floor(k*14); // relógio corre rápido
-    timer.textContent=`00:01:${String(Math.min(59,ts%60)).padStart(2,'0')}`;
+    const seg=Math.min(59,Math.floor(k*14));
+    timer.textContent=`00:${String(H[2]).padStart(2,'0')}:${String(seg).padStart(2,'0')}`;
     const s=k<.15?3-2*ease(k/.15):1; timer.style.transform=`scale(${s})`;
-    shake=k<.25?1-k*4:0; gl=k<.2?.7-k*3:0; red=.25; flash.style.opacity=Math.max(0,.7-k*6);
+    shake=k<.25?1-k*4:0; gl=k<.2?.7-k*3:0; red=.25; fl=Math.max(0,.7-k*6);
   }
-  // tremida da câmera
+  if(ext){
+    for(const kk of ['shake','gl','red','ab','flash','bloom']) delete FX[kk];
+    ext.o.update(t,t-ext.ini,ext.fim-ext.ini);
+    shake=FX.shake||0; gl=FX.gl||0; red=FX.red||0; ab=FX.ab??.002; fl=FX.flash||0; bloom.strength=FX.bloom??1.1;
+    // corte de entrada de cada cena: pequeno glitch
+    const kin=t-ext.ini; if(kin<.15){gl=Math.max(gl,.6-kin*4);}
+  }
   cam.position.x+=Math.sin(t*83)*.12*shake; cam.position.y+=Math.sin(t*71+1)*.12*shake; cam.rotation.z+=Math.sin(t*61)*.03*shake;
-  fx.uniforms.gl.value=gl; fx.uniforms.red.value=red; fx.uniforms.ab.value=ab;
+  fx.uniforms.gl.value=gl; fx.uniforms.red.value=red; fx.uniforms.ab.value=ab; flash.style.opacity=fl;
   legenda(t);
   comp.render();
 }
-window.seek=t=>quadro(t); window.pronto=true; quadro(0);
+window.seek=t=>quadro(t);
+window.diag=t=>{quadro(t);const a=ativas.find(x=>x.o.grupo.visible);if(!a)return 'nenhuma';const out=[];const v=new THREE.Vector3();
+ a.o.grupo.traverse(o=>{if(!(o.isMesh||o.isLine||o.isPoints||o.isInstancedMesh))return;let vis=true,p=o;while(p){if(!p.visible)vis=false;p=p.parent;}
+  o.getWorldPosition(v);const ws=new THREE.Vector3();o.getWorldScale(ws);const n=v.clone().project(cam);
+  if(vis) out.push(`${o.geometry?.type||o.type} pos(${v.x.toFixed(1)},${v.y.toFixed(1)},${v.z.toFixed(1)}) esc${ws.x.toFixed(2)} tela(${((n.x+1)/2*100)|0}%,${((1-n.y)/2*100)|0}%) z${n.z.toFixed(2)}`);});
+ return a.nome+' cam('+cam.position.toArray().map(x=>x.toFixed(1))+') vis='+out.length+'\n'+out.slice(0,25).join('\n');}; window.pronto=true; quadro(0);
 </script></body></html>

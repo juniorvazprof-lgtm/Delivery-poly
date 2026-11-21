@@ -7,7 +7,7 @@ await p.route('http://c.local/**',r=>{const f=path.join(RAIZ,decodeURIComponent(
 const erros=[];p.on('pageerror',e=>erros.push(e.message));p.on('console',m=>{if(m.type()==='error')erros.push(m.text())});
 await p.goto('http://c.local/cena.html');await p.waitForFunction(()=>window.pronto,null,{timeout:60000}).catch(()=>{});
 fs.mkdirSync(OUT,{recursive:true});
-const qs=SO?SO.split(',').map(Number):[...Array(Math.round(DUR*FPS)).keys()];
+const qs=SO?SO.split(',').map(Number):[...Array(Math.round(DUR*FPS)).keys()].filter(i=>i>=(+process.env.INI||0)&&i<(+process.env.FIM||1e9));
 const t0=Date.now();
 for(const i of qs){await p.evaluate(t=>seek(t),i/FPS);await p.screenshot({path:`${OUT}/f${String(i).padStart(4,'0')}.jpg`,type:'jpeg',quality:92,scale:'device'});}
 console.log('erros',JSON.stringify(erros),'ms/quadro',(Date.now()-t0)/qs.length|0);await b.close();})();

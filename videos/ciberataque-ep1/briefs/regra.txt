@@ -1,0 +1,5 @@
+Cena "regra" — de t=41.5 a t=45.6 (dur 4.1). Narração e tempos absolutos:
+- 41.58 "Por isso," 42.10 "a primeira regra" 42.84 "é" → túnel de anéis neon vermelhos (TorusGeometry) com a câmera voando por dentro (avançando em z); no fim do túnel um escudo 3D (forma de escudo extrudada com ExtrudeGeometry a partir de Shape) com "Nº 1" em canvas surge e vem para a frente.
+- 43.00 "Não espere" → impacto: flash 0.8, shake 1.2; o escudo para à frente da câmera; a câmera para.
+- 44.20 "a internet" 44.66 "voltar." → atrás do escudo, um ícone de Wi-Fi cinza com uma AMPULHETA 3D (dois cones unidos) que gira; em 44.66 um X vermelho grande risca ampulheta+wifi; red 0.35.
+Composição: escudo na metade de cima da tela. Estilo épico, muito bloom.

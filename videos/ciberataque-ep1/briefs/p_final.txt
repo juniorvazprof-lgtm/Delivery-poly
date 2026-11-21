@@ -1,0 +1,50 @@
+# Contrato de uma cena (módulo ES) — vídeo vertical "tech thriller" 3D em Three.js
+
+Arquivo: `cenas/<nome>.js`. Exporta UMA função default:
+
+```js
+export default function criar(ctx) {
+  const g = new ctx.THREE.Group();   // TUDO da cena vai dentro de g (o motor adiciona g à cena e liga/desliga a visibilidade)
+  // ... montar objetos uma única vez aqui ...
+  return {
+    grupo: g,
+    update(t, k, dur) { /* chamado a cada quadro enquanto a cena está ativa */ }
+  };
+}
+```
+
+- `t` = tempo absoluto do vídeo em segundos; `k` = tempo desde o início da cena (0..dur); `dur` = duração da cena.
+- O motor renderiza quadro a quadro de forma DETERMINÍSTICA (pode pular ou voltar no tempo). Portanto:
+  - **Proibido** `Math.random`, `Date`, `performance.now`, `requestAnimationFrame`, setTimeout, GSAP, estado que acumula entre quadros. Todo movimento é função pura de `t`/`k`.
+  - Para aleatoriedade fixa use `const rnd = ctx.rnd(semente)` NA CRIAÇÃO (retorna função que dá 0..1).
+- Nada de imports. Use só o que vem no `ctx`.
+
+## O que vem no ctx
+- `ctx.THREE` (three r170), `ctx.RoundedBoxGeometry` (classe: `new ctx.RoundedBoxGeometry(w,h,d,segs,raio)`).
+- `ctx.cam`: PerspectiveCamera fov 40, aspecto 9:16. **Toda cena DEVE posicionar a câmera em todo update** (`ctx.cam.position.set(...)`, `ctx.cam.lookAt(...)`); zere `ctx.cam.rotation.z` não é preciso (lookAt resolve).
+- `ctx.fx`: objeto de efeitos que o motor zera a cada quadro; a cena pode escrever:
+  - `ctx.fx.shake` 0..1.5 (tremida de câmera), `ctx.fx.gl` 0..1 (glitch de faixas), `ctx.fx.red` 0..0.8 (tingir de vermelho),
+    `ctx.fx.ab` (aberração cromática, padrão 0.002, impacto ~0.02), `ctx.fx.flash` 0..1 (clarão branco), `ctx.fx.bloom` (padrão 1.1; use ~0.5 se houver telas/superfícies muito claras).
+- `ctx.ease(x)` easeOutCubic com clamp 0..1; `ctx.pulso(t, freq)` 0..1 senoidal; `ctx.clamp01(x)`.
+- `ctx.cores`: `{ verm:'#ff2b3d', azul:'#2fa8ff', amarelo:'#ffe14a', verde:'#25d366', fundo:'#03060d', branco:'#f2f4f8' }`.
+- `ctx.telaCanvas(w, h)` → `{ canvas, g2d, tex }`: canvas 2D já ligado a uma CanvasTexture sRGB. Depois de desenhar em `g2d`, faça `tex.needsUpdate = true`. Fontes disponíveis no canvas: `'Archivo'` (bold grossa) e `'Anton'` (condensada). Ex.: `g2d.font = '64px Archivo'`.
+- `ctx.textoPlano(texto, {tamanho=64, cor='#fff', fonte='Archivo', largura=2})` → Mesh (plano) com o texto desenhado, largura em unidades do mundo = `largura`. Bom para placas e letreiros.
+- Luzes: o motor já tem AmbientLight 0.6 e uma DirectionalLight azulada. Pode adicionar luzes DENTRO de g (PointLight com intensidade ≤ 8).
+- Névoa exponencial escura (densidade 0.035) e fundo `#03060d`: objetos a mais de ~25 unidades somem.
+
+## Regras de composição (vertical 1080x1920)
+- O terço inferior-meio da tela (de ~58% a ~72% da altura) é ocupado por LEGENDAS GRANDES desenhadas pelo motor. **O assunto principal deve ficar na metade de cima da tela** (enquadre com a câmera: ex. objeto em y=+1.5 e lookAt em y=0, ou câmera levemente baixa).
+- Estilo: escuro, neon, vermelho de alerta (#ff2b3d) contra azul (#2fa8ff), materiais `MeshStandardMaterial` metálicos escuros ou `MeshBasicMaterial` emissivos para neon (o bloom faz brilhar). Low-poly limpo, nada de texturas externas.
+- Movimento constante: câmera sempre se movendo (dolly/órbita lenta) e PELO MENOS um evento visual forte sincronizado com cada palavra-chave listada (tempos absolutos `t`). Entradas de objetos com "pop" (escala 0→1.15→1 em ~0.2s), impactos com `ctx.fx.shake`/`flash`.
+- Cada evento deve ser legível em celular: poucos objetos grandes, alto contraste.
+- Tamanho de referência: com a câmera a ~12 unidades, a largura visível é ~4.8 unidades.
+
+## Entrega
+Responda SOMENTE com o código JavaScript do arquivo (sem markdown, sem explicação). Código completo e funcional, ~150–300 linhas.
+
+## Sua cena
+Cena "final" — de t=45.6 a t=50.05 (dur 4.45). Narração e tempos absolutos:
+- 45.74 "Na parte 2," → placa holográfica azul grande "PARTE 2" (textoPlano, fonte Anton) que monta com efeito de linhas de varredura (revelar de cima para baixo usando escala/clipping simples ou opacidade por faixas de planos).
+- 46.96 "as primeiras" 47.56 "24 horas." → abaixo, um relógio digital neon "24:00:00" (canvas) que começa a contar para baixo rápido; anel circular de progresso (RingGeometry com thetaLength animado) ao redor; em 47.56 pop forte + shake 0.6.
+- 48.90 "Segue" 49.42 "para ver." → um botão 3D vermelho arredondado "SEGUIR" (RoundedBox + texto) que pulsa e é "apertado" (afunda em z e volta) em 49.42 com flash 0.5 e partículas (pequenas esferas) saindo; um cursor/mão simples (cone) toca nele.
+Câmera: frontal, dolly in lento; fim com leve zoom out.

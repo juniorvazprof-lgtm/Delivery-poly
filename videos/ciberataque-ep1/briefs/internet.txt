@@ -1,0 +1,6 @@
+Cena "internet" — de t=4.95 a t=12.6 (dur 7.65). Narração e tempos absolutos:
+- 5.38 "A internet" / 5.92 "cai." → um grande ícone de Wi-Fi neon azul (3 arcos + ponto, feito com TorusGeometry parciais/tubos) no alto; em 5.92 os arcos apagam um a um de cima p/ baixo (0.1s cada), viram vermelhos e um X vermelho grande "estala" por cima com shake 1.0 e glitch.
+- 6.96 "WhatsApp," 7.68 "Instagram" 8.50 "sites" → o Wi-Fi sai para trás e entram 3 "ícones de app" 3D (RoundedBox achatados ~1.3x1.3) em fila horizontal, cada um com pop no seu tempo: verde com balão de fala branco (WhatsApp), gradiente roxo/laranja com câmera (quadrado arredondado com círculo) (Instagram, use canvas p/ o gradiente), azul com globo (sites, "www").
+- 8.88 "param" 9.36 "juntos." → os 3 ícones ficam cinza/desaturados ao mesmo tempo com um "X" vermelho em cada, tremem e caem levemente (rotação); fx.red 0.3, flash 0.4 em 8.88.
+- 10.26 "Não adianta" 10.92 "reiniciar o roteador." 11.66 → roteador 3D (caixa escura com 2 antenas e 4 LEDs) entra pela base; aparece sobre ele um ícone circular de "reiniciar" (seta circular feita de TorusGeometry parcial + cone) girando; LEDs piscam vermelho; em 11.66 o ícone de reiniciar trava, fica vermelho e vira um X; shake 0.8.
+Câmera: começa perto (z≈9) e afasta devagar; leve órbita.

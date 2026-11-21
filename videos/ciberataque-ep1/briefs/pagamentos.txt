@@ -1,0 +1,8 @@
+Cena "pagamentos" — de t=13.85 a t=21.0 (dur 7.15). Narração e tempos absolutos:
+- 13.90 "Os pagamentos" 14.54 "param." → uma barra de progresso neon "PROCESSANDO..." (placa com textoPlano + barra que enche) trava em 70% e fica vermelha em 14.54 com glitch e shake.
+- 15.44 "PIX," → losango 3D (octaedro achatado ou caixa girada 45°) verde-água neon girando, com pop.
+- 16.10 "cartão" → cartão de crédito 3D (RoundedBox fino 3.2x2, faixa magnética, chip dourado, número em canvas) entra girando no ar.
+- 16.64 "e maquininha." → maquininha de cartão 3D (corpo arredondado, tela pequena, teclado de bolinhas) entra; tela mostra "PROCESSANDO".
+- 18.00 "Sem" 18.34 "conexão." → os 3 objetos viram vermelhos/cinza; tela da maquininha muda para "TRANSAÇÃO NEGADA" vermelho piscando; carimbo/selo "SEM CONEXÃO" (placa vermelha girada) bate na frente com shake 1.2 e flash.
+- 19.34 "Só funciona" 19.94 "dinheiro vivo." → tudo cai para fora do quadro; chuva de cédulas verdes (planos com canvas de nota de R$ com "R$ 100") caindo e girando, em 19.94 explosão de notas + fx.red 0, bloom normal, sensação de alívio.
+Câmera: frontal, aproximando devagar; leve balanço.
