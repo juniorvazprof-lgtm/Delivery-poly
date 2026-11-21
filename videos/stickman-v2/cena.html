@@ -1,0 +1,256 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Archivo;src:url(fonts/ArchivoBlack.ttf)}
+@font-face{font-family:Caveat;src:url(fonts/Caveat.ttf)}
+html,body{margin:0;background:#f8f5ee;overflow:hidden}
+svg{display:block}
+.t{font-family:Archivo;paint-order:stroke;stroke:#f8f5ee;stroke-width:10px;stroke-linejoin:round}
+.h{font-family:Caveat;font-weight:700}
+</style></head>
+<body>
+<svg id="s" width="720" height="1280" viewBox="0 0 720 1280">
+  <defs>
+    <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+    <pattern id="papel" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#f8f5ee"/><circle cx="2" cy="3" r=".6" fill="#ebe5d8"/></pattern>
+  </defs>
+  <rect width="720" height="1280" fill="url(#papel)"/>
+  <g id="cam">
+    <g id="mundo" filter="url(#rough)"></g>
+  </g>
+  <rect id="flash" width="720" height="1280" fill="#ff3344" opacity="0"/>
+  <g id="ui"></g>
+  <rect id="wipe" x="-800" width="760" height="1280" fill="#141418"/>
+</svg>
+<script src="node_modules/gsap/dist/gsap.min.js"></script>
+<script>
+(async()=>{await document.fonts.load('64px Archivo');await document.fonts.load('50px Caveat');
+const NS='http://www.w3.org/2000/svg', TINTA='#141418', VERM='#e12832', VERDE='#26a65b', AZUL='#3270e6', PAPEL='#f8f5ee';
+const $=id=>document.getElementById(id);
+function mk(tag,attr,pai){const e=document.createElementNS(NS,tag);for(const k in attr)e.setAttribute(k,attr[k]);(pai||$('mundo')).appendChild(e);return e;}
+const FLOOR=1010, R=Math.PI/180;
+let T=0; // tempo atual (para ruído determinístico)
+const ruido=(t,f,s)=>Math.sin(t*f+s)*0.6+Math.sin(t*f*2.3+s*1.7)*0.4;
+
+// ---------- cenário ----------
+const chao=mk('path',{d:`M-400 ${FLOOR} Q 360 ${FLOOR+4} 1600 ${FLOOR-2}`,stroke:TINTA,'stroke-width':6,fill:'none','stroke-linecap':'round'});
+const sombra=mk('ellipse',{cx:0,cy:FLOOR+4,rx:60,ry:9,fill:'#000',opacity:.12});
+
+// roteador
+const rot=mk('g',{});
+mk('line',{x1:-55,y1:-30,x2:-70,y2:-105,stroke:TINTA,'stroke-width':10,'stroke-linecap':'round'},rot);
+mk('line',{x1:55,y1:-30,x2:70,y2:-105,stroke:TINTA,'stroke-width':10,'stroke-linecap':'round'},rot);
+mk('rect',{x:-95,y:-38,width:190,height:72,rx:16,fill:PAPEL,stroke:TINTA,'stroke-width':10},rot);
+const leds=[0,1,2,3].map(i=>mk('circle',{cx:-45+i*30,cy:0,r:8,fill:VERDE,stroke:TINTA,'stroke-width':3},rot));
+const wifi=mk('g',{transform:'translate(0,-165)'},rot);
+const ondas=[0,1,2].map(k=>mk('path',{d:arco(36+k*30),stroke:AZUL,'stroke-width':10,fill:'none','stroke-linecap':'round'},wifi));
+mk('circle',{cx:0,cy:12,r:9,fill:AZUL},wifi);
+const xis=mk('line',{x1:-80,y1:-80,x2:80,y2:60,stroke:VERM,'stroke-width':15,'stroke-linecap':'round','stroke-dasharray':230,'stroke-dashoffset':230},wifi);
+function arco(r){const a=-135*R,b=-45*R;return `M${Math.cos(a)*r} ${Math.sin(a)*r+12} A${r} ${r} 0 0 1 ${Math.cos(b)*r} ${Math.sin(b)*r+12}`;}
+const tomada=mk('rect',{width:44,height:80,rx:8,fill:PAPEL,stroke:TINTA,'stroke-width':7});
+const cabo=mk('path',{stroke:TINTA,'stroke-width':7,fill:'none','stroke-linecap':'round'});
+const plug=mk('rect',{width:26,height:22,rx:4,fill:TINTA});
+const faiscas=mk('g',{});
+const S={rotX:530,rotOn:1,cabo:0,plugX:0,plugY:0,fais:0,xis:0,showRot:0};
+
+// ---------- celular ----------
+const cel=mk('g',{});
+mk('rect',{x:-30,y:-52,width:60,height:104,rx:10,fill:TINTA},cel);
+const tela=mk('rect',{x:-24,y:-42,width:48,height:84,rx:5,fill:'#7cc0ff'},cel);
+const cav=mk('g',{opacity:0},cel);
+mk('circle',{cx:0,cy:-6,r:15,fill:PAPEL},cav);mk('rect',{x:-8,y:4,width:16,height:12,fill:PAPEL},cav);
+mk('circle',{cx:-6,cy:-7,r:4.5,fill:TINTA},cav);mk('circle',{cx:6,cy:-7,r:4.5,fill:TINTA},cav);
+const C={x:0,y:0,rot:0,naMao:1,hack:0,vib:0,vis:1};
+
+// ---------- boneco (rig) ----------
+const B={x:360,air:0,sq:1,lean:0,head:0,
+  ls:-160,le:-150,rs:160,re:150, // ombros/cotovelos (graus; 0=para baixo, + = para frente/direita)
+  lh:-6,lk:0,rh:6,rk:0, run:0,ph:0, face:0 /*0 neutro 1 susto 2 feliz*/, dir:1, suor:0, look:0};
+const gB=mk('g',{});
+const trilhas=mk('g',{},gB);
+const bracoT=mk('path',{stroke:TINTA,'stroke-width':11,fill:'none','stroke-linecap':'round','stroke-linejoin':'round'},gB);
+const pernas=mk('path',{stroke:TINTA,'stroke-width':11,fill:'none','stroke-linecap':'round','stroke-linejoin':'round'},gB);
+const tronco=mk('path',{stroke:TINTA,'stroke-width':11,fill:'none','stroke-linecap':'round'},gB);
+const cab=mk('g',{},gB);
+mk('circle',{r:46,fill:PAPEL,stroke:TINTA,'stroke-width':10},cab);
+const olhoE=mk('ellipse',{cx:-15,cy:-6,rx:6,ry:7,fill:TINTA},cab), olhoD=mk('ellipse',{cx:15,cy:-6,rx:6,ry:7,fill:TINTA},cab);
+const boca=mk('path',{stroke:TINTA,'stroke-width':6,fill:'none','stroke-linecap':'round'},cab);
+const gotas=[0,1].map(i=>mk('path',{d:'M0 0 q 6 10 0 14 q -6 -4 0 -14',fill:AZUL,opacity:0},cab));
+const bracoF=mk('path',{stroke:TINTA,'stroke-width':11,fill:'none','stroke-linecap':'round','stroke-linejoin':'round'},gB);
+const L=66; let prevM=[], hist=[];
+
+function pt(x,y,a,l){return [x+Math.sin(a*R)*l, y+Math.cos(a*R)*l];}
+function membro(o,a1,a2,l){const p1=pt(o[0],o[1],a1,l), p2=pt(p1[0],p1[1],a1+a2,l);return [o,p1,p2];}
+function curva([a,b,c]){return `M${a[0]} ${a[1]} Q${b[0]} ${b[1]} ${c[0]} ${c[1]}`;}
+const RUN=ph=>({ls:Math.sin(ph)*70, le:-40-Math.max(0,Math.sin(ph))*50, rs:-Math.sin(ph)*70, re:-40-Math.max(0,-Math.sin(ph))*50,
+  lh:Math.sin(ph)*50, lk:-Math.max(0,-Math.cos(ph))*80-10, rh:-Math.sin(ph)*50, rk:-Math.max(0,Math.cos(ph))*80-10});
+
+function desenhaBoneco(){
+  const d=B.dir, k=B.run; const r=RUN(B.ph);
+  const g=n=>(B[n]*(1-k)+r[n]*k);
+  // perna: ângulos espelhados pela direção; joelho dobra para frente
+  const respira=Math.sin(T*3.2)*2;
+  const quad=[B.x, 0];
+  const pe=membro(quad, g('lh')*d, -g('lk')*d*-1, L*1.1), pd=membro(quad, g('rh')*d, -g('rk')*d*-1, L*1.1);
+  const desce=Math.max(pe[2][1],pd[2][1]);
+  const hipY=FLOOR-desce - B.air - Math.abs(Math.sin(B.ph))*14*k;
+  const sh=(arr)=>arr.map(p=>[p[0],p[1]+hipY]);
+  const PE=sh(pe),PD=sh(pd);
+  // tronco com squash/stretch e inclinação
+  const tl=L*2.05*B.sq + respira;
+  const pesc=[B.x+Math.sin(B.lean*d*R)*tl, hipY-Math.cos(B.lean*R)*tl];
+  const ombro=[B.x+(pesc[0]-B.x)*.85, hipY+(pesc[1]-hipY)*.85];
+  const be=membro(ombro, g('ls')*d, g('le')*d, L*.95), bd=membro(ombro, g('rs')*d, g('re')*d, L*.95);
+  tronco.setAttribute('d',`M${B.x} ${hipY} Q${(B.x+pesc[0])/2 - B.lean*.4*d} ${(hipY+pesc[1])/2} ${pesc[0]} ${pesc[1]}`);
+  pernas.setAttribute('d',curva(PE)+curva(PD));
+  // braço de trás e da frente (profundidade)
+  bracoT.setAttribute('d',curva(d>0?be:bd)); bracoF.setAttribute('d',curva(d>0?bd:be));
+  const hx=pesc[0]+Math.sin((B.lean+B.head)*d*R)*48, hy=pesc[1]-Math.cos((B.lean+B.head)*R)*48*(1/B.sq**.3);
+  cab.setAttribute('transform',`translate(${hx} ${hy}) rotate(${(B.head+B.lean)*d}) scale(${1/B.sq**.25} ${B.sq**.25})`);
+  // rosto
+  const pisca = ((T%3.1)<0.1)?0.15:1;
+  const lk=B.look*10+d*4;
+  if(B.face===1){ olhoE.setAttribute('rx',8);olhoE.setAttribute('ry',10*pisca);olhoD.setAttribute('rx',8);olhoD.setAttribute('ry',10*pisca);
+    boca.setAttribute('d',`M${lk-10} 22 q 10 -16 20 0 q -10 16 -20 0`); }
+  else if(B.face===2){ olhoE.setAttribute('ry',2.5);olhoD.setAttribute('ry',2.5); boca.setAttribute('d',`M${lk-18} 14 q 18 22 36 0`);}
+  else { olhoE.setAttribute('rx',6);olhoE.setAttribute('ry',7*pisca);olhoD.setAttribute('rx',6);olhoD.setAttribute('ry',7*pisca); boca.setAttribute('d',`M${lk-12} 22 l 24 0`);}
+  olhoE.setAttribute('cx',-15+lk);olhoD.setAttribute('cx',15+lk);
+  gotas.forEach((g2,i)=>{const f=((T*1.6+i*.5)%1); g2.setAttribute('transform',`translate(${(i?38:-40)} ${-30+f*40})`); g2.setAttribute('opacity',B.suor*(1-f));});
+  sombra.setAttribute('cx',B.x); sombra.setAttribute('rx',60-B.air*.3);
+  // rastros (smear) das mãos em gestos rápidos
+  const maos=[be[2],bd[2]]; hist.push(maos); if(hist.length>5)hist.shift();
+  trilhas.innerHTML='';
+  for(let m=0;m<2;m++){ for(let i=0;i<hist.length-1;i++){const a=hist[i][m],b=hist[i+1][m];const v=Math.hypot(a[0]-b[0],a[1]-b[1]);
+    if(v>14&&v<70) mk('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:TINTA,'stroke-width':6+i*2,opacity:.12+i*.07,'stroke-linecap':'round'},trilhas);} }
+  return {maoE:be[2],maoD:bd[2],cabeca:[hx,hy]};
+}
+
+// ---------- UI / textos ----------
+function txt(s,x,y,size,cor,cls='t'){const e=mk('text',{x,y,'font-size':size,fill:cor,'text-anchor':'middle',class:cls},$('ui'));e.textContent=s;e.style.transformBox='fill-box';e.style.transformOrigin='50% 50%';return e;}
+function palavras(frase,y,size,cores){ // cada palavra vira um <text> para entrar em sequência
+  const ws=frase.split(' ');const tmp=txt(frase,0,-500,size,'#000');const larg=tmp.getComputedTextLength();tmp.remove();
+  let x=360-larg/2;const res=[];
+  ws.forEach((w,i)=>{const e=txt(w,0,y,size,cores[i]||cores[0]);e.setAttribute('text-anchor','start');e.setAttribute('x',x);x+=e.getComputedTextLength()+size*.28;res.push(e);});
+  return res;}
+const cam={z:1,x:360,y:700,shake:0,rot:0};
+
+// ---------- linha do tempo ----------
+const tl=gsap.timeline({paused:true});
+gsap.set(cel,{opacity:1});
+const T1a=palavras('SEU CELULAR',170,64,[TINTA]), T1b=palavras('FOI HACKEADO',250,70,[VERM]);
+const eAgora=txt('e agora?!',360,1140,64,TINTA,'h');
+const cinco=txt('5',360,400,380,VERM); const p5a=palavras('PASSOS PRA',510,64,[TINTA]); const p5b=palavras('SOBREVIVER',590,72,[VERM]);
+const passo=txt('PASSO 1',360,150,48,VERM); const desc=palavras('DESCONECTE TUDO',225,56,[TINTA,TINTA]);
+const hk1=txt('Wi-Fi e dados: OFF',360,420,54,VERDE,'h'), hk2=txt('o hacker perde o acesso',360,480,50,TINTA,'h');
+const feito=txt('FEITO!',360,1160,92,VERDE);
+const ui1=[...T1a,...T1b,eAgora], ui2=[cinco,...p5a,...p5b], ui3=[passo,...desc,hk1,hk2,feito];
+gsap.set([...ui1,...ui2,...ui3],{opacity:0,scale:0});
+
+// Cena 1 — gancho
+B.x=360; Object.assign(B,{ls:20,le:-110,rs:-20,re:120,face:0});
+cam.z=1.25; cam.y=760;
+tl.to(cam,{z:1.4,duration:.6,ease:'none'},0)
+  .to(B,{head:10,look:.6,duration:.4,ease:'sine.inOut'},0)
+  .to(C,{vib:1,duration:.05},.35).to(C,{hack:1,duration:.01},.6)
+  .to($('flash'),{opacity:.55,duration:.04,yoyo:true,repeat:5},.6)
+  .to(cam,{z:1.9,y:640,duration:.18,ease:'power4.out'},.62).to(cam,{shake:1,duration:.01},.62).to(cam,{shake:0,duration:.9},.75)
+  .to(T1a,{opacity:1,scale:1,duration:.35,ease:'back.out(3)',stagger:.12},.7)
+  .to(T1b,{opacity:1,scale:1,duration:.35,ease:'back.out(3)',stagger:.12},.95)
+  // antecipação → susto (pulo) → queda
+  .to(B,{sq:.82,lean:-8,ls:30,rs:-40,re:100,duration:.18,ease:'power2.in'},1.05)
+  .to(B,{sq:1.15,air:90,lean:-12,head:-14,face:1,ls:-165,le:-20,rs:165,re:20,lh:-25,lk:60,rh:25,rk:60,duration:.22,ease:'power3.out'},1.23)
+  .to(C,{naMao:0,duration:.01},1.25)
+  .to(C,{x:640,duration:.8,ease:'power1.out'},1.25).to(C,{rot:720,duration:.8,ease:'power1.out'},1.25)
+  .to(C,{y:'-=260',duration:.35,ease:'power2.out'},1.25).to(C,{y:'+=180',duration:.45,ease:'power2.in'},1.6)
+  .to(cam,{z:1.05,y:700,duration:.5,ease:'power3.inOut'},1.25)
+  .to(B,{air:0,sq:1,duration:.3,ease:'power2.in'},1.45)
+  .to(B,{sq:.8,duration:.08,ease:'power1.out'},1.75).to(B,{sq:1.05,duration:.12,ease:'power1.inOut'},1.83).to(B,{sq:1,duration:.2,ease:'elastic.out(1,.4)'},1.95)
+  .to(B,{lh:-6,lk:0,rh:6,rk:0,ls:-150,le:-30,rs:150,re:30,head:0,lean:0,duration:.3,ease:'power2.out'},1.78)
+  .to(B,{suor:1,duration:.2},2.0)
+  .to(B,{look:-1,duration:.15,ease:'power2.inOut',yoyo:true,repeat:3},2.0)
+  .to(eAgora,{opacity:1,scale:1,rotation:-6,duration:.4,ease:'back.out(3)'},2.1)
+// transição (cortina)
+  .to($('wipe'),{attr:{x:-20},duration:.22,ease:'power3.in'},2.9)
+  .set([...ui1],{opacity:0},3.12).set(cel,{opacity:0},3.12)
+  .set(B,{x:-120,suor:0,face:2,look:0,dir:1},3.12).set(cam,{z:1,y:640,x:360},3.12)
+  .to($('wipe'),{attr:{x:740},duration:.25,ease:'power3.out'},3.12)
+// Cena 2 — "5 passos"
+  .fromTo(cinco,{scale:3.2,opacity:0,rotation:-20},{scale:1,opacity:1,rotation:-4,duration:.3,ease:'power4.in'},3.15)
+  .to(cam,{shake:1.4,duration:.01},3.45).to(cam,{shake:0,duration:.5},3.46)
+  .to(p5a,{opacity:1,scale:1,duration:.3,ease:'back.out(3)',stagger:.1},3.5)
+  .to(p5b,{opacity:1,scale:1,duration:.35,ease:'back.out(3)'},3.75)
+  .to(cinco,{scale:1.08,duration:.25,yoyo:true,repeat:3,ease:'sine.inOut'},3.6)
+  .to(B,{run:1,duration:.1},3.3).to(B,{x:360,duration:.7,ease:'power1.out'},3.3).to(B,{ph:Math.PI*6,duration:.7,ease:'none'},3.3)
+  .to(B,{run:0,duration:.15},3.95)
+  .to(B,{sq:.85,duration:.1},4.0).to(B,{sq:1.12,air:50,ls:-170,le:-10,rs:120,re:40,duration:.18,ease:'power2.out'},4.1)
+  .to(B,{air:0,sq:1,duration:.2,ease:'power2.in'},4.28)
+// transição
+  .to($('wipe'),{attr:{x:-20},duration:.2,ease:'power3.in'},4.45)
+  .set(ui2,{opacity:0},4.65).set(B,{x:-150,face:1,suor:.8,ls:0,rs:0,le:0,re:0},4.65).set(S,{showRot:1},4.65)
+  .to($('wipe'),{attr:{x:740},duration:.22,ease:'power3.out'},4.65)
+// Cena 3 — Passo 1
+  .fromTo(passo,{opacity:0,scale:1,x:-300},{opacity:1,x:0,duration:.35,ease:'back.out(2)'},4.7)
+  .to(desc,{opacity:1,scale:1,duration:.3,ease:'back.out(3)',stagger:.12},4.85)
+  .to(B,{run:1,duration:.1},4.75).to(B,{x:350,duration:1.15,ease:'power1.in'},4.75).to(B,{ph:Math.PI*9,duration:1.15,ease:'none'},4.75)
+  .to(B,{lean:14,duration:.3},4.75)
+  // freio com derrapagem (follow-through)
+  .to(B,{run:0,lean:-22,ls:-60,le:-40,rs:-70,re:-50,lh:30,rh:-25,rk:-30,duration:.25,ease:'power2.out'},5.9)
+  .to(B,{x:385,duration:.3,ease:'power3.out'},5.9)
+  .to(B,{lean:6,duration:.35,ease:'elastic.out(1,.35)'},6.15)
+  // antecipação: agacha e agarra o cabo
+  .to(B,{sq:.86,lean:20,rs:60,re:20,ls:40,le:20,lh:-5,rh:5,rk:0,duration:.25,ease:'power2.inOut'},6.4)
+  .to(S,{cabo:1,duration:.05},6.6)
+  // puxa com força (tremendo)
+  .to(B,{sq:1,lean:-28,rs:-75,re:-20,ls:-80,le:-25,lh:-30,lk:10,rh:25,rk:20,duration:.3,ease:'power2.out'},6.65)
+  .to(B,{lean:-34,duration:.06,yoyo:true,repeat:9,ease:'sine.inOut'},6.95)
+  .to(B,{x:'-=18',duration:.6,ease:'power1.in'},6.95)
+  // plug sai: cai sentado
+  .to(S,{cabo:2,rotOn:0,duration:.01},7.55).to(S,{fais:1,duration:.01},7.55).to(S,{fais:0,duration:.5,ease:'power2.out'},7.56)
+  .to(cam,{shake:1.5,duration:.01},7.55).to(cam,{shake:0,duration:.6},7.56)
+  .to(cam,{z:1.2,x:410,y:820,duration:.3,ease:'power3.out'},7.55)
+  .to(B,{x:'-=70',lean:-55,air:-40,sq:.8,lh:-80,lk:-10,rh:-70,rk:-20,ls:-120,rs:-110,re:-40,duration:.3,ease:'power3.out'},7.56)
+  .to(S,{xis:1,duration:.3,ease:'power2.inOut'},7.75)
+  .to(hk1,{opacity:1,scale:1,duration:.35,ease:'back.out(3)'},7.9).to(hk2,{opacity:1,scale:1,duration:.35,ease:'back.out(3)'},8.05)
+  // levanta feliz
+  .to(B,{face:2,suor:0,duration:.01},8.1)
+  .to(B,{lean:0,air:0,sq:1,lh:-6,lk:0,rh:6,rk:0,ls:-30,le:-10,rs:-150,re:-30,duration:.45,ease:'back.out(2)'},8.2)
+  .to(cam,{z:1,x:360,y:640,duration:.6,ease:'power2.inOut'},8.3)
+  .fromTo(feito,{scale:3,rotation:-25,opacity:0},{scale:1,rotation:-8,opacity:1,duration:.25,ease:'power4.in'},8.7)
+  .to(cam,{shake:1,duration:.01},8.95).to(cam,{shake:0,duration:.4},8.96)
+  .to(B,{rs:-170,re:-10,duration:.12,yoyo:true,repeat:3,ease:'sine.inOut'},9.0)
+  .to(cam,{z:1.06,duration:1,ease:'none'},9);
+
+function render(){
+  // câmera
+  const sx=ruido(T,90,1)*cam.shake*16, sy=ruido(T,83,4)*cam.shake*16, sr=ruido(T,70,7)*cam.shake*2;
+  $('cam').setAttribute('transform',`translate(${360+sx} ${640+sy}) rotate(${sr}) scale(${cam.z}) translate(${-cam.x} ${-cam.y})`);
+  $('ui').setAttribute('transform',`translate(${sx*.5} ${sy*.5})`);
+  const m=desenhaBoneco();
+  // celular
+  if(C.naMao){C.x=m.maoD[0]+18;C.y=m.maoD[1]-30;}
+  const vib=C.hack?0:C.vib*Math.sin(T*120)*4;
+  cel.setAttribute('transform',`translate(${C.x+vib} ${C.y}) rotate(${C.rot+vib})`);
+  tela.setAttribute('fill',C.hack?((Math.floor(T*10)%2)?VERM:'#5a0008'):'#7cc0ff'); cav.setAttribute('opacity',C.hack);
+  // roteador e cabo
+  rot.setAttribute('opacity',S.showRot); tomada.setAttribute('opacity',S.showRot); cabo.setAttribute('opacity',S.showRot); plug.setAttribute('opacity',S.showRot);
+  const rx=S.rotX, ry=FLOOR-36; rot.setAttribute('transform',`translate(${rx} ${ry})`);
+  const tx=660,ty=900; tomada.setAttribute('x',tx-22);tomada.setAttribute('y',ty-40);
+  leds.forEach((l,i)=>l.setAttribute('fill',S.rotOn&&(Math.floor(T*7+i)%3)?VERDE:'#c4c4c4'));
+  ondas.forEach((o,k)=>{o.setAttribute('stroke',S.rotOn?AZUL:'#bbb');o.setAttribute('opacity',S.rotOn?(.55+.45*Math.sin(T*6-k)):1);});
+  xis.setAttribute('stroke-dashoffset',230*(1-S.xis));
+  let px,py;
+  if(S.cabo<1){px=tx;py=ty;}
+  else {px=m.maoD[0];py=m.maoD[1];}
+  const sag=S.cabo>=1&&S.cabo<2?0:40;
+  const ax=rx+95, ay=ry;
+  cabo.setAttribute('d',S.cabo<1?`M${ax} ${ay} Q ${(ax+px)/2} ${ay+30} ${px} ${py}`:`M${rx-95} ${ay} Q ${(rx-95+px)/2} ${Math.max(ay,py)+sag} ${px} ${py}`);
+  plug.setAttribute('x',px-13);plug.setAttribute('y',py-11);plug.setAttribute('opacity',S.showRot&&S.cabo>=2?1:0);
+  faiscas.innerHTML='';
+  if(S.fais>0){for(let i=0;i<12;i++){const a=i/12*6.28+1.3,l=(1-S.fais)*90+10;mk('line',{x1:tx+Math.cos(a)*10,y1:ty+Math.sin(a)*10,x2:tx+Math.cos(a)*l,y2:ty+Math.sin(a)*l,stroke:'#ffb21e','stroke-width':7*S.fais+1,'stroke-linecap':'round'},faiscas);}}
+  // pulsar texto do gancho
+  T1b.forEach((e,i)=>{ if(+e.style.opacity>0) e.setAttribute('transform',`translate(${ruido(T,40,i)*(T<2.5?3:0)} 0)`); });
+}
+window.seek=t=>{if(Math.abs(t-T)>0.05)hist=[];T=t;tl.seek(t,false);render();};
+window.DUR=10;
+seek(0);window.pronto=true;})();
+</script></body></html>
