@@ -1,0 +1,200 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Anton;src:url(fonts/Anton.ttf)}
+@font-face{font-family:Archivo;src:url(fonts/ArchivoBlack.ttf)}
+html,body{margin:0;width:720px;height:1280px;overflow:hidden;background:#000}
+canvas{position:absolute;inset:0;width:720px!important;height:1280px!important}
+#ui{position:absolute;inset:0;pointer-events:none}
+.cap{position:absolute;left:0;right:0;top:770px;text-align:center;font-family:Anton;font-size:118px;line-height:1;color:#fff;
+  letter-spacing:1px;text-transform:uppercase;-webkit-text-stroke:7px #000;paint-order:stroke fill;
+  text-shadow:0 8px 0 #000,0 0 40px rgba(0,0,0,.6)}
+.cap span{display:inline-block;margin:0 10px}
+.am{color:#ffe14a}.vm{color:#ff2b3d}
+#hud{position:absolute;inset:0;opacity:0}
+#timer{position:absolute;top:300px;width:100%;text-align:center;font-family:Archivo;font-size:104px;color:#ff2b3d;
+  text-shadow:0 0 30px #ff2b3d,0 0 80px rgba(255,43,61,.6)}
+#rot{position:absolute;top:240px;width:100%;text-align:center;font-family:Archivo;font-size:34px;color:#ffb3ba;letter-spacing:10px}
+.canto{position:absolute;width:70px;height:70px;border:6px solid #ff2b3d;opacity:.8}
+#rec{position:absolute;top:60px;left:50px;font-family:Archivo;font-size:30px;color:#fff;letter-spacing:3px}
+#rec b{display:inline-block;width:22px;height:22px;border-radius:50%;background:#ff2b3d;margin-right:12px;vertical-align:-2px}
+#flash{position:absolute;inset:0;background:#fff;opacity:0}
+</style></head>
+<body>
+<canvas id="c" width="720" height="1280"></canvas>
+<div id="ui">
+  <div id="hud"><div id="rot">TEMPO DESDE O ATAQUE</div><div id="timer">00:01:00</div>
+    <div class="canto" style="top:40px;left:40px;border-right:0;border-bottom:0"></div><div class="canto" style="top:40px;right:40px;border-left:0;border-bottom:0"></div>
+    <div class="canto" style="bottom:40px;left:40px;border-right:0;border-top:0"></div><div class="canto" style="bottom:40px;right:40px;border-left:0;border-top:0"></div></div>
+  <div id="rec"><b></b>AO VIVO</div>
+  <div class="cap" id="cap"></div>
+  <div id="flash"></div>
+</div>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/","gsap":"./node_modules/gsap/index.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+await document.fonts.load('100px Anton'); await document.fonts.load('100px Archivo');
+
+const W=720,H=1280, VERM=new THREE.Color('#ff2b3d'), AZUL=new THREE.Color('#2fa8ff');
+const rnd=(()=>{let s=7;return()=>(s=(s*16807)%2147483647)/2147483647;})();
+const r=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
+r.setPixelRatio(1.5); r.setSize(W,H,false);
+const cena=new THREE.Scene(); cena.background=new THREE.Color('#03060d'); cena.fog=new THREE.FogExp2('#03060d',0.035);
+const cam=new THREE.PerspectiveCamera(40,W/H,0.1,200);
+
+// ---------- GLOBO ----------
+const globo=new THREE.Group(); cena.add(globo);
+const N=3200, pos=new Float32Array(N*3), cor=new Float32Array(N*3), base=[];
+for(let i=0;i<N;i++){const y=1-(i/(N-1))*2, rr=Math.sqrt(1-y*y), th=i*2.39996;
+  const v=new THREE.Vector3(Math.cos(th)*rr,y,Math.sin(th)*rr).multiplyScalar(3);
+  pos.set([v.x,v.y,v.z],i*3); base.push(v); AZUL.toArray(cor,i*3);}
+const gPts=new THREE.BufferGeometry(); gPts.setAttribute('position',new THREE.BufferAttribute(pos,3)); gPts.setAttribute('color',new THREE.BufferAttribute(cor,3));
+const pts=new THREE.Points(gPts,new THREE.PointsMaterial({size:0.055,vertexColors:true,transparent:true,opacity:.95}));
+globo.add(pts);
+globo.add(new THREE.Mesh(new THREE.SphereGeometry(2.96,48,48),new THREE.MeshBasicMaterial({color:'#020814'})));
+const aro=new THREE.Mesh(new THREE.SphereGeometry(3.25,48,48),new THREE.MeshBasicMaterial({color:'#1a6cff',transparent:true,opacity:.08,side:THREE.BackSide}));
+globo.add(aro);
+// alvo (Brasil aproximado)
+const alvo=new THREE.Vector3().setFromSphericalCoords(3,THREE.MathUtils.degToRad(90+15),THREE.MathUtils.degToRad(-50));
+const anel=new THREE.Mesh(new THREE.RingGeometry(.15,.22,48),new THREE.MeshBasicMaterial({color:VERM,transparent:true,side:THREE.DoubleSide}));
+anel.position.copy(alvo).multiplyScalar(1.01); anel.lookAt(0,0,0); globo.add(anel);
+// arcos de ataque
+const arcos=[];
+for(let i=0;i<26;i++){
+  const a=new THREE.Vector3().setFromSphericalCoords(3,Math.acos(2*rnd()-1),rnd()*6.28);
+  const meio=a.clone().add(alvo).multiplyScalar(.5); meio.setLength(3+a.distanceTo(alvo)*.55);
+  const curva=new THREE.QuadraticBezierCurve3(a,meio,alvo); const p=curva.getPoints(80);
+  const g=new THREE.BufferGeometry().setFromPoints(p); g.setDrawRange(0,0);
+  const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:VERM,transparent:true})); globo.add(l);
+  const cab=new THREE.Mesh(new THREE.SphereGeometry(.05,10,10),new THREE.MeshBasicMaterial({color:'#ffd0d4'})); globo.add(cab);
+  arcos.push({g,cab,p,ini:.35+rnd()*1.3,dur:.45+rnd()*.35});
+}
+cena.add(new THREE.AmbientLight('#ffffff',.6));
+
+// partículas de fundo (poeira digital)
+const pd=new Float32Array(900*3); for(let i=0;i<900;i++)pd.set([(rnd()-.5)*40,(rnd()-.5)*60,-rnd()*40-5],i*3);
+const gpd=new THREE.BufferGeometry(); gpd.setAttribute('position',new THREE.BufferAttribute(pd,3));
+cena.add(new THREE.Points(gpd,new THREE.PointsMaterial({color:'#3b6cff',size:.06,transparent:true,opacity:.5})));
+
+// ---------- CELULAR ----------
+const cel=new THREE.Group(); cel.visible=false; cena.add(cel);
+const corpo=new THREE.Mesh(new RoundedBoxGeometry(2.2,4.4,.28,8,.25),new THREE.MeshStandardMaterial({color:'#0c0f16',metalness:.9,roughness:.25}));
+cel.add(corpo);
+const tc=document.createElement('canvas'); tc.width=440; tc.height=880; const tx=tc.getContext('2d');
+const telaTex=new THREE.CanvasTexture(tc); telaTex.colorSpace=THREE.SRGBColorSpace;
+const tela=new THREE.Mesh(new THREE.PlaneGeometry(2.0,4.0),new THREE.MeshBasicMaterial({map:telaTex,color:'#b8b8b8'})); tela.position.z=.15; cel.add(tela);
+const lk=new THREE.PointLight('#ff2b3d',4,12); lk.position.set(0,0,2.5); cel.add(lk);
+const kl=new THREE.DirectionalLight('#7fb4ff',3); kl.position.set(-4,5,3); cena.add(kl);
+function desenhaTela(t){
+  const k=Math.floor(t*12)%2;
+  tx.fillStyle=k?'#2a0004':'#140002'; tx.fillRect(0,0,440,880);
+  tx.strokeStyle='rgba(255,43,61,.25)'; tx.lineWidth=2; for(let y=0;y<880;y+=6){tx.beginPath();tx.moveTo(0,y);tx.lineTo(440,y);tx.stroke();}
+  // wi-fi riscado
+  tx.lineCap='round'; tx.lineWidth=26; tx.strokeStyle='#ff2b3d';
+  for(let i=0;i<3;i++){tx.beginPath();tx.arc(220,420,60+i*55,-Math.PI*.78,-Math.PI*.22);tx.stroke();}
+  tx.beginPath();tx.arc(220,420,16,0,7);tx.fillStyle='#ff2b3d';tx.fill();
+  tx.lineWidth=30;tx.strokeStyle='#fff';tx.beginPath();tx.moveTo(90,180);tx.lineTo(350,480);tx.stroke();
+  tx.fillStyle='#fff';tx.font='64px Archivo';tx.textAlign='center';tx.fillText('SEM',220,620);tx.fillText('CONEXÃO',220,695);
+  tx.fillStyle='#ff8a95';tx.font='30px Archivo';tx.fillText('ERRO 0x000F · REDE',220,770);
+  // faixas de glitch
+  for(let i=0;i<4;i++){const y=(Math.sin(t*37+i*9)*.5+.5)*860;tx.drawImage(tc,0,y,440,14,(Math.sin(t*91+i)*40),y,440,14);}
+  telaTex.needsUpdate=true;
+}
+
+// ---------- TÚNEL / GRADE (cena do relógio) ----------
+const grade=new THREE.GridHelper(80,60,'#ff2b3d','#5a0d16'); grade.position.y=-3; grade.visible=false; cena.add(grade);
+const grade2=grade.clone(); grade2.position.y=3; grade2.visible=false; cena.add(grade2);
+
+// ---------- PÓS-PROCESSAMENTO ----------
+const comp=new EffectComposer(r); comp.setPixelRatio(1.5); comp.setSize(W,H);
+comp.addPass(new RenderPass(cena,cam));
+const bloom=new UnrealBloomPass(new THREE.Vector2(W,H),1.1,.6,.15); comp.addPass(bloom);
+const fx=new ShaderPass({uniforms:{tDiffuse:{value:null},t:{value:0},ab:{value:.002},gl:{value:0},vin:{value:1.1},red:{value:0}},
+  vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float t,ab,gl,vin,red;varying vec2 v;
+  float h(float n){return fract(sin(n)*43758.5453);}
+  void main(){vec2 u=v;
+    float faixa=floor(u.y*38.+floor(t*24.)*3.);
+    if(gl>0.){ if(h(faixa)<gl*.55) u.x+= (h(faixa+1.)-.5)*.18*gl; }
+    vec2 d=(u-.5)*ab*(1.+gl*6.);
+    vec3 c=vec3(texture2D(tDiffuse,u+d).r,texture2D(tDiffuse,u).g,texture2D(tDiffuse,u-d).b);
+    c+= (h(u.x*999.+u.y*77.+t)-.5)*.07;              // grão
+    c*= .92+.08*sin(u.y*1280.*1.5);                   // scanlines
+    float vg=smoothstep(.95,.25,length((v-.5)*vec2(1.,1.25))*vin); c*=vg;
+    c=mix(c,c*vec3(1.4,.35,.4),red);
+    gl_FragColor=vec4(c,1.);}`});
+comp.addPass(fx); comp.addPass(new OutputPass());
+
+// ---------- LEGENDAS ----------
+const CAPS=[ // [início, fim, html]
+ [0.00,0.48,'ISSO É O QUE'],[0.48,0.92,'ACONTECE'],[0.92,1.66,'NA <span class="am">PRIMEIRA HORA</span>'],
+ [1.66,1.88,'DE UM'],[1.88,2.95,'<span class="vm">CIBERATAQUE</span>'],
+ [3.02,4.15,'PRESTA <span class="am">ATENÇÃO</span>'],[4.30,5.2,'MINUTO <span class="vm">1</span>']];
+const capEl=document.getElementById('cap'); let capAtual=-1;
+function legenda(t){
+  const i=CAPS.findIndex(c=>t>=c[0]&&t<c[1]);
+  if(i!==capAtual){capAtual=i;capEl.innerHTML=i<0?'':CAPS[i][2];}
+  if(i<0)return;
+  const k=Math.min(1,(t-CAPS[i][0])/0.12); const s=k<1? 0.4+1.0*k - .25*Math.sin(k*3.14):1;
+  const shake=(i===4)?(Math.sin(t*90)*8):0;
+  capEl.style.transform=`translateX(${shake}px) scale(${s}) rotate(${i===4?Math.sin(t*50)*2:0}deg)`;
+  capEl.style.opacity=k<0.3?k/0.3:1;
+  capEl.style.top=(i>=5? (i===6?760:770):770)+'px';
+}
+
+// ---------- LINHA DO TEMPO (por quadro) ----------
+const ease=x=>1-Math.pow(1-Math.max(0,Math.min(1,x)),3);
+const hud=document.getElementById('hud'), flash=document.getElementById('flash'), timer=document.getElementById('timer');
+function quadro(t){
+  fx.uniforms.t.value=t; let shake=0, gl=0, red=0, ab=.002;
+  const cena3=t>=4.25, cena2=t>=2.95&&!cena3, cena1=t<2.95;
+  globo.visible=cena1||cena3; cel.visible=cena2; grade.visible=grade2.visible=cena3; hud.style.opacity=cena3?1:0;
+  if(cena1){ bloom.strength=1.1;
+    globo.rotation.y=-0.9+t*.35; globo.rotation.x=.25;
+    const z=THREE.MathUtils.lerp(30,19,ease(t/1.9)); cam.position.set(0,-1.5,z); cam.lookAt(0,-1.5,0); globo.position.y=2.2;
+    arcos.forEach(a=>{const k=Math.max(0,Math.min(1,(t-a.ini)/a.dur)); const n=Math.floor(k*80);
+      a.g.setDrawRange(Math.max(0,n-35),Math.min(35,n)); a.cab.visible=k>0&&k<1; a.cab.position.copy(a.p[Math.min(80,n)]);});
+    anel.scale.setScalar(1+((t*2)%1)*2.5); anel.material.opacity=1-((t*2)%1);
+    // impacto em "ciberataque"
+    if(t>1.88){const k=(t-1.88);
+      shake=Math.max(0,1-k*1.4); gl=Math.max(0,.9-k*1.1); red=Math.min(.8,k*3)*(1-Math.max(0,k-.8)*2);
+      ab=.002+shake*.02; cam.position.z-=ease(k/0.4)*3.5;
+      // onda vermelha se espalhando pelo globo a partir do alvo
+      const raio=k*7;
+      for(let i=0;i<N;i++){const d=base[i].distanceTo(alvo); const c=d<raio?VERM:AZUL; const pis=d<raio&&((i+Math.floor(t*20))%7===0)?.2:1; cor[i*3]=c.r*pis;cor[i*3+1]=c.g*pis;cor[i*3+2]=c.b*pis;}
+      gPts.attributes.color.needsUpdate=true;
+      flash.style.opacity=Math.max(0,.85-k*5);
+    } else flash.style.opacity=0;
+  }
+  if(cena2){const k=t-2.95;
+    desenhaTela(t);
+    cel.rotation.set(-.25+Math.sin(t*2)*.05, -.6+ease(k/1.2)*.75, .12-ease(k/.8)*.12);
+    cel.position.set(0,1.9+Math.sin(t*3)*.08,0);
+    cam.position.set(0,0,13+(1-ease(k/0.35))*8 - k*1.2); cam.lookAt(0,0,0);
+    lk.intensity=4+Math.sin(t*20)*2; bloom.strength=.45; gl=Math.max(0,.6-k*3)+(Math.floor(t*8)%5===0?.25:0); ab=.004+gl*.01;
+    flash.style.opacity=Math.max(0,.5-k*4);
+    if(t>=3.36&&t<3.5) {shake=.6; red=.3;}
+  }
+  if(cena3){const k=t-4.25;
+    globo.rotation.y=t*.6; for(let i=0;i<N;i++){VERM.toArray(cor,i*3);} gPts.attributes.color.needsUpdate=true;
+    bloom.strength=1.1; globo.position.y=-1; cam.position.set(Math.sin(t*.8)*.6,0,THREE.MathUtils.lerp(5,15,ease(k/.5))); cam.lookAt(0,0,0);
+    grade.position.z=(t*6)%1.33; grade2.position.z=grade.position.z;
+    const ts=Math.floor(k*14); // relógio corre rápido
+    timer.textContent=`00:01:${String(Math.min(59,ts%60)).padStart(2,'0')}`;
+    const s=k<.15?3-2*ease(k/.15):1; timer.style.transform=`scale(${s})`;
+    shake=k<.25?1-k*4:0; gl=k<.2?.7-k*3:0; red=.25; flash.style.opacity=Math.max(0,.7-k*6);
+  }
+  // tremida da câmera
+  cam.position.x+=Math.sin(t*83)*.12*shake; cam.position.y+=Math.sin(t*71+1)*.12*shake; cam.rotation.z+=Math.sin(t*61)*.03*shake;
+  fx.uniforms.gl.value=gl; fx.uniforms.red.value=red; fx.uniforms.ab.value=ab;
+  legenda(t);
+  comp.render();
+}
+window.seek=t=>quadro(t); window.pronto=true; quadro(0);
+</script></body></html>
