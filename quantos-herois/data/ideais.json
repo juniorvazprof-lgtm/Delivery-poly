@@ -13,8 +13,8 @@
   "2": {
     "n": 2,
     "comp": {
-      "guerreiro": 2,
-      "guardiao": 0,
+      "guerreiro": 1,
+      "guardiao": 1,
       "piromante": 0,
       "arqueiro": 0,
       "clerigo": 0
@@ -24,10 +24,10 @@
   "3": {
     "n": 3,
     "comp": {
-      "guerreiro": 0,
+      "guerreiro": 1,
       "guardiao": 0,
       "piromante": 2,
-      "arqueiro": 1,
+      "arqueiro": 0,
       "clerigo": 0
     },
     "perigosa": 4
@@ -35,78 +35,78 @@
   "4": {
     "n": 3,
     "comp": {
-      "guerreiro": 1,
+      "guerreiro": 0,
       "guardiao": 1,
-      "piromante": 0,
-      "arqueiro": 1,
+      "piromante": 2,
+      "arqueiro": 0,
       "clerigo": 0
     },
-    "perigosa": 4
+    "perigosa": 5
   },
   "5": {
     "n": 4,
     "comp": {
-      "guerreiro": 3,
+      "guerreiro": 2,
       "guardiao": 0,
       "piromante": 1,
       "arqueiro": 0,
-      "clerigo": 0
+      "clerigo": 1
     },
-    "perigosa": 6
+    "perigosa": 5
   },
   "6": {
-    "n": 4,
-    "comp": {
-      "guerreiro": 3,
-      "guardiao": 1,
-      "piromante": 0,
-      "arqueiro": 0,
-      "clerigo": 0
-    },
-    "perigosa": 6
-  },
-  "7": {
     "n": 5,
     "comp": {
       "guerreiro": 3,
       "guardiao": 1,
       "piromante": 0,
-      "arqueiro": 1,
-      "clerigo": 0
+      "arqueiro": 0,
+      "clerigo": 1
     },
     "perigosa": 7
+  },
+  "7": {
+    "n": 6,
+    "comp": {
+      "guerreiro": 0,
+      "guardiao": 1,
+      "piromante": 2,
+      "arqueiro": 1,
+      "clerigo": 2
+    },
+    "perigosa": 8
   },
   "8": {
     "n": 6,
     "comp": {
-      "guerreiro": 3,
-      "guardiao": 1,
-      "piromante": 1,
-      "arqueiro": 1,
+      "guerreiro": 2,
+      "guardiao": 2,
+      "piromante": 2,
+      "arqueiro": 0,
       "clerigo": 0
     },
-    "perigosa": 9
+    "perigosa": 8
   },
   "9": {
-    "n": 7,
+    "n": 6,
     "comp": {
-      "guerreiro": 3,
+      "guerreiro": 0,
       "guardiao": 1,
-      "piromante": 0,
-      "arqueiro": 2,
-      "clerigo": 1
+      "piromante": 5,
+      "arqueiro": 0,
+      "clerigo": 0
     },
-    "perigosa": 11
+    "perigosa": 10
   },
   "10": {
-    "n": 8,
+    "n": 10,
     "comp": {
-      "guerreiro": 4,
-      "guardiao": 2,
-      "piromante": 1,
-      "arqueiro": 0,
-      "clerigo": 1
+      "guerreiro": 3,
+      "guardiao": 3,
+      "piromante": 3,
+      "arqueiro": 1,
+      "clerigo": 0
     }
   },
-  "_fonte": "design/balance/relatorio-5classes.md"
+  "_fonte": "design/balance/relatorio-rodadas-novas.md"
 }

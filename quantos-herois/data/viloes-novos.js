@@ -2,7 +2,7 @@
 // Mesmo formato de data/viloes.js e data/rodadas.js.
 export const VILOES_NOVOS = {
   goblinArqueiro: {
-    nome: 'Goblin Arqueiro', pv: 18, dano: 6, intervalo: 1.0, alcance: 30, velocidade: 16, raio: 1.5, ouro: 3,
+    nome: 'Goblin Arqueiro', pv: 30, dano: 6, intervalo: 1.0, alcance: 30, velocidade: 16, raio: 1.5, ouro: 3,
     comportamento: 'flanqueia',
     projetil: { velocidade: 85, tipo: 'flecha' },
   },
@@ -12,7 +12,7 @@ export const VILOES_NOVOS = {
     habilidades: [{ tipo: 'golpeFirme', aCada: 3, mult: 2.0, raioArea: 6 }],
   },
   morcego: {
-    nome: 'Morcego', pv: 12, dano: 4, intervalo: 0.5, alcance: 4, velocidade: 26, raio: 1.2, ouro: 1,
+    nome: 'Morcego', pv: 30, dano: 4, intervalo: 0.5, alcance: 4, velocidade: 26, raio: 1.2, ouro: 1,
     comportamento: 'flanqueia',
   },
   xamaGoblin: {
@@ -29,9 +29,9 @@ export const RODADAS_NOVAS = [
   { n: 4,  nome: 'Pântano vigiado',     inimigos: [['slime', 2], ['goblinArqueiro', 4], ['xamaGoblin', 1]] },
   { n: 5,  nome: 'Horda e ogro',        inimigos: [['goblin', 14, { chegada: [0, 5] }], ['ogro', 1, { chegada: [2, 3] }]] },
   { n: 6,  nome: 'Poça e xamãs',        inimigos: [['slime', 3], ['xamaGoblin', 2], ['morcego', 6, { chegada: [0, 4] }]] },
-  { n: 7,  nome: 'Emboscada aérea',     inimigos: [['morcego', 12, { chegada: [0, 4] }], ['goblinArqueiro', 6], ['ogro', 1]] },
+  { n: 7,  nome: 'Emboscada aérea',     inimigos: [['morcego', 12, { chegada: [0, 4] }], ['goblinArqueiro', 6], ['ogro', 2]] },
   { n: 8,  nome: 'Exército misto',      inimigos: [['goblin', 20, { chegada: [0, 6] }], ['ogro', 2], ['xamaGoblin', 2]] },
   { n: 9,  nome: 'Mistura nojenta',     inimigos: [['slime', 4], ['goblinArqueiro', 10], ['ogro', 2], ['xamaGoblin', 1]] },
   { n: 10, nome: 'O Rei Slime',         chefe: true,
-    inimigos: [['reiSlime', 1], ['goblinArqueiro', 8], ['ogro', 2], ['xamaGoblin', 2], ['goblin', 10, { chegada: [0, 5] }]] },
+    inimigos: [['reiSlime', 1], ['goblinArqueiro', 6], ['ogro', 1], ['xamaGoblin', 1], ['goblin', 6, { chegada: [0, 5] }]] },
 ];

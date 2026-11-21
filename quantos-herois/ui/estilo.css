@@ -1183,7 +1183,8 @@ box-shadow:var(--sombra-alta);
   border-bottom:var(--borda);
 }
 .modal-topo h2{font-size:1.15rem;color:var(--dourado);}
-.modal-corpo{padding:.8rem;overflow-y:auto;flex:1;font-weight:700;line-height:1.4;.modal-corpo p{margin:.4rem 0;}
+.modal-corpo{padding:.8rem;overflow-y:auto;flex:1;font-weight:700;line-height:1.4;}
+.modal-corpo p{margin:.4rem 0;}
 .modal-rodape{padding:.5rem .8rem;display:flex;justify-content:space-between;gap:.5rem;border-top:var(--borda);}
 .paginas{display:flex;gap:.3rem;justify-content:center;margin-top:.5rem;}
 .paginas .pt{width:10px;height:10px;border-radius:50%;background:var(--pergaminho-escuro);border:2px solid var(--tinta);}
@@ -1276,9 +1277,10 @@ box-shadow:var(--sombra-alta);
   .bau-tela{padding:.3rem;gap:.3rem;}
   .titulo-bau{font-size:clamp(1.1rem,3.5vw,1.6rem);}
   .palco-bau{gap:.3rem;}
-  .bau{width:min(24vh,120px);height:min(20vh,90px);}
+  .bau{width:min(24vh,120px);height:min(20vh,90px);position:absolute;top:0;left:50%;margin-left:min(-12vh,-60px);opacity:.5;}
   .cartas-bau-nova{gap:.35rem;}
-  .carta-bau{flex:0 1 130px;max-width:150px;height:min(40vh,160px);}
+  .carta-bau{flex:0 1 130px;max-width:150px;height:min(38vh,135px);}
+  .palco-bau{justify-content:flex-end;}
   .carta-bau .icone{font-size:1.3rem;}
   .carta-bau h3{font-size:.8rem;}
   .carta-bau .tipo{font-size:.55rem;}
@@ -1301,7 +1303,14 @@ box-shadow:var(--sombra-alta);
   .carta-heroi button,.carta-evolucao button,.carta-passiva button,.carta-item button{min-height:34px;font-size:.75rem;}
   .carta-passiva .icone-passiva{font-size:1.1rem;padding:.05rem .25rem;}
   .carta-passiva .desc,.carta-item .desc{font-size:.62rem;}
-  .secao-enfermaria{padding:.25rem .35rem;max-height:26vh;}
+  .secao-enfermaria{padding:.2rem .35rem;max-height:18vh;overflow-y:auto;}
+  /* cartas compactas: nome+atributos à esquerda, preço+botão à direita */
+  .carta-heroi{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:.3rem;align-items:center;}
+  .carta-heroi h4{grid-column:1;grid-row:1;}
+  .carta-heroi .atributos{grid-column:1;grid-row:2;}
+  .carta-heroi .preco{grid-column:2;grid-row:1;}
+  .carta-heroi button{grid-column:2;grid-row:2;min-width:44px;}
+  .grade-cartas{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));}
   .secao-enfermaria h2{font-size:.85rem;margin-bottom:.2rem;}
   .linha-enfermaria{padding:.15rem .3rem;gap:.3rem;}
   .linha-enfermaria .nome{font-size:.75rem;}
@@ -1339,7 +1348,7 @@ box-shadow:var(--sombra-alta);
   .contador button.mini{min-width:40px;font-size:.65rem;}
   .linha-classe .nome{font-size:.72rem;}
   .linha-classe .disp{font-size:.6rem;}
-  .carta-bau{height:min(36vh,140px);}
+  .carta-bau{height:min(36vh,120px);}
   .carta-bau .desc{font-size:.58rem;}
   .carta-bau h3{font-size:.72rem;}
   .ganho-grande{font-size:clamp(1.5rem,5vw,2.2rem);}

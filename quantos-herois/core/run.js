@@ -184,7 +184,17 @@ export function opcoesDaRodada(run) {
 }
 
 // ---------- Disponibilidade / preços ----------
+// Evita travar a jornada: se TODOS estão desmaiados, o que voltaria primeiro acorda agora.
+function acordarSeNinguem(run) {
+  const vivos = Object.values(run.elenco).reduce((a, b) => a + b, 0) - run.desmaiados.filter((d) => d.volta > run.rodada).length;
+  if (vivos > 0 || !run.desmaiados.length) return;
+  let i = 0;
+  run.desmaiados.forEach((d, j) => { if (d.volta < run.desmaiados[i].volta) i = j; });
+  run.desmaiados.splice(i, 1);
+}
+
 export function disponiveis(run) {
+  acordarSeNinguem(run);
   const out = Object.fromEntries(Object.keys(HEROIS).map((c) => [c, 0])); // todas as classes, inclusive as recrutadas depois
   for (const c of Object.keys(out)) {
     const total = run.elenco[c] || 0;
