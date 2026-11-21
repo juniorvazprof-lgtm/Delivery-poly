@@ -1,0 +1,113 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Anton;src:url(fontes/Anton.ttf)}
+@font-face{font-family:Archivo;src:url(fontes/ArchivoBlack.ttf)}
+html,body{margin:0;width:720px;height:1280px;overflow:hidden;background:#000}
+canvas{position:absolute;inset:0;width:720px!important;height:1280px!important}
+#ui{position:absolute;inset:0;pointer-events:none}
+.cap{position:absolute;left:0;right:0;top:770px;text-align:center;font-family:Anton;font-size:112px;line-height:1.02;color:#fff;
+  text-transform:uppercase;-webkit-text-stroke:7px #000;paint-order:stroke fill;text-shadow:0 8px 0 #000,0 0 40px rgba(0,0,0,.6);padding:0 30px}
+.am{color:#ffe14a}.vm{color:#ff2b3d}
+#rec{position:absolute;top:60px;left:50px;font-family:Archivo;font-size:30px;color:#fff;letter-spacing:3px}
+#rec b{display:inline-block;width:22px;height:22px;border-radius:50%;background:#ff2b3d;margin-right:12px;vertical-align:-2px}
+#flash{position:absolute;inset:0;background:#fff;opacity:0}
+</style></head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui"><div id="rec"><b></b><span id="selo">AO VIVO</span></div><div class="cap" id="cap"></div><div id="flash"></div></div>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script src="node_modules/d3-array/dist/d3-array.min.js"></script>
+<script src="node_modules/d3-geo/dist/d3-geo.min.js"></script>
+<script src="node_modules/topojson-client/dist/topojson-client.min.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+await document.fonts.load('100px Anton'); await document.fonts.load('100px Archivo');
+const Q=new URLSearchParams(location.search);
+const plano=await (await fetch(Q.get('plano'))).json();
+const W=720,H=1280;
+const r=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
+r.setPixelRatio(1.5); r.setSize(W,H,false);
+const cena=new THREE.Scene(); cena.background=new THREE.Color(plano.fundo||'#03060d'); cena.fog=new THREE.FogExp2(plano.fundo||'#03060d',0.035);
+const cam=new THREE.PerspectiveCamera(40,W/H,0.1,200);
+cena.add(new THREE.AmbientLight('#ffffff',.6)); const kl=new THREE.DirectionalLight('#7fb4ff',3); kl.position.set(-4,5,3); cena.add(kl);
+// poeira de fundo
+{const rr=(()=>{let s=7;return()=>(s=(s*16807)%2147483647)/2147483647;})();const pd=new Float32Array(900*3);for(let i=0;i<900;i++)pd.set([(rr()-.5)*40,(rr()-.5)*60,-rr()*40-5],i*3);
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pd,3));cena.add(new THREE.Points(g,new THREE.PointsMaterial({color:'#3b6cff',size:.06,transparent:true,opacity:.5})));}
+// pós
+const comp=new EffectComposer(r); comp.setPixelRatio(1.5); comp.setSize(W,H);
+comp.addPass(new RenderPass(cena,cam));
+const bloom=new UnrealBloomPass(new THREE.Vector2(W,H),1.1,.6,.15); comp.addPass(bloom);
+const fx=new ShaderPass({uniforms:{tDiffuse:{value:null},t:{value:0},ab:{value:.002},gl:{value:0},red:{value:0}},
+  vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float t,ab,gl,red;varying vec2 v;float h(float n){return fract(sin(n)*43758.5453);}
+  void main(){vec2 u=v;float f=floor(u.y*38.+floor(t*24.)*3.);if(gl>0.&&h(f)<gl*.55)u.x+=(h(f+1.)-.5)*.18*gl;
+  vec2 d=(u-.5)*ab*(1.+gl*6.);vec3 c=vec3(texture2D(tDiffuse,u+d).r,texture2D(tDiffuse,u).g,texture2D(tDiffuse,u-d).b);
+  c+=(h(u.x*999.+u.y*77.+t)-.5)*.07;c*=.92+.08*sin(u.y*1920.);c*=smoothstep(.95,.25,length((v-.5)*vec2(1.,1.25))*1.1);
+  c=mix(c,c*vec3(1.4,.35,.4),red);gl_FragColor=vec4(c,1.);}`});
+comp.addPass(fx); comp.addPass(new OutputPass());
+
+// contexto das cenas (ver contrato-cena.md)
+const FX={};
+const ctx={THREE,RoundedBoxGeometry,cam,fx:FX,d3:window.d3,topojson:window.topojson,
+  ease:x=>1-Math.pow(1-Math.max(0,Math.min(1,x)),3),clamp01:x=>Math.max(0,Math.min(1,x)),pulso:(t,f)=>.5+.5*Math.sin(t*f*6.283),
+  cores:{verm:'#ff2b3d',vermel:'#ff2b3d',azul:'#2fa8ff',amarelo:'#ffe14a',verde:'#25d366',fundo:'#03060d',branco:'#f2f4f8'},
+  rnd:(s)=>{let x=(s|0)||1;return()=>(x=(x*16807)%2147483647)/2147483647;},
+  telaCanvas:(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;return{canvas:c,g2d:c.getContext('2d'),tex};},
+  textoPlano:(txt,o={})=>{const tam=o.tamanho||64,fonte=o.fonte||'Archivo';const c=document.createElement('canvas');const g=c.getContext('2d');g.font=`${tam}px ${fonte}`;
+    const w=Math.ceil(g.measureText(txt).width+tam*.6),h=Math.ceil(tam*1.5);c.width=w;c.height=h;g.font=`${tam}px ${fonte}`;g.fillStyle=o.cor||'#fff';g.textBaseline='middle';g.textAlign='center';g.fillText(txt,w/2,h/2);
+    const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const L=o.largura||2;
+    return new THREE.Mesh(new THREE.PlaneGeometry(L,L*h/w),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));},
+  dados:async(nome)=>(await fetch('node_modules/'+nome)).json()};
+window.__ctx=ctx;
+
+// carrega cenas do plano (motor/cenas/ = biblioteca; job/cenas/ = cenas novas do vídeo)
+const ativas=[];
+for(const c of plano.cenas){
+  const url=c.mod.startsWith('novo:')?`${Q.get('job')}/cenas/${c.mod.slice(5)}.js`:`./cenas/${c.mod}.js`;
+  try{const m=await import(url);const o=await m.default(ctx,c.params||{});o.grupo.visible=false;cena.add(o.grupo);ativas.push({...c,o});}
+  catch(e){console.error('cena '+c.mod+': '+e.message);}
+}
+if(plano.selo!==undefined) document.getElementById('selo').textContent=plano.selo;
+if(plano.selo==='') document.getElementById('rec').style.display='none';
+
+// legendas: [[t, html]] com <am>..</am> / <vm>..</vm>
+const CAPS=(plano.legendas||[]).map(([t,h])=>[t,h.replace(/<am>/g,'<span class="am">').replace(/<vm>/g,'<span class="vm">').replace(/<\/(am|vm)>/g,'</span>')]);
+const capEl=document.getElementById('cap'); let capAtual=-1;
+function legenda(t){
+  let i=-1; for(let j=0;j<CAPS.length;j++) if(t>=CAPS[j][0]) i=j;
+  const html=i<0?'':CAPS[i][1]; if(i!==capAtual){capAtual=i;capEl.innerHTML=html;}
+  if(!html){capEl.style.opacity=0;return;}
+  const k=Math.min(1,(t-CAPS[i][0])/0.12), s=k<1?0.4+k-.25*Math.sin(k*3.14):1;
+  const forte=html.includes('vm'), novo=t-CAPS[i][0]<0.5, sh=forte&&novo?Math.sin(t*90)*7:0;
+  capEl.style.transform=`translateX(${sh}px) scale(${s}) rotate(${forte&&novo?Math.sin(t*50)*1.5:0}deg)`; capEl.style.opacity=k<.3?k/.3:1;
+}
+const flash=document.getElementById('flash');
+function quadro(t){
+  fx.uniforms.t.value=t; cam.rotation.set(0,0,0);
+  const at=ativas.filter(a=>t>=a.ini&&t<a.fim).pop();
+  for(const a of ativas) a.o.grupo.visible=(a===at);
+  for(const k of Object.keys(FX)) delete FX[k];
+  if(at){ at.o.update(t,t-at.ini,at.fim-at.ini); }
+  let gl=FX.gl||0; const kin=at?t-at.ini:9; if(kin<.15) gl=Math.max(gl,.6-kin*4);
+  const sh=FX.shake||0;
+  cam.position.x+=Math.sin(t*83)*.12*sh; cam.position.y+=Math.sin(t*71+1)*.12*sh; cam.rotation.z+=Math.sin(t*61)*.03*sh;
+  fx.uniforms.gl.value=gl; fx.uniforms.red.value=FX.red||0; fx.uniforms.ab.value=FX.ab??.002; bloom.strength=FX.bloom??1.1;
+  flash.style.opacity=FX.flash||0;
+  legenda(t); comp.render();
+}
+window.seek=quadro;
+// diagnóstico: objetos visíveis da cena ativa e onde caem na tela
+window.diag=t=>{quadro(t);const a=ativas.filter(a=>t>=a.ini&&t<a.fim).pop();if(!a)return 'sem cena';const out=[];const v=new THREE.Vector3(),ws=new THREE.Vector3();
+ a.o.grupo.traverse(o=>{if(!(o.isMesh||o.isLine||o.isPoints))return;let vis=true,p=o;while(p){if(!p.visible)vis=false;p=p.parent;}if(!vis)return;
+  o.getWorldPosition(v);o.getWorldScale(ws);const n=v.clone().project(cam);
+  out.push(`${o.geometry?.type} mundo(${v.x.toFixed(1)},${v.y.toFixed(1)},${v.z.toFixed(1)}) escala${ws.x.toFixed(2)} tela(${((n.x+1)/50|0)*1}x=${((n.x+1)/2*100)|0}%,y=${((1-n.y)/2*100)|0}%)${n.z>1?' ATRÁS-DA-CÂMERA':''}`);});
+ return `${a.mod} cam(${cam.position.toArray().map(x=>x.toFixed(1))}) objetos=${out.length}\n`+out.slice(0,18).join('\n');};
+window.erros=[]; window.pronto=true; quadro(0);
+</script></body></html>
