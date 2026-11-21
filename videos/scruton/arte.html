@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Cinzel;font-weight:700;src:url(node_modules/@fontsource/cinzel/files/cinzel-latin-700-normal.woff2)}
+@font-face{font-family:Cinzel;font-weight:600;src:url(node_modules/@fontsource/cinzel/files/cinzel-latin-600-normal.woff2)}
+@font-face{font-family:Garamond;font-weight:700;src:url(node_modules/@fontsource/eb-garamond/files/eb-garamond-latin-700-normal.woff2)}
+html,body{margin:0;background:transparent}
+#logo{display:inline-flex;align-items:center;gap:14px;padding:6px 8px;color:#fff;filter:drop-shadow(0 2px 3px rgba(0,0,0,.7))}
+#logo .t1{font:700 31px/1 Cinzel;letter-spacing:2px}
+#logo .t2{font:600 15px/1 Cinzel;letter-spacing:7.3px;margin-top:6px;opacity:.92}
+#leg{width:720px;text-align:center;font:700 44px/1.08 Garamond;color:#fff;padding:0 60px;box-sizing:border-box;
+ text-shadow:0 0 3px #000,0 0 3px #000,0 2px 6px rgba(0,0,0,.9);-webkit-text-stroke:1.2px rgba(0,0,0,.55);paint-order:stroke fill}
+</style></head><body>
+<div id="logo">
+ <svg width="62" height="62" viewBox="0 0 62 62" fill="none" stroke="#fff">
+  <circle cx="31" cy="31" r="28.5" stroke-width="2.6"/>
+  <circle cx="31" cy="31" r="24" stroke-width="1" opacity=".6"/>
+  <!-- frontão + coluna dórica -->
+  <path d="M17 21 L31 13 L45 21 Z" stroke-width="2" fill="#fff" fill-opacity=".15" stroke-linejoin="round"/>
+  <rect x="18" y="22" width="26" height="3" fill="#fff" stroke="none"/>
+  <rect x="21" y="26" width="20" height="2" fill="#fff" stroke="none"/>
+  <path d="M24 28 V44 M28 28 V44 M31 28 V44 M34 28 V44 M38 28 V44" stroke-width="1.6"/>
+  <rect x="21" y="44" width="20" height="2.4" fill="#fff" stroke="none"/>
+  <rect x="18" y="47.5" width="26" height="3" fill="#fff" stroke="none"/>
+ </svg>
+ <div><div class="t1">SCRUTON</div><div class="t2">FILOSOFIA</div></div>
+</div>
+<div id="leg"></div>
+<script>window.pronto=document.fonts.ready.then(()=>true);</script>
+</body></html>
