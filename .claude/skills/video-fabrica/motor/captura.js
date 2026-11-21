@@ -11,7 +11,7 @@ const tipos = { '.html': 'text/html', '.js': 'application/javascript', '.ttf': '
     fs.existsSync(f) && fs.statSync(f).isFile() ? r.fulfill({ path: f, contentType: tipos[path.extname(f)] || 'text/plain' }) : r.fulfill({ status: 404, body: '' });
   });
   const erros = []; p.on('pageerror', e => erros.push(e.message)); p.on('console', m => { if (m.type() === 'error') erros.push(m.text()); });
-  await p.goto('http://f.local/motor.html?plano=/job/plano.json&job=/job');
+  await p.goto('http://f.local/motor.html?plano=/job/plano.json&job=/job&gl=' + (process.env.GL || '1.5'));
   await p.waitForFunction(() => window.pronto, null, { timeout: 120000 });
   fs.mkdirSync(saida, { recursive: true });
   const F = +fps, dur = await p.evaluate(() => 0) ;

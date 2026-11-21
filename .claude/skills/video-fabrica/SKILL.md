@@ -39,6 +39,23 @@ Pasta: `.claude/skills/video-fabrica/` (abreviada `F`). Trabalhos ficam em `F/tr
   cabeçalho (`// descrição` + `// params: {...}`) — o planejador passa a reutilizá-las e o custo cai.
 - Render: 30 fps padrão; `--proc` = núcleos − 1.
 
+## Já incorporado do relatório de pesquisa (nov/2026)
+- Camada 3D renderizada em GL 0,75× e legendas/HUD em 1,5× (DOM nítido): render ~3 min por 50 s com 3 processos.
+- Prompt do planejador com a parte fixa primeiro (cache de prefixo do DeepSeek) e saída em modo JSON.
+- Regras de retenção no planejador: movimento no quadro 0, virada visual até 1,2 s, troca a cada 1,5–3 s no início, CTA nos 2 s finais, sem repetir a mesma cena seguida.
+- Legendas: zona segura lateral, ajuste automático de tamanho (máx. 2 linhas), sem preposição/número sozinho no fim.
+- Áudio: música com ducking sob a voz (sidechain), −14 LUFS, limitador de pico (~−1,5 dBTP).
+- QA pós-render automático (`qa.json`): quadros pretos, congelados, LUFS e true peak.
+
+## Pendências sugeridas pelo relatório (ainda não feitas)
+- Cache de cenas por hash (template+params+duração) e render por cena com concat `-c copy`.
+- Enviar quadros direto ao FFmpeg pelo stdin (sem gravar JPEG em disco).
+- Revisão da folha por modelo de visão barato (hoje: Claude olha 1 imagem).
+- Sincronia com WhisperX; OCR para texto cortado no vídeo final.
+- Rodar lotes no horário fora de pico do DeepSeek (metade do preço; ~22h–01h e 06h–10h UTC).
+- Variação anti-"template" entre episódios (paletas, rigs de câmera) por causa da política do YouTube (jul/2026).
+- Cenas com visual realista de desastre: manter selo "SIMULAÇÃO" (`plano.selo`).
+
 ## Biblioteca de cenas (`motor/cenas/`)
 globo (ataque ao alvo + onda vermelha), celular (tela de alerta com textos), relogio (separador
 "MINUTO X"), mapa (países reais, rotas, pinos, estilos cyber/vox), titulo (frase de impacto).

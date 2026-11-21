@@ -7,7 +7,7 @@ html,body{margin:0;width:720px;height:1280px;overflow:hidden;background:#000}
 canvas{position:absolute;inset:0;width:720px!important;height:1280px!important}
 #ui{position:absolute;inset:0;pointer-events:none}
 .cap{position:absolute;left:0;right:0;top:770px;text-align:center;font-family:Anton;font-size:112px;line-height:1.02;color:#fff;
-  text-transform:uppercase;-webkit-text-stroke:7px #000;paint-order:stroke fill;text-shadow:0 8px 0 #000,0 0 40px rgba(0,0,0,.6);padding:0 30px}
+  text-transform:uppercase;-webkit-text-stroke:7px #000;paint-order:stroke fill;text-shadow:0 8px 0 #000,0 0 40px rgba(0,0,0,.6);padding:0 80px}
 .am{color:#ffe14a}.vm{color:#ff2b3d}
 #rec{position:absolute;top:60px;left:50px;font-family:Archivo;font-size:30px;color:#fff;letter-spacing:3px}
 #rec b{display:inline-block;width:22px;height:22px;border-radius:50%;background:#ff2b3d;margin-right:12px;vertical-align:-2px}
@@ -33,7 +33,7 @@ const Q=new URLSearchParams(location.search);
 const plano=await (await fetch(Q.get('plano'))).json();
 const W=720,H=1280;
 const r=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
-r.setPixelRatio(1.5); r.setSize(W,H,false);
+const PR=+(Q.get('gl')||1.5); r.setPixelRatio(PR); r.setSize(W,H,false);
 const cena=new THREE.Scene(); cena.background=new THREE.Color(plano.fundo||'#03060d'); cena.fog=new THREE.FogExp2(plano.fundo||'#03060d',0.035);
 const cam=new THREE.PerspectiveCamera(40,W/H,0.1,200);
 cena.add(new THREE.AmbientLight('#ffffff',.6)); const kl=new THREE.DirectionalLight('#7fb4ff',3); kl.position.set(-4,5,3); cena.add(kl);
@@ -41,7 +41,7 @@ cena.add(new THREE.AmbientLight('#ffffff',.6)); const kl=new THREE.DirectionalLi
 {const rr=(()=>{let s=7;return()=>(s=(s*16807)%2147483647)/2147483647;})();const pd=new Float32Array(900*3);for(let i=0;i<900;i++)pd.set([(rr()-.5)*40,(rr()-.5)*60,-rr()*40-5],i*3);
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pd,3));cena.add(new THREE.Points(g,new THREE.PointsMaterial({color:'#3b6cff',size:.06,transparent:true,opacity:.5})));}
 // pós
-const comp=new EffectComposer(r); comp.setPixelRatio(1.5); comp.setSize(W,H);
+const comp=new EffectComposer(r); comp.setPixelRatio(PR); comp.setSize(W,H);
 comp.addPass(new RenderPass(cena,cam));
 const bloom=new UnrealBloomPass(new THREE.Vector2(W,H),1.1,.6,.15); comp.addPass(bloom);
 const fx=new ShaderPass({uniforms:{tDiffuse:{value:null},t:{value:0},ab:{value:.002},gl:{value:0},red:{value:0}},
@@ -82,7 +82,8 @@ const CAPS=(plano.legendas||[]).map(([t,h])=>[t,h.replace(/<am>/g,'<span class="
 const capEl=document.getElementById('cap'); let capAtual=-1;
 function legenda(t){
   let i=-1; for(let j=0;j<CAPS.length;j++) if(t>=CAPS[j][0]) i=j;
-  const html=i<0?'':CAPS[i][1]; if(i!==capAtual){capAtual=i;capEl.innerHTML=html;}
+  const html=i<0?'':CAPS[i][1]; if(i!==capAtual){capAtual=i;capEl.innerHTML=html;let f=112;capEl.style.transform='none';capEl.style.fontSize=f+'px';
+    while(f>56&&(capEl.scrollWidth>capEl.clientWidth+1||capEl.offsetHeight>f*1.02*2+4)){f-=6;capEl.style.fontSize=f+'px';}}
   if(!html){capEl.style.opacity=0;return;}
   const k=Math.min(1,(t-CAPS[i][0])/0.12), s=k<1?0.4+k-.25*Math.sin(k*3.14):1;
   const forte=html.includes('vm'), novo=t-CAPS[i][0]<0.5, sh=forte&&novo?Math.sin(t*90)*7:0;

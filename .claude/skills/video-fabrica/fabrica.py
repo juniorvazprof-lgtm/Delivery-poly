@@ -23,14 +23,14 @@ def log(*a): print('[fabrica]', *a, file=sys.stderr, flush=True)
 def sh(cmd, **kw): return subprocess.run(cmd, shell=isinstance(cmd, str), check=True, **kw)
 
 # ---------------- DeepSeek ----------------
-def deepseek(prompt, max_partes=6, temperatura=0.4):
+def deepseek(prompt, max_partes=6, temperatura=0.4, json_mode=False):
     texto = ''
     for i in range(max_partes):
         msgs = [{"role": "user", "content": prompt}]
         if texto:
             msgs += [{"role": "assistant", "content": texto},
                      {"role": "user", "content": "A resposta foi cortada. Continue EXATAMENTE de onde parou, sem repetir e sem markdown. Últimos caracteres:\n" + texto[-1500:]}]
-        body = json.dumps({"model": "deepseek-chat", "messages": msgs, "max_tokens": 8192, "temperature": temperatura}).encode()
+        body = json.dumps({"model": "deepseek-chat", "messages": msgs, "max_tokens": 8192, "temperature": temperatura, **({"response_format": {"type": "json_object"}} if json_mode else {})}).encode()
         req = urllib.request.Request("https://api.deepseek.com/chat/completions", body,
                                      {"Authorization": "Bearer proxy-injected", "Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=600) as r: j = json.load(r)
@@ -117,28 +117,37 @@ def catalogo():
 
 def planejar(job, tema='', estilo='cyber', max_novas=3):
     base = json.load(open(f'{job}/base.json')); trans = open(f'{job}/transcricao.txt').read()
-    prompt = f"""Você é diretor de vídeos verticais virais (Shorts) em estilo "tech thriller" 3D {estilo}.
-Monte o PLANO de cenas para esta narração (duração {base['dur']}s). Tema/observações: {tema or '(deduza da fala)'}.
-
-TRANSCRIÇÃO (tempos em segundos):
-{trans}
+    # parte FIXA primeiro (igual entre vídeos -> cai no cache de prefixo do DeepSeek); parte variável no fim
+    prompt = f"""Você é diretor de vídeos verticais virais (Shorts/Reels/TikTok) em estilo "tech thriller" 3D.
+Sua tarefa: montar o PLANO de cenas (JSON) para uma narração.
 
 CENAS DA BIBLIOTECA (prontas, use o máximo possível; params entre chaves):
 {catalogo()}
 
-Regras:
-- "cenas": lista CONTÍGUA cobrindo de 0 até {base['dur']}: cada item {{"mod": nome, "ini": s, "fim": s, "params": {{...}}}}. Cortes nos inícios de frases. Cada cena 2–8 s; gancho forte nos primeiros 3 s.
-- Use a biblioteca com params diferentes para variar (ex.: relogio como separador de capítulos, mapa com países/pinos reais, celular com textos da fala, titulo para frases de impacto).
-- No máximo {max_novas} cenas NOVAS, só quando a biblioteca não serve: "mod": "novo:<nome_curto>" e um briefing em "novas": {{"<nome_curto>": "descrição visual detalhada com os eventos e seus tempos ABSOLUTOS (palavras-chave da fala)"}}. Uma cena nova pode ser reutilizada em mais de um trecho.
-- "destaques": {{"PALAVRA": "vm"|"am"}} — até 15 palavras-chave da fala (MAIÚSCULAS, como aparecem) para pintar de vermelho (perigo) ou amarelo (ênfase) na legenda.
-- "sfx": lista de {{"t": s, "som": "boom"|"glitch"|"riser"}} nos impactos e cortes (boom em palavras de impacto, glitch nos cortes, riser 1 s antes de uma revelação). 10–25 itens.
+REGRAS DE RETENÇÃO
+- Quadro 0 já com movimento e a CONSEQUÊNCIA/promessa (nada de vinheta ou logo). Primeira virada visual até 1,2 s.
+- Uma mudança visual a cada 1,5–3 s no começo (até 7 s) e a cada 2–4 s depois; cortes no início de frases, nunca no meio de palavra.
+- Separadores (ex.: relogio) só nas viradas de capítulo citadas na fala e curtos (≤ 1,5 s); nunca a mesma cena da biblioteca duas vezes seguidas.
+- Varie params entre cenas iguais (cores, textos, vista do mapa) para não parecer template repetido.
+- Os 2 s finais: chamada única para o próximo episódio/seguir, coerente com a fala.
+
+REGRAS DO JSON
+- "cenas": lista CONTÍGUA de 0 até a duração: {{"mod": nome, "ini": s, "fim": s, "params": {{...}}}}. Cada cena 1,5–6 s.
+- No máximo MAX_NOVAS cenas NOVAS, só quando a biblioteca não serve: "mod": "novo:<nome_curto>" e briefing em "novas": {{"<nome_curto>": "descrição visual com eventos e tempos ABSOLUTOS ligados às palavras-chave"}}. Uma cena nova pode aparecer em mais de um trecho.
+- "destaques": {{"PALAVRA": "vm"|"am"}} — até 15 palavras da fala (MAIÚSCULAS, como aparecem): vermelho = perigo, amarelo = ênfase.
+- "sfx": 10–25 itens {{"t": s, "som": "boom"|"glitch"|"riser"}}: boom na palavra de impacto, glitch nos cortes, riser 1 s antes de uma revelação.
 - "musica": "bgm-decisions" (tensão) ou "bgm-cipher" (tecnologia).
-Responda SOMENTE o JSON: {{"cenas":[...], "novas":{{...}}, "destaques":{{...}}, "sfx":[...], "musica":"..."}}"""
-    plano = extrair_json(deepseek(prompt, temperatura=.5))
+Responda SOMENTE o JSON: {{"cenas":[...], "novas":{{...}}, "destaques":{{...}}, "sfx":[...], "musica":"..."}}
+
+===== DADOS DESTE VÍDEO =====
+Duração: {base['dur']} s. Estilo: {estilo}. Máximo de cenas novas: {max_novas}. Tema/observações: {tema or '(deduza da fala)'}.
+TRANSCRIÇÃO (tempos em segundos):
+{trans}"""
+    plano = extrair_json(deepseek(prompt, temperatura=.5, json_mode=True))
     # legendas determinísticas + destaques do DeepSeek
     dest = {k.upper(): v for k, v in plano.get('destaques', {}).items()}
     leg = []
-    for t, txt in base['legendas']:
+    for t, txt in agrupar_legendas(json.load(open(f'{job}/palavras.json'))):
         for w, cls in dest.items():
             txt = re.sub(rf'\b{re.escape(w)}\b', f'<{cls}>{w}</{cls}>', txt) if w in txt else txt
         leg.append([t, txt])
@@ -182,9 +191,9 @@ def cenas(job):
     log('cenas novas:', nomes)
 
 # ---------------- captura (node + playwright) ----------------
-def capturar(job, saida, quadros=None, fps=30, ini=0, fim=None, escala=1.5, diag=None):
+def capturar(job, saida, quadros=None, fps=30, ini=0, fim=None, escala=1.5, diag=None, gl=None):
     cmd = ['node', f'{MOTOR}/captura.js', os.path.abspath(job), os.path.abspath(saida), str(fps), str(escala)]
-    env = dict(os.environ, QUADROS=','.join(map(str, quadros)) if quadros else '', INI=str(ini), FIM=str(fim or ''), DIAG=','.join(map(str, diag or [])))
+    env = dict(os.environ, QUADROS=','.join(map(str, quadros)) if quadros else '', INI=str(ini), FIM=str(fim or ''), DIAG=','.join(map(str, diag or [])), GL=str(gl or escala))
     r = subprocess.run(cmd, env=env, capture_output=True, text=True)
     if r.returncode: log(r.stderr[-800:])
     return r.stdout
@@ -241,37 +250,46 @@ def previa(job, n=12):
     folha.save(f'{job}/folha.png'); log(f'folha: {job}/folha.png  tempos: {ts}')
 
 # ---------------- 6. render final ----------------
-def render(job, fps=30, proc=3):
+def render(job, fps=30, proc=3, gl=0.75):
     plano = json.load(open(f'{job}/plano.json')); dur = plano['dur']; total = int(dur * fps) + 1
-    pasta = f'{job}/quadros'; shutil.rmtree(pasta, ignore_errors=True); os.makedirs(pasta)
+    pasta = f'{job}/quadros'
     from concurrent.futures import ThreadPoolExecutor
     passo = math.ceil(total / proc)
-    with ThreadPoolExecutor(proc) as ex:
-        list(ex.map(lambda i: capturar(job, pasta, fps=fps, ini=i * passo, fim=min(total, (i + 1) * passo)), range(proc)))
+    if len(glob.glob(f'{pasta}/*.jpg')) < total:
+      shutil.rmtree(pasta, ignore_errors=True); os.makedirs(pasta)
+      with ThreadPoolExecutor(proc) as ex:
+        list(ex.map(lambda i: capturar(job, pasta, fps=fps, ini=i * passo, fim=min(total, (i + 1) * passo), gl=gl), range(proc)))
     sons = f'{MOTOR}/sons'; arq = {'boom': 'boom.wav', 'glitch': 'glitch.ogg', 'riser': 'riser.wav'}
     entradas = ['-framerate', str(fps), '-i', f'{pasta}/f%05d.jpg', '-i', f"{job}/{plano['audio']}",
                 '-i', f"{sons}/{plano.get('musica', 'bgm-decisions')}.mp3"]
-    filtros, rot = ['[1]volume=1.0[V]', f"[2]aloop=loop=-1:size=2e9,atrim=0:{dur},volume=0.15,afade=t=out:st={max(0, dur - 1.5)}:d=1.5[M]"], ['[V]', '[M]']
+    filtros, rot = ['[1]volume=1.0,asplit=2[V][Vsc]', f"[2]aloop=loop=-1:size=2e9,atrim=0:{dur},volume=0.22,afade=t=out:st={max(0, dur - 1.5)}:d=1.5[M0]",
+                   '[M0][Vsc]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=300[M]'], ['[V]', '[M]']
     for i, s in enumerate(plano.get('sfx', [])):
         if s.get('som') not in arq: continue
-        entradas += ['-i', f"{sons}/{arq[s['som']]}"]; n = len(entradas) // 2 - 1; ms = int(max(0, s['t'] - (1 if s['som'] == 'riser' else 0)) * 1000)
+        entradas += ['-i', f"{sons}/{arq[s['som']]}"]; n = entradas.count('-i') - 1; ms = int(max(0, s['t'] - (1 if s['som'] == 'riser' else 0)) * 1000)
         filtros.append(f"[{n}]adelay={ms}|{ms},volume={.7 if s['som'] == 'boom' else .9}[S{i}]"); rot.append(f'[S{i}]')
-    filtros.append(f"{''.join(rot)}amix={len(rot)}:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11,atrim=0:{dur}[au]")
+    filtros.append(f"{''.join(rot)}amix={len(rot)}:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.84:level=false,aresample=48000,atrim=0:{dur}[au]")
     final = f'{job}/final.mp4'
     sh(['ffmpeg', '-y', '-loglevel', 'error', *entradas, '-filter_complex', ';'.join(filtros), '-map', '0', '-map', '[au]',
         '-c:v', 'libx264', '-preset', 'medium', '-b:v', '8M', '-maxrate', '10M', '-bufsize', '16M', '-pix_fmt', 'yuv420p', '-r', str(fps),
         '-c:a', 'aac', '-b:a', '192k', '-t', str(dur), '-movflags', '+faststart', final])
     shutil.rmtree(pasta)
+    qa = subprocess.run(['ffmpeg', '-i', final, '-vf', 'blackdetect=d=0.1:pix_th=0.10,freezedetect=n=-60dB:d=0.8',
+                         '-af', 'ebur128=peak=true', '-f', 'null', '-'], capture_output=True, text=True).stderr
+    pretos = re.findall(r'black_start:([\d.]+)', qa); cong = re.findall(r'freeze_start: ([\d.]+)', qa)
+    lufs = re.findall(r'I:\s+(-?[\d.]+) LUFS', qa); pico = re.findall(r'Peak:\s+(-?[\d.]+) dBFS', qa)
+    rel = {'pretos': pretos, 'congelados': cong, 'lufs': lufs[-1] if lufs else None, 'true_peak': pico[-1] if pico else None}
+    json.dump(rel, open(f'{job}/qa.json', 'w')); log('QA:', rel)
     log(f'pronto: {final} ({os.path.getsize(final) / 1e6:.1f} MB)')
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('etapa'); ap.add_argument('job'); ap.add_argument('audio', nargs='?')
     ap.add_argument('--tema', default=''); ap.add_argument('--estilo', default='cyber'); ap.add_argument('--max-novas', type=int, default=3)
-    ap.add_argument('--rodadas', type=int, default=2); ap.add_argument('--fps', type=int, default=30); ap.add_argument('--proc', type=int, default=3)
+    ap.add_argument('--rodadas', type=int, default=2); ap.add_argument('--fps', type=int, default=30); ap.add_argument('--proc', type=int, default=3); ap.add_argument('--gl', type=float, default=0.75)
     a = ap.parse_args(); e = a.etapa
     if e in ('transcrever', 'tudo'): transcrever(a.job, a.audio)
     if e in ('planejar', 'tudo'): planejar(a.job, a.tema, a.estilo, a.max_novas)
     if e in ('cenas', 'tudo'): cenas(a.job)
     if e in ('checar', 'tudo'): checar(a.job, a.rodadas)
     if e in ('previa', 'tudo'): previa(a.job)
-    if e == 'render': render(a.job, a.fps, a.proc)
+    if e == 'render': render(a.job, a.fps, a.proc, a.gl)
