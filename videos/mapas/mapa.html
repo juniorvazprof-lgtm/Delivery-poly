@@ -1,0 +1,115 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Anton;src:url(fonts/Anton.ttf)}
+@font-face{font-family:Archivo;src:url(fonts/ArchivoBlack.ttf)}
+@font-face{font-family:Noto;src:url(fonts/NotoSans.ttf)}
+html,body{margin:0;overflow:hidden}
+</style></head><body>
+<svg id="s"></svg>
+<script src="node_modules/d3-array/dist/d3-array.min.js"></script>
+<script src="node_modules/d3-geo/dist/d3-geo.min.js"></script>
+<script src="node_modules/topojson-client/dist/topojson-client.min.js"></script>
+<script>
+(async()=>{
+await document.fonts.load('60px Anton');await document.fonts.load('60px Archivo');await document.fonts.load('30px Noto');
+const P=new URLSearchParams(location.search), cena=P.get('cena')||'1', estilo=P.get('estilo')||'cyber';
+const W=+(P.get('w')||1080), H=+(P.get('h')||1920);
+const topo=await (await fetch('node_modules/world-atlas/countries-50m.json')).json();
+const paises=topojson.feature(topo,topo.objects.countries).features;
+const bordas=topojson.mesh(topo,topo.objects.countries,(a,b)=>a!==b);
+const BR=paises.find(p=>p.id==='076');
+const NS='http://www.w3.org/2000/svg', svg=document.getElementById('s');
+svg.setAttribute('width',W);svg.setAttribute('height',H);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+const el=(t,a,p=svg)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e;};
+const TEMA= estilo==='vox'
+ ? {fundo:'#f3ecdc',mar:'#dfe9ec',terra:'#e6dcc6',borda:'#b9ad94',br:'#ff5a36',brBorda:'#7a1d0b',arco:'#1b1b1b',pino:'#1b1b1b',txt:'#111',caixa:'#111',caixaTxt:'#fff',grade:'#c9d8dc',glow:0}
+ : {fundo:'#03060d',mar:'#050b16',terra:'#0d1a2e',borda:'#1f4a8a',br:'#ff2b3d',brBorda:'#ff8a95',arco:'#ff2b3d',pino:'#ffe14a',txt:'#fff',caixa:'#ff2b3d',caixaTxt:'#fff',grade:'#0c1a33',glow:1};
+// defs
+const defs=el('defs',{});
+defs.innerHTML=`<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${estilo==='vox'?0:9}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="papel"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 .4  0 0 0 0 .35  0 0 0 0 .25  0 0 0 .08 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+<radialGradient id="vin" cx="50%" cy="45%" r="75%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="${estilo==='vox'?.18:.75}"/></radialGradient>
+<pattern id="pontos" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.6" fill="#2f6fd6" opacity=".55"/></pattern>`;
+el('rect',{width:W,height:H,fill:TEMA.fundo});
+
+// projeção por cena
+let proj;
+const geo=(lon,lat)=>proj([lon,lat]);
+if(cena==='1'){ proj=d3.geoNaturalEarth1().rotate([30,0]).fitExtent([[-W*.35,H*.22],[W*1.35,H*.72]],{type:'Sphere'}); }
+else if(cena==='2'||cena==='3'){ proj=d3.geoMercator().fitExtent([[W*.08,H*.16],[W*.92,H*.66]],BR); }
+else if(cena==='4'){ proj=d3.geoOrthographic().rotate([52,14,0]).fitExtent([[W*.06,H*.15],[W*.94,H*.15+W*.88]],{type:'Sphere'}).clipAngle(90); }
+else if(cena==='5'){ proj=d3.geoNaturalEarth1().rotate([-20,0]).fitExtent([[40,150],[W-40,H-40]],{type:'Sphere'}); }
+const path=d3.geoPath(proj);
+// mar / grade
+el('path',{d:path({type:'Sphere'}),fill:TEMA.mar});
+el('path',{d:path(d3.geoGraticule10()),fill:'none',stroke:TEMA.grade,'stroke-width':1.2});
+// terra
+const gT=el('g',{});
+for(const p of paises){ if(p.id==='076')continue;
+  el('path',{d:path(p),fill:estilo==='cyber'?'url(#pontos)':TEMA.terra,stroke:TEMA.borda,'stroke-width':estilo==='vox'?1.2:1.4,'stroke-linejoin':'round'},gT);}
+if(estilo==='vox') el('path',{d:path({type:'Sphere'}),fill:'#000',filter:'url(#papel)'});
+// brasil
+el('path',{d:path(BR),fill:TEMA.br,opacity:estilo==='cyber'?.85:1,stroke:TEMA.brBorda,'stroke-width':4,filter:'url(#glow)'});
+if(estilo==='cyber') el('path',{d:path(BR),fill:'none',stroke:'#ffd0d4','stroke-width':2.5});
+
+// helpers de rota, pino, rótulo
+const alvo=[-47.9,-15.8]; // Brasília
+function rota(de,cor=TEMA.arco,larg=5){
+  const lin=d3.geoInterpolate(de,alvo); const pts=d3.range(0,1.001,.02).map(lin).map(c=>geo(...c)).filter(Boolean);
+  // arco "levantado" em tela (estilo Vox)
+  const a=pts[0],b=pts[pts.length-1]; const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2 - Math.hypot(b[0]-a[0],b[1]-a[1])*.28;
+  const d=`M${a[0]} ${a[1]} Q${mx} ${my} ${b[0]} ${b[1]}`;
+  el('path',{d,fill:'none',stroke:cor,'stroke-width':larg,'stroke-linecap':'round','stroke-dasharray':estilo==='vox'?'14 10':'none',filter:'url(#glow)',opacity:.95});
+  el('circle',{cx:a[0],cy:a[1],r:larg*2,fill:cor,filter:'url(#glow)'});
+  return [mx,my];
+}
+function pino(lon,lat,nome,lado=1,r=16){
+  const [x,y]=geo(lon,lat);
+  el('circle',{cx:x,cy:y,r:r*2.6,fill:'none',stroke:TEMA.pino,'stroke-width':4,opacity:.45});
+  el('circle',{cx:x,cy:y,r:r*1.6,fill:'none',stroke:TEMA.pino,'stroke-width':5,opacity:.8});
+  el('circle',{cx:x,cy:y,r:r,fill:TEMA.pino,stroke:estilo==='vox'?'#fff':'#000','stroke-width':4,filter:'url(#glow)'});
+  if(nome) rotulo(x+lado*(r*2.8),y,nome,lado<0?'end':'start',34);
+}
+function rotulo(x,y,txt,anc='start',tam=40){
+  const t=el('text',{x,y:y+tam*.35,'font-family':'Archivo','font-size':tam,fill:TEMA.caixaTxt,'text-anchor':anc});t.textContent=txt;
+  const bb=t.getBBox(); const pad=tam*.32;
+  const r=el('rect',{x:bb.x-pad,y:bb.y-pad*.6,width:bb.width+pad*2,height:bb.height+pad*1.2,rx:estilo==='vox'?2:10,fill:TEMA.caixa});
+  svg.insertBefore(r,t);
+}
+function titulo(l1,l2){
+  const a=el('text',{x:W/2,y:H*.085,'font-family':'Anton','font-size':W*.1,fill:TEMA.txt,'text-anchor':'middle','paint-order':'stroke',stroke:estilo==='vox'?'#f3ecdc':'#000','stroke-width':10});a.textContent=l1;
+  if(l2){const b=el('text',{x:W/2,y:H*.085+W*.1,'font-family':'Anton','font-size':W*.1,fill:estilo==='vox'?'#ff5a36':'#ff2b3d','text-anchor':'middle','paint-order':'stroke',stroke:estilo==='vox'?'#f3ecdc':'#000','stroke-width':10});b.textContent=l2;}
+}
+function legenda(txt,cor){const t=el('text',{x:W/2,y:H*.8,'font-family':'Anton','font-size':W*.11,fill:cor||'#fff','text-anchor':'middle','paint-order':'stroke',stroke:'#000','stroke-width':14});t.textContent=txt;}
+
+if(cena==='1'){
+  for(const de of [[116.4,39.9],[37.6,55.7],[125.7,39.0],[51.4,35.7],[-77,38.9],[28.9,41],[2.3,48.8]]) rota(de);
+  pino(...alvo,'BRASIL',1,18);
+  titulo('ATAQUES','EM TEMPO REAL');
+  legenda('DE ONDE VÊM?');
+}
+if(cena==='2'||cena==='3'){
+  pino(-46.63,-23.55,'SÃO PAULO',-1);
+  pino(-43.2,-22.9,'RIO',1);
+  pino(-47.9,-15.8,'BRASÍLIA',-1);
+  pino(-38.5,-12.97,'SALVADOR',-1,12);
+  pino(-60.0,-3.1,'MANAUS',-1,12);
+  const [x,y]=geo(-46.63,-23.55);
+  rotulo(W*.5,H*.7,'70% DA REDE FORA DO AR','middle',46);
+  titulo('MINUTO 10',estilo==='vox'?'O PAÍS DESCONECTA':'APAGÃO DIGITAL');
+}
+if(cena==='4'){
+  for(const de of [[116.4,39.9],[37.6,55.7],[-77,38.9],[2.3,48.8],[-0.1,51.5]]) rota(de,TEMA.arco,6);
+  pino(...alvo,null,0,20);
+  titulo('ALVO:','BRASIL');
+  legenda('PRIMEIRA HORA','#ffe14a');
+}
+if(cena==='5'){
+  for(const de of [[116.4,39.9],[37.6,55.7],[125.7,39.0],[51.4,35.7],[-77,38.9]]) rota(de,TEMA.arco,6);
+  pino(...alvo,'BRASIL',1,18);
+  const t=el('text',{x:60,y:110,'font-family':'Anton','font-size':86,fill:TEMA.txt});t.textContent='O MAPA DO ATAQUE';
+}
+el('rect',{width:W,height:H,fill:'url(#vin)'});
+window.pronto=true;
+})();
+</script></body></html>
