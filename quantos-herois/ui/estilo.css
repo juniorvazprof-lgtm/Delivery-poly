@@ -1367,3 +1367,10 @@ box-shadow:var(--sombra-alta);
 .bau.bau-3d{position:relative;width:min(46vh,300px);height:min(40vh,260px);background:none;box-shadow:none;border:0}
 .bau.bau-3d::before,.bau.bau-3d::after{display:none}
 @media (max-height:420px){.bau.bau-3d{position:absolute;width:min(46vh,190px);height:min(40vh,150px);opacity:1}}
+
+/* retratos chibi 3D no lugar dos emojis */
+.com-retrato{display:inline-flex;align-items:center;gap:.3em;min-width:0}
+.com-retrato .retrato{width:1.9em;height:1.9em;object-fit:contain;flex:none;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25));margin:-.35em 0}
+/* desafio do dia: caixa de resultado para copiar */
+.caixa-diario{display:flex;flex-direction:column;align-items:center;gap:.4rem;background:var(--pergaminho);color:var(--tinta);border:3px solid var(--tinta);border-radius:14px;padding:.5rem .8rem}
+.caixa-diario pre{margin:0;font:700 .85rem/1.3 system-ui;white-space:pre-wrap;text-align:center}

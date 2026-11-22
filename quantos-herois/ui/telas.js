@@ -1,8 +1,17 @@
+import { retrato } from '../render/modelos3d.js';
 import { HEROIS } from '../data/herois.js';
 import { HEROIS_EVOLUIDOS } from '../data/evolucoes.js';
 
 const EMOJI_INIMIGO = { goblin:'👺', slime:'🟢', slimeMedio:'🟢', slimePequeno:'🟢', reiSlime:'👑' };
 const NOME_INIMIGO = { goblin:'Goblin', slime:'Slime', slimeMedio:'Slime Médio', slimePequeno:'Slime Pequeno', reiSlime:'Rei Slime' };
+function comRetrato(classe, texto, emojiPadrao = '🛡️'){
+  let url = null; try { url = retrato(classe, 96); } catch (e) {}
+  const span = el('span', { class:'com-retrato' });
+  if (url) span.appendChild(el('img', { class:'retrato', src:url, alt:'' }));
+  else span.appendChild(document.createTextNode((EMOJI_CLASSE[classe] || emojiPadrao) + ' '));
+  span.appendChild(document.createTextNode(texto));
+  return span;
+}
 const EMOJI_CLASSE = {
   guerreiro:'⚔️', guardiao:'🛡️', piromante:'🔥', arqueiro:'🏹', clerigo:'✨',
   magoTornado:'🌪️', campeao:'🗡️', paladino:'⚜️', atirador:'🎯', sumoSacerdote:'☀️'
@@ -85,7 +94,7 @@ function ilustracaoHerois(){
 </svg>` });
 }
 
-export function telaMenu(app, { temRun, aoNova, aoContinuar, aoComoJogar, aoRecordes }){
+export function telaMenu(app, { temRun, aoNova, aoContinuar, aoComoJogar, aoRecordes, aoDiario, diarioInfo, aoConquistas }){
   limpar(app);
   const tela = el('div', { class:'tela' });
   const grid = el('div', { class:'menu-inicial' });
@@ -96,7 +105,9 @@ export function telaMenu(app, { temRun, aoNova, aoContinuar, aoComoJogar, aoReco
   botoes.appendChild(el('button', { class:'grande principal', onclick: aoNova }, 'Nova jornada'));
   if (temRun) botoes.appendChild(el('button', { class:'grande secundario', onclick: aoContinuar }, 'Continuar'));
   botoes.appendChild(el('button', { class:'secundario', onclick: aoComoJogar }, 'Como jogar'));
+  if (aoDiario) botoes.appendChild(el('button', { class:'grande arcano', onclick: aoDiario }, `📅 Desafio do dia${diarioInfo ? ' · ' + diarioInfo : ''}`));
   botoes.appendChild(el('button', { class:'secundario', onclick: aoRecordes }, 'Melhores jornadas'));
+  if (aoConquistas) botoes.appendChild(el('button', { class:'secundario', onclick: aoConquistas }, '🏅 Conquistas'));
   esq.appendChild(botoes);
   grid.appendChild(esq);
   const dir = el('div', { class:'menu-dir' });
@@ -163,7 +174,7 @@ export function telaTime(app, { run, opcao, disponiveis, estrelasCalc, custoSold
     enviados[classe] = 0;
     const linha = el('div', { class:'linha-classe' });
     const infoDiv = el('div', { class:'info' });
-    infoDiv.appendChild(el('div', { class:'nome' }, `${EMOJI_CLASSE[classe] || '🛡️'} ${info.nome}`));
+    { const n = el('div', { class:'nome' }); n.appendChild(comRetrato(classe, info.nome)); infoDiv.appendChild(n); }
     const disp = el('div', { class:'disp' });
     disp.appendChild(document.createTextNode(`${info.disponiveis}/${info.total}`));
     if (info.desmaiados && info.desmaiados.length){
@@ -341,6 +352,7 @@ export function telaBatalha(app, { run, cfg, aoFim, aoConsumivel, aoSair }){
     iniciarVisual(criarVisualFn, b){
       visual = criarVisualFn(canvas, b, {
         velocidade,
+        rodada: run && run.rodada,
         aoFim: (res) => aoFim(res),
         aoMoeda: (valor) => {
           poteAcumulado += valor;
@@ -394,7 +406,7 @@ export function telaBatalha(app, { run, cfg, aoFim, aoConsumivel, aoSair }){
       const info = porClasse[classe];
       const linha = el('div', { class:'hud-linha-classe' });
       const topo = el('div', { class:'topo' });
-      topo.appendChild(el('span', { class:'nome' }, `${EMOJI_CLASSE[classe] || '🛡️'} ${nomeClasse(classe)}`));
+      { const n = el('span', { class:'nome' }); n.appendChild(comRetrato(classe, nomeClasse(classe))); topo.appendChild(n); }
       topo.appendChild(el('span', null, `${info.vivos}/${info.total}`));
       linha.appendChild(topo);
       const barras = el('div', { class:'hud-mini-barras' });
@@ -649,7 +661,7 @@ export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, cons
     const info = classes[classe];
     const preco = precos[classe];
     const c = el('div', { class:'carta-heroi' });
-    c.appendChild(el('h4', null, `${EMOJI_CLASSE[classe] || '🛡️'} ${info.nome}`));
+    { const h = el('h4'); h.appendChild(comRetrato(classe, info.nome)); c.appendChild(h); }
     const atr = el('div', { class:'atributos' });
     atr.appendChild(el('span', null, `❤ ${info.pv}`));
     atr.appendChild(el('span', null, `⚔ ${info.dano}`));
@@ -763,7 +775,7 @@ export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, cons
     const lista = el('div', { class:'lista-enfermaria' });
     for (const d of run.desmaiados){
       const linha = el('div', { class:'linha-enfermaria' });
-      linha.appendChild(el('span', { class:'nome' }, `${EMOJI_CLASSE[d.classe] || '🛡️'} ${nomeClasse(d.classe)}`));
+      { const n = el('span', { class:'nome' }); n.appendChild(comRetrato(d.classe, nomeClasse(d.classe))); linha.appendChild(n); }
       linha.appendChild(el('span', { class:'volta' }, `💤 volta na rodada ${d.volta}`));
       if ((run.inventario.pocaoRessurreicao || 0) > 0){
         linha.appendChild(el('button', { class:'arcano', onclick: () => aoUsarPocao(d.classe) }, `Poção (${run.inventario.pocaoRessurreicao})`));
@@ -798,12 +810,13 @@ export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, cons
   trocarAba(abaAtiva);
 }
 
-export function telaFim(app, { run, pontuacao, recordes, aoNova, aoMenu }){
+export function telaFim(app, { run, pontuacao, recordes, aoNova, aoMenu, extra }){
   limpar(app);
   const tela = el('div', { class:'tela' });
   const cont = el('div', { class:'fim-jornada' });
   const vitoria = run.fim === 'vitoria';
   cont.appendChild(el('h1', { class:'titulo-contorno' }, vitoria ? 'Jornada Completa!' : 'Fim da Jornada'));
+  if (extra) cont.appendChild(extra);
   cont.appendChild(el('div', { class:'subtitulo', style:'color:var(--pergaminho);font-family:var(--fonte-titulo);font-size:1.3rem;' }, `Rodada alcançada: ${Math.min(run.rodada, 10)}/10`));
   cont.appendChild(el('div', { class:'pontuacao-grande' }, `${pontuacao} pts`));
 
@@ -887,6 +900,17 @@ export function modalComoJogar(app, { aoFechar }){
     btnProx.textContent = pagina === paginas.length - 1 ? 'Entendi!' : 'Próximo';
   }
   render();
+}
+
+export function modalConteudo(app, { titulo, conteudo, aoFechar = () => {} }){
+  const fundo = el('div', { class:'modal-fundo' });
+  const modal = el('div', { class:'modal' });
+  const topo = el('div', { class:'modal-topo' });
+  topo.appendChild(el('h2', null, titulo));
+  topo.appendChild(el('button', { class:'icone secundario', onclick: () => { fundo.remove(); aoFechar(); } }, '✕'));
+  modal.appendChild(topo);
+  const corpo = el('div', { class:'modal-corpo' }); corpo.appendChild(conteudo); modal.appendChild(corpo);
+  fundo.appendChild(modal); app.appendChild(fundo);
 }
 
 export function modalRecordes(app, { recordes, aoFechar }){

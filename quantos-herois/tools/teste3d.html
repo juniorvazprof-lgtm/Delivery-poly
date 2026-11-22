@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000}canvas{width:100vw;height:100vh;display:block}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script></head>
+<body><canvas id="c"></canvas><script type="module">
+// Ferramenta de teste: ?rodada=N&ex=evo mostra uma batalha 3D isolada (para prints e ajustes de câmera)
+import { criarBatalha } from '../core/combate.js';
+import { criarVisual } from '../render/batalha3d.js';
+const q=new URLSearchParams(location.search), rod=+(q.get('rodada')||1);
+const herois=q.get('ex')==='evo'?{campeao:2,paladino:1,magoTornado:1,atirador:1,sumoSacerdote:1}:{guerreiro:3,guardiao:2,piromante:2,arqueiro:2,clerigo:1};
+const b=criarBatalha({herois,inimigos:[['goblin',8],['goblinArqueiro',3],['slime',2],['morcego',4],['ogro',1]],semente:7});
+const v=criarVisual(document.getElementById('c'),b,{rodada:rod,aoFim:()=>{window.fim=true}});v.iniciar();window.v=v;window.b=b;window.pronto=true;
+</script></body></html>

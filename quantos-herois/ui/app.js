@@ -8,7 +8,8 @@ import { RELIQUIAS } from '../data/reliquias.js';
 import { CONSUMIVEIS } from '../data/consumiveis.js';
 import { RODADAS, ECONOMIA } from '../data/rodadas.js';
 import { criarBatalha, resumo, usarTonico, usarMeteoro, DT } from '../core/combate.js';
-import { criarVisual } from '../render/batalha3d.js'; // visual 3D chibi (o 2D continua em render/batalha.js)
+import { criarVisual } from '../render/batalha3d.js';
+import { avaliar, mostrarToast, painelConquistas } from './conquistas.js'; // visual 3D chibi (o 2D continua em render/batalha.js)
 import {
   criarRun, opcoesDaRodada, disponiveis, precoHeroi, recrutar,
   comprarConsumivel, comprarReliquiaLoja, usarPocao, usarBandagem, usarTrombeta, compradoNestaRodada,
@@ -18,7 +19,7 @@ import {
 } from '../core/run.js';
 import {
   telaMenu, telaDesafio, telaTime, telaBatalha, telaResultado,
-  telaBau, telaAcampamento, telaFim, modalComoJogar, modalRecordes
+  telaBau, telaAcampamento, telaFim, modalComoJogar, modalRecordes, modalConteudo
 } from './telas.js';
 
 const CHAVE_RUN = 'qh_run';
@@ -82,13 +83,24 @@ function irMenu(){
     aoNova: () => { run = null; salvarRun(); iniciarNovaJornada(); },
     aoContinuar: () => { const r = carregarRun(); if (r){ run = r; rotear(); } },
     aoComoJogar: () => modalComoJogar(app, { aoFechar: () => {} }),
-    aoRecordes: () => modalRecordes(app, { recordes: lerRecordes(), aoFechar: () => {} })
+    aoRecordes: () => modalRecordes(app, { recordes: lerRecordes(), aoFechar: () => {} }),
+    aoDiario: () => { run = null; iniciarNovaJornada(true); },
+    diarioInfo: (() => { const m = melhorDiario(); return m ? `recorde hoje ${m} pts` : ''; })(),
+    aoConquistas: () => modalConteudo(app, { titulo: 'Conquistas', conteudo: painelConquistas(app) })
   });
 }
 
-function iniciarNovaJornada(){
-  const semente = Math.floor(Math.random() * 1e9);
+// Desafio do dia: mesma semente para todos os jogadores no mesmo dia
+function hojeStr(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function sementeDoDia(){ let h = 2166136261; for (const ch of 'qh-' + hojeStr()) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return Math.abs(h) % 1e9; }
+function melhorDiario(){ try { const o = JSON.parse(localStorage.getItem('qh_diario') || '{}'); return o[hojeStr()] || 0; } catch (e) { return 0; } }
+function gravarDiario(pts){ try { const o = JSON.parse(localStorage.getItem('qh_diario') || '{}'); o[hojeStr()] = Math.max(o[hojeStr()] || 0, pts); localStorage.setItem('qh_diario', JSON.stringify(o)); } catch (e) {} }
+function avisar(evento, dados){ for (const c of avaliar(evento, dados)) mostrarToast(app, c); }
+
+function iniciarNovaJornada(diario = false){
+  const semente = diario ? sementeDoDia() : Math.floor(Math.random() * 1e9);
   run = criarRun({ semente, ideais });
+  if (diario) run.diario = hojeStr();
   salvarRun();
   irDesafio();
 }
@@ -163,6 +175,7 @@ function finalizarBatalha(res){
   destruirVisual();
   const relatorio = concluirBatalha(run, opcaoAtual, enviadosAtual, res);
   salvarRun();
+  avisar('batalha', { relatorio, enviados: enviadosAtual, run });
   telaResultado(app, {
     relatorio,
     aoContinuar: () => {
@@ -181,7 +194,7 @@ function irBau(){
     : { tipo: 'melhoria', nome: MELHORIAS[op.id].nome, icone: MELHORIAS[op.id].icone, desc: MELHORIAS[op.id].desc, raridade: MELHORIAS[op.id].raridade });
   telaBau(app, {
     opcoes,
-    aoEscolher: (i) => { escolherBau(run, i); salvarRun(); irAcampamento(); },
+    aoEscolher: (i) => { escolherBau(run, i); avisar('bau', { run }); salvarRun(); irAcampamento(); },
     aoPular: () => { pularBau(run); salvarRun(); irAcampamento(); }
   });
 }
@@ -204,13 +217,13 @@ function irAcampamento(){
     passivasInfo: PASSIVAS,
     evolucoes: opcoesEvolucao(run),
     aoComprarPassiva: (id) => { comprarPassiva(run, id); salvarRun(); irAcampamento(); },
-    aoEvoluir: (classe) => { evoluir(run, classe); salvarRun(); irAcampamento(); },
+    aoEvoluir: (classe) => { if (evoluir(run, classe)) avisar('evoluir', { run }); salvarRun(); irAcampamento(); },
     aoRecrutar: (classe) => { recrutar(run, classe); salvarRun(); irAcampamento(); },
     aoComprarConsumivel: (id) => { comprarConsumivel(run, id); salvarRun(); irAcampamento(); },
     aoComprarReliquia: (id) => { comprarReliquiaLoja(run, id); salvarRun(); irAcampamento(); },
     aoUsarPocao: (classe) => { usarPocao(run, classe); salvarRun(); irAcampamento(); },
     aoUsarBandagem: (classe) => { usarBandagem(run, classe); salvarRun(); irAcampamento(); },
-    aoUsarTrombeta: () => { usarTrombeta(run); salvarRun(); irAcampamento(); },
+    aoUsarTrombeta: () => { if (usarTrombeta(run)) avisar('trombeta', { run }); salvarRun(); irAcampamento(); },
     esgotadoRodada: (id) => compradoNestaRodada(run, id),
     aoSeguir: () => { salvarRun(); irDesafio(); }
   });
@@ -220,13 +233,25 @@ function irFim(){
   if (!run) return irMenu();
   const pts = pontuacao(run);
   const recordes = gravarRecorde({ pontuacao: pts, rodada: run.rodada, data: Date.now() });
+  avisar('fimJornada', { run, vitoriaFinal: run.fim === 'vitoria', diario: !!run.diario });
+  let extra = null;
+  if (run.diario){
+    gravarDiario(pts);
+    const texto = `Quantos Heróis? · Desafio ${run.diario}\n🏆 ${pts} pts · rodada ${Math.min(run.rodada, 10)}/10\n${(run.historico || []).map(h => h.vitoria ? '⭐'.repeat(Math.max(1, h.estrelas || 1)) : '💀').join(' ')}`;
+    extra = document.createElement('div'); extra.className = 'caixa-diario';
+    const pre = document.createElement('pre'); pre.textContent = texto; extra.appendChild(pre);
+    const bt = document.createElement('button'); bt.className = 'principal'; bt.textContent = 'Copiar resultado';
+    bt.onclick = () => { navigator.clipboard?.writeText(texto).then(() => { bt.textContent = 'Copiado!'; }).catch(() => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); bt.textContent = 'Selecionado: copie'; }); };
+    extra.appendChild(bt);
+  }
   try { localStorage.removeItem(CHAVE_RUN); } catch (e) {}
   telaFim(app, {
     run,
     pontuacao: pts,
     recordes,
     aoNova: () => { run = null; iniciarNovaJornada(); },
-    aoMenu: () => { run = null; irMenu(); }
+    aoMenu: () => { run = null; irMenu(); },
+    extra
   });
 }
 
