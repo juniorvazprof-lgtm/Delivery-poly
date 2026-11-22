@@ -1,0 +1,22 @@
+{
+ "ciclo": 1,
+ "veredito": "revisar",
+ "resultados_verificados": [
+  "Sanidade em ruído branco: completude 100% em SNR alto, cai com SNR, 0 falsos positivos (sanidade_saida.json).",
+  "Ruído ponto a ponto TGLC: log10(rms) = 0.344*T - 7.095 (600 curvas reais, setor 1).",
+  "Dados reais T=10-16: sinais de 10-50 ppt são recuperados em >=87% até T=16; para 2-10 ppt a completude cai a 50% em T50≈15.1.",
+  "Para T<15 e A<2 ppt a completude fica em 15-21% mesmo com ruído branco baixo: o limite é imposto por sistemáticas/variabilidade intrínseca, não pelo ruído de fótons.",
+  "O FAP de Baluev (<1%) marca 60-100% das estrelas-controle reais como periódicas, com picos em 5-10 d: inutilizável como critério de detecção em TGLC sem calibração empírica."
+ ],
+ "criticas": [
+  "T>16 é SIMULADO (ruído branco adicionado a curvas reais de T 15-16); o TGLC público para em T=16. A afirmação central da fonte (queda em T≳17) NÃO foi testada em dados reais.",
+  "Controle contaminado por variáveis reais (amostra aleatória); é preciso excluir variáveis conhecidas (Gaia DR3 vari_summary) para medir a taxa real de falso positivo.",
+  "Um único setor (S1), cadência de 30 min; resultados podem mudar em setores com cadência de 200 s e em campos lotados.",
+  "Falta uma variante com remoção de tendência (detrending) para separar o efeito das sistemáticas do efeito das variáveis intrínsecas."
+ ],
+ "proximo_ciclo": [
+  "Gerar curvas reais para T=16-18 rodando o pacote tglc sobre recortes de FFI (TESScut em mast.stsci.edu).",
+  "Limpar o controle com Gaia DR3 (requer liberar gea.esac.esa.int) e calibrar um limiar empírico de potência por faixa de T.",
+  "Repetir em 1 setor de 200 s (setor ≥56)."
+ ]
+}
