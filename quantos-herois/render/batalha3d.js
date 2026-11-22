@@ -3,7 +3,8 @@ import { passo, DT } from '../core/combate.js';
 import { VILOES } from '../data/viloes.js';
 import { ECONOMIA } from '../data/rodadas.js';
 
-const CAMERA = { altura: 8, distancia: 17, alvoY: .8 };
+// Câmera isométrica (ortográfica): azimute 45°, elevação ~35°; zoom automático pelo espalhamento da luta.
+const CAMERA = { azimute: 45, elevacao: 35.3, distancia: 30, zoomMin: 6.5, zoomMax: 13, folga: 3 };
 const ESC = 0.2;
 const PELE = '#ffd7b0';
 
@@ -128,8 +129,8 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
 
   const cena = new THREE.Scene();
   cena.background = new THREE.Color('#8fd0f0');
-  cena.fog = new THREE.Fog('#8fd0f0', 22, 48);
-  const cam = new THREE.PerspectiveCamera(38, 1, .1, 200);
+  cena.fog = new THREE.Fog('#8fd0f0', 38, 70);
+  const cam = new THREE.OrthographicCamera(-10, 10, 6, -6, -60, 200); let aspecto = 16 / 9, meiaAlt = 8;
 
   cena.add(new THREE.HemisphereLight('#fff6e0', '#4a7a3a', 1.6));
   const sol = new THREE.DirectionalLight('#fff1d0', 2.6);
@@ -187,8 +188,7 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     const w = canvas.clientWidth || canvas.width || 1;
     const h = canvas.clientHeight || canvas.height || 1;
     renderer.setSize(w, h, false);
-    cam.aspect = w / h;
-    cam.updateProjectionMatrix();
+    aspecto = w / Math.max(1, h);
   }
 
   let ro = null;
@@ -479,15 +479,18 @@ export function criarVisual(canvas, batalha, opcoes = {}) {
     const vivosU = batalha.unidades.filter(u => !u.morto && !(u.atraso > 0 && batalha.t < u.atraso));
     const c = vivosU.length ? media(vivosU) : { x: eixo.cx, y: eixo.cy };
     foco.lerp(mundo(c.x, c.y), Math.min(1, dtR * 1.5));
-    const ret = (canvas.clientWidth / Math.max(1, canvas.clientHeight)) < 1.2 ? 1.5 : 1;
+    // zoom: cabe todo mundo vivo (com folga), suavizado
+    let esp = 0;
+    for (const u of vivosU) { const w = mundo(u.x, u.y); esp = Math.max(esp, Math.abs(w.x - foco.x), Math.abs(w.z - foco.z) * 1.6); }
+    const alvoMeia = Math.min(CAMERA.zoomMax, Math.max(CAMERA.zoomMin, esp * .62 + CAMERA.folga));
+    meiaAlt += (alvoMeia - meiaAlt) * Math.min(1, dtR * 1.2);
+    const mw = meiaAlt * Math.max(aspecto, .8);
+    cam.left = -mw; cam.right = mw; cam.top = meiaAlt; cam.bottom = -meiaAlt; cam.updateProjectionMatrix();
     let tx = 0, tz = 0;
-    if (tremor > 0) {
-      tremor -= dtR;
-      tx = (rnd() - .5) * tremor * 1.2;
-      tz = (rnd() - .5) * tremor * 1.2;
-    }
-    cam.position.set(foco.x - .5 + tx, CAMERA.altura * ret, foco.z + CAMERA.distancia * ret + tz);
-    cam.lookAt(foco.x, CAMERA.alvoY, foco.z - .5);
+    if (tremor > 0) { tremor -= dtR; tx = (rnd() - .5) * tremor * 1.2; tz = (rnd() - .5) * tremor * 1.2; }
+    const az = CAMERA.azimute * Math.PI / 180, el = CAMERA.elevacao * Math.PI / 180, d = CAMERA.distancia;
+    cam.position.set(foco.x + Math.sin(az) * Math.cos(el) * d + tx, Math.sin(el) * d, foco.z + Math.cos(az) * Math.cos(el) * d + tz);
+    cam.lookAt(foco.x + tx, 0, foco.z + tz);
   }
 
   function checarFim(dtR) {

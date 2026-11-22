@@ -1354,3 +1354,16 @@ box-shadow:var(--sombra-alta);
   .ganho-grande{font-size:clamp(1.5rem,5vw,2.2rem);}
   .estrelas-grandes{font-size:clamp(1.4rem,4.5vw,2rem);}
 }
+
+/* status da batalha no resultado (sempre visível) */
+.status-batalha{display:flex;flex-direction:column;gap:.35rem;width:min(100%,760px);max-height:42vh;min-height:0}
+.destaques-batalha{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center}
+.chip-destaque{background:var(--pergaminho);color:var(--tinta);border:2px solid var(--tinta);border-radius:999px;padding:.15rem .55rem;font-weight:800;font-size:.78rem;white-space:nowrap}
+.rolar-tabela{overflow:auto;min-height:0;border-radius:10px}
+.status-batalha .tabela-classe{width:100%;font-variant-numeric:tabular-nums}
+@media (max-height:420px){.chip-destaque{font-size:.62rem;padding:.05rem .4rem}.status-batalha{max-height:38vh}}
+
+/* baú 3D: o canvas ocupa a caixa do baú, maior que o CSS antigo */
+.bau.bau-3d{position:relative;width:min(46vh,300px);height:min(40vh,260px);background:none;box-shadow:none;border:0}
+.bau.bau-3d::before,.bau.bau-3d::after{display:none}
+@media (max-height:420px){.bau.bau-3d{position:absolute;width:min(46vh,190px);height:min(40vh,150px);opacity:1}}

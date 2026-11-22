@@ -460,7 +460,18 @@ export function telaResultado(app, { relatorio, aoContinuar }){
       tbody.appendChild(tr);
     }
     tabela.appendChild(tbody);
-    painelDetalhes.appendChild(tabela);
+    // destaques: quem mais se sobressaiu em cada estatística
+    const linhas = Object.entries(relatorio.porClasse);
+    const melhor = (campo) => linhas.reduce((m, [c, d]) => (d[campo] || 0) > (m ? m[1][campo] || 0 : 0) ? [c, d] : m, null);
+    const chips = el('div', { class:'destaques-batalha' });
+    for (const [campo, rotulo] of [['dano','⚔️ Mais dano'],['danoRecebido','🛡️ Mais apanhou'],['cura','✨ Mais cura'],['abates','💀 Mais abates'],['caidos','⚰️ Mais caídos']]){
+      const m = melhor(campo); if (!m || !(m[1][campo] > 0)) continue;
+      chips.appendChild(el('span', { class:'chip-destaque' }, `${rotulo}: ${EMOJI_CLASSE[m[0]] || ''} ${nomeClasse(m[0])} (${Math.round(m[1][campo])})`));
+    }
+    const caixa = el('div', { class:'status-batalha' });
+    caixa.appendChild(chips);
+    const rolar = el('div', { class:'rolar-tabela' }); rolar.appendChild(tabela); caixa.appendChild(rolar);
+    cont.appendChild(caixa);
   }
   cont.appendChild(painelDetalhes);
 
@@ -495,7 +506,10 @@ export function telaResultado(app, { relatorio, aoContinuar }){
   }
 }
 
-export function telaBau(app, { opcoes, aoEscolher, aoPular }){
+export function telaBau(app, { opcoes, aoEscolher: escolherOrig, aoPular: pularOrig }){
+  let bau3d = null;
+  const aoEscolher = (i) => { if (bau3d) bau3d.destruir(); escolherOrig(i); };
+  const aoPular = () => { if (bau3d) bau3d.destruir(); pularOrig(); };
   limpar(app);
   const tela = el('div', { class:'tela tela-bau' });
   const cont = el('div', { class:'bau-tela' });
@@ -571,17 +585,19 @@ export function telaBau(app, { opcoes, aoEscolher, aoPular }){
   }
 
   // Sequência: treme 3x → abre tampa → raios → cartas voam e viram
-  bau.classList.add('tremendo');
-  setTimeout(() => {
-    bau.classList.remove('tremendo');
-    bau.classList.add('aberto');
-    raios.classList.add('ativos');
-  }, 900);
-  setTimeout(() => {
-    cartasEl.forEach((c, i) => {
-      setTimeout(() => c.classList.add('revelada'), i * 180);
-    });
-  }, 1400);
+  // Baú 3D (ui/bau3d.js); se o WebGL falhar, cai na animação CSS antiga
+  const ordem = { comum: 0, rara: 1, epica: 2 };
+  const raridade = opcoes.reduce((m, o) => (ordem[o.raridade] || 0) > (ordem[m] || 0) ? o.raridade : m, 'comum');
+  const revelar = () => cartasEl.forEach((c, i) => setTimeout(() => c.classList.add('revelada'), i * 180));
+  import('./bau3d.js').then(({ criarBau3d }) => {
+    bau.classList.add('bau-3d'); bau.textContent = '';
+    bau3d = criarBau3d(bau, { raridade });
+    setTimeout(() => bau3d.abrir().then(() => { raios.classList.add('ativos'); revelar(); }), 350);
+  }).catch(() => {
+    bau.classList.add('tremendo');
+    setTimeout(() => { bau.classList.remove('tremendo'); bau.classList.add('aberto'); raios.classList.add('ativos'); }, 900);
+    setTimeout(revelar, 1400);
+  });
 }
 
 export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, consumiveisInfo, passivasInfo, evolucoes, aoRecrutar, aoComprarConsumivel, aoComprarReliquia, aoComprarPassiva, aoEvoluir, aoUsarPocao, aoUsarBandagem, aoUsarTrombeta, esgotadoRodada, aoSeguir }){
