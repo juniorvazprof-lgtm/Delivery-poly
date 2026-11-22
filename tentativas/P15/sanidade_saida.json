@@ -1,0 +1,50 @@
+{
+ "sigma=0.001 A=[0.0005,0.002)": {
+  "n": 62,
+  "completude": 1.0,
+  "SNR_med": 2965.2
+ },
+ "sigma=0.001 A=[0.002,0.01)": {
+  "n": 71,
+  "completude": 1.0,
+  "SNR_med": 62837.4
+ },
+ "sigma=0.001 A=[0.01,0.05)": {
+  "n": 67,
+  "completude": 1.0,
+  "SNR_med": 1935479.3
+ },
+ "sigma=0.001 FPR": 0.0,
+ "sigma=0.01 A=[0.0005,0.002)": {
+  "n": 70,
+  "completude": 0.9,
+  "SNR_med": 27.6
+ },
+ "sigma=0.01 A=[0.002,0.01)": {
+  "n": 65,
+  "completude": 1.0,
+  "SNR_med": 601.3
+ },
+ "sigma=0.01 A=[0.01,0.05)": {
+  "n": 65,
+  "completude": 1.0,
+  "SNR_med": 9416.3
+ },
+ "sigma=0.01 FPR": 0.0,
+ "sigma=0.1 A=[0.0005,0.002)": {
+  "n": 53,
+  "completude": 0.0,
+  "SNR_med": 0.3
+ },
+ "sigma=0.1 A=[0.002,0.01)": {
+  "n": 63,
+  "completude": 0.333,
+  "SNR_med": 5.9
+ },
+ "sigma=0.1 A=[0.01,0.05)": {
+  "n": 84,
+  "completude": 1.0,
+  "SNR_med": 164.6
+ },
+ "sigma=0.1 FPR": 0.0
+}

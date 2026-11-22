@@ -1,0 +1,1 @@
+- **Falha 1 (sanidade):** completude ~91–94% em SNR altíssimo. Causa: P injetado perto de 13 d = borda da grade (1/13 d⁻¹) e tolerância fixa de 1% mais estreita que a resolução 1/T para P longos. Correção: grade até 20 d e critério |Δf| < 1/T.
