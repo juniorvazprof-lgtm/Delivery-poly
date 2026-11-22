@@ -1,0 +1,496 @@
+{
+ "artigos": 102,
+ "tokens": 41920,
+ "problemas": [
+  {
+   "id": "2412.06175",
+   "problema": "A pureza da classe de estrelas variáveis rotacionais (ROT) é relativamente baixa, indicando contaminação na classificação.",
+   "trecho": "The purity of ROT is relatively low at 83.3$\\%$.",
+   "titulo": "Classification of Periodic Variable Stars from TESS",
+   "ano": 2024
+  },
+  {
+   "id": "2406.12578",
+   "problema": "Há discordâncias intrigantes na classificação entre catálogos, e a classificação da variabilidade estelar é complexa, exigindo cautela no uso de classificações de catálogos.",
+   "trecho": "This comparison reveals intriguing disagreements in classification ranging from 52 % to 100 %.",
+   "titulo": "Periodic variable A-F spectral type stars in the southern TESS continuous viewing zone",
+   "ano": 2024
+  },
+  {
+   "id": "2405.02264",
+   "problema": "O projeto de validação e distinção de estrelas DSCT e GDOR com TESS ainda está em andamento e incompleto.",
+   "trecho": "(In Progress)",
+   "titulo": "Validating Gaia DR3 Pulsating Variable Classifications with TESS: Building Reliable $δ$ Scuti and $γ$ Doradus Stars Catalogs (In Progress)",
+   "ano": 2024
+  },
+  {
+   "id": "2604.12758",
+   "problema": "A pureza das amostras requer filtragem adicional por cor, luminosidade, frequência dominante e vizinhança, e o catálogo é disponibilizado para escrutínio futuro.",
+   "trecho": "To ensure purity of the samples, filtering on colour, luminosity, the dominant frequency and its amplitude, and presence of close neighbours is helpful.",
+   "titulo": "Variability classification of TESS targets in LOPS2, the first long-term pointing field of PLATO. Version 1 of the public variability catalogue",
+   "ano": 2026
+  },
+  {
+   "id": "2312.01140",
+   "problema": "Classificações espectrais errôneas ou duvidosas de estrelas Ap e o processamento de dados TESS que pode remover parte do sinal de variabilidade podem levar a identificações espúrias de candidatas a rotação super-lenta.",
+   "trecho": "two issues may lead to spurious identification of ssrAp star candidates.",
+   "titulo": "Long-period Ap stars discovered with TESS data: Cycles 3 and 4",
+   "ano": 2023
+  },
+  {
+   "id": "2510.24444",
+   "problema": "Uma das estrelas candidatas requer confirmação espectroscópica adicional para sua classificação.",
+   "trecho": "one (TIC 32302937) is a likely hot subluminous star, but it requires further spectroscopic confirmation.",
+   "titulo": "Pulsation Mode Identification and Classification of 46 High-Amplitude $δ$ Scuti Stars from 50 Candidates with TESS observations",
+   "ano": 2025
+  },
+  {
+   "id": "2605.24871",
+   "problema": "A origem da modulação de baixa frequência coerente observada no TESS em duas estrelas permanece incerta, e a interpretação da variabilidade de HD 73135 como rotação não pode excluir uma binária elipsoidal.",
+   "trecho": "an ellipsoidal-binary interpretation cannot yet be excluded ... display coherent low-frequency modulation in TESS of uncertain origin",
+   "titulo": "High-precision K2/TESS Photometry and HERMES Spectroscopy of Four Bright Field Stars",
+   "ano": 2026
+  },
+  {
+   "id": "2408.06097",
+   "problema": "O estudo apenas prepara o caminho para modelagem futura baseada nas frequências individuais dos modos identificados, ainda não realizada.",
+   "trecho": "Our study prepares for future detailed modelling based on individual frequencies of identified modes",
+   "titulo": "Mode identification and ensemble asteroseismology of 119 $β$ Cep stars detected by Gaia light curves and monitored by TESS",
+   "ano": 2024
+  },
+  {
+   "id": "2505.21843",
+   "problema": "A classificação de NSV 014 como variável eclipsante é duvidosa, podendo ser reclassificada como pulsante de baixa amplitude.",
+   "trecho": "it is doubtful that NSV 014 is an eclipsing variable ... can be re-classified as a low-amplitude pulsating one",
+   "titulo": "Determination of Light Curve Parameters of Poorly Studied Eclipsing Variables Using Data from Tess and Other Sky Surveys",
+   "ano": 2025
+  },
+  {
+   "id": "2405.01539",
+   "problema": "Os mecanismos de excitação dos modos para o grupo contínuo de pulsadores g-mode ao longo da sequência principal precisam ser atualizados com física aprimorada.",
+   "trecho": "implying that the mode excitation mechanisms for all these pulsators need to be updated with improved physics",
+   "titulo": "Confronting sparse Gaia DR3 photometry with TESS for a sample of around 60,000 OBAF-type pulsators",
+   "ano": 2024
+  },
+  {
+   "id": "2501.04082",
+   "problema": "Detalhes-chave da sincronização de marés, como escala de tempo, eficiência de dissipação, período rotacional e dependência da massa estelar, permanecem pouco restringidos.",
+   "trecho": "key details such as the timescale of synchronization, efficiency of tidal dissipation, rotational period, and dependence on stellar mass are not well constrained",
+   "titulo": "Tidal Synchronization of TESS Eclipsing Binaries",
+   "ano": 2025
+  },
+  {
+   "id": "2605.05324",
+   "problema": "A representação não foi otimizada para desempenho de classificação e não usa rótulos nem informação explícita de período, deixando em aberto a avaliação do seu valor para classificação/caracterização de variáveis.",
+   "trecho": "Our goal is not to optimize classification performance, but to construct a computationally efficient mapping",
+   "titulo": "A useful representation of TESS light curves",
+   "ano": 2026
+  },
+  {
+   "id": "2608.25019",
+   "problema": "Tarefas a jusante como classificação estelar ainda não foram exploradas com o EncoTESS, e a extensão a todas as cadências e a outras missões é trabalho futuro.",
+   "trecho": "other downstream tasks such as stellar classification could also be explored",
+   "titulo": "EncoTESS: Age-Sensitive Encodings from Raw TESS Light Curves",
+   "ano": 2026
+  },
+  {
+   "id": "2411.18609",
+   "problema": "A classificação de variáveis e CVs por clustering permanece parcial, com 152 objetos apenas candidatos a novas CVs que requerem confirmação.",
+   "trecho": "an additional 152 objects that we consider candidates for new CVs",
+   "titulo": "Variability in hot sub-luminous stars and binaries: Machine-learning analysis of Gaia DR3 multi-epoch photometry",
+   "ano": 2024
+  },
+  {
+   "id": "2508.04272",
+   "problema": "Períodos derivados de Gaia e TESS apresentam problemas como aliases de meio período que dificultam a caracterização orbital.",
+   "trecho": "we highlight issues such as half-period aliases",
+   "titulo": "MONOS: Multiplicity Of Northern O-type Spectroscopic systems. III. New orbits and Gaia TESS analysis for 10 SB2E systems",
+   "ano": 2025
+  },
+  {
+   "id": "2608.04712",
+   "problema": "A variabilidade não periódica do vento contamina a detecção de frequências e questiona a classificação da estrela como variável alpha Cyg.",
+   "trecho": "questioning its classification as alpha Cyg variable",
+   "titulo": "Characterization of the variability of the blue supergiant HD 14134",
+   "ano": 2026
+  },
+  {
+   "id": "2608.18172",
+   "problema": "A proveniência dos rótulos de treino é uma variável não reportada que altera drasticamente o desempenho de detectores de trânsitos, e o teto observacional limita a AUC por cadência.",
+   "trecho": "how its training labels were made",
+   "titulo": "Astro-Hunters: Machine Learning for Exoplanet Transit Detection in TESS Photometry",
+   "ano": 2026
+  },
+  {
+   "id": "2511.05761",
+   "problema": "A dinâmica orbital e a evolução estelar de sistemas triplos permanecem pouco compreendidas.",
+   "trecho": "their orbital dynamics and stellar evolution remain poorly understood",
+   "titulo": "The Triple System V1371 Tau: An Eclipsing Binary with an Outer Be Star",
+   "ano": 2025
+  },
+  {
+   "id": "2608.19419",
+   "problema": "Eventos de microlente de alto cadência contêm falsos positivos, incluindo variáveis de longo período, Mira, cataclísmicas e gigantes vermelhas, que precisam ser identificados.",
+   "trecho": "identified false positives including long-period variables, Mira variables, cataclysmic variables, red giants, and transients",
+   "titulo": "Microlensify: a Transformer Based Machine Learning Classifier for Microlensing Events Trained on TESS Light Curves",
+   "ano": 2026
+  },
+  {
+   "id": "2302.06700",
+   "problema": "A lista de candidatos contém muitos alarmes e falsos positivos que necessitam de triagem multifacetada.",
+   "trecho": "The list has many False Alarms and False Positives that need to be culled with multifaceted vetting operations (Paper II)",
+   "titulo": "DIAmante TESS AutoRegressive Planet Search (DTARPS): I. Analysis of 0.9 Million Light Curves",
+   "ano": 2023
+  },
+  {
+   "id": "2502.11758",
+   "problema": "Os catálogos publicados de binárias eclipsantes bem caracterizadas são insuficientes face à abundância de candidatos em Kepler e TESS.",
+   "trecho": "published catalogues of well-characterised systems fall short of reflecting this abundance",
+   "titulo": "EBOP MAVEN: A machine learning model for predicting eclipsing binary light curve fitting parameters",
+   "ano": 2025
+  },
+  {
+   "id": "2510.21465",
+   "problema": "É necessário melhorar a escalabilidade do processamento e caracterização de binárias eclipsantes destacadas em dados de Kepler e TESS.",
+   "trecho": "We aim to improve the scalability of efforts to process these data",
+   "titulo": "EBOP MAVEN: A machine learning model to estimate the input parameters for analytic fitting of detached eclipsing binary light curves",
+   "ano": 2025
+  },
+  {
+   "id": "2402.12369",
+   "problema": "É necessário minimizar o esforço humano de busca em milhões de curvas de luz TESS para identificar variáveis de curto período.",
+   "trecho": "minimizes the required human search effort",
+   "titulo": "Short-Period Variables in TESS Full-Frame Image Light Curves Identified via Convolutional Neural Networks",
+   "ano": 2024
+  },
+  {
+   "id": "2509.12411",
+   "problema": "O tamanho pequeno da amostra limita o sucesso da predição de parâmetros estelares de estrelas O a partir de curvas de luz TESS, exigindo conjuntos maiores de observações fotométricas e espectroscópicas combinadas.",
+   "trecho": "Further progress will require expanded datasets of matched photometric and spectroscopic observations.",
+   "titulo": "Predicting Stellar Parameters of Massive Stars from Light Curves with Machine Learning",
+   "ano": 2025
+  },
+  {
+   "id": "2409.02540",
+   "problema": "As incertezas nas frequências das distribuições de frequência de flares são afetadas pela incompletude de detecção de eventos de baixa amplitude.",
+   "trecho": "refining power-law slopes for flare behavior with the frequency uncertainties due to the detection incompleteness of low-amplitude events",
+   "titulo": "Scalable, Advanced Machine Learning-based Approaches for Stellar Flare Identification: Application to TESS short-cadence Data and Analysis of a New Flare Catalogue",
+   "ano": 2024
+  },
+  {
+   "id": "2307.05664",
+   "problema": "Sistemáticas da órbita de 13,7 dias do TESS impediram buscas de rotação estelar para períodos além de 13 dias, deixando a maioria das estrelas fora de alcance.",
+   "trecho": "light curve systematics related to the satellite's 13.7-day orbit have prevented stellar rotation searches for periods longer than 13 days, putting the majority of stars beyond reach",
+   "titulo": "TESS Stellar Rotation up to 80 days in the Southern Continuous Viewing Zone",
+   "ano": 2023
+  },
+  {
+   "id": "2605.08051",
+   "problema": "A recuperação de espaçamentos de períodos de modos de gravidade a partir de baselines curtos típicos de K2 permanece pouco explorada em escala de ensemble.",
+   "trecho": "Recovering DPi_1 from the much shorter (~80-day) baselines typical of K2 remains largely unexplored at the ensemble scale.",
+   "titulo": "Period spacings and global seismic parameters for K2 red giants using deep learning",
+   "ano": 2026
+  },
+  {
+   "id": "2512.15484",
+   "problema": "O modelo tem apenas capacidade moderada de distinguir flares eruptivos de confinados, e a fração intrínseca de associação CME-flare é incerta.",
+   "trecho": "This TSS value indicates that the model possesses a moderate ability to discriminate between eruptive and confined flares.",
+   "titulo": "A Machine-Learning Approach for Identifying CME-Associated Stellar Flares in TESS Observations",
+   "ano": 2025
+  },
+  {
+   "id": "2602.02701",
+   "problema": "O número de trânsitos de exocometas confirmados ainda é pequeno, sendo necessárias mais observações para confirmar sua presença em muitos sistemas planetários jovens.",
+   "trecho": "Although the number of confirmed exocomet transits is still small, the growing amount of observations points to their likely presence in many young planetary systems.",
+   "titulo": "Visual inspection of potential exocomet transits identified through machine learning and statistical methods",
+   "ano": 2026
+  },
+  {
+   "id": "2402.19075",
+   "problema": "Para curvas de luz com CDPP até 150 ppm, houve aumento significativo de curvas que não puderam ser classificadas com confiança.",
+   "trecho": "when applying machine learning to less accurate light curves (CDPP up to 150 ppm), we noticed a significant increase in curves that could not be confidently classified",
+   "titulo": "Hunting for exocomet transits in the TESS database using the Random Forest method",
+   "ano": 2024
+  },
+  {
+   "id": "2506.15989",
+   "problema": "Métodos de aprendizado de máquina usados em estudos históricos podem não determinar com precisão os parâmetros físicos de alvos individuais.",
+   "trecho": "the machine learning methods used in historical studies might not accurately determine the physical parameters for individual targets",
+   "titulo": "The investigation of 84 TESS totally eclipsing contact binaries",
+   "ano": 2025
+  },
+  {
+   "id": "2605.15606",
+   "problema": "São necessárias observações futuras, incluindo estudos espectroscópicos e multi-comprimento de onda, para caracterizar completamente os sistemas candidatos.",
+   "trecho": "Future observations, including further spectroscopic and multi-wavelength studies, are needed to fully characterize these systems.",
+   "titulo": "Searching for Spider-Like Pulsars from TESS Ellipsoidal Lightcurves with X-ray counterparts",
+   "ano": 2026
+  },
+  {
+   "id": "2402.16018",
+   "problema": "A contaminação por objetos próximos ou estrelas companheiras impede atribuir exclusivamente as flares detectadas às estrelas compactas, exigindo investigação adicional.",
+   "trecho": "all flaring compact stars showed signs of contamination from nearby objects or companion stars, preventing sole attribution of the detected flares",
+   "titulo": "Flares hunting in hot subdwarf and white dwarf stars from Cycles 1-5 of TESS photometry",
+   "ano": 2024
+  },
+  {
+   "id": "2602.01344",
+   "problema": "A classificação atual de estrelas δ Scuti em HADS/LADS baseada apenas na amplitude pode não capturar a complexidade dos mecanismos de pulsação, levando a possíveis erros de classificação.",
+   "trecho": "this classification may not fully capture the complexity of their pulsation mechanisms and non-linear effects, leading to possible misclassifications",
+   "titulo": "Machine learning for understanding pulsating stars I: the non-linear phenomenon in δ Scuti stars",
+   "ano": 2026
+  },
+  {
+   "id": "2603.03539",
+   "problema": "A caracterização da população de variáveis cataclísmicas ainda é incompleta, havendo sistemas com períodos desconhecidos ou discrepantes que necessitam de determinações mais confiáveis.",
+   "trecho": "offer new determinations for systems with previously unknown periods, thereby supporting a more complete and reliable characterisation of the cataclysmic variable population",
+   "titulo": "A Catalogue of Orbital Periods of Cataclysmic Variables and Candidates from TESS Observations",
+   "ano": 2026
+  },
+  {
+   "id": "2511.20908",
+   "problema": "A classificação de híbridos γ Dor/δ Sct permanece incerta, com candidatos identificados apenas probabilisticamente e viés para híbridos dominados por modos de pressão.",
+   "trecho": "we find more pressure-mode dominant hybrids",
+   "titulo": "Automated all-sky detection of γ Doradus / δ Scuti hybrids in TESS data from positive unlabelled (PU) learning",
+   "ano": 2025
+  },
+  {
+   "id": "2308.16106",
+   "problema": "Certas propriedades de superhumps, como superhumps positivos em sistemas de alta razão de massa, contradizem a teoria e permanecem sem explicação.",
+   "trecho": "positive superhumps in high mass ratio systems which defy theory",
+   "titulo": "TESS light curves of cataclysmic variables -- III -- More superhump systems among old novae and novalike variables",
+   "ano": 2023
+  },
+  {
+   "id": "2301.10264",
+   "problema": "A definição do que constitui uma anomalia e como esta depende das propriedades da população de curvas de luz estudada continua sendo uma questão em aberto.",
+   "trecho": "the fundamental definition of what constitutes an anomaly and how this depends on the overall properties of the population of light curves studied remains a discussed issue",
+   "titulo": "Linking Anomalous Behaviour with Stellar Properties: An Unsupervised Exploration of TESS Light Curves",
+   "ano": 2023
+  },
+  {
+   "id": "2611.02450",
+   "problema": "A variabilidade em velocidade radial de estrelas Be em transição ativas pode refletir mudanças de perfil de linha ligadas a outbursts, não sendo indicador inequívoco de movimento binário.",
+   "trecho": "RV variability in active Be transition stars may be influenced by outburst-related line-profile changes rather than being an unambiguous indicator of binary motion",
+   "titulo": "An all-sky catalogue of Be transition stars from WISE and Gaia",
+   "ano": 2026
+  },
+  {
+   "id": "2501.13656",
+   "problema": "As causas da variabilidade de cinco estrelas deficientes em hidrogênio não binárias permanecem incertas.",
+   "trecho": "the causes of their variability remain uncertain",
+   "titulo": "A search for close binary systems in the SALT survey of hydrogen-deficient stars using {\\it TESS}",
+   "ano": 2025
+  },
+  {
+   "id": "2401.07413",
+   "problema": "A fração de estrelas com pulsação delta Scuti cai de ~70% para ~45% em estrelas mais fracas, e um único setor TESS só detecta as pulsações de menor amplitude até cerca de G=9.",
+   "trecho": "the fraction drops to about 45% for fainter stars and we find that a single sector of TESS data only detects the lowest-amplitude delta Scuti pulsations (around 50 ppm) in stars down to about G=9",
+   "titulo": "Identifying 850 delta Scuti pulsators in a narrow Gaia colour range with TESS 10-minute full-frame images",
+   "ano": 2024
+  },
+  {
+   "id": "2610.38264",
+   "problema": "Estrelas pulsantes jovens, especialmente de massa intermediária, permanecem relativamente inexploradas.",
+   "trecho": "they remain relatively unexplored, particularly in the intermediate-mass regime",
+   "titulo": "Asteroseismic properties of young pulsators in the Perseus Molecular Cloud. Discovery of period-spacing patterns in HD 281229",
+   "ano": 2026
+  },
+  {
+   "id": "2607.27855",
+   "problema": "Há uma discrepância entre a fração prevista (40-80%) e a observada (3-25%) de period-bouncers, possivelmente porque grande parte da população permanece oculta em catálogos de anãs brancas.",
+   "trecho": "a substantial fraction of the PB population may remain hidden in WD catalogues",
+   "titulo": "Unveiling the period-bounce population of cataclysmic variables: Spectroscopic and time-domain follow-up of eROSITA-selected candidates",
+   "ano": 2026
+  },
+  {
+   "id": "2407.04775",
+   "problema": "A evolução por envelope comum é uma das maiores incertezas na evolução de binárias, por desafios computacionais e falta de sistemas de referência observados.",
+   "trecho": "CE evolution may be one of the largest uncertainties in binary evolution due to a combination of computational challenges and a lack of observed benchmarks",
+   "titulo": "The first catalog of candidate white dwarf-main sequence binaries in open star clusters: A new window into common envelope evolution",
+   "ano": 2024
+  },
+  {
+   "id": "2506.21169",
+   "problema": "Não foi encontrada conexão entre a taxa de flares e a variabilidade rádio, nem entre a ocorrência de flares ópticos e a variabilidade rádio nas estrelas estudadas individualmente.",
+   "trecho": "We found no connection between the flare rate and the radio variability",
+   "titulo": "Radio emission from flaring stars and brown dwarfs",
+   "ano": 2025
+  },
+  {
+   "id": "2609.16445",
+   "problema": "Os princípios que governam a distribuição de amplitudes das pulsações em estrelas δ Scuti permanecem pouco claros.",
+   "trecho": "the underlying principles governing their amplitude distribution remain unclear",
+   "titulo": "Characterizing bright $δ$ Scuti pulsators using TESS light curves:II. Pulsation amplitude and energy distributions",
+   "ano": 2026
+  },
+  {
+   "id": "2504.01110",
+   "problema": "O sistema WY Leo foi pouco estudado na literatura, carecendo de caracterização detalhada.",
+   "trecho": "it has not been extensively studied in the literature",
+   "titulo": "Photometric investigation of WY Leo: An Eclipsing binary system with Delta Scuti component",
+   "ano": 2025
+  },
+  {
+   "id": "2604.19255",
+   "problema": "Dados asterossísmicos de TESS e Gaia para estrelas roAp ainda não foram explorados em todo o seu potencial.",
+   "trecho": "asteroseismic data obtained with TESS and Gaia has not been explored to its full potential",
+   "titulo": "Rapidly oscillating Ap stars observed with TESS. The LAMOST Ap sample and 49 Cam",
+   "ano": 2026
+  },
+  {
+   "id": "2604.19255",
+   "problema": "A possível natureza binária de TIC 252881095 depende de confirmação do sinal orbital de ~30 d.",
+   "trecho": "If the tentative ~30-d orbital signal is confirmed",
+   "titulo": "Rapidly oscillating Ap stars observed with TESS. The LAMOST Ap sample and 49 Cam",
+   "ano": 2026
+  },
+  {
+   "id": "2609.00287",
+   "problema": "A discrepância entre raios derivados de SED e de modelagem sísmica para TIC 408074920 permanece sem explicação definitiva.",
+   "trecho": "TIC 408074920 displays a significant discrepancy, plausibly attributable to the different sensitivities of the two methods and additional systematic effects",
+   "titulo": "Discovery and Characterization of Three New High-amplitude delta Scuti Stars from TESS Observations",
+   "ano": 2026
+  },
+  {
+   "id": "2609.00287",
+   "problema": "Os mecanismos físicos subjacentes à variabilidade de amplitude dos HADS requerem monitoramento de longo prazo ainda não disponível.",
+   "trecho": "emphasize the importance of the long-term monitoring that future missions such as PLATO will allow in order to explore the underlying physical mechanisms of this variability",
+   "titulo": "Discovery and Characterization of Three New High-amplitude delta Scuti Stars from TESS Observations",
+   "ano": 2026
+  },
+  {
+   "id": "2508.04761",
+   "problema": "A classificação de estrelas Delta Scuti como quimicamente peculiares exige análise espectroscópica detalhada, mostrando que identificações prévias eram imprecisas.",
+   "trecho": "This study show us the importance of chemical abundance analysis in the classification of chemical peculiar stars",
+   "titulo": "Spectroscopic and Photometric Investigation of Some Potentially Chemically Peculiar $δ$ Scuti Stars",
+   "ano": 2025
+  },
+  {
+   "id": "2409.13135",
+   "problema": "A relação entre ν_max e temperatura efetiva tem dispersão grande demais para ser útil.",
+   "trecho": "The $\\nu_{\\rm max}$ measurements display a correlation with effective temperature, but with scatter that is too large for the relation to be useful",
+   "titulo": "The $δ$ Scuti stars of the Cep--Her Complex. I: Pulsator fraction, rotation, asteroseismic large spacings, and the $ν_{\\rm max}$ relation",
+   "ano": 2024
+  },
+  {
+   "id": "2409.13135",
+   "problema": "A medida vbroad do Gaia para estrelas A subestima v sin i de rotadores lentos em 10-15%.",
+   "trecho": "it is mostly accurate but underestimates $v\\sin i$ for slow rotators ($v\\sin i < 50$ km.s$^{-1}$) by 10--15%",
+   "titulo": "The $δ$ Scuti stars of the Cep--Her Complex. I: Pulsator fraction, rotation, asteroseismic large spacings, and the $ν_{\\rm max}$ relation",
+   "ano": 2024
+  },
+  {
+   "id": "2404.01092",
+   "problema": "Discrepâncias nas velocidades radiais de duas fontes impedem uma medida precisa das massas de OO Peg.",
+   "trecho": "discrepancies in the radial velocities from two sources prevent a precise mass measurement",
+   "titulo": "Rediscussion of eclipsing binaries. Paper XVIII. The F-type system OO Pegasi",
+   "ano": 2024
+  },
+  {
+   "id": "2404.01092",
+   "problema": "Apesar de ambas as componentes estarem na faixa de instabilidade Delta Scuti, não há evidência de pulsações, e é necessária espectroscopia mais extensa.",
+   "trecho": "More extensive spectroscopy is needed to improve our understanding of the system",
+   "titulo": "Rediscussion of eclipsing binaries. Paper XVIII. The F-type system OO Pegasi",
+   "ano": 2024
+  },
+  {
+   "id": "2410.20834",
+   "problema": "A natureza evolutiva das manchas/rotação (f8 e harmônicos) é apenas sugerida, necessitando análise futura para confirmar mudanças estruturais ao longo do tempo.",
+   "trecho": "further analysis suggesting evolving characteristics over time",
+   "titulo": "KIC 10855535: An elegant Delta Scuti pulsator with Amplitude and Phase Modulation",
+   "ano": 2024
+  },
+  {
+   "id": "2611.24796",
+   "problema": "A ambiguidade na identificação do modo não-radial introduz incertezas adicionais dependentes do modelo.",
+   "trecho": "the ambiguity in its identification introduces additional model-dependent uncertainties",
+   "titulo": "Asteroseismology of AI Velorum: a prototype of high-amplitude delta Scuti stars",
+   "ano": 2026
+  },
+  {
+   "id": "2310.09805",
+   "problema": "Os modelos de pulsação existentes não descrevem bem as observações de estrelas DSCT/MAIA, exigindo uma reavaliação.",
+   "trecho": "Existing pulsation models do not describe the observations at all well and a re-evaluation is required",
+   "titulo": "Pulsation in hot main sequence stars: comparison of observations with models",
+   "ano": 2023
+  },
+  {
+   "id": "2309.07989",
+   "problema": "A terceira frequência de RV Ari só pode ser associada a modos não-radiais mistos, permanecendo a identificação modal incerta.",
+   "trecho": "can only be associated with mixed nonradial modes l=1, g4-g8 or l=2, g10-g12",
+   "titulo": "Asteroseismology of double-mode radial $δ$ Scuti stars: AE Ursae Majoris and RV Arietis",
+   "ano": 2023
+  },
+  {
+   "id": "2312.04199",
+   "problema": "A incidência de estrelas roAp na população Ap é de apenas 5,5%, levantando questões fundamentais sobre as condições necessárias para excitar pulsações em estrelas Ap.",
+   "trecho": "raising fundamental questions about the conditions required to excite pulsations in Ap stars",
+   "titulo": "TESS Cycle 2 observations of roAp stars with 2-min cadence data",
+   "ano": 2023
+  },
+  {
+   "id": "2510.09165",
+   "problema": "Para magnitudes TESS maiores que 17, as detecções de período tornam-se cada vez menos confiáveis.",
+   "trecho": "for TESS magnitudes $\\gtrsim$ 17, period detections become increasingly unreliable",
+   "titulo": "A systematic search for orbital periods of polars with TESS. Methods, detection limits, and results",
+   "ano": 2025
+  },
+  {
+   "id": "2510.05017",
+   "problema": "As amplitudes e frequências dos sinais de baixa amplitude em Cefeidas de primeiro sobretom variam dentro de um setor TESS, desafiando os modelos teóricos.",
+   "trecho": "the amplitudes and frequencies of these signals often vary within a TESS sector, a phenomenon that challenges theoretical models",
+   "titulo": "Exploring Low-Amplitude Variability in First Overtone Cepheids with TESS",
+   "ano": 2025
+  },
+  {
+   "id": "2304.05706",
+   "problema": "Nenhum sinal localizável se sustenta como frequência de pulsação intrínseca das supergigantes, sendo necessária detecção inequívoca de variabilidade pulsacional antes de considerar FYPS uma nova classe de pulsadores.",
+   "trecho": "unambiguous detection of pulsational variability should be obtained before FYPS are considered a new class of pulsator",
+   "titulo": "Contamination in TESS light curves: The case of the Fast Yellow Pulsating Supergiants",
+   "ano": 2023
+  },
+  {
+   "id": "2302.02166",
+   "problema": "A variabilidade de modos de oscilação parece ser um fenômeno comum que a teoria linear de pulsação não-radial padrão ainda não explica, e o levantamento estendido a K2 e TESS busca restringir os parâmetros que governam efeitos não-lineares fracos.",
+   "trecho": "mode variability is likely a common phenomenon, which remain unaccounted for by standard linear non-radial pulsation theory",
+   "titulo": "The cradle of nonlinear asteroseismology: observations of oscillation mode variability in compact pulsating stars",
+   "ano": 2023
+  },
+  {
+   "id": "2610.40656",
+   "problema": "A sensibilidade de detecção explica muito, mas não toda, da aparente impureza da faixa de instabilidade, e a crista secundária é provavelmente uma combinação de vários modos de overtone.",
+   "trecho": "Detection sensitivity therefore accounts for much, but not all, of the apparent impurity of the strip",
+   "titulo": "The $δ$ Scuti instability strip and period-luminosity relation as seen by TESS and Gaia DR3",
+   "ano": 2026
+  },
+  {
+   "id": "2410.03589",
+   "problema": "A natureza de WeSb 1 permanece incerta, podendo ser um núcleo planetário do tipo EGB 6 ou um sistema simbiótico dentro de uma nebulosa planetária evoluída.",
+   "trecho": "makes WeSb 1 a candidate for either an EGB 6-type planetary nucleus, or a symbiotic system inside an evolved planetary nebula, both of which are rare objects",
+   "titulo": "Variability of Central Stars of Planetary Nebulae with the Zwicky Transient Facility. I. Methods, Short-Timescale Variables, Binary Candidates, and the Unusual Nucleus of WeSb 1",
+   "ano": 2024
+  },
+  {
+   "id": "2403.01295",
+   "problema": "A ausência de variabilidade detectada nos eclipses secundários de Kepler sugere que a variabilidade atmosférica de KELT-1 b não é comum, mas o sinal instrumental de 4 trimestres pode afetar outras curvas de luz.",
+   "trecho": "the absence of detected secondary eclipse variability in Kepler data suggests that the atmospheric variability in KELT-1 b is not common",
+   "titulo": "A Search for Temporal Atmospheric Variability of Kepler Hot Jupiters",
+   "ano": 2024
+  },
+  {
+   "id": "2407.08653",
+   "problema": "As estrelas dLHdC mostram variações em escalas de tempo mais curtas que as RCB, sugerindo que podem ter massas menores, questão ainda em aberto.",
+   "trecho": "dLHdC stars show variations on timescales shorter than RCB stars, suggesting that they may have lower masses than RCB stars",
+   "titulo": "An infrared census of R Coronae Borealis Stars II -- Spectroscopic classifications and implications for the rate of low-mass white dwarf mergers",
+   "ano": 2024
+  },
+  {
+   "id": "2302.01643",
+   "problema": "Embora cerca de 64% da amostra mostre variabilidade estatisticamente significativa, ela não é uniforme entre tipo espectral e período de rotação, e os parâmetros de variabilidade são explorados em busca de sistemáticas plausíveis.",
+   "trecho": "it is not uniform across the spectral type and rotation period",
+   "titulo": "Exploring the short-term variability of Hα and H\\b{eta} emissions in a sample of M Dwarfs",
+   "ano": 2023
+  }
+ ]
+}

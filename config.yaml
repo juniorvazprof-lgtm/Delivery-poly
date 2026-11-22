@@ -1,0 +1,16 @@
+subarea: "Classificação de estrelas variáveis com curvas de luz TESS e aprendizado de máquina"
+deepseek:
+  url: https://api.deepseek.com/chat/completions
+  model: deepseek-chat
+  max_tokens: 800        # limite por chamada
+  temperature: 0.0
+orcamento:
+  tokens_por_problema: 60000   # ao estourar: descartar e registrar motivo
+fila:
+  max_problemas: 10
+  max_tentativas_por_ciclo: 3
+garimpo:
+  max_por_consulta: 40
+  desde_ano: 2023
+  termos: ["open problem", "remains unclear", "remains unsolved", "future work", "remains a challenge", "not yet understood"]
+  temas: ["TESS variable star classification", "TESS light curve machine learning", "TESS variability catalogue", "delta Scuti TESS", "TESS systematics variable stars"]
