@@ -11,7 +11,7 @@ import { criarBatalha, resumo, usarTonico, usarMeteoro, DT } from '../core/comba
 import { criarVisual } from '../render/batalha.js';
 import {
   criarRun, opcoesDaRodada, disponiveis, precoHeroi, recrutar,
-  comprarConsumivel, comprarReliquiaLoja, usarPocao, usarBandagem,
+  comprarConsumivel, comprarReliquiaLoja, usarPocao, usarBandagem, usarTrombeta, compradoNestaRodada,
   custoSoldo, validarEnvio, prepararBatalha, gastarConsumivel,
   estrelas, concluirBatalha, escolherBau, pularBau, comprarPassiva, opcoesEvolucao, evoluir,
   pontuacao, serializar, restaurar
@@ -210,6 +210,8 @@ function irAcampamento(){
     aoComprarReliquia: (id) => { comprarReliquiaLoja(run, id); salvarRun(); irAcampamento(); },
     aoUsarPocao: (classe) => { usarPocao(run, classe); salvarRun(); irAcampamento(); },
     aoUsarBandagem: (classe) => { usarBandagem(run, classe); salvarRun(); irAcampamento(); },
+    aoUsarTrombeta: () => { usarTrombeta(run); salvarRun(); irAcampamento(); },
+    esgotadoRodada: (id) => compradoNestaRodada(run, id),
     aoSeguir: () => { salvarRun(); irDesafio(); }
   });
 }

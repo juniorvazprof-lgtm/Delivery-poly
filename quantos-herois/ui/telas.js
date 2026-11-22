@@ -584,7 +584,7 @@ export function telaBau(app, { opcoes, aoEscolher, aoPular }){
   }, 1400);
 }
 
-export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, consumiveisInfo, passivasInfo, evolucoes, aoRecrutar, aoComprarConsumivel, aoComprarReliquia, aoComprarPassiva, aoEvoluir, aoUsarPocao, aoUsarBandagem, aoSeguir }){
+export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, consumiveisInfo, passivasInfo, evolucoes, aoRecrutar, aoComprarConsumivel, aoComprarReliquia, aoComprarPassiva, aoEvoluir, aoUsarPocao, aoUsarBandagem, aoUsarTrombeta, esgotadoRodada, aoSeguir }){
   limpar(app);
   const tela = el('div', { class:'tela tela-acampamento' });
   tela.appendChild(barraTopo({ rodada: run.rodada, vida: run.baseVida, vidaMax: run.baseVidaMax, ouro: run.ouro }));
@@ -708,8 +708,9 @@ export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, cons
     rod.appendChild(el('span', { class:'preco' }, `${info.preco} 🪙`));
     rod.appendChild(el('span', { class:'qtd' }, `tem: ${qtd}`));
     c.appendChild(rod);
-    const btn = el('button', { class:'principal', onclick: () => aoComprarConsumivel(id) }, 'Comprar');
-    if (run.ouro < info.preco) btn.disabled = true;
+    const esg = info.porRodada && esgotadoRodada && esgotadoRodada(id);
+    const btn = el('button', { class:'principal', onclick: () => aoComprarConsumivel(id) }, esg ? 'Já comprada nesta rodada' : 'Comprar');
+    if (run.ouro < info.preco || esg) btn.disabled = true;
     c.appendChild(btn);
     gradeMer.appendChild(c);
   }
@@ -740,6 +741,9 @@ export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, cons
   if (run.desmaiados && run.desmaiados.length){
     const secEnf = el('div', { class:'secao secao-enfermaria' });
     secEnf.appendChild(el('h2', null, 'Enfermaria'));
+    if ((run.inventario.trombetaRessurreicao || 0) > 0){
+      secEnf.appendChild(el('button', { class:'arcano', onclick: () => aoUsarTrombeta() }, `📯 Trombeta: reviver até ${Math.min(5, run.desmaiados.length)} (${run.inventario.trombetaRessurreicao})`));
+    }
     const lista = el('div', { class:'lista-enfermaria' });
     for (const d of run.desmaiados){
       const linha = el('div', { class:'linha-enfermaria' });

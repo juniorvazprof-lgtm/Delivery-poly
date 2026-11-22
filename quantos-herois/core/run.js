@@ -126,6 +126,7 @@ export function criarRun({ semente, ideais }) {
       pergaminhoMeteoro: 0,
       bandagem: 0,
       tonicoCura: 0,
+      trombetaRessurreicao: 0,
     },
     recrutados: Object.fromEntries(Object.keys(HEROIS).map((c) => [c, 0])),
     ideais: ideais || {},
@@ -228,8 +229,10 @@ export function comprarConsumivel(run, id) {
   const item = CONSUMIVEIS[id];
   if (!item) return false;
   if (run.ouro < item.preco) return false;
+  if (item.porRodada && compradoNestaRodada(run, id)) return false;
   run.ouro -= item.preco;
   run.inventario[id] = (run.inventario[id] || 0) + 1;
+  if (item.porRodada) { run.comprasRodada = run.comprasRodada || {}; run.comprasRodada[id] = run.rodada; }
   return true;
 }
 
@@ -245,7 +248,21 @@ export function comprarReliquiaLoja(run, id) {
   return true;
 }
 
+export function compradoNestaRodada(run, id) {
+  return !!(run.comprasRodada && run.comprasRodada[id] === run.rodada);
+}
+
 // ---------- Consumíveis de recuperação ----------
+// Trombeta: revive até N desmaiados de uma vez (os que demorariam mais para voltar primeiro).
+export function usarTrombeta(run) {
+  const item = CONSUMIVEIS.trombetaRessurreicao;
+  if ((run.inventario.trombetaRessurreicao || 0) <= 0 || !run.desmaiados.length) return 0;
+  const ordem = run.desmaiados.map((d, i) => [d.volta, i]).sort((a, b) => b[0] - a[0]).slice(0, item.revive).map(x => x[1]);
+  run.desmaiados = run.desmaiados.filter((_, i) => !ordem.includes(i));
+  run.inventario.trombetaRessurreicao--;
+  return ordem.length;
+}
+
 export function usarPocao(run, classe) {
   if ((run.inventario.pocaoRessurreicao || 0) <= 0) return false;
   const idx = run.desmaiados.findIndex(d => d.classe === classe);
