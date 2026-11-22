@@ -8,7 +8,7 @@ import { RELIQUIAS } from '../data/reliquias.js';
 import { CONSUMIVEIS } from '../data/consumiveis.js';
 import { RODADAS, ECONOMIA } from '../data/rodadas.js';
 import { criarBatalha, resumo, usarTonico, usarMeteoro, DT } from '../core/combate.js';
-import { criarVisual } from '../render/batalha.js';
+import { criarVisual } from '../render/batalha3d.js'; // visual 3D chibi (o 2D continua em render/batalha.js)
 import {
   criarRun, opcoesDaRodada, disponiveis, precoHeroi, recrutar,
   comprarConsumivel, comprarReliquiaLoja, usarPocao, usarBandagem, usarTrombeta, compradoNestaRodada,
