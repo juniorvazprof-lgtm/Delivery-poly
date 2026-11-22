@@ -1,0 +1,83 @@
+{
+ "problema": "Períodos derivados de Gaia e TESS sofrem de aliases (em particular de meio período), dificultando a caracterização orbital de sistemas espectroscópicos e de trânsito.",
+ "contexto": "O problema é transversal: aparece em sistemas SB2E de tipo O estudados com Gaia/TESS [2508.04272], em planetas com trânsitos duplos separados por anos [2011.05832], em TOIs com P indefinido ou igual à separação dos dois eventos [2611.03019], em binárias/novas [2302.09782, 2605.22802] e em RVs fortemente aliasadas [1808.07059, 2002.01772]. Casos concretos mostram que o alias harmónico pode sobreviver à descoberta e só cair com RV de alta precisão e fotometria multi-época [2606.29666].",
+ "ja_tentado": [
+  {
+   "ref": "2508.04272",
+   "o_que": "Órbitas novas e análise Gaia/TESS para 10 SB2E, sinalizando explicitamente aliases de meio período."
+  },
+  {
+   "ref": "2011.05832",
+   "o_que": "Simulação de população de trânsitos duplos TESS e avaliação de fotometria NGTS e espectroscopia HARPS/CORALIE para mitigar aliases."
+  },
+  {
+   "ref": "2611.03019",
+   "o_que": "Reanálise de 187 TOIs com P=0 ou P>=200 d usando todo o arquivo TESS, método baseado em fluxo com pesos por época, duração e prior geométrico; recupera 12 períodos publicados e 71% em testes de injeção-recuperação."
+  },
+  {
+   "ref": "2302.09782",
+   "o_que": "Correção do período orbital de CW Mon de 0,1766 d para 0,19346802 d, identificando o primeiro como alias de 2 dias."
+  },
+  {
+   "ref": "2605.22802",
+   "o_que": "Timing multi-instrumento (Zorro/Gemini, SAAO, TESS) que distingue a rotação verdadeira de 37,69131 s da modulação de ~42 s."
+  },
+  {
+   "ref": "2606.29666",
+   "o_que": "RV de alta precisão e fotometria multi-época revelam que P~14,42 d é alias harmónico; período verdadeiro 4,808264 d."
+  },
+  {
+   "ref": "1808.07059",
+   "o_que": "Reanálise de RVs HARPS de YZ Ceti mostrando que os períodos dos dois planetas interiores não são univocamente determinados."
+  },
+  {
+   "ref": "2002.01772",
+   "o_que": "229 RVs adicionais e comparação bayesiana com simulações de periodogramas (Dawson-Fabrycky) para resolver aliases em YZ Ceti."
+  },
+  {
+   "ref": "1901.07250",
+   "o_que": "Mostra que TTVs resolvem a degenerescência entre candidatos de período semelhante e configurações co-orbitais."
+  },
+  {
+   "ref": "2306.04295",
+   "o_que": "Identificação de planetas de longo período como eventos de trânsito duplo em TESS e resolução do período."
+  },
+  {
+   "ref": "2506.20907",
+   "o_que": "Trânsito terrestre de HIP 41378 f que restringe o centro de trânsito e atualiza a solução TTV."
+  }
+ ],
+ "lacuna": "Falta um método unificado, validado em amostras grandes, que combine Gaia (astrometria/RV), TESS (fotometria multi-sector) e priors físicos para rejeitar sistematicamente aliases de meio período, com taxas de falso positivo quantificadas fora dos casos individuais.",
+ "dados_publicos": [
+  "Curvas de luz TESS (setores primários e estendidos)",
+  "Arquivo TESS até ao Sector 107",
+  "Dados Gaia (astrometria e RVs)",
+  "RVs HARPS, CORALIE, CARMENES, NEID",
+  "Fotometria NGTS, CHEOPS, TRAPPIST-North, LCOGT, ZTF",
+  "Campanhas VSNET"
+ ],
+ "abordagens_candidatas": [
+  {
+   "ideia": "Aplicar o método de pesos por época, duração e prior geométrico de [2611.03019] a sistemas SB2E com Gaia/TESS como em [2508.04272].",
+   "teste_verificavel": "Recuperação cega de períodos publicados e testes de injeção-recuperação em subamostra de SB2E, medindo fração de aliases de meio período eliminados."
+  },
+  {
+   "ideia": "Usar TTVs para desambiguar candidatos de período semelhante, como em [1901.07250] e [2506.20907].",
+   "teste_verificavel": "Previsão de épocas de trânsito futuras e verificação com fotometria terrestre; comparar χ² das soluções alias vs. verdadeira."
+  },
+  {
+   "ideia": "Combinar RV de alta precisão com fotometria multi-época para quebrar harmónicos, como em [2606.29666] e [2002.01772].",
+   "teste_verificavel": "Ajuste bayesiano com comparação de modelos e simulações de periodogramas; exigir que a solução alternativa seja rejeitada com fator de Bayes acima de limiar pré-definido."
+  }
+ ],
+ "riscos": [
+  "Contaminação por atividade estelar e artefactos instrumentais a imitar periodicidade [2002.01772, 2107.06293]",
+  "Cobertura temporal insuficiente que mantém degenerescência [2011.05832]",
+  "Prior geométrico enviesado a favorecer períodos curtos [2611.03019]",
+  "Generalização indevida de casos individuais para toda a população"
+ ],
+ "refs_invalidas": [],
+ "tokens": 3954,
+ "n_refs": 15,
+ "fonte": "2508.04272"
+}

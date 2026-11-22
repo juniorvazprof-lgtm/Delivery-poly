@@ -1,0 +1,61 @@
+{
+ "problema": "Detecções de período em curvas de luz TESS tornam-se progressivamente não confiáveis para magnitudes TESS ≳17, limitando estudos de variabilidade e binárias em alvos fracos.",
+ "contexto": "O TESS foi desenhado para exoplanetas em estrelas brilhantes; para fontes fracas o ruído sistemático e a razão sinal-ruído degradam a recuperação de periodicidade. A caracterização de populações intrinsecamente fracas (anãs brancas duplas, polares, AGN, binárias de anãs marrons) depende de fotometria TESS de baixa amplitude, onde o limite de detecção é crítico [2510.09165].",
+ "ja_tentado": [
+  {
+   "ref": "2510.09165",
+   "o_que": "Busca sistemática de períodos orbitais em polares com TESS; documenta que para T≳17 as detecções se tornam não confiáveis e discute limites de detecção."
+  },
+  {
+   "ref": "2507.09164",
+   "o_que": "Aplica SSA para reduzir ruído em curvas TESS de 17 DWDs conhecidas, buscando sinais de eclipse, lente gravitacional, elipsoidais e Doppler boosting."
+  },
+  {
+   "ref": "2510.14801",
+   "o_que": "Detecta sinal periódico >10σ em binária de anãs marrons com T=15.9 usando FFI de TESS Cycles 1–7, refinando o período."
+  },
+  {
+   "ref": "2310.08631",
+   "o_que": "Pipeline Quaver para extrair curvas TESS de fontes fracas e extensas com variabilidade estocástica (AGN Pictor A)."
+  },
+  {
+   "ref": "2604.18579",
+   "o_que": "T16: curvas FFI uniformemente detrended do Cycle 1 até T=16 mag, viabilizando buscas sensitivas além dos pipelines oficiais."
+  },
+  {
+   "ref": "2004.07556",
+   "o_que": "Mede Doppler beaming de 1 mmag em curva TESS de anã branca de massa extremamente baixa, demonstrando sensibilidade a sinais sub-mmag."
+  }
+ ],
+ "lacuna": "Não há caracterização quantitativa e sistemática da queda de confiabilidade de detecção periódica entre T≈16 e T≳17, nem critérios padronizados (falsos positivos, completude) para validar períodos nessa faixa; os pipelines existentes param em T=16.",
+ "dados_publicos": [
+  "Curvas FFI TESS (Cycles 1–7) via MAST",
+  "T16 light curves (83.717.159 curvas, T≤16) [2604.18579]",
+  "Catálogos de DWDs, polares e binárias eclipsantes conhecidas [2507.09164, 2510.09165]",
+  "TIC (TESS Input Catalog) para magnitudes e contaminantes"
+ ],
+ "abordagens_candidatas": [
+  {
+   "ideia": "Injeção-recuperação de sinais periódicos sintéticos em curvas TESS reais na faixa T=15–18, medindo completude e taxa de falsos positivos em função de magnitude, amplitude e cadência.",
+   "teste_verificavel": "Comparar períodos recuperados com os injetados; construir curvas de completude vs. T e amplitude e verificar se o limiar de confiabilidade coincide com T≈17."
+  },
+  {
+   "ideia": "Aplicar detrending/denoising (SSA [2507.09164], Quaver [2310.08631]) e comparar poder de detecção antes/depois em alvos fracos com período conhecido.",
+   "teste_verificavel": "Medir ganho em SNR do pico periódico e redução de falsos positivos em amostra controle de períodos espectroscópicos."
+  },
+  {
+   "ideia": "Treinar classificador (inspirado em Microlensify [2608.19419]) para distinguir períodos reais de sistemáticos em curvas fracas.",
+   "teste_verificavel": "Validação cruzada em alvos com período independente (e.g., DWDs [2507.09164], 2M1510 AB [2510.14801]) reportando precisão e recall por binário de magnitude."
+  }
+ ],
+ "riscos": [
+  "Contaminação por fontes vizinhas em pixels grandes domina em T≳17, confundindo injeção-recuperação.",
+  "Amostra de períodos verdadeiros em alvos fracos é pequena, limitando validação estatística.",
+  "Sistemáticos instrumentais variam por setor/câmera, dificultando generalização dos limiares.",
+  "Resultados dependem do pipeline de extração, não comparáveis diretamente entre [2604.18579] e [2310.08631]."
+ ],
+ "refs_invalidas": [],
+ "tokens": 3765,
+ "n_refs": 33,
+ "fonte": "2510.09165"
+}

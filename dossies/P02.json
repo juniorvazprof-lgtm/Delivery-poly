@@ -1,0 +1,76 @@
+{
+ "problema": "Discordâncias na classificação de estrelas variáveis entre catálogos, com taxas de concordância variando de 52% a 100%, tornando o uso acrítico de classificações de catálogo arriscado.",
+ "contexto": "A classificação de variabilidade estelar é complexa e depende de cadência, bandas e métodos. Comparações entre catálogos revelam discordâncias intrigantes [2406.12578], enquanto alguns cruzamentos mostram boa concordância (ex.: 94% com OGLE [2502.18158]; >90% de recuperação e excelente concordância em [1405.4290]). Catálogos amplos usam métodos automáticos [1807.03448, 2011.13930, 2504.00347] e ciência cidadã [2111.02415], e classes propostas podem ser reatribuídas (ex.: 'upside-down CBH' como ACV [2107.07990]).",
+ "ja_tentado": [
+  {
+   "ref": "2406.12578",
+   "o_que": "Comparação de classificações de variáveis periódicas A-F no CVZ sul do TESS, expondo discordâncias de 52% a 100%."
+  },
+  {
+   "ref": "1405.4290",
+   "o_que": "Catálogo Catalina com ~61.000 variáveis periódicas; cruzamento com surveys prévios mostra >90% de recuperação e boa concordância em período, amplitude e classe."
+  },
+  {
+   "ref": "1807.03448",
+   "o_que": "Catálogo WISE all-sky com 50.282 variáveis periódicas e classificação baseada em curvas de luz no infravermelho médio usando tipos conhecidos do GCVS."
+  },
+  {
+   "ref": "2111.02415",
+   "o_que": "Classificação por voluntários (Citizen ASAS-SN) de 40.640 candidatos, com 10.420 novos descobrimentos classificados."
+  },
+  {
+   "ref": "1106.2832",
+   "o_que": "Aprendizado ativo para mitigar viés de seleção amostral na classificação fotométrica de variáveis."
+  },
+  {
+   "ref": "2107.07990",
+   "o_que": "Reclassificação de 'upside-down CBH' do ATLAS como prováveis ACV, identificando 264 candidatos."
+  },
+  {
+   "ref": "2502.18158",
+   "o_que": "Cepheids Pop. II em aglomerados globulares; concordância de 94% com OGLE na classificação."
+  },
+  {
+   "ref": "2011.13930",
+   "o_que": "Busca de RR Lyrae no DES com classificação multivariada e ajuste de templates; boa concordância com outros catálogos."
+  },
+  {
+   "ref": "2504.00347",
+   "o_que": "Random forest para classificar variáveis TESS (setores 1-57) com inspeção visual por subclasse."
+  }
+ ],
+ "lacuna": "Falta quantificar sistematicamente as causas das discordâncias (cadência, banda, critérios, viés de treinamento) e definir critérios de confiabilidade por classe antes do uso de classificações de catálogo.",
+ "dados_publicos": [
+  "TESS setores 1-57 (curvas de 2 min) [2504.00347]",
+  "Catalina Surveys DR1 [1405.4290]",
+  "WISE 5-year [1807.03448]",
+  "ASAS-SN g-band [2111.02415]",
+  "ATLAS First Catalog [2107.07990]",
+  "Gaia variáveis e OGLE (cruzamentos em [2502.18158, 2504.00347])",
+  "DES 6-year [2011.13930]"
+ ],
+ "abordagens_candidatas": [
+  {
+   "ideia": "Cruzar catálogos por classe e banda, medindo matriz de confusão e concordância por amplitude/período.",
+   "teste_verificavel": "Reproduzir a faixa 52-100% de [2406.12578] em subamostras comuns e testar se a concordância depende de amplitude e período."
+  },
+  {
+   "ideia": "Treinar classificador com aprendizado ativo para reduzir viés de seleção [1106.2832] e validar em dados mais profundos.",
+   "teste_verificavel": "Comparar viés e acurácia em conjunto de teste profundo antes/depois do aprendizado ativo."
+  },
+  {
+   "ideia": "Revisão visual dirigida das discordâncias por classe (como em [2504.00347]) e reclassificação com critérios explícitos.",
+   "teste_verificavel": "Medir fração de discordâncias resolvidas e concordância residual após inspeção cega."
+  }
+ ],
+ "riscos": [
+  "Viés de seleção e de treinamento em amostras rasas [1106.2832]",
+  "Classes heterogêneas entre catálogos (ex.: reclassificações [2107.07990])",
+  "Cadência/banda distintas gerando falsas discordâncias",
+  "Sobreajuste a classes conhecidas do GCVS [1807.03448]"
+ ],
+ "refs_invalidas": [],
+ "tokens": 0,
+ "n_refs": 9,
+ "fonte": "2406.12578"
+}
