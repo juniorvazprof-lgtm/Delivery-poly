@@ -37,7 +37,34 @@ h1{font-size:28px;text-align:center;margin:8px 0 4px}
 .done .opt .res{display:block}
 .opt.ai .res{background:rgba(124,92,255,.9)}.opt.real .res{background:rgba(34,197,94,.9)}
 .opt.ok{border-color:var(--ok)}.opt.no{border-color:var(--bad)}
-.fb{text-align:center;font-size:22px;font-weight:800;margin:12px 0 0;min-height:30px}
+body{background:radial-gradient(120% 60% at 50% 0%,#231b4a 0%,var(--bg) 60%) fixed}
+.opt{transition:transform .2s,border-color .2s,opacity .3s;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.opt:active{transform:scale(.97)}
+.done .opt{pointer-events:none}
+.done .opt.real:not(.no){opacity:.55}
+.ov{position:fixed;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,9,14,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .25s}
+.ov.on{opacity:1;pointer-events:auto}
+.pop{width:100%;max-width:340px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:28px 22px 22px;text-align:center;transform:scale(.6) translateY(30px);opacity:0}
+.ov.on .pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1) forwards}
+.ov.hit .pop{border-color:var(--ok);box-shadow:0 0 60px rgba(34,197,94,.35)}
+.ov.miss .pop{border-color:var(--bad);box-shadow:0 0 60px rgba(239,68,68,.35)}
+.ov.miss.on .pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1) forwards,shake .45s .45s}
+.ico{width:96px;height:96px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:52px;color:#fff}
+.hit .ico{background:var(--ok)}.miss .ico{background:var(--bad)}
+.ov.on .ico{animation:bounce .6s .15s both}
+.pop h3{font-size:30px;margin-bottom:6px}.pop p{color:var(--mut);margin-bottom:18px}
+.nx{position:relative;width:100%;padding:16px;border:0;border-radius:14px;background:var(--acc);color:#fff;font-size:18px;font-weight:800;overflow:hidden;cursor:pointer;animation:glow 1.2s infinite}
+.nx i{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.22);width:0}
+.ov.on .nx i{animation:fill 3s linear forwards}
+.nx span{position:relative}
+.conf{position:fixed;top:45%;left:50%;width:10px;height:14px;border-radius:2px;z-index:10;pointer-events:none;animation:conf 1s ease-out forwards}
+@keyframes pop{to{transform:none;opacity:1}}
+@keyframes bounce{0%{transform:scale(0) rotate(-30deg)}70%{transform:scale(1.15)}100%{transform:none}}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+@keyframes fill{to{width:100%}}
+@keyframes glow{50%{box-shadow:0 0 0 6px rgba(124,92,255,.3)}}
+@keyframes conf{to{transform:translate(var(--x),var(--y)) rotate(540deg);opacity:0}}
+.big{animation:bounce .7s both}
 .big{font-size:64px;font-weight:900;text-align:center;margin:10px 0}
 .hidden{display:none!important}
 </style>
@@ -73,9 +100,12 @@ h1{font-size:28px;text-align:center;margin:8px 0 4px}
   <div class="bar"><i id="prog"></i></div>
   <p class="q">Qual foi feita por <b>IA</b>? 👇</p>
   <div class="pair" id="pair"></div>
-  <p class="fb" id="fb"></p>
-  <button class="btn hidden" id="next">Próxima →</button>
 </section>
+
+<div class="ov" id="ov"><div class="pop">
+  <div class="ico" id="ico"></div><h3 id="fbt"></h3><p id="fbs"></p>
+  <button class="nx" id="next"><i></i><span id="nxl">Próxima →</span></button>
+</div></div>
 
 <section id="end" class="hidden">
   <h1>Resultado</h1>
@@ -123,7 +153,7 @@ function build(){
 function start(){rounds=build();idx=0;score=0;show('game');draw()}
 function draw(){
   var r=rounds[idx], P=$('pair');
-  P.classList.remove('done');$('fb').textContent='';$('next').classList.add('hidden');
+  P.classList.remove('done');
   $('rnd').textContent='Rodada '+(idx+1)+' de '+rounds.length;$('pts').textContent='⭐ '+score;
   $('prog').style.width=(idx/rounds.length*100)+'%';
   var opts=r.aiFirst?[['ai',r.ai],['real',r.real]]:[['real',r.real],['ai',r.ai]];
@@ -132,14 +162,36 @@ function draw(){
     if(P.classList.contains('done'))return;P.classList.add('done');
     var hit=b.dataset.k==='ai';if(hit)score++;
     b.classList.add(hit?'ok':'no');if(!hit)P.querySelector('.ai').classList.add('ok');
-    $('fb').textContent=hit?'✅ Acertou!':'❌ Errou! Essa era real.';
     $('pts').textContent='⭐ '+score;
-    $('next').textContent=idx+1<rounds.length?'Próxima →':'Ver resultado';
-    $('next').classList.remove('hidden');if(navigator.vibrate)navigator.vibrate(hit?30:[60,40,60]);
+    if(navigator.vibrate)navigator.vibrate(hit?30:[60,40,60]);
+    setTimeout(function(){feedback(hit)},450);
   }});
   window.scrollTo(0,0);
 }
-$('next').onclick=function(){idx++;if(idx<rounds.length)draw();else finish()};
+var timer;
+function feedback(hit){
+  var ov=$('ov');ov.className='ov '+(hit?'hit':'miss');
+  $('ico').textContent=hit?'✓':'✕';
+  $('fbt').textContent=hit?'Acertou!':'Errou!';
+  $('fbs').textContent=hit?'Você identificou a imagem de IA.':'Você escolheu a foto real.';
+  $('nxl').textContent=idx+1<rounds.length?'Próxima →':'Ver resultado 🏁';
+  void ov.offsetWidth;ov.classList.add('on');
+  if(hit)confetti();
+  timer=setTimeout(advance,3000);
+}
+function advance(){
+  clearTimeout(timer);var ov=$('ov');if(!ov.classList.contains('on'))return;
+  ov.classList.remove('on');
+  setTimeout(function(){idx++;if(idx<rounds.length)draw();else finish()},250);
+}
+function confetti(){
+  var c=['#22c55e','#7c5cff','#facc15','#38bdf8','#f472b6'];
+  for(var i=0;i<28;i++){var d=document.createElement('i');d.className='conf';
+    var a=Math.random()*Math.PI*2,r=120+Math.random()*160;
+    d.style.background=c[i%5];d.style.setProperty('--x',Math.cos(a)*r+'px');d.style.setProperty('--y',Math.sin(a)*r+'px');
+    document.body.appendChild(d);setTimeout(d.remove.bind(d),1000)}
+}
+$('next').onclick=advance;
 function finish(){
   show('end');var p=score/rounds.length;
   $('score').textContent=score+' / '+rounds.length;
