@@ -11,7 +11,7 @@ import { criarBatalha, resumo, usarTonico, usarMeteoro, DT } from '../core/comba
 import { criarVisual } from '../render/batalha3d.js';
 import { avaliar, mostrarToast, painelConquistas } from './conquistas.js'; // visual 3D chibi (o 2D continua em render/batalha.js)
 import {
-  criarRun, opcoesDaRodada, disponiveis, precoHeroi, recrutar,
+  criarRun, opcoesDaRodada, disponiveis, precoHeroi, recrutar, envioMaximo,
   comprarConsumivel, comprarReliquiaLoja, usarPocao, usarBandagem, usarTrombeta, compradoNestaRodada,
   custoSoldo, validarEnvio, prepararBatalha, gastarConsumivel,
   estrelas, concluirBatalha, escolherBau, pularBau, comprarPassiva, opcoesEvolucao, evoluir,
@@ -112,7 +112,7 @@ function irDesafio(){
   telaDesafio(app, {
     run,
     opcoes,
-    aoEscolher: (op) => { opcaoAtual = op; irTime(); },
+    aoEscolher: (op) => { opcaoAtual = op; enviadosAtual = envioMaximo(run); irBatalha(); }, // todos os heróis vão sempre
     aoVoltar: () => { salvarRun(); irMenu(); }
   });
 }
@@ -237,7 +237,7 @@ function irFim(){
   let extra = null;
   if (run.diario){
     gravarDiario(pts);
-    const texto = `Quantos Heróis? · Desafio ${run.diario}\n🏆 ${pts} pts · rodada ${Math.min(run.rodada, 10)}/10\n${(run.historico || []).map(h => h.vitoria ? '⭐'.repeat(Math.max(1, h.estrelas || 1)) : '💀').join(' ')}`;
+    const texto = `Quantos Heróis? · Desafio ${run.diario}\n🏆 ${pts} pts · rodada ${run.rodada}\n${(run.historico || []).map(h => h.vitoria ? '⭐'.repeat(Math.max(1, h.estrelas || 1)) : '💀').join(' ')}`;
     extra = document.createElement('div'); extra.className = 'caixa-diario';
     const pre = document.createElement('pre'); pre.textContent = texto; extra.appendChild(pre);
     const bt = document.createElement('button'); bt.className = 'principal'; bt.textContent = 'Copiar resultado';

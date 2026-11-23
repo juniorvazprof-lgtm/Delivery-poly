@@ -37,3 +37,31 @@ export const ECONOMIA = {
   bau: { rodadas: [3, 6, 9], chance3Estrelas: 0.3 },
   reliquiaNaLoja: 1,                          // relíquias à venda no acampamento
 };
+
+// ---------- Depois do Rei Slime: 4 rodadas extras e o modo infinito ----------
+export const RODADAS_EXTRAS = [
+  { n: 11, nome: 'Fortaleza goblin', inimigos: [['ogro', 3], ['goblinArqueiro', 8], ['xamaGoblin', 2], ['goblin', 10, { chegada: [0, 5] }]] },
+  { n: 12, nome: 'Céu de morcegos', inimigos: [['slime', 4], ['morcego', 14, { chegada: [0, 4] }], ['goblinArqueiro', 6], ['ogro', 2]] },
+  { n: 13, nome: 'Marcha dos ogros', inimigos: [['ogro', 5], ['xamaGoblin', 3], ['morcego', 10], ['goblin', 12, { chegada: [0, 6] }]] },
+  { n: 14, nome: 'Os Reis Gêmeos', chefe: true, titulo: 'Os Reis Gêmeos', descricao: 'Dois reis slime e a guarda de elite.',
+    inimigos: [['reiSlime', 2], ['ogro', 2], ['xamaGoblin', 2], ['goblinArqueiro', 8]] },
+];
+// Modo infinito (rodada 15+): ciclo das rodadas extras, cada vez mais fortes e numerosas; chefe a cada 5 rodadas.
+export function rodadaInfinita(r) {
+  const k = r - 14; // 1, 2, 3...
+  const base = RODADAS_EXTRAS[(k - 1) % 4];
+  const forca = +(1.15 + 0.16 * k).toFixed(2), mais = 1 + 0.08 * k;
+  const chefe = k % 5 === 0; // 19, 24, 29...
+  const lista = chefe ? RODADAS_EXTRAS[3].inimigos : base.inimigos;
+  return { n: r, nome: chefe ? `Chefe infinito ${r}` : `Onda infinita ${r}`, chefe, infinito: true,
+    titulo: chefe ? `Chefe da onda ${r}` : undefined, descricao: chefe ? 'Os reis voltam mais fortes.' : undefined,
+    inimigos: lista.map(([t, q, o = {}]) => [t, t === 'reiSlime' ? q : Math.round(q * mais), { ...o, forca }]) };
+}
+// rodadas extras 11–13 vêm reforçadas (vida e dano); a 14 é o chefe e fica como está
+function reforcar(def, forca) { return { ...def, inimigos: def.inimigos.map(([t, q, o = {}]) => [t, q, { ...o, forca }]) }; }
+export function definicaoRodada(r) {
+  if (r <= 10) return RODADAS[r - 1];
+  if (r <= 13) return reforcar(RODADAS_EXTRAS[r - 11], +(1.2 + 0.12 * (r - 11)).toFixed(2));
+  if (r === 14) return RODADAS_EXTRAS[3];
+  return rodadaInfinita(r);
+}

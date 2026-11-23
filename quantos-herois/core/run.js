@@ -6,7 +6,7 @@ import { MELHORIAS } from '../data/melhorias.js';
 const HEROIS = { ...HEROIS_BASE, ...HEROIS_EVOLUIDOS };
 import { RELIQUIAS } from '../data/reliquias.js';
 import { CONSUMIVEIS } from '../data/consumiveis.js';
-import { RODADAS, ECONOMIA } from '../data/rodadas.js';
+import { RODADAS, ECONOMIA, definicaoRodada } from '../data/rodadas.js';
 
 // ---------- RNG (mulberry32) ----------
 // Estado é um inteiro de 32 bits guardado em run.rng (serializável).
@@ -144,15 +144,15 @@ export function criarRun({ semente, ideais }) {
 // ---------- Opções da rodada ----------
 export function opcoesDaRodada(run) {
   const r = run.rodada;
-  const def = RODADAS[r - 1];
+  const def = definicaoRodada(r);
   if (!def) return [];
   const idealSeguro = (run.ideais && run.ideais[String(r)] && run.ideais[String(r)].n) || 1;
 
   if (r === 10 || def.chefe) {
     return [{
       id: 'chefe',
-      titulo: 'O Rei Slime',
-      descricao: 'O covil fede. Encare o chefão e seus lacaios.',
+      titulo: def.titulo || 'O Rei Slime',
+      descricao: def.descricao || 'O covil fede. Encare o chefão e seus lacaios.',
       inimigos: def.inimigos,
       ideal: idealSeguro,
       premioBase: ECONOMIA.bonusVitoria(r),
@@ -326,6 +326,16 @@ export function gastarConsumivel(run, id) {
 }
 
 // ---------- Estrelas ----------
+// Estrelas por sobreviventes: 3 = ninguém caiu; 2 = caíram até 25% (mín. 1); 1 = venceu com perdas maiores.
+export function estrelasSobreviventes(totalEnviado, totalMortos, vitoria) {
+  if (!vitoria) return 0;
+  if (totalMortos <= 0) return 3;
+  if (totalMortos <= Math.max(1, Math.floor(totalEnviado * 0.25))) return 2;
+  return 1;
+}
+// Todos os heróis disponíveis vão para a batalha
+export function envioMaximo(run) { return { ...disponiveis(run) }; }
+
 export function estrelas(opcao, enviados) {
   let total = 0;
   for (const c of Object.keys(enviados)) total += enviados[c] || 0;
@@ -339,7 +349,8 @@ export function estrelas(opcao, enviados) {
 export function concluirBatalha(run, opcao, enviados, resumo) {
   const rodadaBatalha = run.rodada;
   const totalEnviado = Object.values(enviados).reduce((a, b) => a + (b || 0), 0);
-  const est = estrelas(opcao, enviados);
+  const totMortos = Object.values(resumo.mortos || {}).reduce((a, b) => a + (b || 0), 0);
+  const est = estrelasSobreviventes(totalEnviado, totMortos, !!resumo.vitoria) || 1;
   const efRun = efeitosRun(run);
   const pote = Math.round((resumo.ouroAbates || 0) * ECONOMIA.multAbate * efRun.multPote);
 
@@ -374,9 +385,10 @@ export function concluirBatalha(run, opcao, enviados, resumo) {
   if (run.baseVida <= 0) {
     run.baseVida = 0;
     run.fim = 'derrota';
-  } else if (vitoria && rodadaBatalha === 10) {
-    run.fim = 'vitoria';
   }
+  // sem fim por vitória: depois do Rei Slime vêm as rodadas 11–14 e o modo infinito (até a base cair)
+  if (vitoria && rodadaBatalha === 10) run.venceuRei = true;
+  if (vitoria && rodadaBatalha === 14) run.liberouInfinito = true;
 
   // Baú: depois de toda vitória (relíquia garantida nas rodadas de ECONOMIA.bau.rodadas)
   let bauAberto = false;

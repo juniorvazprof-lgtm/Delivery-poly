@@ -65,8 +65,9 @@ export function criarBatalha({ herois = {}, inimigos = [], reliquias = [], chave
       // goblins chegam espalhados e em levas; slimes em grupo
       const goblin = tipo === 'goblin';
       const x = goblin ? b.rng.entre(8, LADO - 8) : clamp(cx + b.rng.entre(-18, 18), 6, LADO - 6);
-      criarUnidade(b, 'v', tipo, ...deitar(x, tipo === 'reiSlime' ? 20 : b.rng.entre(6, 36)),
+      const nu = criarUnidade(b, 'v', tipo, ...deitar(x, tipo === 'reiSlime' ? 20 : b.rng.entre(6, 36)),
         { geracao: 0, atraso: opc.chegada ? b.rng.entre(...opc.chegada) : goblin ? b.rng.entre(0, 3) : 0 });
+      if (opc.forca && opc.forca !== 1) { nu.pv = nu.pvMax = Math.round(nu.pv * opc.forca); nu.dano *= opc.forca; }
     }
   }
   for (const u of b.unidades) if (u.lado === 'h') est(b, u.tipo).enviados++;

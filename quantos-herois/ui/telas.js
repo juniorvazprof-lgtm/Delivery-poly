@@ -2,8 +2,9 @@ import { retrato } from '../render/modelos3d.js';
 import { HEROIS } from '../data/herois.js';
 import { HEROIS_EVOLUIDOS } from '../data/evolucoes.js';
 
-const EMOJI_INIMIGO = { goblin:'👺', slime:'🟢', slimeMedio:'🟢', slimePequeno:'🟢', reiSlime:'👑' };
-const NOME_INIMIGO = { goblin:'Goblin', slime:'Slime', slimeMedio:'Slime Médio', slimePequeno:'Slime Pequeno', reiSlime:'Rei Slime' };
+const EMOJI_INIMIGO = { goblin:'👺', slime:'🟢', slimeMedio:'🟢', slimePequeno:'🟢', reiSlime:'👑', goblinArqueiro:'🏹', ogro:'👹', morcego:'🦇', xamaGoblin:'🪶' };
+const NOME_INIMIGO = { goblin:'Goblin', slime:'Slime', slimeMedio:'Slime Médio', slimePequeno:'Slime Pequeno', reiSlime:'Rei Slime', goblinArqueiro:'Goblin Arqueiro', ogro:'Ogro', morcego:'Morcego', xamaGoblin:'Xamã Goblin' };
+export function rotuloRodada(r){ return r <= 10 ? `Rodada ${r}/10` : r <= 14 ? `Extra ${r}/14` : `∞ Onda ${r}`; }
 function comRetrato(classe, texto, emojiPadrao = '🛡️'){
   let url = null; try { url = retrato(classe, 96); } catch (e) {}
   const span = el('span', { class:'com-retrato' });
@@ -41,7 +42,7 @@ function limpar(app){ while (app.firstChild) app.removeChild(app.firstChild); }
 
 function barraTopo({ rodada, vida, vidaMax, ouro }){
   const barra = el('div', { class:'barra-topo' });
-  if (rodada != null) barra.appendChild(el('div', { class:'chip rodada' }, `Rodada ${rodada}/10`));
+  if (rodada != null) barra.appendChild(el('div', { class:'chip rodada' }, rotuloRodada(rodada)));
   if (vida != null) barra.appendChild(el('div', { class:'chip vida' }, el('span', { class:'coracao' }, '♥'), ` ${vida}/${vidaMax}`));
   if (ouro != null) barra.appendChild(el('div', { class:'chip ouro' }, '🪙 ', String(ouro)));
   return barra;
@@ -134,7 +135,7 @@ export function telaDesafio(app, { run, opcoes, aoEscolher, aoVoltar }){
     }
     c.appendChild(inimigos);
     const meta = el('div', { class:'meta' });
-    meta.appendChild(el('span', { class:'ideal' }, `Ideal: ${op.ideal} heróis`));
+    meta.appendChild(el('span', { class:'ideal' }, 'Todos os heróis vão'));
     meta.appendChild(el('span', { class:'premio' }, `Prêmio: ${op.premioBase} 🪙`));
     c.appendChild(meta);
     cartoes.appendChild(c);
@@ -791,7 +792,7 @@ export function telaAcampamento(app, { run, classes, precos, reliquiasInfo, cons
 
   // Rodapé com "Seguir viagem"
   const secProx = el('div', { class:'secao secao-seguir' });
-  secProx.appendChild(el('h2', { style:'margin:0;border:none;padding:0;' }, `Próximo: Rodada ${run.rodada}`));
+  secProx.appendChild(el('h2', { style:'margin:0;border:none;padding:0;' }, `Próximo: ${rotuloRodada(run.rodada)}`));
   secProx.appendChild(el('button', { class:'grande principal', onclick: aoSeguir }, 'Seguir viagem'));
   cont.appendChild(secProx);
 
@@ -817,7 +818,7 @@ export function telaFim(app, { run, pontuacao, recordes, aoNova, aoMenu, extra }
   const vitoria = run.fim === 'vitoria';
   cont.appendChild(el('h1', { class:'titulo-contorno' }, vitoria ? 'Jornada Completa!' : 'Fim da Jornada'));
   if (extra) cont.appendChild(extra);
-  cont.appendChild(el('div', { class:'subtitulo', style:'color:var(--pergaminho);font-family:var(--fonte-titulo);font-size:1.3rem;' }, `Rodada alcançada: ${Math.min(run.rodada, 10)}/10`));
+  cont.appendChild(el('div', { class:'subtitulo', style:'color:var(--pergaminho);font-family:var(--fonte-titulo);font-size:1.3rem;' }, `Chegou até: ${rotuloRodada(Math.max(1, run.rodada - (run.fim ? 0 : 0)))}`));
   cont.appendChild(el('div', { class:'pontuacao-grande' }, `${pontuacao} pts`));
 
   if (run.historico && run.historico.length){
