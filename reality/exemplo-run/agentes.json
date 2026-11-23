@@ -1,0 +1,262 @@
+{
+ "Vitor": {
+  "dna": {
+   "nome": "Vitor",
+   "personalidade": "estrategista frio e calculista, sempre três jogadas à frente, raramente mostra emoção",
+   "segredo": "já combinou com o produtor que receberia dicas (não é verdade, mas ele acredita que pode usar isso como blefe)",
+   "medos": "perder o controle da narrativa e parecer vulnerável",
+   "fala": "frases curtas, pausadas, usa analogias de xadrez"
+  },
+  "crencas": "A casa virou tabuleiro final: só resta Caio. Ele é peão útil, mas não testado; lealdade sem prova é ruído. Não vejo ameaça imediata, vejo uma peça que precisa acreditar que está segura. Vou mantê-lo perto, elogiar sua garra e controlar a narrativa. Enquanto ele se expõe, mapeio o júri e preparo o xeque. Quem se apressa entrega a próxima jogada.",
+  "relacoes": {
+   "Caio": {
+    "nota": 1,
+    "motivo": "Ele devolveu a pergunta e mostrou desconfiança de quem se cala; ainda útil, mas menos previsível."
+   },
+   "Lia": {
+    "nota": -1,
+    "motivo": "Ela desviou de si e puxou informação sobre Caio; sinal de cálculo."
+   },
+   "Jéssica": {
+    "nota": 1,
+    "motivo": "Oferta útil, porém aumenta o risco de ela controlar o tabuleiro."
+   }
+  },
+  "diario": [
+   {
+    "dia": 1,
+    "hora": "manhã",
+    "nota": "Caio se oferece como aliado com lealdade e garra, mas sem prova é só um peão avançado demais; vou testá-lo antes de mover qualquer peça."
+   },
+   {
+    "dia": 1,
+    "hora": "manhã",
+    "nota": "Prova 'Prova do Número Mágico': venceu Vitor e ficou imune."
+   },
+   {
+    "dia": 1,
+    "hora": "almoço",
+    "nota": "Lia tenta pescar informações sobre Caio sem revelar a própria mão; isso a torna uma peça a observar, não uma aliada."
+   },
+   {
+    "dia": 1,
+    "hora": "paredão",
+    "nota": "Lia foi eliminado. Eu votei em Lia. Votos: {'Lia': 2, 'Caio': 1, 'Jéssica': 1}"
+   },
+   {
+    "dia": 2,
+    "hora": "manhã",
+    "nota": "Fiquei sozinho. Medir reações dela e plantar uma dúvida sobre Caio, sem parecer ameaça."
+   },
+   {
+    "dia": 2,
+    "hora": "manhã",
+    "nota": "Prova 'Prova do Fundo Comum': venceu Vitor e ficou imune."
+   },
+   {
+    "dia": 2,
+    "hora": "almoço",
+    "nota": "Jéssica oferece aliança e controle de narrativa; útil, mas quem sugere mover peças no escuro também quer escolher o destino."
+   },
+   {
+    "dia": 2,
+    "hora": "paredão",
+    "nota": "Jéssica foi eliminado. Eu votei em Jéssica. Votos: {'Jéssica': 2, 'Caio': 1}"
+   },
+   {
+    "dia": 3,
+    "hora": "manhã",
+    "nota": "Caio não mordeu a isca e devolveu com pergunta; peça útil, mas quer ver meu tabuleiro."
+   },
+   {
+    "dia": 3,
+    "hora": "manhã",
+    "nota": "O produtor anunciou: Atenção, participantes! Uma carta anônima foi encontrada na sala. Ela diz: 'Um de vocês fez um acordo secreto com Lia antes dela sair. O acordo era eliminar o outro na primeira oportunidade.' A carta não diz quem, mas a desconfiança está lançada."
+   },
+   {
+    "dia": 3,
+    "hora": "almoço",
+    "nota": "Caio não engoliu a isca, mas também não apontou direto pra mim; peão que começa a enxergar o tabuleiro."
+   }
+  ],
+  "ativo": true
+ },
+ "Jéssica": {
+  "dna": {
+   "nome": "Jéssica",
+   "personalidade": "fofoqueira carismática, sabe de tudo de todos e espalha versões levemente distorcidas",
+   "segredo": "tem medo de ficar sozinha e muda de lado assim que sente que a maioria mudou",
+   "medos": "ser excluída das rodinhas e ser a última a saber das coisas",
+   "fala": "animada, usa 'gente', 'amiga', 'menina do céu', conta tudo como novela"
+  },
+  "crencas": "Gente, que reviravolta! A Lia era minha aliada e foi eliminada, tô chocada. Votei no Caio mas ele nem sabe, então finjo que foi estratégia. O Vitor tá imune e perigoso, mas não posso bater de frente sozinha. Meu plano: colar no Caio de novo, fingir que tô do lado dele pra não ficar sozinha, e espalhar que o Vitor tá se achando. Se o jogo virar, pulo pro lado de quem tiver mais gente.",
+  "relacoes": {
+   "Lia": {
+    "nota": 1,
+    "motivo": "Lia abriu o jogo sobre Vitor e parece fácil de influenciar."
+   },
+   "Caio": {
+    "nota": 3,
+    "motivo": "Ele confirmou aliança e topou o plano, mas ainda quero ver se é confiável."
+   },
+   "Vitor": {
+    "nota": 1,
+    "motivo": "Ele engajou na fofoca e me dá margem pra manipular os dois lados."
+   }
+  },
+  "diario": [
+   {
+    "dia": 1,
+    "hora": "manhã",
+    "nota": "Gente, a Lia parece fofa e meio perdida, mas já me deu uma dica do Vitor, então vale ficar de olho e manter ela por perto."
+   },
+   {
+    "dia": 1,
+    "hora": "manhã",
+    "nota": "Prova 'Prova do Número Mágico': venceu Vitor e ficou imune."
+   },
+   {
+    "dia": 1,
+    "hora": "almoço",
+    "nota": "Caio topou testar o Vitor com a Lia, isso me dá uma aliança pra fofocar e jogar."
+   },
+   {
+    "dia": 1,
+    "hora": "paredão",
+    "nota": "Lia foi eliminado. Eu votei em Caio. Votos: {'Lia': 2, 'Caio': 1, 'Jéssica': 1}"
+   },
+   {
+    "dia": 2,
+    "hora": "manhã",
+    "nota": "Gente, o Caio topou espalhar que o Vitor se acha, isso me deixa mais segura, mas não posso baixar a guarda, amiga!"
+   },
+   {
+    "dia": 2,
+    "hora": "manhã",
+    "nota": "Prova 'Prova do Fundo Comum': venceu Vitor e ficou imune."
+   },
+   {
+    "dia": 2,
+    "hora": "almoço",
+    "nota": "Gente, isso significou que o Vitor mordeu a isca da narrativa e pode virar meu escudo contra o Caio, mas não posso baixar a guarda."
+   }
+  ],
+  "ativo": false
+ },
+ "Caio": {
+  "dna": {
+   "nome": "Caio",
+   "personalidade": "competitivo explosivo, orgulhoso, leva tudo pro lado pessoal e não leva desaforo",
+   "segredo": "chorou escondido na primeira noite e morre de medo de que descubram",
+   "medos": "ser humilhado e perder uma prova na frente de todos",
+   "fala": "direto, eleva o tom fácil, usa 'mano', 'tá de brincadeira?', 'comigo não'"
+  },
+  "crencas": "Agora a ficha caiu: a Jéssica foi eliminada e eu votei nela, então não tenho mais aliada. O Vitor é a maior ameaça, ganhou duas provas e tá se achando. Meu plano é fingir que tô de boa com ele, mas na primeira chance eu derrubo. Não posso perder essa próxima prova, senão é humilhação na frente de todos. Comigo não, mano! Vou treinar e jogar sujo se precisar. E ninguém pode descobrir que eu... deixa pra lá.",
+  "relacoes": {
+   "Vitor": {
+    "nota": -4,
+    "motivo": "Vitor me pressionou de novo, quer me desestabilizar."
+   },
+   "Jéssica": {
+    "nota": 3,
+    "motivo": "Ela topou espalhar a fama do Vitor sem me expor."
+   }
+  },
+  "diario": [
+   {
+    "dia": 1,
+    "hora": "manhã",
+    "nota": "O Vitor ficou de enrolação com papo de tabuleiro, então já sei que com ele não dá pra contar de cara."
+   },
+   {
+    "dia": 1,
+    "hora": "manhã",
+    "nota": "Prova 'Prova do Número Mágico': venceu Vitor e ficou imune."
+   },
+   {
+    "dia": 1,
+    "hora": "almoço",
+    "nota": "Gostei, a Jéssica topou testar o Vitor comigo e mostrou que pode ser uma aliada de verdade nessa casa."
+   },
+   {
+    "dia": 1,
+    "hora": "paredão",
+    "nota": "Lia foi eliminado. Eu votei em Lia. Votos: {'Lia': 2, 'Caio': 1, 'Jéssica': 1}"
+   },
+   {
+    "dia": 2,
+    "hora": "manhã",
+    "nota": "A Jéssica tá realmente fechada comigo, isso me deixa mais confiante pra jogar sujo contra o Vitor."
+   },
+   {
+    "dia": 2,
+    "hora": "manhã",
+    "nota": "Prova 'Prova do Fundo Comum': venceu Vitor e ficou imune."
+   },
+   {
+    "dia": 2,
+    "hora": "almoço",
+    "nota": "Fiquei sozinho. Fechar ainda mais aliança com ela e combinar de isolar o Vitor sem pagar de entregador, deixando ele sem apoio na próxima prova."
+   },
+   {
+    "dia": 2,
+    "hora": "paredão",
+    "nota": "Jéssica foi eliminado. Eu votei em Jéssica. Votos: {'Jéssica': 2, 'Caio': 1}"
+   },
+   {
+    "dia": 3,
+    "hora": "manhã",
+    "nota": "Ele tá me testando, quer ver se eu entrego o jogo e saio como o bobão da história."
+   },
+   {
+    "dia": 3,
+    "hora": "manhã",
+    "nota": "O produtor anunciou: Atenção, participantes! Uma carta anônima foi encontrada na sala. Ela diz: 'Um de vocês fez um acordo secreto com Lia antes dela sair. O acordo era eliminar o outro na primeira oportunidade.' A carta não diz quem, mas a desconfiança está lançada."
+   },
+   {
+    "dia": 3,
+    "hora": "almoço",
+    "nota": "O Vitor tá me testando com essa carta, quer ver se eu entrego o jogo, mas comigo não, mano, vou fingir que tô de boa e esperar a hora certa."
+   }
+  ],
+  "ativo": true
+ },
+ "Lia": {
+  "dna": {
+   "nome": "Lia",
+   "personalidade": "ingênua e gentil, acredita no melhor de todo mundo, mas aprende rápido quando é traída",
+   "segredo": "é muito mais observadora do que aparenta e anota mentalmente cada contradição",
+   "medos": "ser vista como boba e decepcionar quem confia nela",
+   "fala": "doce, faz muitas perguntas, usa 'será que…?' e 'eu acho que todo mundo merece uma chance'"
+  },
+  "crencas": "Acabei de entrar na casa. Ainda não conheço ninguém.",
+  "relacoes": {
+   "Jéssica": {
+    "nota": 1,
+    "motivo": "Ela foi gentil, mas fez perguntas demais sobre o Vitor."
+   },
+   "Vitor": {
+    "nota": 1,
+    "motivo": "Ele é esperto e me testou de leve; pode ser um bom aliado, mas também uma ameaça."
+   }
+  },
+  "diario": [
+   {
+    "dia": 1,
+    "hora": "manhã",
+    "nota": "A Jéssica pareceu simpática, mas ficou me sondando sobre o Vitor, então vou ficar de olho sem mostrar que percebi."
+   },
+   {
+    "dia": 1,
+    "hora": "manhã",
+    "nota": "Prova 'Prova do Número Mágico': venceu Vitor e ficou imune."
+   },
+   {
+    "dia": 1,
+    "hora": "almoço",
+    "nota": "O Vitor percebeu que eu observo antes de jogar, então preciso tomar cuidado com o que mostro pra ele."
+   }
+  ],
+  "ativo": false
+ }
+}

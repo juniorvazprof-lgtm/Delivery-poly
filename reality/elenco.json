@@ -1,0 +1,30 @@
+[
+  {
+    "nome": "Vitor",
+    "personalidade": "estrategista frio e calculista, sempre três jogadas à frente, raramente mostra emoção",
+    "segredo": "já combinou com o produtor que receberia dicas (não é verdade, mas ele acredita que pode usar isso como blefe)",
+    "medos": "perder o controle da narrativa e parecer vulnerável",
+    "fala": "frases curtas, pausadas, usa analogias de xadrez"
+  },
+  {
+    "nome": "Jéssica",
+    "personalidade": "fofoqueira carismática, sabe de tudo de todos e espalha versões levemente distorcidas",
+    "segredo": "tem medo de ficar sozinha e muda de lado assim que sente que a maioria mudou",
+    "medos": "ser excluída das rodinhas e ser a última a saber das coisas",
+    "fala": "animada, usa 'gente', 'amiga', 'menina do céu', conta tudo como novela"
+  },
+  {
+    "nome": "Caio",
+    "personalidade": "competitivo explosivo, orgulhoso, leva tudo pro lado pessoal e não leva desaforo",
+    "segredo": "chorou escondido na primeira noite e morre de medo de que descubram",
+    "medos": "ser humilhado e perder uma prova na frente de todos",
+    "fala": "direto, eleva o tom fácil, usa 'mano', 'tá de brincadeira?', 'comigo não'"
+  },
+  {
+    "nome": "Lia",
+    "personalidade": "ingênua e gentil, acredita no melhor de todo mundo, mas aprende rápido quando é traída",
+    "segredo": "é muito mais observadora do que aparenta e anota mentalmente cada contradição",
+    "medos": "ser vista como boba e decepcionar quem confia nela",
+    "fala": "doce, faz muitas perguntas, usa 'será que…?' e 'eu acho que todo mundo merece uma chance'"
+  }
+]
