@@ -1,0 +1,488 @@
+<title>Casa Vigiada 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: cena isométrica ocupa a tela; painel de controle à direita (abaixo no celular). Visual único de "estúdio à noite", sem tema claro. */
+:root{
+  --bg:#12101c;--panel:#1b1828;--line:#2e2a42;--ink:#f3f0fa;--mut:#a29cb8;
+  --gold:#f5c542;--love:#ff5c9a;--ally:#3fd19a;--fight:#ff5a4f;--trust:#6aa7ff;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--body);margin:0;overflow:hidden}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 360px;height:100%}
+@media (max-width:820px){.app{grid-template-columns:1fr;grid-template-rows:56% 44%}}
+.stage{position:relative;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(120% 90% at 50% 30%,#2a2440,var(--bg))}
+#c{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:absolute;top:12px;left:max(12px,env(safe-area-inset-left,0px));display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+.chip{background:rgba(18,16,28,.78);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font:500 12px var(--mono);backdrop-filter:blur(6px)}
+.chip b{color:var(--gold);font-weight:500}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--fight);margin-right:6px;animation:bl 1.2s infinite}
+@keyframes bl{50%{opacity:.2}}
+#labels{position:absolute;inset:0;pointer-events:none}
+.nm{position:absolute;transform:translate(-50%,-100%);font:600 11px var(--body);padding:1px 6px;border-radius:4px;background:rgba(18,16,28,.7);white-space:nowrap}
+.nm.lead::before{content:"♛ ";color:var(--gold)}
+.bub{position:absolute;transform:translate(-50%,-100%);max-width:170px;background:#fff;color:#1b1828;font:600 12px/1.3 var(--body);padding:6px 9px;border-radius:10px;animation:pop .25s ease-out;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.bub::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
+.bub.think{background:#2e2a42;color:var(--ink);font-style:italic}.bub.think::after{border-top-color:#2e2a42}
+@keyframes pop{from{transform:translate(-50%,-80%) scale(.6);opacity:0}}
+.side{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding-block:16px 24px;padding-left:16px;padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px;align-content:start;min-height:0}
+@media (max-width:820px){.side{border-left:0;border-top:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px))}}
+h1{font:800 24px/1 var(--display);margin:0;letter-spacing:-.01em}
+h2{font:600 13px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin:0 0 8px}
+.ctrl{display:flex;gap:6px;flex-wrap:wrap}
+button{font:600 12px var(--body);color:var(--ink);background:#262238;border:1px solid var(--line);border-radius:6px;padding:7px 10px;cursor:pointer}
+button:hover{border-color:var(--mut)}button:focus-visible{outline:2px solid var(--gold)}
+button.on{background:var(--gold);color:#1b1828;border-color:var(--gold)}
+.feed{display:grid;gap:4px;max-height:220px;overflow-y:auto;font-size:13px}
+.feed div{padding:4px 0;border-bottom:1px solid var(--line)}
+.feed time{font:500 11px var(--mono);color:var(--mut);margin-right:6px}
+.cast{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cast button{padding:6px 2px;display:grid;justify-items:center;gap:2px;font-size:11px}
+.cast i{width:14px;height:14px;border-radius:50%}
+.cast button.out{opacity:.3}
+.rel{display:grid;gap:8px}
+.r{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:12px}
+.bars{display:grid;gap:2px}
+.bar{height:4px;background:#262238;border-radius:2px;position:relative;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0}
+.tag{font:500 10px var(--mono);padding:2px 6px;border-radius:4px;white-space:nowrap}
+.key{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--mut)}
+.key span::before{content:"";display:inline-block;width:10px;height:4px;margin-right:4px;vertical-align:middle;background:var(--c)}
+details{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+summary{cursor:pointer;font-weight:600}
+details p,details li{color:var(--mut);font-size:13px}
+details code{font:500 12px var(--mono);color:var(--ink)}
+.trait{font:500 11px var(--mono);color:var(--mut)}
+@media (prefers-reduced-motion:reduce){.live,.bub{animation:none}}
+</style>
+
+<div class="app">
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div id="labels"></div>
+    <div class="hud">
+      <span class="chip"><span class="live"></span><span id="clock">Dia 1 · 08:00</span></span>
+      <span class="chip">Líder: <b id="leader">ninguém</b></span>
+      <span class="chip" id="alive">8 na casa</span>
+    </div>
+  </div>
+  <aside class="side">
+    <div>
+      <h1>Casa Vigiada</h1>
+      <p style="color:var(--mut);margin:6px 0 0">8 bots com personalidade própria. Cada interação mexe em quatro pesos por relação: amizade, atração, rivalidade e confiança. Toque num bot para ver o que ele sente.</p>
+    </div>
+    <div class="ctrl" role="group" aria-label="Velocidade">
+      <button id="pause">⏸ Pausar</button>
+      <button data-s="1" class="on">1×</button><button data-s="3">3×</button><button data-s="8">8×</button>
+      <button id="prova">Prova do Líder</button>
+      <button id="paredao">Paredão</button>
+      <button id="reset">Reiniciar</button>
+    </div>
+    <div>
+      <h2>Elenco</h2>
+      <div class="cast" id="cast"></div>
+    </div>
+    <div>
+      <h2 id="selTitle">Relações</h2>
+      <div class="trait" id="selTraits"></div>
+      <div class="key" style="margin:6px 0 10px"><span style="--c:var(--ally)">amizade</span><span style="--c:var(--love)">atração</span><span style="--c:var(--fight)">rivalidade</span><span style="--c:var(--trust)">confiança</span></div>
+      <div class="rel" id="rel"></div>
+    </div>
+    <div>
+      <h2>Ao vivo</h2>
+      <div class="feed" id="feed"></div>
+    </div>
+    <details>
+      <summary>Como funcionam os pesos</summary>
+      <p>Cada bot guarda, para cada colega, quatro números:</p>
+      <ul>
+        <li><code>amizade</code> −100 a 100, sobe com conversa e alianças, cai com briga e fofoca descoberta.</li>
+        <li><code>atração</code> 0 a 100, sobe com flerte correspondido. Casal = atração mútua acima de 60 e amizade acima de 30.</li>
+        <li><code>rivalidade</code> 0 a 100, sobe com briga, traição e com quem ganha prova (para os ambiciosos).</li>
+        <li><code>confiança</code> −100 a 100, sobe com aliança, cai com fofoca e voto descoberto.</li>
+      </ul>
+      <p>A cada momento livre o bot sorteia uma ação. O peso de cada opção é <code>traço da personalidade × relação com o alvo × contexto</code>. Exemplo: brigar = <code>temperamento × (rivalidade + max(0, −amizade)) / 100</code>. Quem tem pavio curto e já odeia alguém briga muito mais.</p>
+      <p>A reação depende de quem recebe: um flerte só cola se o alvo já sente atração; numa briga, quem assiste escolhe um lado pela amizade que já tinha. Todo dia os pesos decaem 3% em direção ao neutro, então relações precisam ser mantidas.</p>
+      <p>No paredão, cada um vota em quem tem maior <code>rivalidade − amizade − confiança/2</code>. O líder fica imune e leva a pessoa com mais amizade + atração para o quarto do líder.</p>
+    </details>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+// ------------------------------------------------------------ elenco
+const CAST = [
+  {n:"Vitor", c:"#4f86ff", t:{soc:.4,temp:.3,flerte:.3,fofoca:.2,amb:.95,leal:.6}},
+  {n:"Jéssica",c:"#ff5cb0",t:{soc:.9,temp:.4,flerte:.5,fofoca:.95,amb:.5,leal:.3}},
+  {n:"Caio", c:"#ff8a2a", t:{soc:.6,temp:.95,flerte:.5,fofoca:.3,amb:.8,leal:.8}},
+  {n:"Lia",  c:"#2fd39a", t:{soc:.7,temp:.1,flerte:.4,fofoca:.1,amb:.3,leal:.95}},
+  {n:"Duda", c:"#c77dff", t:{soc:.8,temp:.5,flerte:.9,fofoca:.5,amb:.4,leal:.5}},
+  {n:"Rafa", c:"#ffd23f", t:{soc:.5,temp:.7,flerte:.8,fofoca:.4,amb:.7,leal:.4}},
+  {n:"Nina", c:"#4ad8ff", t:{soc:.6,temp:.3,flerte:.3,fofoca:.6,amb:.85,leal:.2}},
+  {n:"Téo",  c:"#a3e05a", t:{soc:.9,temp:.2,flerte:.6,fofoca:.3,amb:.2,leal:.7}},
+];
+const LINES = {
+  conversar:["E aí, dormiu bem?","Tô achando a casa mais calma hoje.","Bora fazer um café?","Me conta da sua família.","Hoje eu tô com fé!"],
+  conversarOk:["Hahaha, adoro você!","Verdade, tamo junto.","Você é dos meus."],
+  flertar:["Esse sorriso aí é proibido...","Senta aqui do meu lado?","Tu fica bem de amarelo, hein."],
+  flertarSim:["Para que eu fico sem graça 😳","Só se for agora.","Hmm, gostei."],
+  flertarNao:["Opa, calma lá.","Te vejo como amigo!","Hoje não, querido(a)."],
+  brigar:["Você é falso(a)!","Fala na minha cara!","Comigo não!","Para de se fazer de vítima!"],
+  brigarR:["Abaixa o tom!","Tá nervoso(a) por quê?","Você que começou!"],
+  fofocar:["Menina... sabe o que {c} falou de você?","Cuidado com {c}, viu.","{c} tá jogando sozinho(a)."],
+  alianca:["Fecha comigo até a final?","A gente se protege no paredão.","Nós dois contra a casa."],
+  aliancaSim:["Fechado. Até o fim.","Pode confiar."],aliancaNao:["Vou pensar...","Não fecho com ninguém."],
+};
+const pick=a=>a[Math.random()*a.length|0];
+
+// ------------------------------------------------------------ casa
+const ROOMS = {
+  quarto:{x:[-12,-4],z:[-9,-1],col:0x6e5aa8,label:"Quarto"},
+  lider:{x:[-12,-4],z:[-1,4],col:0xc9a227,label:"Quarto do Líder"},
+  confess:{x:[-12,-4],z:[4,9],col:0xa8323a,label:"Confessionário"},
+  sala:{x:[-4,4],z:[-9,1],col:0x8a6a4f,label:"Sala"},
+  cozinha:{x:[4,12],z:[-9,1],col:0xd8d2c4,label:"Cozinha"},
+  jardim:{x:[-4,12],z:[1,9],col:0x4f9a52,label:"Área externa"},
+};
+// portas: [salaA, salaB, ponto em A, ponto em B]
+const DOORS = [
+  ["quarto","sala",[-4.8,-5],[-3.2,-5]],
+  ["cozinha","sala",[4.8,-4],[3.2,-4]],
+  ["sala","jardim",[0,0.2],[0,1.8]],
+  ["cozinha","jardim",[8,0.2],[8,1.8]],
+  ["lider","jardim",[-4.8,2.5],[-3.2,2.5]],
+  ["confess","jardim",[-4.8,6.5],[-3.2,6.5]],
+];
+const POOL = {x:[1,8],z:[3.4,7.6]};
+function route(a,b){ // BFS entre cômodos
+  if(a===b) return [];
+  const prev={[a]:null},q=[a];
+  while(q.length){const r=q.shift();for(const d of DOORS){let o=null,p1,p2;
+    if(d[0]===r){o=d[1];p1=d[2];p2=d[3]}else if(d[1]===r){o=d[0];p1=d[3];p2=d[2]}
+    if(o&&!(o in prev)){prev[o]={r,p1,p2};q.push(o)}}}
+  const pts=[];let cur=b;while(prev[cur]){pts.unshift(prev[cur].p1,prev[cur].p2);cur=prev[cur].r}return pts;
+}
+function roomAt(x,z){for(const k in ROOMS){const r=ROOMS[k];if(x>=r.x[0]&&x<=r.x[1]&&z>=r.z[0]&&z<=r.z[1])return k}return "jardim"}
+function spot(room){
+  const r=ROOMS[room];let x,z,i=0;
+  do{x=r.x[0]+1.2+Math.random()*(r.x[1]-r.x[0]-2.4);z=r.z[0]+1.2+Math.random()*(r.z[1]-r.z[0]-2.4);i++}
+  while(room==="jardim"&&x>POOL.x[0]-.4&&x<POOL.x[1]+.4&&z>POOL.z[0]-.4&&z<POOL.z[1]+.4&&i<20);
+  return [x,z];
+}
+
+// ------------------------------------------------------------ three
+const canvas=document.getElementById("c");
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+const cam=new THREE.OrthographicCamera(-1,1,1,-1,-100,200);
+cam.position.set(22,22,22);cam.lookAt(0,0,0);
+let zoom=1;
+const hemi=new THREE.HemisphereLight(0xffffff,0x443355,.7);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffffff,.8);sun.position.set(10,25,8);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-20,right:20,top:20,bottom:-20});scene.add(sun);
+const mat=c=>new THREE.MeshLambertMaterial({color:c});
+function box(w,h,d,c,x,y,z,parent=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c));m.position.set(x,y+h/2,z);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
+// base
+box(26,.4,20,0x2a2440,0,-.4,0);
+for(const k in ROOMS){const r=ROOMS[k];box(r.x[1]-r.x[0],.05,r.z[1]-r.z[0],r.col,(r.x[0]+r.x[1])/2,0,(r.z[0]+r.z[1])/2)}
+// piscina
+box(POOL.x[1]-POOL.x[0]+.6,.25,POOL.z[1]-POOL.z[0]+.6,0xe9e4d8,(POOL.x[0]+POOL.x[1])/2,0,(POOL.z[0]+POOL.z[1])/2);
+const water=new THREE.Mesh(new THREE.BoxGeometry(POOL.x[1]-POOL.x[0],.08,POOL.z[1]-POOL.z[0]),new THREE.MeshLambertMaterial({color:0x2ec4ff,transparent:true,opacity:.85,emissive:0x0a3a66}));
+water.position.set((POOL.x[0]+POOL.x[1])/2,.24,(POOL.z[0]+POOL.z[1])/2);scene.add(water);
+// paredes (com vãos nas portas)
+const WALL=0xe8e2f0,WH=1.1;
+function wallX(z,x0,x1,gaps=[]){let s=x0;[...gaps.sort((a,b)=>a-b),x1+99].forEach(g=>{const e=Math.min(g-.9,x1);if(e>s)box(e-s,WH,.2,WALL,(s+e)/2,0,z);s=g+.9})}
+function wallZ(x,z0,z1,gaps=[]){let s=z0;[...gaps.sort((a,b)=>a-b),z1+99].forEach(g=>{const e=Math.min(g-.9,z1);if(e>s)box(.2,WH,e-s,WALL,x,0,(s+e)/2);s=g+.9})}
+wallX(-9,-12,12);wallZ(-12,-9,9);
+wallZ(-4,-9,9,[-5,2.5,6.5]);wallX(-1,-12,-4);wallX(4,-12,-4);
+wallZ(4,-9,1,[-4]);wallX(1,-4,12,[0,8]);
+// móveis
+for(let i=0;i<3;i++){box(1.6,.5,2.6,0xf2efe9,-10.6+i*2.8,0,-6.8);box(1.6,.25,.6,0x9b8ce0,-10.6+i*2.8,.5,-7.8)} // camas
+box(3.4,.6,3,0xfff2c2,-9.6,0,1.5);box(3.4,.9,.4,0xd4a62a,-9.6,0,-.2);box(.6,1.6,.6,0xf5c542,-5.2,0,0); // cama do líder + troféu
+box(1.4,1.2,1,0x1b1828,-10.5,0,7.2);box(.6,.6,.6,0x333333,-7,0,6.5); // poltrona confess. + câmera
+box(4,.7,1.2,0x3d5a80,0,0,-7.6);box(1.2,.7,3,0x3d5a80,-2.2,0,-5.8);box(1.6,.35,1,0x5c4632,0,0,-5); // sofá + mesinha
+box(7,1,1,0xb8b2a6,8,0,-8.4);box(2.6,1,1.4,0x8f8a80,8,0,-4.8); // cozinha
+for(let i=0;i<3;i++)box(.8,.25,2,0xffffff,1.6+i*2.4,0,8.4); // espreguiçadeiras
+[[-2.6,3],[-2.6,8],[11,2.4],[11,8.2]].forEach(([x,z])=>{box(.3,1.2,.3,0x6b4a2b,x,0,z);const t=new THREE.Mesh(new THREE.IcosahedronGeometry(.9,0),mat(0x2f7d3a));t.position.set(x,1.8,z);t.castShadow=true;scene.add(t)});
+
+// ------------------------------------------------------------ bots
+const labels=document.getElementById("labels");
+let bots=[],day=1,hour=8,leader=null,guest=null,speed=1,paused=false,sel=null;
+function mkBot(d,i){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.32,.42,.9,8),mat(d.c));body.position.y=.45;body.castShadow=true;
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),mat(0xf3d6c0));head.position.y=1.15;head.castShadow=true;
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(.31,10,6,0,Math.PI*2,0,Math.PI/2),mat(d.c));hair.position.y=1.2;
+  const ring=new THREE.Mesh(new THREE.RingGeometry(.5,.62,20),new THREE.MeshBasicMaterial({color:0xf5c542,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.06;ring.visible=false;
+  g.add(body,head,hair,ring);
+  const [x,z]=spot(["sala","jardim","cozinha","quarto"][i%4]);g.position.set(x,0,z);scene.add(g);
+  body.userData.bot=head.userData.bot=hair.userData.bot=i;
+  const nm=document.createElement("div");nm.className="nm";nm.textContent=d.n;nm.style.color=d.c;labels.appendChild(nm);
+  return {i,n:d.n,c:d.c,t:d.t,g,ring,parts:[body,head,hair],nm,bub:null,bubT:0,alive:true,path:[],state:"idle",cd:Math.random()*3,
+    room:roomAt(x,z),busyT:0,partner:null,swim:false,rel:{}};
+}
+function initRel(){
+  bots.forEach(a=>bots.forEach(b=>{if(a!==b)a.rel[b.i]={amz:Math.round(Math.random()*20-5),atr:Math.round(Math.random()*45),riv:Math.round(Math.random()*10),conf:Math.round(Math.random()*20-5)}}));
+}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function adj(a,b,k,v){const r=a.rel[b.i];if(!r)return;r[k]=clamp(Math.round(r[k]+v),k==="amz"||k==="conf"?-100:0,100)}
+
+function say(b,txt,think=false,dur=2.6){
+  if(b.bub)b.bub.remove();
+  const el=document.createElement("div");el.className="bub"+(think?" think":"");el.textContent=txt;labels.appendChild(el);b.bub=el;b.bubT=dur;
+}
+const feedEl=document.getElementById("feed");
+function log(html){
+  const d=document.createElement("div");d.innerHTML=`<time>D${day} ${String(hour|0).padStart(2,"0")}h</time>${html}`;
+  feedEl.prepend(d);while(feedEl.children.length>60)feedEl.lastChild.remove();
+}
+const N=b=>`<b style="color:${b.c}">${b.n}</b>`;
+
+function goTo(b,room,pt){
+  b.path=[...route(b.room,room),pt||spot(room)].map(p=>new THREE.Vector3(p[0],0,p[1]));b.destRoom=room;
+}
+function allowed(b,room){return room!=="lider"||b===leader||b===guest}
+const alive=()=>bots.filter(b=>b.alive);
+
+// ------------------------------------------------------------ decisão por pesos
+function decide(a){
+  const opts=[];
+  const others=alive().filter(b=>b!==a&&b.state!=="talk");
+  for(const b of others){
+    const r=a.rel[b.i],t=a.t;
+    opts.push({k:"conversar",b,w:t.soc*(1+r.amz/100)*.9});
+    opts.push({k:"flertar",b,w:t.flerte*(r.atr/100)*(r.riv<40?1.4:.3)});
+    opts.push({k:"brigar",b,w:t.temp*((r.riv+Math.max(0,-r.amz))/100)*1.6});
+    opts.push({k:"alianca",b,w:t.amb*Math.max(0,r.amz)/100*Math.max(0,r.conf+20)/100*1.2});
+    const alvo=alive().filter(c=>c!==a&&c!==b).sort((x,y)=>(a.rel[y.i].riv-a.rel[y.i].amz)-(a.rel[x.i].riv-a.rel[x.i].amz))[0];
+    if(alvo)opts.push({k:"fofocar",b,c:alvo,w:t.fofoca*Math.max(0,r.amz+20)/100*Math.max(0,a.rel[alvo.i].riv-a.rel[alvo.i].amz+10)/100*1.5});
+  }
+  opts.push({k:"nadar",w:.25+(hour>11&&hour<18?.35:0)},{k:"cozinhar",w:(hour>=11&&hour<=13)||(hour>=19&&hour<=20)?.6:.08},
+            {k:"dormir",w:hour>=23||hour<7?2.5:.03},{k:"confessar",w:.18});
+  if(a===leader)opts.push({k:"lider",w:.5});
+  let tot=0;opts.forEach(o=>{o.w=Math.max(0,o.w)**1.5;tot+=o.w});
+  let r=Math.random()*tot;for(const o of opts){r-=o.w;if(r<=0)return o}return opts[0];
+}
+function start(a){
+  const o=decide(a);a.plan=o;
+  if(o.b){
+    const room=allowed(a,o.b.room)&&o.b.room!=="confess"?o.b.room:"sala";
+    const near=[o.b.g.position.x+(Math.random()<.5?.9:-.9),o.b.g.position.z+(Math.random()<.5?.9:-.9)];
+    goTo(a,room,roomAt(near[0],near[1])===room?near:null);a.state="walk";
+    if(o.b.state==="idle"||o.b.state==="wait"){o.b.state="wait";o.b.waitT=8;o.b.path=[]}
+  }else{
+    const room={nadar:"jardim",cozinhar:"cozinha",dormir:"quarto",confessar:"confess",lider:"lider"}[o.k];
+    const pt=o.k==="nadar"?[POOL.x[0]+1+Math.random()*(POOL.x[1]-POOL.x[0]-2),POOL.z[0]+1+Math.random()*(POOL.z[1]-POOL.z[0]-2)]:null;
+    goTo(a,room,pt);a.state="walk";
+  }
+}
+function arrive(a){
+  const o=a.plan;a.state="idle";a.cd=2+Math.random()*3;
+  if(!o)return;
+  if(!o.b){
+    if(o.k==="nadar"){a.swim=true;say(a,pick(["Água tá uma delícia!","Bora pra piscina, gente!","🏊"]));a.cd=5}
+    if(o.k==="cozinhar")say(a,pick(["Quem quer arroz?","Hoje tem estrogonofe!","Alguém lavou essa panela?"]));
+    if(o.k==="dormir"){say(a,"zzz",true,4);a.cd=10}
+    if(o.k==="lider")say(a,pick(["Paz e silêncio no meu quarto.","Liderança é solidão."]),true);
+    if(o.k==="confessar")confess(a);
+    return;
+  }
+  const b=o.b;
+  if(b.alive&&b.state!=="talk"&&b.g.position.distanceTo(a.g.position)>3.2&&(a.tries=(a.tries||0)+1)<3&&allowed(a,b.room)&&b.room!=="confess"){
+    goTo(a,b.room,[b.g.position.x+.9,b.g.position.z+.9]);a.state="walk";a.plan=o;if(b.state==="idle"){b.state="wait";b.waitT=6;b.path=[]}return}
+  a.tries=0;
+  if(!b.alive||b.g.position.distanceTo(a.g.position)>3.2||b.state==="talk"){say(a,"Ué, cadê?",true);if(b.state==="wait")b.state="idle";return}
+  a.state=b.state="talk";a.busyT=b.busyT=4.5;b.path=[];
+  face(a,b);face(b,a);
+  interact(a,b,o);
+}
+function face(a,b){a.g.rotation.y=Math.atan2(b.g.position.x-a.g.position.x,b.g.position.z-a.g.position.z)}
+function watchers(a,b){return alive().filter(s=>s!==a&&s!==b&&s.room===a.room)}
+
+function interact(a,b,o){
+  const ra=a.rel[b.i],rb=b.rel[a.i];
+  switch(o.k){
+  case "conversar":
+    say(a,pick(LINES.conversar));setTimeout(()=>say(b,pick(rb.amz>-10?LINES.conversarOk:["Hm.","Tá.","Aham..."])),1300);
+    adj(a,b,"amz",6+8*b.t.soc);adj(b,a,"amz",rb.amz>-10?5+8*a.t.soc:-2);adj(a,b,"conf",4);adj(b,a,"conf",3);
+    if(Math.random()<.5)log(`💬 ${N(a)} e ${N(b)} batem papo na ${ROOMS[a.room].label.toLowerCase()}.`);
+    break;
+  case "flertar":{
+    say(a,pick(LINES.flertar));
+    const ok=rb.atr>35&&rb.riv<50;
+    setTimeout(()=>say(b,pick(ok?LINES.flertarSim:LINES.flertarNao)),1300);
+    if(ok){adj(a,b,"atr",10);adj(b,a,"atr",10);adj(a,b,"amz",3);adj(b,a,"amz",3);
+      if(ra.atr>60&&rb.atr>60&&ra.amz>30&&rb.amz>30&&!(a.couple===b.i)){a.couple=b.i;b.couple=a.i;log(`💘 ${N(a)} e ${N(b)} viraram casal!`)}
+      else log(`😏 ${N(a)} flertou com ${N(b)} e foi correspondido(a).`);
+      watchers(a,b).forEach(s=>{if(s.rel[b.i].atr>55){adj(s,a,"riv",12);say(s,"Ciúmes? Eu? Imagina.",true);log(`😤 ${N(s)} ficou com ciúme de ${N(a)}.`)}});
+    }else{adj(a,b,"atr",-8);adj(b,a,"amz",-3);adj(a,b,"conf",-3);log(`🙅 ${N(a)} levou um fora de ${N(b)}.`)}
+    break;}
+  case "brigar":{
+    say(a,pick(LINES.brigar),false,3);setTimeout(()=>say(b,pick(LINES.brigarR),false,3),1200);
+    [[a,b],[b,a]].forEach(([x,y])=>{adj(x,y,"riv",12+10*x.t.temp);adj(x,y,"amz",-12);adj(x,y,"conf",-6)});
+    const w=watchers(a,b);
+    w.forEach(s=>{const side=s.rel[a.i].amz>=s.rel[b.i].amz?a:b,other=side===a?b:a;adj(s,side,"amz",4);adj(s,other,"amz",-6);adj(s,other,"riv",5)});
+    log(`🔥 BRIGA: ${N(a)} × ${N(b)}${w.length?` (na frente de ${w.map(N).join(", ")})`:""}`);
+    break;}
+  case "fofocar":{
+    const c=o.c;say(a,pick(LINES.fofocar).replace("{c}",c.n));setTimeout(()=>say(b,"Mentira?! 😱"),1300);
+    adj(a,b,"amz",4);adj(b,a,"amz",3);adj(b,c,"conf",-10);adj(b,c,"amz",-5);
+    const caught=c.room===a.room||Math.random()<.2;
+    if(caught){adj(c,a,"riv",22);adj(c,a,"conf",-30);adj(c,a,"amz",-15);setTimeout(()=>say(c,`Eu ouvi, ${a.n}!`,false,3),2200);
+      log(`🐍 ${N(c)} descobriu que ${N(a)} fez fofoca dele(a) pra ${N(b)}.`)}
+    else log(`🤫 ${N(a)} cochichou sobre ${N(c)} com ${N(b)}.`);
+    break;}
+  case "alianca":{
+    say(a,pick(LINES.alianca));const ok=rb.amz>25&&rb.conf>0;
+    setTimeout(()=>say(b,pick(ok?LINES.aliancaSim:LINES.aliancaNao)),1300);
+    if(ok){adj(a,b,"conf",15);adj(b,a,"conf",12);adj(a,b,"amz",8);adj(b,a,"amz",6);log(`🤝 ${N(a)} e ${N(b)} fecharam aliança.`)}
+    else{adj(a,b,"conf",-6);log(`🧊 ${N(b)} recusou aliança com ${N(a)}.`)}
+    break;}
+  }
+  refreshSel();
+}
+function confess(a){
+  const others=alive().filter(b=>b!==a);if(!others.length)return;
+  const sc=b=>a.rel[b.i].riv-a.rel[b.i].amz-a.rel[b.i].conf/2;
+  const enemy=others.slice().sort((x,y)=>sc(y)-sc(x))[0],friend=others.slice().sort((x,y)=>a.rel[y.i].amz-a.rel[x.i].amz)[0];
+  const fake=a.rel[enemy.i].riv>30&&a.rel[enemy.i].amz>-5;
+  const txt=fake?`Sorrio pro ${enemy.n}, mas meu voto é nele(a).`:`${friend.n} é minha pessoa aqui. ${enemy.n}? Quero longe.`;
+  say(a,txt,true,4.5);log(`🎥 Confessionário · ${N(a)}: “${txt}”`);
+}
+
+// ------------------------------------------------------------ eventos do dia
+function prova(){
+  const v=alive().filter(b=>b!==leader);if(v.length<2)return;
+  const score=b=>b.t.amb*Math.random()*1.4+Math.random();
+  const win=v.sort((x,y)=>score(y)-score(x))[0];
+  setLeader(win);
+  alive().forEach(s=>{if(s===win)return;adj(s,win,"amz",s.rel[win.i].amz>20?3:0);if(s.t.amb>.6){adj(s,win,"riv",8)}});
+  const g=alive().filter(b=>b!==win).sort((x,y)=>(win.rel[y.i].amz+win.rel[y.i].atr)-(win.rel[x.i].amz+win.rel[x.i].atr))[0];
+  guest=g||null;
+  if(g){adj(g,win,"amz",10);adj(g,win,"conf",8);alive().forEach(s=>{if(s!==g&&s!==win&&s.rel[win.i].amz>30){adj(s,win,"conf",-8);adj(s,g,"riv",6)}})}
+  log(`🏆 <b>Prova do Líder</b>: ${N(win)} venceu! Levou ${g?N(g):"ninguém"} para o quarto do líder.`);
+  say(win,"SOU LÍDER!!! 👑",false,3.5);
+  [win,g].forEach(b=>{if(b&&b.state!=="talk"){b.plan=null;goTo(b,"lider");b.state="walk"}});
+  refreshSel();
+}
+function setLeader(b){bots.forEach(x=>{x.ring.visible=false;x.nm.classList.remove("lead")});leader=b;if(b){b.ring.visible=true;b.nm.classList.add("lead")}
+  document.getElementById("leader").textContent=b?b.n:"ninguém"}
+function paredao(){
+  const v=alive();if(v.length<=2)return;
+  const votes={};const detail=[];
+  v.forEach(a=>{const el=v.filter(b=>b!==a&&b!==leader);if(!el.length)return;
+    const t=el.sort((x,y)=>(a.rel[y.i].riv-a.rel[y.i].amz-a.rel[y.i].conf/2)-(a.rel[x.i].riv-a.rel[x.i].amz-a.rel[x.i].conf/2))[0];
+    votes[t.i]=(votes[t.i]||0)+1;detail.push(`${a.n}→${t.n}`);
+    if(Math.random()<.3){adj(t,a,"riv",15);adj(t,a,"conf",-20)}});
+  const top=Object.entries(votes).sort((x,y)=>y[1]-x[1]);
+  const out=bots[+top[0][0]];
+  log(`🗳️ <b>Paredão</b>: ${detail.join(", ")}.`);
+  log(`🚪 ${N(out)} foi eliminado(a) com ${top[0][1]} voto(s).`);
+  say(out,"Foi bom enquanto durou... 💔",false,4);
+  setTimeout(()=>{out.alive=false;out.state="gone";goTo(out,"jardim",[11.5,9.5]);},1500);
+  if(out===leader)setLeader(null);if(out===guest)guest=null;
+  document.getElementById("alive").textContent=`${alive().length-1} na casa`;
+  if(alive().length-1<=2)setTimeout(()=>{const f=alive();const w=f.sort((x,y)=>respect(y)-respect(x))[0];log(`👑 <b>FINAL</b>: ${N(w)} vence a temporada!`);say(w,"EU GANHEI!!! 🏆",false,6)},3000);
+  buildCast();
+}
+const respect=b=>alive().reduce((s,o)=>o===b?s:s+o.rel[b.i].amz+o.rel[b.i].conf/2,0);
+
+// ------------------------------------------------------------ UI
+const castEl=document.getElementById("cast");
+function buildCast(){castEl.innerHTML="";bots.forEach(b=>{const e=document.createElement("button");e.className=(b.alive?"":"out")+(sel===b?" on":"");
+  e.innerHTML=`<i style="background:${b.c}"></i>${b.n}`;e.onclick=()=>{sel=b;buildCast();refreshSel()};castEl.appendChild(e)})}
+function status(a,b){
+  const r=a.rel[b.i],q=b.rel[a.i];
+  if(a.couple===b.i)return ["casal","var(--love)"];
+  if(r.riv>55&&r.amz<0)return ["inimigo","var(--fight)"];
+  if(r.conf<-30)return ["não confia","var(--trust)"];
+  if(r.amz>50&&r.conf>40)return ["aliado","var(--ally)"];
+  if(r.atr>60)return ["crush","var(--love)"];
+  if(r.amz>30)return ["amigo","var(--ally)"];
+  if(r.riv>35)return ["treta","var(--fight)"];
+  return ["neutro","var(--mut)"];
+}
+function refreshSel(){
+  const el=document.getElementById("rel");
+  if(!sel){el.innerHTML='<p style="color:var(--mut);margin:0">Toque num bot na casa ou no elenco.</p>';document.getElementById("selTraits").textContent="";return}
+  document.getElementById("selTitle").innerHTML=`Relações de <span style="color:${sel.c}">${sel.n}</span>`;
+  const t=sel.t;document.getElementById("selTraits").textContent=`social ${t.soc} · pavio ${t.temp} · flerte ${t.flerte} · fofoca ${t.fofoca} · ambição ${t.amb} · lealdade ${t.leal}`;
+  const bar=(v,c,neg)=>neg?`<div class="bar"><i style="background:${c};left:${v<0?50+v/2:50}%;width:${Math.abs(v)/2}%"></i></div>`:`<div class="bar"><i style="background:${c};left:0;width:${v}%"></i></div>`;
+  el.innerHTML=bots.filter(b=>b!==sel).sort((x,y)=>(sel.rel[y.i].amz+sel.rel[y.i].atr)-(sel.rel[x.i].amz+sel.rel[x.i].atr)).map(b=>{const r=sel.rel[b.i],[s,c]=status(sel,b);
+    return `<div class="r" style="${b.alive?"":"opacity:.35"}"><span style="color:${b.c};font-weight:600">${b.n}</span><div class="bars" title="amizade ${r.amz} · atração ${r.atr} · rivalidade ${r.riv} · confiança ${r.conf}">${bar(r.amz,"var(--ally)",1)}${bar(r.atr,"var(--love)")}${bar(r.riv,"var(--fight)")}${bar(r.conf,"var(--trust)",1)}</div><span class="tag" style="color:${c};border:1px solid ${c}">${s}</span></div>`}).join("");
+}
+document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{speed=+b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.classList.toggle("on",x===b))});
+document.getElementById("pause").onclick=e=>{paused=!paused;e.target.textContent=paused?"▶ Continuar":"⏸ Pausar"};
+document.getElementById("prova").onclick=prova;document.getElementById("paredao").onclick=paredao;
+document.getElementById("reset").onclick=reset;
+
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+canvas.addEventListener("pointerdown",e=>{const r=canvas.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(mouse,cam);const h=ray.intersectObjects(bots.flatMap(b=>b.parts))[0];if(h){sel=bots[h.object.userData.bot];buildCast();refreshSel()}});
+canvas.addEventListener("wheel",e=>{e.preventDefault();zoom=clamp(zoom*(e.deltaY>0?1.1:.9),.5,1.6);resize()},{passive:false});
+
+function reset(){
+  bots.forEach(b=>{scene.remove(b.g);b.nm.remove();b.bub&&b.bub.remove()});
+  bots=CAST.map(mkBot);initRel();day=1;hour=8;leader=null;guest=null;setLeader(null);feedEl.innerHTML="";
+  sel=bots[1];buildCast();refreshSel();document.getElementById("alive").textContent=`${bots.length} na casa`;
+  log("📺 Começou a temporada! 8 participantes entram na casa.");
+}
+
+// ------------------------------------------------------------ loop
+function resize(){
+  const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);
+  const a=w/h,s=(a<1?17/a:15)*zoom;cam.left=-s*a;cam.right=s*a;cam.top=s;cam.bottom=-s;cam.updateProjectionMatrix();
+}
+addEventListener("resize",resize);
+const v3=new THREE.Vector3();
+function place(el,obj,y){v3.set(obj.position.x,y,obj.position.z).project(cam);el.style.left=(v3.x+1)/2*canvas.clientWidth+"px";el.style.top=(1-v3.y)/2*canvas.clientHeight+"px"}
+const sky=[[0,0x0c0a18],[6,0x3a2a55],[9,0x2a2440],[17,0x2a2440],[19,0x5a2f4a],[21,0x0c0a18],[24,0x0c0a18]];
+let last=performance.now(),evDay=0,parDay=0;
+function frame(now){
+  const realDt=Math.min(.05,(now-last)/1000);last=now;
+  const dt=paused?0:realDt*speed;
+  if(dt){
+    const ph=hour;hour+=dt/3;           // 1 hora = 3 s
+    if(hour>=24){hour-=24;day++;bots.forEach(a=>Object.values(a.rel).forEach(r=>{r.amz=Math.round(r.amz*.97);r.atr=Math.round(r.atr*.97);r.riv=Math.round(r.riv*.97);r.conf=Math.round(r.conf*.97)}));log(`☀️ Amanheceu o dia ${day}.`)}
+    if(ph<10&&hour>=10&&evDay!==day){evDay=day;prova()}
+    if(ph<22&&hour>=22&&parDay!==day&&day>=2){parDay=day;paredao()}
+    for(const b of bots){
+      if(b.state==="gone"){if(b.path.length)step(b,dt);else b.g.visible=false;continue}
+      if(b.path.length){b.swim=false;step(b,dt);if(!b.path.length&&b.state==="walk")arrive(b)}
+      else if(b.state==="talk"){b.busyT-=dt;if(b.busyT<=0){b.state="idle";b.cd=2+Math.random()*3}}
+      else if(b.state==="wait"){b.waitT-=dt;if(b.waitT<=0)b.state="idle"}
+      else{b.cd-=dt;if(b.cd<=0)start(b)}
+      if(b.bub){b.bubT-=dt;if(b.bubT<=0){b.bub.remove();b.bub=null}}
+    }
+  }
+  const t=now/1000;
+  for(const b of bots){
+    const moving=b.path.length>0;
+    b.g.position.y=b.swim?-.55+Math.sin(t*2+b.i)*.05:(moving?Math.abs(Math.sin(t*10))*.08:0);
+    b.ring.rotation.z=t;
+    place(b.nm,b.g,b.g.position.y+1.75);b.nm.style.display=b.g.visible?"":"none";
+    if(b.bub)place(b.bub,b.g,b.g.position.y+2.2);
+  }
+  water.material.emissive.setHex(hour>19||hour<6?0x1a6aa8:0x0a3a66);
+  // céu e luz por hora
+  let c0=sky[0],c1=sky[1];for(let i=0;i<sky.length-1;i++)if(hour>=sky[i][0]&&hour<sky[i+1][0]){c0=sky[i];c1=sky[i+1]}
+  const k=(hour-c0[0])/(c1[0]-c0[0]);const col=new THREE.Color(c0[1]).lerp(new THREE.Color(c1[1]),k);
+  renderer.setClearColor(col);const dayL=hour>6&&hour<19?1:.45;sun.intensity=.85*dayL;hemi.intensity=.45+.3*dayL;
+  document.getElementById("clock").textContent=`Dia ${day} · ${String(hour|0).padStart(2,"0")}:${String((hour%1)*60|0).padStart(2,"0")}`;
+  renderer.render(scene,cam);requestAnimationFrame(frame);
+}
+function step(b,dt){
+  const tgt=b.path[0],p=b.g.position,dx=tgt.x-p.x,dz=tgt.z-p.z,d=Math.hypot(dx,dz),sp=2.4*dt;
+  if(d<=sp){p.x=tgt.x;p.z=tgt.z;b.path.shift();b.room=roomAt(p.x,p.z)}else{p.x+=dx/d*sp;p.z+=dz/d*sp;b.g.rotation.y=Math.atan2(dx,dz)}
+}
+resize();reset();
+canvas.parentElement&&new ResizeObserver(resize).observe(canvas);
+requestAnimationFrame(frame);
+})();
+</script>
