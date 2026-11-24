@@ -24,7 +24,7 @@ body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--body);margin:0;ov
 #labels{position:absolute;inset:0;pointer-events:none}
 .nm{position:absolute;transform:translate(-50%,-100%);font:600 11px var(--body);padding:1px 6px;border-radius:4px;background:rgba(18,16,28,.7);white-space:nowrap}
 .nm.lead::before{content:"♛ ";color:var(--gold)}
-.bub{position:absolute;transform:translate(-50%,-100%);max-width:170px;background:#fff;color:#1b1828;font:600 12px/1.3 var(--body);padding:6px 9px;border-radius:10px;animation:pop .25s ease-out;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.bub{position:absolute;transform:translate(-50%,-100%);max-width:220px;background:#fff;color:#1b1828;font:600 12px/1.3 var(--body);padding:6px 9px;border-radius:10px;animation:pop .25s ease-out;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 .bub::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
 .bub.think{background:#2e2a42;color:var(--ink);font-style:italic}.bub.think::after{border-top-color:#2e2a42}
 @keyframes pop{from{transform:translate(-50%,-80%) scale(.6);opacity:0}}
@@ -38,6 +38,9 @@ button:hover{border-color:var(--mut)}button:focus-visible{outline:2px solid var(
 button.on{background:var(--gold);color:#1b1828;border-color:var(--gold)}
 .feed{display:grid;gap:4px;max-height:220px;overflow-y:auto;font-size:13px}
 .feed div{padding:4px 0;border-bottom:1px solid var(--line)}
+.rodas{display:grid;gap:8px}
+.roda{border:1px solid var(--line);border-left:4px solid var(--c);border-radius:6px;padding:8px 10px;font-size:13px}
+.roda .t{font-weight:600}.roda .m{font:500 11px var(--mono);color:var(--mut)}.roda q{display:block;margin-top:4px;color:var(--mut)}
 .feed time{font:500 11px var(--mono);color:var(--mut);margin-right:6px}
 .cast{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .cast button{padding:6px 2px;display:grid;justify-items:center;gap:2px;font-size:11px}
@@ -72,7 +75,7 @@ details code{font:500 12px var(--mono);color:var(--ink)}
   <aside class="side">
     <div>
       <h1>Casa Vigiada</h1>
-      <p style="color:var(--mut);margin:6px 0 0">8 bots com personalidade própria. Cada interação mexe em quatro pesos por relação: amizade, atração, rivalidade e confiança. Toque num bot para ver o que ele sente.</p>
+      <p style="color:var(--mut);margin:6px 0 0">8 bots com história de vida própria. Eles formam rodas de 2 a 4 pessoas e conversam sobre a vida; cada roda pode dar certo ou azedar. Cada interação mexe em quatro pesos por relação: amizade, atração, rivalidade e confiança. Toque num bot para ver o que ele sente.</p>
     </div>
     <div class="ctrl" role="group" aria-label="Velocidade">
       <button id="pause">⏸ Pausar</button>
@@ -90,6 +93,10 @@ details code{font:500 12px var(--mono);color:var(--ink)}
       <div class="trait" id="selTraits"></div>
       <div class="key" style="margin:6px 0 10px"><span style="--c:var(--ally)">amizade</span><span style="--c:var(--love)">atração</span><span style="--c:var(--fight)">rivalidade</span><span style="--c:var(--trust)">confiança</span></div>
       <div class="rel" id="rel"></div>
+    </div>
+    <div>
+      <h2>Rodas de conversa agora</h2>
+      <div class="rodas" id="rodas"></div>
     </div>
     <div>
       <h2>Ao vivo</h2>
@@ -253,10 +260,10 @@ const alive=()=>bots.filter(b=>b.alive);
 // ------------------------------------------------------------ decisão por pesos
 function decide(a){
   const opts=[];
-  const others=alive().filter(b=>b!==a&&b.state!=="talk");
+  const others=alive().filter(b=>b!==a&&b.state!=="talk"&&b.state!=="roda");
   for(const b of others){
     const r=a.rel[b.i],t=a.t;
-    opts.push({k:"conversar",b,w:t.soc*(1+r.amz/100)*.9});
+    opts.push({k:"conversar",b,w:t.soc*(1+r.amz/100)*(BANK?.25:.9)});
     opts.push({k:"flertar",b,w:t.flerte*(r.atr/100)*(r.riv<40?1.4:.3)});
     opts.push({k:"brigar",b,w:t.temp*((r.riv+Math.max(0,-r.amz))/100)*1.6});
     opts.push({k:"alianca",b,w:t.amb*Math.max(0,r.amz)/100*Math.max(0,r.conf+20)/100*1.2});
@@ -294,10 +301,10 @@ function arrive(a){
     return;
   }
   const b=o.b;
-  if(b.alive&&b.state!=="talk"&&b.g.position.distanceTo(a.g.position)>3.2&&(a.tries=(a.tries||0)+1)<3&&allowed(a,b.room)&&b.room!=="confess"){
+  if(b.alive&&b.state!=="talk"&&b.state!=="roda"&&b.g.position.distanceTo(a.g.position)>3.2&&(a.tries=(a.tries||0)+1)<3&&allowed(a,b.room)&&b.room!=="confess"){
     goTo(a,b.room,[b.g.position.x+.9,b.g.position.z+.9]);a.state="walk";a.plan=o;if(b.state==="idle"){b.state="wait";b.waitT=6;b.path=[]}return}
   a.tries=0;
-  if(!b.alive||b.g.position.distanceTo(a.g.position)>3.2||b.state==="talk"){say(a,"Ué, cadê?",true);if(b.state==="wait")b.state="idle";return}
+  if(!b.alive||b.g.position.distanceTo(a.g.position)>3.2||b.state==="talk"||b.state==="roda"){say(a,"Ué, cadê?",true);if(b.state==="wait")b.state="idle";return}
   a.state=b.state="talk";a.busyT=b.busyT=4.5;b.path=[];
   face(a,b);face(b,a);
   interact(a,b,o);
@@ -351,9 +358,72 @@ function confess(a){
   const others=alive().filter(b=>b!==a);if(!others.length)return;
   const sc=b=>a.rel[b.i].riv-a.rel[b.i].amz-a.rel[b.i].conf/2;
   const enemy=others.slice().sort((x,y)=>sc(y)-sc(x))[0],friend=others.slice().sort((x,y)=>a.rel[y.i].amz-a.rel[x.i].amz)[0];
+  const bank=BANK&&BANK.confessionario[a.n];
+  if(bank&&bank.length&&Math.random()<.65){const txt=pick(bank);say(a,txt,true,5);log(`🎥 Confessionário · ${N(a)}: “${esc(txt)}”`);return}
   const fake=a.rel[enemy.i].riv>30&&a.rel[enemy.i].amz>-5;
   const txt=fake?`Sorrio pro ${enemy.n}, mas meu voto é nele(a).`:`${friend.n} é minha pessoa aqui. ${enemy.n}? Quero longe.`;
   say(a,txt,true,4.5);log(`🎥 Confessionário · ${N(a)}: “${txt}”`);
+}
+
+// ------------------------------------------------------------ rodas de conversa (falas geradas pelo DeepSeek)
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let BANK=null;const used=new Set(),rodas=[];
+fetch("conversas.json").then(r=>r.json()).then(d=>{BANK=d;log(`📼 ${d.conversas.length} conversas roteirizadas carregadas.`)}).catch(()=>log("Sem banco de conversas: usando falas curtas."));
+const byName=n=>bots.find(b=>b.n===n);
+const free=b=>b&&b.alive&&(b.state==="idle"||b.state==="walk"||b.state==="wait");
+const VIBE={boa:["var(--ally)",0x3fd19a,"😄","boa"],neutra:["var(--gold)",0xf5c542,"😐","morna"],ruim:["var(--fight)",0xff5a4f,"😠","azedou"]};
+function tryRoda(){
+  if(!BANK||rodas.length>=3||hour<8)return;
+  const cands=BANK.conversas.filter((c,i)=>!used.has(i)&&c.grupo.every(n=>free(byName(n))));
+  if(!cands.length){if(used.size>BANK.conversas.length*.7)used.clear();return}
+  // peso: clima da roda combina com o que eles já sentem, mais um bom tanto de sorte
+  const w=c=>{const g=c.grupo.map(byName);let s=0,k=0;g.forEach(a=>g.forEach(b=>{if(a!==b){s+=a.rel[b.i].amz-a.rel[b.i].riv;k++}}));const m=s/k;
+    return (c.vibe==="boa"?1+Math.max(0,m)/40:c.vibe==="ruim"?1+Math.max(0,-m)/30:1)*(.3+Math.random())};
+  let tot=0;const ws=cands.map(c=>{const x=w(c);tot+=x;return x});let r=Math.random()*tot,c=cands[0];
+  for(let i=0;i<cands.length;i++){r-=ws[i];if(r<=0){c=cands[i];break}}
+  used.add(BANK.conversas.indexOf(c));
+  const orig=c;
+  const g=c.grupo.map(byName);
+  const busy=new Set(rodas.map(x=>x.c.local));const locs=["sala","cozinha","jardim","piscina","quarto"].filter(l=>!busy.has(l));
+  c={...c,local:busy.has(c.local)||Math.random()<.5?pick(locs):c.local};
+  const room=c.local==="piscina"?"jardim":c.local;
+  let cx,cz;
+  if(c.local==="piscina"){cx=POOL.x[0]+.8+Math.random()*(POOL.x[1]-POOL.x[0]-1.6);cz=POOL.z[1]+1.1}
+  else{const rr=ROOMS[room];cx=clamp(spot(room)[0],rr.x[0]+1.6,rr.x[1]-1.6);cz=clamp(spot(room)[1],rr.z[0]+1.6,rr.z[1]-1.6)}
+  const rad=.75+.15*g.length;
+  const ring=new THREE.Mesh(new THREE.RingGeometry(rad+.35,rad+.5,28),new THREE.MeshBasicMaterial({color:VIBE[c.vibe][1],transparent:true,opacity:.7,side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2;ring.position.set(cx,.08,cz);ring.visible=false;scene.add(ring);
+  const R={c,g,cx,cz,room,line:-1,t:14,ring,started:false,last:""};
+  g.forEach((b,i)=>{const a=i/g.length*Math.PI*2;b.state="roda";b.plan=null;b.swim=false;if(b.bub){b.bub.remove();b.bub=null}
+    goTo(b,room,[cx+Math.cos(a)*rad,cz+Math.sin(a)*rad])});
+  rodas.push(R);renderRodas();
+}
+function updRodas(dt){
+  for(const R of rodas.slice()){
+    if(R.g.some(b=>!b.alive||b.state!=="roda")){endRoda(R,false);continue}
+    if(!R.started){R.t-=dt;
+      if(R.g.every(b=>!b.path.length)||R.t<=0){R.started=true;R.t=.4;R.ring.visible=true;
+        R.g.forEach(b=>{b.g.rotation.y=Math.atan2(R.cx-b.g.position.x,R.cz-b.g.position.z)});
+        log(`${VIBE[R.c.vibe][2]} Roda na ${ROOMS[R.room].label.toLowerCase()}: ${R.g.map(N).join(", ")} · <i>${esc(R.c.titulo)}</i>`)}
+      continue}
+    R.ring.material.opacity=.45+.25*Math.sin(performance.now()/300);
+    R.t-=dt;if(R.t>0)continue;
+    const f=R.c.falas[++R.line];
+    if(!f){endRoda(R,true);continue}
+    const b=byName(f.quem),dur=1.3+f.fala.length*.035;say(b,f.fala,false,dur);R.t=dur+.2;R.last=`${f.quem}: ${f.fala}`;renderRodas();
+  }
+}
+function endRoda(R,full){
+  scene.remove(R.ring);rodas.splice(rodas.indexOf(R),1);
+  R.g.forEach(b=>{if(b.state==="roda"){b.state="idle";b.cd=1+Math.random()*5}});
+  if(full){(R.c.efeitos||[]).forEach(e=>{const a=byName(e.de),b=byName(e.para);if(a&&b)["amz","atr","riv","conf"].forEach(k=>{if(+e[k])adj(a,b,k,+e[k])})});
+    log(`${VIBE[R.c.vibe][2]} ${esc(R.c.resumo)}`);refreshSel()}
+  renderRodas();
+}
+function renderRodas(){
+  const el=document.getElementById("rodas");
+  el.innerHTML=rodas.length?rodas.map(R=>`<div class="roda" style="--c:${VIBE[R.c.vibe][0]}"><div class="t">${esc(R.c.titulo)}</div><div class="m">${R.g.map(b=>b.n).join(" · ")} · clima ${VIBE[R.c.vibe][3]} · ${esc(R.c.tema)}</div>${R.last?`<q>${esc(R.last)}</q>`:'<q>se juntando…</q>'}</div>`).join("")
+    :'<p style="color:var(--mut);margin:0">Ninguém em roda agora. As rodas se formam entre 8h e meia-noite.</p>';
 }
 
 // ------------------------------------------------------------ eventos do dia
@@ -368,7 +438,7 @@ function prova(){
   if(g){adj(g,win,"amz",10);adj(g,win,"conf",8);alive().forEach(s=>{if(s!==g&&s!==win&&s.rel[win.i].amz>30){adj(s,win,"conf",-8);adj(s,g,"riv",6)}})}
   log(`🏆 <b>Prova do Líder</b>: ${N(win)} venceu! Levou ${g?N(g):"ninguém"} para o quarto do líder.`);
   say(win,"SOU LÍDER!!! 👑",false,3.5);
-  [win,g].forEach(b=>{if(b&&b.state!=="talk"){b.plan=null;goTo(b,"lider");b.state="walk"}});
+  [win,g].forEach(b=>{if(b&&b.state!=="talk"&&b.state!=="roda"){b.plan=null;goTo(b,"lider");b.state="walk"}});
   refreshSel();
 }
 function setLeader(b){bots.forEach(x=>{x.ring.visible=false;x.nm.classList.remove("lead")});leader=b;if(b){b.ring.visible=true;b.nm.classList.add("lead")}
@@ -428,6 +498,7 @@ canvas.addEventListener("pointerdown",e=>{const r=canvas.getBoundingClientRect()
 canvas.addEventListener("wheel",e=>{e.preventDefault();zoom=clamp(zoom*(e.deltaY>0?1.1:.9),.5,1.6);resize()},{passive:false});
 
 function reset(){
+  rodas.slice().forEach(r=>endRoda(r,false));used.clear();
   bots.forEach(b=>{scene.remove(b.g);b.nm.remove();b.bub&&b.bub.remove()});
   bots=CAST.map(mkBot);initRel();day=1;hour=8;leader=null;guest=null;setLeader(null);feedEl.innerHTML="";
   sel=bots[1];buildCast();refreshSel();document.getElementById("alive").textContent=`${bots.length} na casa`;
@@ -443,18 +514,21 @@ addEventListener("resize",resize);
 const v3=new THREE.Vector3();
 function place(el,obj,y){v3.set(obj.position.x,y,obj.position.z).project(cam);el.style.left=(v3.x+1)/2*canvas.clientWidth+"px";el.style.top=(1-v3.y)/2*canvas.clientHeight+"px"}
 const sky=[[0,0x0c0a18],[6,0x3a2a55],[9,0x2a2440],[17,0x2a2440],[19,0x5a2f4a],[21,0x0c0a18],[24,0x0c0a18]];
-let last=performance.now(),evDay=0,parDay=0;
+let last=performance.now(),evDay=0,parDay=0,rodaClock=2;
 function frame(now){
   const realDt=Math.min(.05,(now-last)/1000);last=now;
   const dt=paused?0:realDt*speed;
   if(dt){
-    const ph=hour;hour+=dt/3;           // 1 hora = 3 s
+    const ph=hour;hour+=dt/8;           // 1 hora = 8 s
     if(hour>=24){hour-=24;day++;bots.forEach(a=>Object.values(a.rel).forEach(r=>{r.amz=Math.round(r.amz*.97);r.atr=Math.round(r.atr*.97);r.riv=Math.round(r.riv*.97);r.conf=Math.round(r.conf*.97)}));log(`☀️ Amanheceu o dia ${day}.`)}
+    rodaClock-=dt;if(rodaClock<=0){rodaClock=1.2;tryRoda()}
+    updRodas(dt);
     if(ph<10&&hour>=10&&evDay!==day){evDay=day;prova()}
     if(ph<22&&hour>=22&&parDay!==day&&day>=2){parDay=day;paredao()}
     for(const b of bots){
       if(b.state==="gone"){if(b.path.length)step(b,dt);else b.g.visible=false;continue}
       if(b.path.length){b.swim=false;step(b,dt);if(!b.path.length&&b.state==="walk")arrive(b)}
+      else if(b.state==="roda"){}
       else if(b.state==="talk"){b.busyT-=dt;if(b.busyT<=0){b.state="idle";b.cd=2+Math.random()*3}}
       else if(b.state==="wait"){b.waitT-=dt;if(b.waitT<=0)b.state="idle"}
       else{b.cd-=dt;if(b.cd<=0)start(b)}
