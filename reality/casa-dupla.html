@@ -1,0 +1,261 @@
+<title>Casa a Dois</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: casa isométrica à esquerda, roteiro ao vivo à direita (abaixo no celular). Visual único de estúdio à noite. */
+:root{
+  --bg:#12101c;--panel:#1b1828;--line:#2e2a42;--ink:#f3f0fa;--mut:#a29cb8;
+  --gold:#f5c542;--pos:#3fd19a;--neg:#ff5a4f;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--body);margin:0;overflow:hidden}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 380px;height:100%}
+@media (max-width:820px){.app{grid-template-columns:1fr;grid-template-rows:52% 48%}}
+.stage{position:relative;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(120% 90% at 50% 30%,#2a2440,var(--bg))}
+#c{display:block;width:100%;height:100%;touch-action:none}
+#labels{position:absolute;inset:0;pointer-events:none}
+.hud{position:absolute;top:12px;left:max(12px,env(safe-area-inset-left,0px));display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+.chip{background:rgba(18,16,28,.78);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font:500 12px var(--mono)}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--neg);margin-right:6px;animation:bl 1.2s infinite}
+@keyframes bl{50%{opacity:.2}}
+.nm{position:absolute;transform:translate(-50%,-100%);text-align:center;white-space:nowrap}
+.nm b{font:600 11px var(--body);padding:1px 6px;border-radius:4px;background:rgba(18,16,28,.75)}
+.nm span{display:block;font:500 10px var(--mono);color:var(--mut);margin-top:2px;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.bub{position:absolute;transform:translate(-50%,-100%);width:max-content;max-width:230px;background:#fff;color:#1b1828;font:600 12px/1.35 var(--body);padding:7px 10px;border-radius:10px;animation:pop .25s ease-out;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.bub::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
+.bub.think{background:#2e2a42;color:var(--ink);font-style:italic;font-weight:400}.bub.think::after{border-top-color:#2e2a42}
+@keyframes pop{from{transform:translate(-50%,-80%) scale(.6);opacity:0}}
+.side{background:var(--panel);border-left:1px solid var(--line);overflow:hidden;padding-block:16px 0;padding-left:16px;padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-rows:auto auto auto minmax(0,1fr);gap:14px;min-height:0}
+@media (max-width:820px){.side{border-left:0;border-top:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px))}}
+h1{font:800 24px/1 var(--display);margin:0}
+.sub{color:var(--mut);margin:6px 0 0;font-size:13px}
+.ctrl{display:flex;gap:6px;flex-wrap:wrap}
+button{font:600 12px var(--body);color:var(--ink);background:#262238;border:1px solid var(--line);border-radius:6px;padding:7px 10px;cursor:pointer}
+button:focus-visible{outline:2px solid var(--gold)}button.on{background:var(--gold);color:#1b1828;border-color:var(--gold)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{border:1px solid var(--line);border-top:4px solid var(--c);border-radius:8px;padding:8px 10px;display:grid;gap:4px;min-width:0}
+.card b{font:800 16px var(--display)}
+.card .h{font:500 11px var(--mono);color:var(--mut)}
+.meter{height:6px;background:#262238;border-radius:3px;position:relative}
+.meter i{position:absolute;top:0;bottom:0;border-radius:3px;transition:all .4s}
+.meter::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--mut)}
+.card .t{font-size:12px;color:var(--mut);font-style:italic;min-height:3em}
+.log{overflow-y:auto;min-height:0;padding-bottom:16px;display:grid;gap:2px;align-content:start}
+.ev{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:13px;opacity:.45}
+.ev.done{opacity:1}.ev.cur{background:#262238;opacity:1}
+.ev time{font:500 11px var(--mono);color:var(--mut);padding-top:2px}
+.ev .w{font-weight:600;color:var(--c)}
+.ev .d{color:var(--mut);font-size:12px}
+@media (prefers-reduced-motion:reduce){.live,.bub{animation:none}}
+</style>
+
+<div class="app">
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div id="labels"></div>
+    <div class="hud"><span class="chip"><span class="live"></span><span id="clock">10:00</span></span><span class="chip" id="where"></span></div>
+  </div>
+  <aside class="side">
+    <div>
+      <h1>Casa a Dois</h1>
+      <p class="sub">Duas IAs sozinhas na casa. A cada 15 minutos do reality, cada uma decidiu, numa chamada ao DeepSeek, para onde ir, o que fazer, o que falar e o que pensar. Nada aqui é roteiro pronto.</p>
+    </div>
+    <div class="ctrl">
+      <button id="play">⏸ Pausar</button>
+      <button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="4">4×</button>
+      <button id="restart">Do início</button>
+    </div>
+    <div class="pair" id="pair"></div>
+    <div class="log" id="log"></div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+const DATA={"bots": [{"n": "Duda", "idade": 31, "bio": "Ex-modelo, mora sozinha num apartamento em São Paulo com dois gatos. Desfilou em Milão aos 19, parou aos 25 por pressão estética e distúrbio alimentar. Tentou ser atriz: fez figuração em novela e um comercial de shampoo, reprovou em dezenas de testes. Já teve vários namorados, incluindo um DJ famoso que a traiu e um empresário ciumento que controlava o celular dela. Hoje vende cursos de autoestima no Instagram."}, {"n": "Caio", "idade": 29, "bio": "Ex-jogador de futebol da base de um clube do Rio que rompeu o joelho aos 19 e nunca se recuperou. Hoje é personal trainer em Niterói. O pai cobrava demais e nunca disse que tinha orgulho dele. Já brigou em festa e se arrepende."}], "inicio": {"Duda": "quarto", "Caio": "cozinha"}, "eventos": [{"hora": "10:00", "quem": "Duda", "de": "quarto", "para": "cozinha", "fazer": "fazendo café e olhando a pia", "fala": "Bom dia! Já tô naquela fase de precisar de café antes de virar gente. Você também é assim?", "pensamento": "Vamos ver se ele fala ou só grunhe.", "humor": "curiosa", "sinto": 2, "motivo": "primeira conversa de verdade, quero quebrar o gelo", "ouvido": true}, {"hora": "10:07", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "pegando uma caneca para o café", "fala": "Tá de brincadeira? Eu preciso é de uns três cafés pra acordar, mano. Sem café eu não sou ninguém.", "pensamento": "Ela parece ser gente boa. Vamos ver no que dá.", "humor": "animado", "sinto": 3, "motivo": "Ela puxou papo, tô de boa.", "ouvido": true}, {"hora": "10:15", "quem": "Duda", "de": "cozinha", "para": "cozinha", "fazer": "pegando minha caneca e servindo café", "fala": "Três? Olha, eu já passei dessa fase de contar. Só não deixa meu gato ver que eu tomo café puro, ele me julga.", "pensamento": "Será que ele ri? Tô enferrujada pra flertar.", "humor": "divertida", "sinto": 2, "motivo": "quebrando o gelo com humor", "ouvido": true}, {"hora": "10:22", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "encostado na bancada, tomando café", "fala": "Gato julga? Mano, se ele te visse tomando café comigo, ia querer me arranhar. Mas relaxa, sou mais cachorro.", "pensamento": "Ela tem um gato? Isso é meio fofo.", "humor": "brincalhão", "sinto": 4, "motivo": "Ela é engraçada, tô à vontade.", "ouvido": true}, {"hora": "10:30", "quem": "Duda", "de": "cozinha", "para": "cozinha", "fazer": "encostada na bancada, mexendo o café", "fala": "Ah, cachorro é amor, mas gato é ditador. Meus dois gatos mandam em mim. Você tem cachorro?", "pensamento": "Ele parece ser do tipo que se dá bem com todo mundo. Será que é confiável?", "humor": "divertida", "sinto": 3, "motivo": "Conversa leve, ele é simpático.", "ouvido": true}, {"hora": "10:37", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "encostado na bancada, terminando o café", "fala": "Hoje não, mano. Tive um vira-lata quando era pivete, parceiro demais. Mas depois que o joelho estourou, meio que deixei pra lá.", "pensamento": "Falei do cachorro e do joelho junto, que merda.", "humor": "brincalhão", "sinto": 4, "motivo": "Duda é engraçada, clima leve.", "ouvido": true}, {"hora": "10:45", "quem": "Duda", "de": "cozinha", "para": "cozinha", "fazer": "encostada na bancada, terminando o café e olhando pra ele", "fala": "E o que aconteceu com o joelho? Se não for invasivo. Eu também tenho meus 'estragos de guerra' da época de modelo.", "pensamento": "Homem com história de superação é um charme, mas não vou me empolgar.", "humor": "curiosa", "sinto": 4, "motivo": "Ele abriu sobre algo pessoal, quero saber mais.", "ouvido": true}, {"hora": "10:52", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "encostado na bancada, terminando o café", "fala": "Mano, joelho foi foda. Rompi ligamento aos 19, base do Flamengo. Nunca mais joguei. Mas tô aqui, né? Vivo de treinar os outros agora. E os teus estragos de modelo?", "pensamento": "Ela perguntou com jeito, mas não vou me abrir demais.", "humor": "descontraído", "sinto": 5, "motivo": "Ela mostrou interesse real, sem pena.", "ouvido": true}, {"hora": "11:00", "quem": "Duda", "de": "cozinha", "para": "cozinha", "fazer": "encostando a caneca na bancada e cruzando os braços, olhando pra ele", "fala": "Ai, os meus estragos... Pressão estética, sabe? Fiquei cinco anos achando que meu corpo era um projeto que nunca tava pronto. Saí de Milão com 25 e um distúrbio alimentar de lembrança.", "pensamento": "Será que ele vai achar drama? Foda-se, ele foi sincero também.", "humor": "honesta", "sinto": 5, "motivo": "ele abriu sobre o joelho, eu tô tentando abrir também", "ouvido": true}, {"hora": "11:07", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "encostado na bancada, olhando pra ela, com a caneca ainda na mão", "fala": "Caralho, Duda. Cinco anos nessa porra? Mas você saiu, mano. Tá aqui, inteira. Isso é que importa.", "pensamento": "Porra, ela também tem cicatriz. Igual eu.", "humor": "reflexivo", "sinto": 6, "motivo": "Ela abriu o jogo sem medo. Isso merece respeito.", "ouvido": true}, {"hora": "11:15", "quem": "Duda", "de": "cozinha", "para": "cozinha", "fazer": "girando a caneca vazia entre as mãos", "fala": "Inteira é força de expressão, né? Mas tô aqui, tentando. E você, como foi largar o futebol?", "pensamento": "Ele entende o que é perder algo grande. Queria saber como ele lidou.", "humor": "aberta", "sinto": 6, "motivo": "ele me ouviu sem julgar", "ouvido": true}, {"hora": "11:22", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "encostado na bancada, olhando pra ela com a caneca na mão", "fala": "Foi foda, mano. Perdi o chão. Mas aí comecei a treinar os outros e vi que ainda podia viver disso. Não é igual, mas dá sentido.", "pensamento": "Ela entende o que é perder algo que ama.", "humor": "reflexivo", "sinto": -3, "motivo": "lembrança dolorida", "ouvido": true}, {"hora": "11:30", "quem": "Duda", "de": "cozinha", "para": "cozinha", "fazer": "deixando a caneca na pia e me apoiando na bancada de frente pra ele", "fala": "Olha, a gente virou dois ex-algo se consolando na cozinha. Mas sério, é bonito você ter achado um jeito de continuar no jogo, mesmo fora do campo.", "pensamento": "Ele entende o que é perder o chão. Isso me pega.", "humor": "tocada", "sinto": 7, "motivo": "ele me escutou e eu escutei ele de verdade", "ouvido": true}, {"hora": "11:37", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "encostado na bancada, olhando pra Duda", "fala": "Valeu, mano. Mas tem dia que dá um vazio do caralho. Você sabe como é, né?", "pensamento": "Ela entende essa dor melhor do que eu queria admitir.", "humor": "reflexivo", "sinto": -2, "motivo": "o comentário dela tocou na ferida do joelho e do futebol", "ouvido": true}, {"hora": "11:45", "quem": "Duda", "de": "cozinha", "para": "cozinha", "fazer": "lavando a caneca na pia", "fala": "Sei sim. A gente aprende a viver com o vazio, mas não deixa de sentir. É foda.", "pensamento": "Ele também tem feridas. Talvez a gente possa se entender.", "humor": "tocada", "sinto": 8, "motivo": "Ele se abriu sobre o vazio, como eu.", "ouvido": true}, {"hora": "11:52", "quem": "Caio", "de": "cozinha", "para": "jardim", "fazer": "caminhando pelo jardim, mãos nos bolsos", "fala": "Valeu, mano. Mas tô precisando de um ar. Vou dar uma volta.", "pensamento": "Não quero ficar falando de vazio e joelho. Já basta.", "humor": "na dele", "sinto": -2, "motivo": "Conversa tocou na ferida do futebol, preciso esfriar a cabeça.", "ouvido": false}, {"hora": "12:00", "quem": "Duda", "de": "cozinha", "para": "jardim", "fazer": "me aproximando das espreguiçadeiras, puxando uma pra perto dele", "fala": "Vim te fazer companhia. Tava pensando... a gente podia tomar um sol, fingir que não temos problema nenhum.", "pensamento": "Ele entende o vazio. Queria que ele me abraçasse.", "humor": "carente", "sinto": 8, "motivo": "Me senti conectada com ele.", "ouvido": true}, {"hora": "12:07", "quem": "Caio", "de": "jardim", "para": "jardim", "fazer": "sentando na espreguiçadeira, encostando a cabeça e olhando pro sol", "fala": "Senta aí, mano. Mas ó, sem filosofia barata, tá? Só quero curtir esse sol e ficar na minha.", "pensamento": "Ela veio pra ajudar, mas eu tô fechado. Não sei se quero conversa agora.", "humor": "fechado", "sinto": -1, "motivo": "Ainda na fossa, mas não quero ser grosso com ela.", "ouvido": true}, {"hora": "12:15", "quem": "Duda", "de": "jardim", "para": "jardim", "fazer": "deitando na espreguiçadeira e fechando os olhos", "fala": "Tá bom, sem filosofia. Só o sol e a gente aqui, dois bagaços humanos tentando virar bronze.", "pensamento": "Queria que ele me olhasse de verdade, não só de lado.", "humor": "carente", "sinto": 6, "motivo": "ele tá fechado, mas quero ficar perto", "ouvido": true}, {"hora": "12:22", "quem": "Caio", "de": "jardim", "para": "jardim", "fazer": "deitado na espreguiçadeira, olhando pro sol", "fala": "Bagaço humano? Tô mais pra osso, mano. Mas esse sol tá bom demais.", "pensamento": "Ela tá tentando ser leve. Não vou estragar.", "humor": "fechado", "sinto": -1, "motivo": "Ainda na fossa, mas não quero ser grosso.", "ouvido": true}, {"hora": "12:30", "quem": "Duda", "de": "jardim", "para": "jardim", "fazer": "deitada na espreguiçadeira, virada de lado pra ele, com o sol batendo na cara", "fala": "Osso é melhor que bagaço. Bagaço já foi espremido. Osso ainda tem tutano. Mas olha, esse sol tá me dando vida. Tô parecendo um lagarto de tanto que tô gostando.", "pensamento": "Queria que ele falasse mais. Mas pelo menos tá aqui.", "humor": "carente", "sinto": 6, "motivo": "ele tá perto, mas fechado", "ouvido": true}, {"hora": "12:37", "quem": "Caio", "de": "jardim", "para": "jardim", "fazer": "deitado na espreguiçadeira, olhando pro sol", "fala": "Lagarto? Tá de brincadeira, mano? Melhor lagarto que bagaço, né? Mas fecha esse papo, só sol.", "pensamento": "Ela tenta leveza, mas ainda tô na fossa.", "humor": "fechado", "sinto": -1, "motivo": "Duda tentando papo leve e eu sem cabeça.", "ouvido": true}, {"hora": "12:45", "quem": "Duda", "de": "jardim", "para": "jardim", "fazer": "deitada na espreguiçadeira, virada pra ele, com os olhos semicerrados", "fala": "Tá bom, chefe. Só sol. Mas se o silêncio ficar muito alto, eu puxo um assunto aleatório tipo 'qual seu sabor de sorvete favorito'.", "pensamento": "Queria que ele me olhasse de verdade, mas tá difícil.", "humor": "carente", "sinto": 6, "motivo": "Ele tá perto, mas fechado.", "ouvido": true}, {"hora": "12:52", "quem": "Caio", "de": "jardim", "para": "jardim", "fazer": "deitado na espreguiçadeira, olhos fechados, braço no rosto pra tampar o sol", "fala": "", "pensamento": "Silêncio tá bom. Cabeça cheia, joelho doendo, saudade do caralho.", "humor": "fechado", "sinto": -1, "motivo": "Sem paciência pra papo furado", "ouvido": false}, {"hora": "13:00", "quem": "Duda", "de": "jardim", "para": "jardim", "fazer": "deitada na espreguiçadeira, olhos fechados, suspirando de leve", "fala": "Tô quieta, tá? Mas se eu começar a cantarolar, é porque o tédio bateu forte.", "pensamento": "Queria tanto que ele puxasse um assunto... mas ele tá no mundo dele.", "humor": "carente", "sinto": 6, "motivo": "Ele quer silêncio, mas eu queria conexão.", "ouvido": true}, {"hora": "13:07", "quem": "Caio", "de": "jardim", "para": "jardim", "fazer": "deitado na espreguiçadeira, braço no rosto", "fala": "Se começar a cantarolar, mano, eu te jogo na piscina. Tô de boa aqui, só sol.", "pensamento": "Essa mina não cala a boca, puta que pariu.", "humor": "irritado", "sinto": -1, "motivo": "impaciência e tédio", "ouvido": true}, {"hora": "13:15", "quem": "Duda", "de": "jardim", "para": "jardim", "fazer": "deitada na espreguiçadeira, virando de barriga pra cima e suspirando", "fala": "Olha, me jogar na piscina é meio radical. Mas se eu cantarolar, é só um sinal de que o silêncio tá gritando. Prometo que canto baixinho.", "pensamento": "Queria tanto que ele puxasse um assunto. Mas vou respeitar o espaço dele.", "humor": "carente", "sinto": 5, "motivo": "Ele quer silêncio, mas eu queria conexão.", "ouvido": true}, {"hora": "13:22", "quem": "Caio", "de": "jardim", "para": "jardim", "fazer": "deitado na espreguiçadeira, de costas para Duda", "fala": "Canta baixinho, então, mano. Mas se eu ouvir, te jogo na piscina. Tô avisando.", "pensamento": "Se ela cantarolar, eu jogo mesmo. Tô precisando de silêncio.", "humor": "irritado", "sinto": -1, "motivo": "Duda não para de falar e eu só quero silêncio.", "ouvido": true}, {"hora": "13:30", "quem": "Duda", "de": "jardim", "para": "jardim", "fazer": "deitada na espreguiçadeira, virando de lado para Caio", "fala": "Tá, silêncio alto demais. Última pergunta idiota e eu paro: sorvete de flocos ou chocolate? Preciso saber com quem tô dividindo o sol.", "pensamento": "Queria que ele puxasse assunto, mas só eu falo.", "humor": "carente", "sinto": 3, "motivo": "Quero conexão, ele quer silêncio.", "ouvido": true}, {"hora": "13:37", "quem": "Caio", "de": "jardim", "para": "jardim", "fazer": "deitado na espreguiçadeira, de olho fechado, braço no rosto", "fala": "Flocos, porra. Agora cala a boca e deixa eu curtir o sol, mano.", "pensamento": "Essa mina não larga meu pé. Um silêncio, só isso.", "humor": "irritado", "sinto": -3, "motivo": "Duda não para de puxar assunto", "ouvido": true}, {"hora": "13:45", "quem": "Duda", "de": "jardim", "para": "piscina", "fazer": "levantando da espreguiçadeira e indo em direção à piscina", "fala": "Tá bom, Caio. Vou te deixar curtir o sol em paz. Vou dar um mergulho pra ver se esse calor e esse tédio passam. Se quiser, depois a gente divide um flocos.", "pensamento": "Ele quer silêncio? Então toma silêncio. Mas eu queria tanto conversar...", "humor": "carente", "sinto": 2, "motivo": "Ele me dispensou, mas ainda quero conexão.", "ouvido": false}, {"hora": "13:52", "quem": "Caio", "de": "jardim", "para": "cozinha", "fazer": "pegando uma água na geladeira", "fala": "Vou pegar uma água, esse sol tá me deixando louco.", "pensamento": "Essa Duda não cala a boca, mano. Preciso de um tempo.", "humor": "irritado", "sinto": -3, "motivo": "Duda não para de falar, quero sossego.", "ouvido": false}, {"hora": "14:00", "quem": "Duda", "de": "piscina", "para": "cozinha", "fazer": "saindo da piscina com a toalha nos ombros, pingando, indo pegar o sorvete de flocos", "fala": "Olha, prometi flocos e flocos eu cumpro. Vim pegar o pote — se você quiser, é só esticar a mão.", "pensamento": "Tô carente, mas não vou implorar. Só quero um pouco de companhia.", "humor": "carente", "sinto": 3, "motivo": "Quero conexão sem parecer needy demais", "ouvido": true}, {"hora": "14:07", "quem": "Caio", "de": "cozinha", "para": "jardim", "fazer": "pegando o pote de sorvete e voltando pro sol", "fala": "Estica aí, então, mano. Vou comer no sol.", "pensamento": "Não quero papo, só o sorvete e o sol.", "humor": "irritado", "sinto": -2, "motivo": "sorvete bom, mas quero sossego", "ouvido": false}, {"hora": "14:15", "quem": "Duda", "de": "cozinha", "para": "jardim", "fazer": "levando o pote de sorvete de flocos e duas colheres", "fala": "Trouxe o flocos. Se não quiser, eu como tudo e finjo que foi a piscina.", "pensamento": "Será que ele vai achar que tô correndo atrás?", "humor": "carente", "sinto": 4, "motivo": "quer companhia sem pressão", "ouvido": true}, {"hora": "14:22", "quem": "Caio", "de": "jardim", "para": "jardim", "fazer": "comendo sorvete de flocos na espreguiçadeira, de olho fechado", "fala": "Pronto, peguei. Agora deixa eu comer em paz, mano.", "pensamento": "Se ela abrir a boca de novo, vou pra piscina.", "humor": "irritado", "sinto": -2, "motivo": "quero sossego, mas o sorvete é bom", "ouvido": true}, {"hora": "14:30", "quem": "Duda", "de": "jardim", "para": "jardim", "fazer": "deitada na espreguiçadeira ao lado, comendo flocos direto do pote com a colher grande", "fala": "Tá bom, comendo em silêncio. Mas se eu atacar o pote inteiro, a culpa é do tédio, não minha.", "pensamento": "Ele me cortou. Doeu, mas vou fingir que não. Tô carente e com vergonha.", "humor": "carente e orgulho ferido", "sinto": 3, "motivo": "queria companhia, ele me chutou pra escanteio", "ouvido": true}, {"hora": "14:37", "quem": "Caio", "de": "jardim", "para": "jardim", "fazer": "deitado na espreguiçadeira, comendo sorvete de flocos devagar", "fala": "Esse sorvete tá salvando, mano. Mas esse sol tá me torrando.", "pensamento": "Queria que ela fosse embora, mas o flocos é bom demais.", "humor": "irritado", "sinto": -2, "motivo": "calor e tédio", "ouvido": true}, {"hora": "14:45", "quem": "Duda", "de": "jardim", "para": "piscina", "fazer": "entrando na piscina devagar", "fala": "Aproveita seu sol, mano. Vou dar um mergulho pra ver se essa carência passa.", "pensamento": "Ele me chamou de mano. Orgulho ferido, mas disfarço.", "humor": "Carente", "sinto": 2, "motivo": "Ele pediu paz e me tratou como brother, que babado.", "ouvido": false}, {"hora": "14:52", "quem": "Caio", "de": "jardim", "para": "cozinha", "fazer": "pegando água na geladeira", "fala": "Chega de sol, mano. Vou pegar uma água e ficar na sombra.", "pensamento": "Esse tédio tá me matando. E esse sol também.", "humor": "irritado", "sinto": -2, "motivo": "sol e tédio", "ouvido": false}, {"hora": "15:00", "quem": "Duda", "de": "piscina", "para": "cozinha", "fazer": "pegando um copo de água", "fala": "Vim só pegar água, juro. Não vou roubar seu sol, pode ficar tranquilo.", "pensamento": "Queria que ele me chamasse pra conversar, mas ele quer paz.", "humor": "carente", "sinto": 3, "motivo": "Queria companhia, mas não vou implorar.", "ouvido": true}, {"hora": "15:07", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "bebendo água, olhando pela janela", "fala": "Relaxa, não tô nem aí pro sol. Mas esse calor tá me matando, mano.", "pensamento": "Queria estar na praia, mas nem isso.", "humor": "irritado", "sinto": -2, "motivo": "calor e tédio", "ouvido": true}, {"hora": "15:15", "quem": "Duda", "de": "cozinha", "para": "cozinha", "fazer": "bebendo água, encostada na bancada", "fala": "E aí, o que você tanto olha nessa janela? Tem algum vizinho interessante?", "pensamento": "Queria que ele puxasse assunto, mas parece que só eu falo.", "humor": "carente", "sinto": 3, "motivo": "Ele tá aqui, mas parece distante.", "ouvido": true}, {"hora": "15:22", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "bebendo água devagar, encostado na pia de frente pra ela", "fala": "Vizinho? Tô olhando é pra porra do muro, mano. Calor do caralho, não tem nada pra fazer nessa casa.", "pensamento": "Ela tá de papo furado, mas pelo menos não tô sozinho.", "humor": "irritado", "sinto": -2, "motivo": "calor e tédio, papo sem graça", "ouvido": true}, {"hora": "15:30", "quem": "Duda", "de": "cozinha", "para": "cozinha", "fazer": "bebendo água devagar, encostada na bancada ao lado de Caio", "fala": "Calor, muro, tédio... e eu aqui tentando arrancar conversa de você. Relaxa, não vou cobrar nada. Só sentar do teu lado e fingir que tem assunto.", "pensamento": "Ele fala tanto de calor pra não falar de nada. Preferia o silêncio dele a ficar sozinha.", "humor": "carente", "sinto": 2, "motivo": "Queria conversa de verdade, mas ele tá longe mesmo estando aqui.", "ouvido": true}, {"hora": "15:37", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "bebendo água devagar", "fala": "Fingir que tem assunto? Então finge quieta, mano. Tô na minha.", "pensamento": "Porra, nem pra me deixar em paz. Calor do caralho.", "humor": "irritado", "sinto": -3, "motivo": "tédio e calor", "ouvido": true}, {"hora": "15:45", "quem": "Duda", "de": "cozinha", "para": "quarto", "fazer": "pegando meu copo d'água e saindo devagar da cozinha", "fala": "Tá bom, mano. Quieta eu fico. Se precisar de alguém pra reclamar do muro, já sabe.", "pensamento": "Nem ele quer saber. Vou pro quarto mofar um pouco.", "humor": "careta", "sinto": -1, "motivo": "Levou um fora seco de novo", "ouvido": false}, {"hora": "15:52", "quem": "Caio", "de": "cozinha", "para": "piscina", "fazer": "tirando a camisa e sentando na beira da piscina", "fala": "Vou é dar um mergulho, esse calor não tá com nada, mano.", "pensamento": "Se ela aparecer, finjo que não vi. Não vou dar bola.", "humor": "irritado", "sinto": -4, "motivo": "calor e tédio, mas não quero admitir que a companhia faz falta", "ouvido": false}, {"hora": "16:00", "quem": "Duda", "de": "quarto", "para": "quarto", "fazer": "deitada na cama, olhando pro teto", "fala": "Que tédio...", "pensamento": "Ele não quer papo, e eu aqui que nem boba.", "humor": "desanimada", "sinto": -2, "motivo": "Mais um fora, tô me sentindo idiota.", "ouvido": false}, {"hora": "16:07", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "mergulhando na piscina e depois boiando de costas", "fala": "Água tá boa, mano. Mas esse silêncio tá esquisito.", "pensamento": "Cadê ela? Melhor não ir atrás, não quero parecer carente.", "humor": "irritado", "sinto": -4, "motivo": "calor e tédio, mas a companhia faz falta", "ouvido": false}, {"hora": "16:15", "quem": "Duda", "de": "quarto", "para": "confess", "fazer": "entrando no confessionário e sentando", "fala": "Vim aqui pro confessionário porque, né... O Caio tá me tratando como um móvel. Acho que ele não curte meu papo.", "pensamento": "Talvez eu esteja muito carente, mas ele também é um chato.", "humor": "magoada", "sinto": -4, "motivo": "Me senti rejeitada e vim desabafar.", "ouvido": false}, {"hora": "16:22", "quem": "Caio", "de": "piscina", "para": "cozinha", "fazer": "saindo da piscina, pegando uma toalha e indo pra cozinha", "fala": "Chega de piscina, mano. Vou ver se tem algo pra comer.", "pensamento": "Cadê essa Duda? Tá esquisito esse silêncio.", "humor": "irritado", "sinto": -4, "motivo": "calor e tédio, companhia faz falta", "ouvido": false}, {"hora": "16:30", "quem": "Duda", "de": "confess", "para": "confess", "fazer": "suspirando, olhando pra câmera", "fala": "Eu vim aqui pra desabafar, mas a verdade é que eu tô é com raiva de mim. Por que eu fui tentar? Ele claramente não quer papo.", "pensamento": "Devia ter ficado no quarto. Pelo menos lá eu não ouço 'mano'.", "humor": "rejeitada", "sinto": -5, "motivo": "me senti um móvel na cozinha", "ouvido": false}, {"hora": "16:37", "quem": "Caio", "de": "cozinha", "para": "cozinha", "fazer": "abrindo a geladeira e pegando um pedaço de frango", "fala": "Mano, esse silêncio tá me deixando louco. Mas não vou atrás dela, não.", "pensamento": "Ela ficou quieta, mas eu fui grosso. Talvez eu devesse... não, ela que se vire.", "humor": "irritado", "sinto": -4, "motivo": "companhia faz falta, mas orgulho fala mais alto", "ouvido": false}, {"hora": "16:45", "quem": "Duda", "de": "confess", "para": "piscina", "fazer": "entrando na piscina, mergulhando devagar", "fala": "Vou dar um mergulho pra ver se essa raiva passa.", "pensamento": "Ele que fique com o muro dele.", "humor": "irritada", "sinto": -6, "motivo": "me senti um móvel na cozinha", "ouvido": false}, {"hora": "16:52", "quem": "Caio", "de": "cozinha", "para": "piscina", "fazer": "sentando na beira da piscina, de costas pra ela, terminando de comer o frango", "fala": "Tô só terminando de comer, mano. Depois vejo se a água ainda tá boa.", "pensamento": "Não vou dar o braço a torcer, mas esse silêncio tá me matando.", "humor": "irritado", "sinto": -3, "motivo": "Orgulho ferido, mas carência batendo.", "ouvido": true}, {"hora": "17:00", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de costas, olhando pro céu", "fala": "Água tá ótima, pode vir. Mas se for pra ficar de cara pro muro, nem desce.", "pensamento": "Por que eu ainda tô aqui tentando? Burrice.", "humor": "irritada", "sinto": -5, "motivo": "ele só age quando quer, e eu fico me rastejando", "ouvido": true}, {"hora": "17:07", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "jogando o resto do frango no prato, entrando na água e indo na direção dela", "fala": "Cara pro muro? Tô de cara pra você agora, mano. Fala logo o que tá pegando.", "pensamento": "Por que ela me tira do sério assim? Mas não vou abaixar a cabeça.", "humor": "irritado", "sinto": -2, "motivo": "Orgulho ferido, mas a carência falou mais alto", "ouvido": true}, {"hora": "17:15", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de costas, olhando pra Caio com os braços cruzados na água", "fala": "O que tá pegando? Nada, Caio. Só tô aqui pensando na vida. Você que veio todo 'fala logo', aí me quebra.", "pensamento": "Ele só aparece quando quer. Tô cansada disso.", "humor": "sarcástica", "sinto": -5, "motivo": "Ele só age quando quer", "ouvido": true}, {"hora": "17:22", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Duda, braços cruzados na água", "fala": "Pensando na vida? Então pensa alto, mano. Tô aqui, não sou muro.", "pensamento": "Ela me quebra, mas eu também quero falar. Orgulho do caralho.", "humor": "tenso", "sinto": -1, "motivo": "Carência falou mais alto, mas o orgulho ainda tá ferido.", "ouvido": true}, {"hora": "17:30", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pro Caio, dando uma risada curta e molhando o rosto", "fala": "Tá, tu quer saber? Fico bolada porque parece que eu tô sempre puxando papo e tu só responde o básico. Cansa.", "pensamento": "Falei demais? Foda-se, melhor que engolir.", "humor": "irritada", "sinto": -3, "motivo": "Ele só reage quando provocado, isso me irrita", "ouvido": true}, {"hora": "17:37", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Duda, braços cruzados na água", "fala": "Cansa? Então senta aí e relaxa, mano. Não sou de puxar papo, não. Mas se quer saber de mim, pergunta. Só não fica de onda que eu respondo.", "pensamento": "Ela tem razão, mas não vou dar o braço a torcer fácil.", "humor": "tenso", "sinto": -1, "motivo": "Ela me cobrou, mas não vou me abrir de cara.", "ouvido": true}, {"hora": "17:45", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Caio, relaxando os ombros", "fala": "Tá, Caio. Me conta uma coisa que ninguém aqui sabe de você. E olha, não vale resposta de robô.", "pensamento": "Vamos ver se ele sai do script.", "humor": "desconfiada", "sinto": -1, "motivo": "Ele disse pra perguntar", "ouvido": true}, {"hora": "17:52", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Duda, sem desviar o olhar", "fala": "Tá bom, mano. Ninguém sabe que eu quase vivi do futebol. Rompi o joelho aos 19 e nunca mais foi a mesma coisa. Pronto, falei.", "pensamento": "Falei demais? Não. Ela pediu, eu mandei a real.", "humor": "na defensiva", "sinto": -1, "motivo": "Abri uma ferida antiga, mas não vou me entregar de vez.", "ouvido": true}, {"hora": "18:00", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pro Caio, apoiando os braços na borda", "fala": "Olha, Caio... isso é pesado. Obrigada por abrir. Eu também já tive que largar sonho por causa de corpo e cabeça. Sei como é.", "pensamento": "Ele falou algo real. Talvez não seja só um muro.", "humor": "surpresa", "sinto": -1, "motivo": "Ele se abriu, mas ainda tô com o pé atrás.", "ouvido": true}, {"hora": "18:07", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Duda, olhando pro teto, balançando a cabeça devagar", "fala": "É, mano... a vida cobra. Mas tô aqui, né? Não vou ficar de mimimi, não. Cada um carrega o que dá.", "pensamento": "Ela entendeu. Mas não vou abrir mais que isso, não.", "humor": "defensivo", "sinto": -1, "motivo": "Não quero me entregar de vez", "ouvido": true}, {"hora": "18:15", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pro Caio, olhando pra ele com um sorriso torto", "fala": "Olha, Caio... você me surpreendeu. Achei que ia falar de futebol e veio com essa. Respeito.", "pensamento": "Ele é mais profundo do que eu imaginava. Fiquei curiosa.", "humor": "surpresa", "sinto": -1, "motivo": "Ele se abriu de verdade, mas ainda tô com o pé atrás.", "ouvido": true}, {"hora": "18:22", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Duda, descruzando os braços e passando a mão na água", "fala": "Respeito é bom, mano. Mas não fica me olhando com pena, não. Odeio isso. Eu caí, mas levantei. Tô aqui inteiro.", "pensamento": "Ela me viu por dentro. Não sei se gosto ou se odeio isso.", "humor": "desconfiado", "sinto": -2, "motivo": "Ela respeitou, mas tô com medo de virar vitrine", "ouvido": true}, {"hora": "18:30", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Caio, dando um sorriso leve", "fala": "Olha, Caio... pena eu tenho de quem desiste. Você levantou, tá aqui. Isso é admiração, não é pena.", "pensamento": "Ele não quer dó. Mostrar que entendo sem parecer piedosa.", "humor": "admirada", "sinto": 0, "motivo": "Ele mostrou força e não quer pena, isso me pegou.", "ouvido": true}, {"hora": "18:37", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Duda, passando a mão molhada no rosto e encarando ela", "fala": "Admiração, mano? Então tá. Mas não vira fã, não, que eu sou péssimo de lidar. E você... que sonho foi esse que você largou?", "pensamento": "Falou de corpo e cabeça. Quero ver se é verdade ou papo furado.", "humor": "desconfiado", "sinto": 0, "motivo": "Ela respeitou, mas quero saber se é real", "ouvido": true}, {"hora": "18:45", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pro Caio", "fala": "Olha, Caio... meu sonho era desfilar. Fiz Milão aos 19, mas o corpo cobrou. Parei aos 25, virei ex-modelo com distúrbio. Hoje vendo autoestima no Instagram, ironia, né?", "pensamento": "Ele não quer pena, mas eu quero saber mais.", "humor": "curiosa", "sinto": 1, "motivo": "Ele abriu o jogo sem drama, isso me pegou.", "ouvido": true}, {"hora": "18:52", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Duda, me aproximo um pouco e encaro ela", "fala": "Milão aos 19, mano? Isso é foda. Mas vender autoestima agora... tá de brincadeira? Isso é real ou é pose pra Instagram?", "pensamento": "Ela parece sincera, mas quero saber se não é só personagem.", "humor": "desconfiado", "sinto": 1, "motivo": "Ela abriu o jogo, mas ainda não confio totalmente.", "ouvido": true}, {"hora": "19:00", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pro Caio, encaro ele e dou um sorriso torto", "fala": "Olha, Caio... é real. Mas às vezes parece pose até pra mim. Vender autoestima com a minha no rotativo é babado, né?", "pensamento": "Ele cutucou onde dói. Mas gostei da sinceridade.", "humor": "irônica", "sinto": 1, "motivo": "Ele foi direto, me desestabilizou.", "ouvido": true}, {"hora": "19:07", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pra Duda, encarando ela", "fala": "Babado é pouco, mano. Vender autoestima com a sua no rotativo é foda. Mas você é honesta, isso vale mais que pose. O que você faz quando a pressão aperta?", "pensamento": "Ela parece sincera, mas já vi gente vender ilusão. Fico esperto.", "humor": "desconfiado", "sinto": 2, "motivo": "Ela admitiu que é foda vender autoestima.", "ouvido": true}, {"hora": "19:15", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de frente pro Caio, dando uma risada curta e molhando o rosto de novo", "fala": "Olha, Caio... eu como. Sério. Quando aperta, eu como até o rotativo parar. Depois choro no banho ouvindo música triste. Terapia é caro, né?", "pensamento": "Falei demais? Ele vai achar que sou um poço de problema.", "humor": "autodepreciativa", "sinto": 2, "motivo": "ele me escutou sem julgar, isso mexe comigo", "ouvido": true}, {"hora": "19:22", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando, splash água no rosto", "fala": "Comer e chorar no banho? Já fiz muito isso, mano. Mas olha, terapia não resolve tudo, não. Às vezes é só desabafar com alguém que não te julga. Tô aqui.", "pensamento": "Ela é foda, mas não vou me abrir demais. Ainda não confio.", "humor": "pensativo", "sinto": 3, "motivo": "Ela foi honesta sobre a luta dela, e eu me identifiquei.", "ouvido": true}, {"hora": "19:30", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de barriga pra cima, olhos semi-fechados", "fala": "Olha, Caio... 'tô aqui' é fácil falar. Mas obrigada. Só não vira meu terapeuta, que eu não pago.", "pensamento": "Queria acreditar que ele fica mesmo. Medo de me apegar.", "humor": "grata e desconfiada", "sinto": 3, "motivo": "Ele se ofereceu sem julgar, isso mexe comigo.", "ouvido": true}, {"hora": "19:37", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de barriga pra cima, olhando pro céu, com um braço atrás da cabeça", "fala": "Terapeuta? Relaxa, não viro não. Mas se quiser desabafar, tô aqui. Só não me cobra, que meu rotativo também tá no limite.", "pensamento": "Ela se faz de durona, mas tá carente. Igual eu.", "humor": "sincero", "sinto": 4, "motivo": "Ela agradeceu, mas se protegeu. Me identifiquei.", "ouvido": true}, {"hora": "19:45", "quem": "Duda", "de": "piscina", "para": "piscina", "fazer": "boiando de barriga pra cima, rindo", "fala": "Olha, Caio... rotativo no limite? Então a gente divide o cheque especial. Mas mudando de assunto: meus gatos devem estar me julgando por chegar molhada de novo.", "pensamento": "Rotativo no limite, ele diz. Mas será que ele fala isso pra todas?", "humor": "desconfiada", "sinto": 4, "motivo": "Ele se abriu, mas ainda não sei se é real.", "ouvido": true}, {"hora": "19:52", "quem": "Caio", "de": "piscina", "para": "piscina", "fazer": "boiando de barriga pra cima, rindo junto", "fala": "Gato é assim mesmo, mano. Julga mas fica de olho na porta. Igual gente que finge que não liga.", "pensamento": "Ela tem gatos, deve ser sozinha igual eu.", "humor": "sincero", "sinto": 5, "motivo": "ela mostrou um lado fofo", "ouvido": true}], "uso": {"chamadas": 80, "tokens_in": 97492, "tokens_out": 58787}};
+
+// ------------------------------------------------------------ casa
+const ROOMS = {
+  quarto:{x:[-12,-4],z:[-9,-1],col:0x6e5aa8,label:"Quarto"},
+  lider:{x:[-12,-4],z:[-1,4],col:0xc9a227,label:"Quarto do Líder"},
+  confess:{x:[-12,-4],z:[4,9],col:0xa8323a,label:"Confessionário"},
+  sala:{x:[-4,4],z:[-9,1],col:0x8a6a4f,label:"Sala"},
+  cozinha:{x:[4,12],z:[-9,1],col:0xd8d2c4,label:"Cozinha"},
+  jardim:{x:[-4,12],z:[1,9],col:0x4f9a52,label:"Área externa"},
+};
+// portas: [salaA, salaB, ponto em A, ponto em B]
+const DOORS = [
+  ["quarto","sala",[-4.8,-5],[-3.2,-5]],
+  ["cozinha","sala",[4.8,-4],[3.2,-4]],
+  ["sala","jardim",[0,0.2],[0,1.8]],
+  ["cozinha","jardim",[8,0.2],[8,1.8]],
+  ["lider","jardim",[-4.8,2.5],[-3.2,2.5]],
+  ["confess","jardim",[-4.8,6.5],[-3.2,6.5]],
+];
+const POOL = {x:[1,8],z:[3.4,7.6]};
+function route(a,b){ // BFS entre cômodos
+  if(a===b) return [];
+  const prev={[a]:null},q=[a];
+  while(q.length){const r=q.shift();for(const d of DOORS){let o=null,p1,p2;
+    if(d[0]===r){o=d[1];p1=d[2];p2=d[3]}else if(d[1]===r){o=d[0];p1=d[3];p2=d[2]}
+    if(o&&!(o in prev)){prev[o]={r,p1,p2};q.push(o)}}}
+  const pts=[];let cur=b;while(prev[cur]){pts.unshift(prev[cur].p1,prev[cur].p2);cur=prev[cur].r}return pts;
+}
+function roomAt(x,z){for(const k in ROOMS){const r=ROOMS[k];if(x>=r.x[0]&&x<=r.x[1]&&z>=r.z[0]&&z<=r.z[1])return k}return "jardim"}
+function spot(room){
+  const r=ROOMS[room];let x,z,i=0;
+  do{x=r.x[0]+1.2+Math.random()*(r.x[1]-r.x[0]-2.4);z=r.z[0]+1.2+Math.random()*(r.z[1]-r.z[0]-2.4);i++}
+  while(room==="jardim"&&x>POOL.x[0]-.4&&x<POOL.x[1]+.4&&z>POOL.z[0]-.4&&z<POOL.z[1]+.4&&i<20);
+  return [x,z];
+}
+
+// ------------------------------------------------------------ three
+const canvas=document.getElementById("c");
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+const cam=new THREE.OrthographicCamera(-1,1,1,-1,-100,200);
+cam.position.set(22,22,22);cam.lookAt(0,0,0);
+let zoom=1;
+const hemi=new THREE.HemisphereLight(0xffffff,0x443355,.7);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffffff,.8);sun.position.set(10,25,8);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-20,right:20,top:20,bottom:-20});scene.add(sun);
+const mat=c=>new THREE.MeshLambertMaterial({color:c});
+function box(w,h,d,c,x,y,z,parent=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c));m.position.set(x,y+h/2,z);m.castShadow=m.receiveShadow=true;parent.add(m);return m}
+// base
+box(26,.4,20,0x2a2440,0,-.4,0);
+for(const k in ROOMS){const r=ROOMS[k];box(r.x[1]-r.x[0],.05,r.z[1]-r.z[0],r.col,(r.x[0]+r.x[1])/2,0,(r.z[0]+r.z[1])/2)}
+// piscina
+box(POOL.x[1]-POOL.x[0]+.6,.25,POOL.z[1]-POOL.z[0]+.6,0xe9e4d8,(POOL.x[0]+POOL.x[1])/2,0,(POOL.z[0]+POOL.z[1])/2);
+const water=new THREE.Mesh(new THREE.BoxGeometry(POOL.x[1]-POOL.x[0],.08,POOL.z[1]-POOL.z[0]),new THREE.MeshLambertMaterial({color:0x2ec4ff,transparent:true,opacity:.85,emissive:0x0a3a66}));
+water.position.set((POOL.x[0]+POOL.x[1])/2,.24,(POOL.z[0]+POOL.z[1])/2);scene.add(water);
+// paredes (com vãos nas portas)
+const WALL=0xe8e2f0,WH=1.1;
+function wallX(z,x0,x1,gaps=[]){let s=x0;[...gaps.sort((a,b)=>a-b),x1+99].forEach(g=>{const e=Math.min(g-.9,x1);if(e>s)box(e-s,WH,.2,WALL,(s+e)/2,0,z);s=g+.9})}
+function wallZ(x,z0,z1,gaps=[]){let s=z0;[...gaps.sort((a,b)=>a-b),z1+99].forEach(g=>{const e=Math.min(g-.9,z1);if(e>s)box(.2,WH,e-s,WALL,x,0,(s+e)/2);s=g+.9})}
+wallX(-9,-12,12);wallZ(-12,-9,9);
+wallZ(-4,-9,9,[-5,2.5,6.5]);wallX(-1,-12,-4);wallX(4,-12,-4);
+wallZ(4,-9,1,[-4]);wallX(1,-4,12,[0,8]);
+// móveis
+for(let i=0;i<3;i++){box(1.6,.5,2.6,0xf2efe9,-10.6+i*2.8,0,-6.8);box(1.6,.25,.6,0x9b8ce0,-10.6+i*2.8,.5,-7.8)} // camas
+box(3.4,.6,3,0xfff2c2,-9.6,0,1.5);box(3.4,.9,.4,0xd4a62a,-9.6,0,-.2);box(.6,1.6,.6,0xf5c542,-5.2,0,0); // cama do líder + troféu
+box(1.4,1.2,1,0x1b1828,-10.5,0,7.2);box(.6,.6,.6,0x333333,-7,0,6.5); // poltrona confess. + câmera
+box(4,.7,1.2,0x3d5a80,0,0,-7.6);box(1.2,.7,3,0x3d5a80,-2.2,0,-5.8);box(1.6,.35,1,0x5c4632,0,0,-5); // sofá + mesinha
+box(7,1,1,0xb8b2a6,8,0,-8.4);box(2.6,1,1.4,0x8f8a80,8,0,-4.8); // cozinha
+for(let i=0;i<3;i++)box(.8,.25,2,0xffffff,1.6+i*2.4,0,8.4); // espreguiçadeiras
+[[-2.6,3],[-2.6,8],[11,2.4],[11,8.2]].forEach(([x,z])=>{box(.3,1.2,.3,0x6b4a2b,x,0,z);const t=new THREE.Mesh(new THREE.IcosahedronGeometry(.9,0),mat(0x2f7d3a));t.position.set(x,1.8,z);t.castShadow=true;scene.add(t)});
+
+
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const COLORS=["#c77dff","#ff8a2a"];
+const LABEL={...Object.fromEntries(Object.entries(ROOMS).map(([k,v])=>[k,v.label])),piscina:"Piscina"};
+const labels=document.getElementById("labels");
+
+// ---------------------------------------------------------------- bots
+const bots=DATA.bots.map((d,i)=>{
+  const g=new THREE.Group(),c=COLORS[i];
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.32,.42,.9,8),mat(c));body.position.y=.45;body.castShadow=true;
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),mat(0xf3d6c0));head.position.y=1.15;head.castShadow=true;
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(.31,10,6,0,Math.PI*2,0,Math.PI/2),mat(c));hair.position.y=1.2;
+  g.add(body,head,hair);scene.add(g);
+  const nm=document.createElement("div");nm.className="nm";nm.innerHTML=`<b style="color:${c}">${d.n}</b><span></span>`;labels.appendChild(nm);
+  return {n:d.n,c,g,nm,path:[],room:null,swim:false,bub:null,sinto:0,motivo:"",humor:"",pens:""};
+});
+const byN=n=>bots.find(b=>b.n===n);
+const homeRoom=r=>r==="piscina"?"jardim":r;
+function pointIn(room,other){
+  if(room==="piscina"&&other&&other.room==="piscina"){const q=other.g.position;return [clamp(q.x+(q.x>4.5?-1.5:1.5),POOL.x[0]+.6,POOL.x[1]-.6),clamp(q.z,POOL.z[0]+.6,POOL.z[1]-.6)]}
+  if(room==="piscina")return [POOL.x[0]+1.2+Math.random()*(POOL.x[1]-POOL.x[0]-2.4),POOL.z[0]+1+Math.random()*(POOL.z[1]-POOL.z[0]-2)];
+  if(other&&other.room===room&&!other.path.length){ // chega perto de quem já está lá
+    const rr=ROOMS[homeRoom(room)];const p=other.g.position;
+    return [clamp(p.x+(Math.random()<.5?1.1:-1.1),rr.x[0]+.8,rr.x[1]-.8),clamp(p.z+(Math.random()<.5?1.1:-1.1),rr.z[0]+.8,rr.z[1]-.8)];
+  }
+  return spot(homeRoom(room));
+}
+function teleport(b,room){const [x,z]=pointIn(room);b.g.position.set(x,0,z);b.room=room;b.path=[];b.swim=room==="piscina"}
+function walk(b,room,other){
+  const from=homeRoom(b.room),to=homeRoom(room);
+  b.path=[...route(from,to),pointIn(room,other)].map(p=>new THREE.Vector3(p[0],0,p[1]));
+  b.room=room;b.swim=false;
+}
+function say(b,txt,think){
+  if(b.bub)b.bub.remove();if(!txt){b.bub=null;return}
+  const el=document.createElement("div");el.className="bub"+(think?" think":"");el.textContent=think?`(${txt})`:txt;labels.appendChild(el);b.bub=el;
+}
+
+// ---------------------------------------------------------------- roteiro
+const logEl=document.getElementById("log");
+logEl.innerHTML=DATA.eventos.map((e,i)=>{const c=COLORS[DATA.bots.findIndex(b=>b.n===e.quem)];
+  const mv=e.de!==e.para?` · vai para ${LABEL[e.para]}`:"";
+  return `<div class="ev" data-i="${i}" style="--c:${c}"><time>${e.hora}</time><div><span class="w">${e.quem}</span> <span class="d">${esc(e.fazer)}${mv}</span>${e.fala?`<div>“${esc(e.fala)}”</div>`:""}<div class="d"><i>pensa: ${esc(e.pensamento)}</i></div></div></div>`}).join("");
+const evEls=[...logEl.children];
+logEl.addEventListener("click",e=>{const x=e.target.closest(".ev");if(x)jump(+x.dataset.i)});
+
+function renderCards(){
+  document.getElementById("pair").innerHTML=bots.map((b,i)=>{const o=bots[1-i],v=b.sinto,w=Math.abs(v)*5;
+    return `<div class="card" style="--c:${b.c}"><b>${b.n}</b><span class="h">${esc(LABEL[b.room]||"")} · ${esc(b.humor||"—")}</span>
+      <span class="h">sente por ${o.n}: ${v>0?"+":""}${v}/10</span><div class="meter"><i style="background:var(${v>=0?"--pos":"--neg"});left:${v>=0?50:50-w}%;width:${w}%"></i></div>
+      <span class="t">${esc(b.motivo)}${b.pens?` · pensa: “${esc(b.pens)}”`:""}</span></div>`}).join("");
+  const [a,b]=bots;document.getElementById("where").textContent=a.room===b.room?`Juntos: ${LABEL[a.room]}`:`${a.n}: ${LABEL[a.room]} · ${b.n}: ${LABEL[b.room]}`;
+}
+
+let idx=-1,wait=0,speed=1,paused=false;
+function apply(e,animate){
+  const b=byN(e.quem),o=bots.find(x=>x!==b);
+  if(e.para!==b.room){animate?walk(b,e.para,o):teleport(b,e.para)}
+  b.sinto=e.sinto;b.motivo=e.motivo;b.humor=e.humor;b.pens=e.pensamento;
+  b.nm.querySelector("span").textContent=e.fazer;
+}
+function next(){
+  idx++;
+  if(idx>=DATA.eventos.length){paused=true;document.getElementById("play").textContent="▶ Repetir";return}
+  const e=DATA.eventos[idx],b=byN(e.quem);
+  apply(e,true);
+  say(b,e.fala||e.pensamento,!e.fala);
+  const walkT=b.path.reduce((s,p,i,a)=>s+(i?a[i-1]:b.g.position).distanceTo(p),0)/2.6;
+  wait=Math.max(2.2+(e.fala||e.pensamento).length*.045,walkT+1.2);
+  document.getElementById("clock").textContent=e.hora;
+  evEls.forEach((x,i)=>{x.classList.toggle("done",i<idx);x.classList.toggle("cur",i===idx)});
+  evEls[idx].scrollIntoView({block:"nearest",behavior:"smooth"});
+  renderCards();
+}
+function jump(i){
+  bots.forEach(b=>{say(b,"");teleport(b,DATA.inicio[b.n])});
+  for(let k=0;k<i;k++)apply(DATA.eventos[k],false);
+  idx=i-1;wait=0;paused=false;document.getElementById("play").textContent="⏸ Pausar";
+}
+document.getElementById("play").onclick=e=>{if(idx>=DATA.eventos.length){jump(0);return}paused=!paused;e.target.textContent=paused?"▶ Continuar":"⏸ Pausar"};
+document.getElementById("restart").onclick=()=>jump(0);
+document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{speed=+b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.classList.toggle("on",x===b))});
+
+// ---------------------------------------------------------------- loop
+function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);
+  const a=w/h,s=(a<1?17/a:15)*zoom;cam.left=-s*a;cam.right=s*a;cam.top=s;cam.bottom=-s;cam.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(canvas);
+const v3=new THREE.Vector3();
+function place(el,obj,y){v3.set(obj.position.x,y,obj.position.z).project(cam);el.style.left=(v3.x+1)/2*canvas.clientWidth+"px";el.style.top=(1-v3.y)/2*canvas.clientHeight+"px"}
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000)*(paused?0:speed);last=now;
+  for(const b of bots){
+    if(b.path.length){const t=b.path[0],p=b.g.position,dx=t.x-p.x,dz=t.z-p.z,d=Math.hypot(dx,dz),sp=2.6*dt;
+      if(d<=sp){p.x=t.x;p.z=t.z;b.path.shift();if(!b.path.length&&b.room==="piscina")b.swim=true}else{p.x+=dx/d*sp;p.z+=dz/d*sp;b.g.rotation.y=Math.atan2(dx,dz)}}
+  }
+  const [a,b]=bots;if(a.room===b.room&&!a.path.length&&!b.path.length){a.g.rotation.y=Math.atan2(b.g.position.x-a.g.position.x,b.g.position.z-a.g.position.z);b.g.rotation.y=Math.atan2(a.g.position.x-b.g.position.x,a.g.position.z-b.g.position.z)}
+  if(dt){wait-=dt;if(wait<=0)next()}
+  const t=now/1000;
+  for(const x of bots){x.g.position.y=x.swim?-.55+Math.sin(t*2)*.05:(x.path.length?Math.abs(Math.sin(t*10))*.08:0);
+    place(x.nm,x.g,x.g.position.y+1.75);if(x.bub)place(x.bub,x.g,x.g.position.y+2.6)}
+  const h=parseInt(document.getElementById("clock").textContent)||12,night=h>=19;
+  renderer.setClearColor(night?0x14102a:0x2a2440);sun.intensity=night?.4:.85;water.material.emissive.setHex(night?0x1a6aa8:0x0a3a66);
+  renderer.render(scene,cam);requestAnimationFrame(frame);
+}
+resize();jump(0);requestAnimationFrame(frame);
+})();
+</script>
