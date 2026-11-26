@@ -135,3 +135,4 @@ h3 { margin: 4px 0; font-size: 15px; color: #ffd35c; }
 .clip img { width: 64px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 8px; background: #15172a; cursor: pointer; flex: 0 0 auto; }
 .clip b { font-size: 12px; color: #9aa3c7; } .clip p { margin: 2px 0 6px; font-size: 14px; } .clip a { color: #8fd3ff; font-size: 13px; }
 #player video { height: min(86vh, 720px); aspect-ratio: 9 / 16; max-width: 94vw; border-radius: 14px; background: #000; }
+.clip .dl { border: 0; background: none; color: #8fd3ff; font-size: 13px; padding: 0; }

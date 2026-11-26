@@ -1768,7 +1768,7 @@ function renderVlog() {
     const cs = clipes.filter(c => c.dia === d);
     return `<section class="vday"><div class="vhead"><h4>Dia ${d} · ${cs.length} ${cs.length > 1 ? 'clipes' : 'clipe'}</h4><button data-dia="${d}">▶ Vlog do dia</button></div>
       ${cs.map(c => `<div class="clip"><img src="${c.thumb || ''}" alt="" data-id="${c.id}"><div><b>${esc(c.t)}</b><p>${esc(c.narr || '')}</p>
-      <a href="${clipUrl(c)}" download="capivara-${c.id}.${c.blob.type.includes('mp4') ? 'mp4' : 'webm'}">⬇ baixar</a></div></div>`).join('')}</section>`;
+      <button class="dl" data-dl="${c.id}">⬇ baixar</button></div></div>`).join('')}</section>`;
   }).join('');
 }
 // player: toca um clipe ou o dia inteiro em sequência
@@ -1782,6 +1782,20 @@ function proximo() {
   if (!c) { $('player').classList.add('hidden'); v.pause(); return; }
   v.src = clipUrl(c); v.play().catch(() => {});
 }
+// Baixar: no claude.ai usa o recurso de download do artifact; fora dele, o download comum do navegador
+let downloadsP = null;
+async function baixarClipe(c, btn) {
+  if (!c) return;
+  const ext = c.blob.type.includes('mp4') ? 'mp4' : 'webm', filename = `capivara-dia${c.dia}-${c.id}.${ext}`;
+  downloadsP ||= window.claude?.use ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+  const dl = await downloadsP;
+  if (dl) {
+    try { await dl.save({ filename, data: c.blob }); btn.textContent = '✅ salvo'; }
+    catch (e) { btn.textContent = e?.code === 'declined' ? '⬇ baixar' : '❌ não foi possível salvar aqui'; }
+    return;
+  }
+  const a = document.createElement('a'); a.href = clipUrl(c); a.download = filename; document.body.append(a); a.click(); a.remove();
+}
 function initVlogUI() {
   $('player-video').onended = proximo;
   $('player').onclick = e => { if (e.target.id === 'player') { fila = []; proximo(); } };
@@ -1789,6 +1803,7 @@ function initVlogUI() {
     const d = e.target.dataset.dia, id = e.target.dataset.id;
     if (d) tocar(clipes.filter(c => c.dia === +d));
     if (id) tocar(clipes.filter(c => c.id === +id));
+    if (e.target.dataset.dl) baixarClipe(clipes.find(c => c.id === +e.target.dataset.dl), e.target);
   };
   idb.all().then(cs => { clipes = (cs || []).sort((a, b) => a.id - b.id); renderVlog(); }).catch(() => renderVlog());
 }
