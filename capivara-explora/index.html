@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1b1e2b">
+<title>Capivara Explora</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="app">
+  <!-- ===== Metade de cima: mundo 3D ===== -->
+  <section id="stage">
+    <canvas id="c"></canvas>
+    <div id="hud-day" class="hud">Dia 1</div>
+    <div id="hud-time" class="hud">☀️ 07:00</div>
+    <div id="emoji" class="emoji"></div>
+    <div id="bubble" class="bubble"></div>
+    <div id="zzz" class="zzz">Z<span>z</span><span>z</span></div>
+    <div id="banner" class="banner"></div>
+    <button id="btn-show" class="btn-show" title="Mostrar interface">👁️</button>
+  </section>
+
+  <!-- ===== Metade de baixo: painel ===== -->
+  <section id="panel">
+    <div id="controls">
+      <button id="btn-pause" title="Pausar">⏸️</button>
+      <button id="btn-speed" title="Velocidade">1x</button>
+      <button id="btn-surprise" class="wide">🎁 Soltar surpresa</button>
+      <button id="btn-hide" title="Ocultar interface">🎬</button>
+      <button id="btn-reset" title="Resetar mundo">🔄</button>
+      <button id="btn-settings" title="Configurações">⚙️</button>
+    </div>
+    <div id="tabs">
+      <button class="tab active" data-tab="thoughts">🧠 Pensamentos</button>
+      <button class="tab" data-tab="memory">📚 Memória</button>
+      <button class="tab" data-tab="status">❤️ Status</button>
+    </div>
+    <div id="tab-thoughts" class="tabpane active"><div id="log"></div></div>
+    <div id="tab-memory" class="tabpane">
+      <h3>Aprendizados</h3><ul id="mem-list"></ul>
+      <h3>Descobertas</h3><div id="disc-list"></div>
+    </div>
+    <div id="tab-status" class="tabpane">
+      <div id="bars"></div>
+      <div id="brain-info"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== Configurações ===== -->
+<div id="settings" class="modal hidden">
+  <div class="modal-box">
+    <h2>⚙️ Configurações</h2>
+    <label>Cérebro
+      <select id="cfg-mode">
+        <option value="gemini">Gemini (IA)</option>
+        <option value="offline">Offline (sem API)</option>
+      </select>
+    </label>
+    <label>Chave da API do Gemini
+      <input id="cfg-key" type="password" placeholder="AIza..." autocomplete="off">
+    </label>
+    <label>Modelo
+      <input id="cfg-model" type="text" placeholder="gemini-2.5-flash">
+    </label>
+    <p class="hint">A chave fica salva só neste aparelho (localStorage).</p>
+    <div class="row">
+      <button id="cfg-reset" class="danger">🔄 Resetar mundo</button>
+      <button id="cfg-close">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
