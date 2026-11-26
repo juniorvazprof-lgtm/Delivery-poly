@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><title>Prévia dos modelos</title>
+<style>body{margin:0;background:#cfe6f5;font:14px sans-serif}#g{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px}
+.c{position:relative;background:#e9f4ec}.c span{position:absolute;left:6px;top:4px;font-weight:700}canvas{width:100%;display:block}</style>
+<div id="g"></div>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+// Prévia: carrega cada GLB de ../../capivara-explora/models e renderiza com a mesma luz do jogo.
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const names = (new URLSearchParams(location.search).get('m') || '').split(',').filter(Boolean);
+const loader = new GLTFLoader();
+for (const n of names) {
+  const div = document.createElement('div'); div.className = 'c'; div.innerHTML = `<span>${n}</span>`;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 300; div.append(cv); document.getElementById('g').append(div);
+  const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true }); r.setClearColor(0xe9f4ec);
+  const s = new THREE.Scene(); s.add(new THREE.HemisphereLight(0xfff1d6, 0x5a7a3a, 1.2));
+  const d = new THREE.DirectionalLight(0xffe0b0, 1.6); d.position.set(3, 5, 4); s.add(d);
+  try {
+    const g = await loader.loadAsync(`../../capivara-explora/models/${n}.glb`);
+    s.add(g.scene);
+    const b = new THREE.Box3().setFromObject(g.scene), c = b.getCenter(new THREE.Vector3()), z = b.getSize(new THREE.Vector3()).length();
+    const cam = new THREE.PerspectiveCamera(35, 1, 0.01, 100); cam.position.set(c.x + z * 0.9, c.y + z * 0.6, c.z + z * 1.3); cam.lookAt(c);
+    r.render(s, cam);
+  } catch (e) { div.querySelector('span').textContent += ' (erro)'; }
+}
+document.title = 'pronto';
+</script>

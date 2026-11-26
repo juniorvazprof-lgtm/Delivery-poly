@@ -12,6 +12,7 @@
 //   6. Interface (balão, emoji, painel, botões)
 // =====================================================================
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // ---------------------------------------------------------------------
 // 1. CONFIGURAÇÃO E PERSISTÊNCIA
@@ -136,6 +137,42 @@ const rain = new THREE.Points(rainGeo, new THREE.PointsMaterial({ color: 0xbfe4f
 rain.visible = false;
 scene.add(rain);
 
+// --- Modelos GLB gerados no Blender (tools/blender_gen) ---
+// Carregados uma vez; cada objeto do mundo recebe um clone. Se um arquivo faltar,
+// usa o modelo procedural equivalente (função de fallback).
+const MODEL_NAMES = ['capivara', 'arvore', 'arvore_frutas', 'arbusto_amoras', 'capim_alto', 'arbusto_espinhos', 'arbusto_bagas_brancas',
+  'cogumelo_vermelho', 'cogumelo_marrom', 'pedra', 'caverna', 'flores', 'fonte', 'abrigo', 'passaro', 'melancia', 'bola', 'caixa'];
+const MODELS = {};
+{
+  const loader = new GLTFLoader(), matCache = {};
+  await Promise.all(MODEL_NAMES.map(n => loader.loadAsync(`models/${n}.glb`).then(g => {
+    g.scene.traverse(o => {
+      if (!o.isMesh) return;
+      // troca o material PBR por Lambert flat (mais leve no celular, mesmo visual low poly)
+      const hex = o.material.color.getHex();
+      o.material = matCache[hex] || (matCache[hex] = new THREE.MeshLambertMaterial({ color: hex, flatShading: true }));
+      o.castShadow = true;
+    });
+    MODELS[n] = g.scene;
+  }).catch(e => console.warn('modelo ausente:', n, e.message))));
+}
+const model = (name, fallback, scale = 1) => {
+  const g = MODELS[name] ? MODELS[name].clone(true) : fallback();
+  if (MODELS[name] && scale !== 1) g.scale.setScalar(scale);
+  return g;
+};
+
+// --- Noite: estrelas e vaga-lumes (dois Points baratos) ---
+const stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(
+  Array.from({ length: 500 }, () => { const a = rand(0, 6.28), e = rand(0.15, 1.45), r = 90; return [Math.cos(a) * Math.cos(e) * r, Math.sin(e) * r, Math.sin(a) * Math.cos(e) * r]; }).flat(), 3)),
+  new THREE.PointsMaterial({ color: 0xffffff, size: 0.6, transparent: true, opacity: 0, fog: false, depthWrite: false }));
+scene.add(stars);
+const FLY_N = 45;
+const flies = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(
+  Array.from({ length: FLY_N * 3 }, (_, i) => i % 3 === 1 ? rand(0.4, 2) : rand(-12, 12)), 3)),
+  new THREE.PointsMaterial({ color: 0xfff27a, size: 0.16, transparent: true, opacity: 0, depthWrite: false }));
+scene.add(flies);
+
 // --- Helpers de modelagem low poly ---
 const M = col => new THREE.MeshLambertMaterial({ color: col, flatShading: true });
 function mesh(geo, col, x = 0, y = 0, z = 0, shadow = true) {
@@ -243,6 +280,48 @@ const TYPES = {
       comer: () => ({ d: { humor: -5 }, msg: 'Você mordeu a casca da árvore. Gosto de madeira. Não matou a fome.', anim: 'comer' }),
     },
   },
+  arbusto_amoras: {
+    nome: 'arbusto de amoras', desc: 'um arbusto baixo e redondo com cachos de bolinhas roxo-escuras',
+    efeitos: {
+      comer: () => ({ d: { fome: -20, humor: +8 }, msg: 'Você comeu as bolinhas roxas do arbusto. Doces, com um fundo azedinho. A fome diminuiu.', anim: 'comer' }),
+      cheirar: () => ({ d: { humor: +2 }, msg: 'O arbusto tem um cheiro de fruta madura.', anim: 'cheirar' }),
+    },
+  },
+  capim_alto: {
+    nome: 'touceira de capim', desc: 'uma touceira de capim alto, verde-claro e macio',
+    efeitos: {
+      comer: () => ({ d: { fome: -15, humor: +5 }, msg: 'Você mastigou o capim alto devagar. Fresco e macio, parece feito para você.', anim: 'comer' }),
+      sentar: () => ({ d: { energia: +5, humor: +3 }, msg: 'Você se acomodou no meio do capim. Ele faz cócegas na barriga.', anim: 'sentar' }),
+    },
+  },
+  arbusto_espinhos: {
+    nome: 'arbusto de folhas pontudas', desc: 'um arbusto de folhas pontudas com frutinhas amarelas no meio',
+    efeitos: {
+      comer: () => ({ d: { fome: -10, humor: -12 }, msg: 'Você tentou alcançar as frutinhas amarelas e as folhas pontudas furaram o focinho. Comeu pouco e doeu.', anim: 'tremer' }),
+      cheirar: () => ({ d: { humor: -3 }, msg: 'Ao cheirar de perto, uma folha pontuda espetou o nariz.', anim: 'tremer' }),
+    },
+  },
+  arbusto_bagas_brancas: {
+    nome: 'arbusto de bagas brancas', desc: 'um arbusto delicado, verde-azulado, com bagas brancas peroladas',
+    efeitos: {
+      comer: () => ({ d: { fome: -8, energia: -20 }, msg: 'Você comeu as bagas brancas. Pouco tempo depois veio uma sonolência pesada, as pálpebras caindo.', anim: 'dormir' }),
+      cheirar: () => ({ d: {}, msg: 'As bagas brancas quase não têm cheiro.', anim: 'cheirar' }),
+    },
+  },
+  fonte: {
+    nome: 'fonte de pedra', desc: 'uma pequena bacia de pedras com água limpa, alimentada por uma bica que escorre sem parar',
+    efeitos: {
+      beber: () => ({ d: { sede: -50, humor: +5 }, msg: 'Você bebeu da fonte. A água é limpa, fria e tem gosto de pedra.', anim: 'beber' }),
+      cheirar: () => ({ d: { humor: +2 }, msg: 'A fonte cheira a musgo e água corrente.', anim: 'cheirar' }),
+    },
+  },
+  abrigo: {
+    nome: 'abrigo de galhos', desc: 'um abrigo simples de galhos e folhas largas, com um forro de folhas secas no chão',
+    efeitos: {
+      dormir: () => { const n = isNight(); return { d: { energia: n ? +70 : +40 }, msg: n ? 'Você dormiu no abrigo de galhos durante a noite. O forro de folhas é quente e o teto segura o sereno.' : 'Você cochilou no abrigo de galhos. Um descanso curto, mas bom.', anim: 'dormir' }; },
+      sentar: () => ({ d: { energia: +8, humor: +4 }, msg: 'Você sentou sob o abrigo e ficou olhando o campo lá fora.', anim: 'sentar' }),
+    },
+  },
   cogumelo_vermelho: {
     nome: 'cogumelo vermelho com pintas', desc: 'um cogumelo de chapéu vermelho vivo com pintinhas brancas, muito bonito',
     efeitos: {
@@ -331,6 +410,9 @@ const DISCOVERY_TEXT = {
   'beber:lago': 'água do lago', 'dormir:caverna': 'dormir na caverna', 'sentar:pedra': 'contemplar na pedra',
   'cheirar:flores': 'o perfume das flores', 'investigar:passaro': 'um amigo de penas', 'comer:melancia': 'MELANCIA!',
   'investigar:bola': 'brincar de bola', 'investigar:caixa': 'caixas misteriosas',
+  'comer:arbusto_amoras': 'amoras matam a fome', 'comer:capim_alto': 'o capim é macio e bom',
+  'comer:arbusto_espinhos': 'folhas pontudas machucam', 'comer:arbusto_bagas_brancas': 'bagas brancas dão sono',
+  'beber:fonte': 'a fonte de água limpa', 'dormir:abrigo': 'um abrigo para dormir',
 };
 
 // --- Instâncias do mundo ---
@@ -342,27 +424,56 @@ function addObject(type, x, z, maker, block = 0) {
   if (maker) { o.mesh = placeAt(maker(), x, z); o.mesh.rotation.y = rand(0, 6.28); }
   objects.push(o); return o;
 }
-addObject('arvore_frutas', -10, -10, () => makeTree(true), 1.1);
-addObject('arvore_frutas', -14, 7, () => makeTree(true), 1.1);
-[[-4, 13], [12, 13], [-21, -18], [20, -20], [-23, 15], [4, -19], [24, 6], [-26, 0], [15, 24], [-8, 24], [0, -26]].forEach(([x, z]) => addObject('arvore', x, z, () => makeTree(false), 1.1));
-addObject('cogumelo_vermelho', -6, -4, () => makeMushroom(true));
-addObject('cogumelo_vermelho', 17, 9, () => makeMushroom(true));
-addObject('cogumelo_marrom', -12, -2, () => makeMushroom(false));
-addObject('cogumelo_marrom', 3, 10, () => makeMushroom(false));
-addObject('cogumelo_marrom', -17, 12, () => makeMushroom(false));
+const MK = {
+  arvore: () => model('arvore', () => makeTree(false)),
+  arvore_frutas: () => model('arvore_frutas', () => makeTree(true)),
+  cogumelo_vermelho: () => model('cogumelo_vermelho', () => makeMushroom(true), 1.2),
+  cogumelo_marrom: () => model('cogumelo_marrom', () => makeMushroom(false), 1.2),
+  pedra: () => model('pedra', makeRock),
+  caverna: () => model('caverna', makeCave),
+  flores: () => model('flores', makeFlowers, 1.4),
+  passaro: () => model('passaro', makeBird),
+  melancia: () => model('melancia', makeWatermelon),
+  bola: () => model('bola', makeBall),
+  caixa: () => model('caixa', makeBox),
+  arbusto_amoras: () => model('arbusto_amoras', () => makeFlowers()),
+  capim_alto: () => model('capim_alto', () => makeFlowers()),
+  arbusto_espinhos: () => model('arbusto_espinhos', () => makeFlowers()),
+  arbusto_bagas_brancas: () => model('arbusto_bagas_brancas', () => makeFlowers()),
+  fonte: () => model('fonte', makeRock),
+  abrigo: () => model('abrigo', makeRock),
+};
+addObject('arvore_frutas', -10, -10, MK.arvore_frutas, 1.1);
+addObject('arvore_frutas', -14, 7, MK.arvore_frutas, 1.1);
+[[-4, 13], [12, 13], [-21, -18], [20, -20], [-23, 15], [4, -19], [24, 6], [-26, 0], [15, 24], [-8, 24], [0, -26]].forEach(([x, z]) => addObject('arvore', x, z, MK.arvore, 1.1));
+addObject('cogumelo_vermelho', -6, -4, MK.cogumelo_vermelho);
+addObject('cogumelo_vermelho', 17, 9, MK.cogumelo_vermelho);
+addObject('cogumelo_marrom', -12, -2, MK.cogumelo_marrom);
+addObject('cogumelo_marrom', 3, 10, MK.cogumelo_marrom);
+addObject('cogumelo_marrom', -17, 12, MK.cogumelo_marrom);
 const lago = addObject('lago', LAKE.x, LAKE.z, null);
 lago.pos.y = WATER_Y;
 const riacho = addObject('riacho', 23, streamZ(23), null);
 riacho.pos.y = STREAM_Y;
-addObject('pedra', -2, 4, makeRock, 1.6);
-const cave = addObject('caverna', -21, -5, makeCave, 3.4);
+addObject('pedra', -2, 4, MK.pedra, 1.6);
+const cave = addObject('caverna', -21, -5, MK.caverna, 3.4);
 cave.mesh.rotation.y = 0;
 cave.entrance = new THREE.Vector3(-17, 0, -5);
-addObject('flores', 4, 4, makeFlowers);
-addObject('flores', -16, -13, makeFlowers);
-addObject('flores', 12, 18, makeFlowers);
+addObject('flores', 4, 4, MK.flores);
+addObject('flores', -16, -13, MK.flores);
+addObject('flores', 12, 18, MK.flores);
+// arbustos comestíveis espalhados
+[['arbusto_amoras', -6, 18], ['arbusto_amoras', 18, -12], ['arbusto_amoras', -24, -10],
+ ['capim_alto', 0, -12], ['capim_alto', -9, 3], ['capim_alto', 20, 14], ['capim_alto', -18, 22],
+ ['arbusto_espinhos', 6, 20], ['arbusto_espinhos', -12, -20], ['arbusto_bagas_brancas', 24, -11], ['arbusto_bagas_brancas', -4, -14]]
+  .forEach(([t, x, z]) => addObject(t, x, z, MK[t], 0.7));
+addObject('fonte', -19, 17, MK.fonte, 1.1);
+const abrigo = addObject('abrigo', 15, 4, MK.abrigo, 1.6);
+abrigo.mesh.rotation.y = 0;                    // aberto para +Z
+abrigo.entrance = new THREE.Vector3(15, 0, 6.6);
 const bird = addObject('passaro', 0, 0, null);
-bird.mesh = makeBird(); scene.add(bird.mesh);
+bird.mesh = MK.passaro(); scene.add(bird.mesh);
+bird.mesh.userData.wings = ['wing_l', 'wing_r'].map(n => bird.mesh.getObjectByName(n)).filter(Boolean);
 bird.t = 0; bird.mode = 'circle'; bird.home = new THREE.Vector3(0, 0, 0); bird.fleeUntil = 0;
 function scareBird() { bird.mode = 'flee'; bird.fleeUntil = gameTime + 8; bird.fleeDir = new THREE.Vector3(rand(-1, 1), 0, rand(-1, 1)).normalize(); }
 
@@ -426,7 +537,16 @@ function isFree(v) { const [i, j] = cellOf(v); return !blocked[i + j * GN]; }
 // ---------------------------------------------------------------------
 const capy = { root: new THREE.Group(), model: new THREE.Group(), pos: new THREE.Vector3(0, 0, 0), yaw: 0,
   anim: 'idle', animT: 0, path: [], speed: 2.2, swim: false, onArrive: null };
-{
+if (MODELS.capivara) {
+  // Modelo do Blender: usa os nós nomeados (body, head_pivot, eye_l/r, leg_fl/fr/bl/br) como pivôs de animação
+  const g = MODELS.capivara.clone(true);
+  const byName = n => g.getObjectByName(n);
+  const body = byName('body'), head = byName('head_pivot');
+  capy.model.add(g);
+  capy.parts = { body, head, eyes: ['eye_l', 'eye_r'].map(byName).filter(Boolean),
+    legs: ['leg_fl', 'leg_fr', 'leg_bl', 'leg_br'].map(byName) };
+  capy.root.add(capy.model); scene.add(capy.root);
+} else {
   const FUR = M(0xb07a4f), DARK = M(0x7a4f33), BLACK = M(0x1a1410);
   const body = mesh(new THREE.IcosahedronGeometry(0.55, 1), FUR, 0, 0.68, 0); body.scale.set(1, 0.85, 1.45);
   const head = new THREE.Group(); head.position.set(0, 0.98, 0.72);
@@ -471,8 +591,8 @@ function animateCapy(dt) {
   capy.model.rotation.set(mrx, 0, mrz);
   head.rotation.set(hx, 0, hz);
   legs.forEach((l, i) => { l.rotation.x = (i % 3 === 0 ? 1 : -1) * legSwing + legFold * (i < 2 ? -1 : 1); });
-  eyes.forEach(e => e.scale.set(1, eyeS, 1));
-  body.scale.y = 0.85 + breath;
+  eyes.forEach(e => { e.userData.sy ??= e.scale.y; e.scale.y = e.userData.sy * eyeS; });
+  body.userData.sy ??= body.scale.y; body.scale.y = body.userData.sy * (1 + breath);
 }
 
 // Movimento ao longo do caminho
@@ -502,7 +622,8 @@ let raining = false, rainUntil = 0, nextWeatherCheck = 20;
 const waiters = []; // promessas esperando gameTime
 const gameWait = s => new Promise(r => waiters.push({ at: gameTime + s, r }));
 const isNight = () => state.clock < 0.24 || state.clock > 0.8;
-const inCave = () => capy.pos.distanceTo(new THREE.Vector3(cave.entrance.x, capy.pos.y, cave.entrance.z)) < 3;
+const nearXZ = (p, r) => Math.hypot(capy.pos.x - p.x, capy.pos.z - p.z) < r;
+const inCave = () => nearXZ(cave.entrance, 3) || nearXZ(abrigo.entrance, 2.2);   // caverna ou abrigo: protegida da chuva
 function periodName() {
   const h = state.clock * 24;
   return h < 5 ? 'madrugada' : h < 12 ? 'manhã' : h < 18 ? 'tarde' : h < 20 ? 'entardecer' : 'noite';
@@ -519,10 +640,21 @@ function updateWorld(dt) {
   skyCol.copy(SKY_NIGHT).lerp(SKY_DAY, light).lerp(SKY_SET, sunset * 0.6);
   if (raining) skyCol.lerp(SKY_RAIN, 0.55);
   scene.background = skyCol; scene.fog.color.copy(skyCol);
-  sun.intensity = light * (raining ? 0.5 : 1.4);
-  sun.color.setHSL(0.09, 0.8, 0.6 + light * 0.25);
+  // de dia o sol; à noite a mesma luz vira lua (azulada e fraca), economizando uma luz
+  const moon = light < 0.2;
+  sun.intensity = moon ? 0.35 : light * (raining ? 0.5 : 1.4);
+  if (moon) sun.color.set(0x9fb6ff); else sun.color.setHSL(0.09, 0.8, 0.6 + light * 0.25);
+  const night = 1 - smooth(0.05, 0.35, light);
+  stars.material.opacity = raining ? 0 : night * 0.9; stars.position.copy(camera.position);
+  flies.material.opacity = raining ? 0 : night * (0.6 + Math.sin(gameTime * 3) * 0.3);
+  if (night > 0.05) {
+    flies.position.set(capy.pos.x, heightAt(capy.pos.x, capy.pos.z), capy.pos.z);
+    const fp = flies.geometry.attributes.position;
+    for (let i = 0; i < FLY_N; i++) { fp.setX(i, fp.getX(i) + Math.sin(gameTime * 0.9 + i) * dt * 0.5); fp.setY(i, 0.4 + Math.abs(Math.sin(gameTime * 0.5 + i * 1.3)) * 1.8); }
+    fp.needsUpdate = true;
+  }
   hemi.intensity = 0.35 + light * 0.6;
-  sun.position.set(capy.pos.x + Math.cos(ang) * 25, Math.max(4, sh * 30), capy.pos.z + 12);
+  sun.position.set(capy.pos.x + Math.cos(moon ? ang + Math.PI : ang) * 25, Math.max(6, Math.abs(sh) * 30), capy.pos.z + 12);
   sun.target.position.copy(capy.pos);
   // chuva ocasional
   if (gameTime > nextWeatherCheck) {
@@ -581,7 +713,7 @@ function updateBird(dt) {
   m.position.copy(bird.pos);
   const mv = m.position.clone().sub(prev); if (mv.lengthSq() > 1e-6) m.rotation.y = Math.atan2(mv.x, mv.z);
   const f = Math.sin(bird.t * 18) * 0.7;
-  m.userData.wings[0].rotation.z = f; m.userData.wings[1].rotation.z = -f;
+  if (m.userData.wings.length === 2) { m.userData.wings[0].rotation.y = f * 0.6; m.userData.wings[1].rotation.y = -f * 0.6; }
 }
 let animOverride = null;
 function flashAnim(name, dur) { animOverride = { name, until: gameTime + dur, prev: capy.anim }; capy.anim = name; capy.animT = 0; }
@@ -625,7 +757,7 @@ function buildPerception() {
     visiveis,
     texto: [
       `Hora: ${periodName()} (${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}), dia ${state.day}.`,
-      `Clima: ${raining ? 'chovendo' : isNight() ? 'noite tranquila' : 'tempo bom'}.${inCave() ? ' Você está na entrada da caverna, protegida.' : ''}${gameTime < sickUntil ? ' Você está ENJOADA, a barriga revirando.' : ''}`,
+      `Clima: ${raining ? 'chovendo' : isNight() ? 'noite tranquila' : 'tempo bom'}.${inCave() ? ' Você está abrigada, protegida da chuva.' : ''}${gameTime < sickUntil ? ' Você está ENJOADA, a barriga revirando.' : ''}`,
       `Seus status (0-100): fome ${s.fome | 0} (alto = faminta), sede ${s.sede | 0} (alto = sedenta), energia ${s.energia | 0} (baixo = exausta), humor ${s.humor | 0} (alto = feliz).`,
       'O que você vê ao redor (raio de 15 m):',
       ...(visiveis.length ? visiveis.map(({ o, d }) => `- id "${o.id}": ${TYPES[o.type].desc} — ${d.toFixed(1)} m, ${directionWord(o.pos)}`) : ['- nada de especial, só grama']),
@@ -636,10 +768,10 @@ function buildPerception() {
 // ---------------------------------------------------------------------
 // 5b. CÉREBRO
 // ---------------------------------------------------------------------
-const PERSONALIDADE = `Você é uma capivara jovem, calma, zen e levemente filosófica, que acabou de acordar num mundo desconhecido. É curiosa, mas preguiçosa, e ama água. Às vezes faz reflexões existenciais inesperadas ('Será que o lago sabe que eu existo?'). Fale em português brasileiro, natural e engraçado. Você NÃO sabe o que é seguro ou perigoso: só sabe o que está na sua memória e o que aprendeu experimentando. Varie suas falas e não repita frases.`;
+const PERSONALIDADE = `Você é uma capivara jovem que acabou de despertar num mundo desconhecido. É calma, observadora e contemplativa. Explora devagar, presta atenção em texturas, cheiros, sons, luz e no passar do tempo, e tira conclusões com cuidado, como uma naturalista escrevendo um diário de campo. Ama água e não tem pressa. De vez em quando faz uma reflexão serena sobre a existência, sem piadas. Fale em português brasileiro, em tom sóbrio e simples. Não use emojis nem gírias no pensamento nem na fala. Você NÃO sabe o que é seguro ou perigoso: só sabe o que está na sua memória e o que aprendeu experimentando. Varie as frases e não se repita.`;
 const FORMATO = `
 A cada turno você recebe sua percepção e decide UMA ação. Responda SOMENTE com JSON neste formato:
-{"pensamento":"monólogo em 1ª pessoa, 1-2 frases, engraçado e com personalidade","fala":"balão curto de 2-6 palavras","emoji":"um emoji da emoção","acao":"ir_para | comer | beber | nadar | dormir | cheirar | sentar | investigar | fugir | vagar","alvo":"id de um objeto visível ou null","aprendizado":"algo novo aprendido com a última experiência, ou null"}
+{"pensamento":"monólogo em 1ª pessoa, 1-2 frases, sóbrio e contemplativo, sem emojis","fala":"balão curto de 2-6 palavras, sem emojis","emoji":"um único emoji que resume a emoção (aparece só sobre a cabeça)","acao":"ir_para | comer | beber | nadar | dormir | cheirar | sentar | investigar | fugir | vagar","alvo":"id de um objeto visível ou null","aprendizado":"algo novo aprendido com a última experiência, ou null"}
 Regras: "acao" deve ser exatamente uma das opções. "alvo" deve ser um id exatamente como aparece na percepção (ou null para vagar/fugir/dormir no lugar). Só registre "aprendizado" quando a última ação realmente te ensinou algo novo.`;
 
 const memory = { lastResult: 'Você acabou de acordar. Tudo é novo.', history: [] };
@@ -658,7 +790,7 @@ function normalizeDecision(raw, perc) {
     if (cand && acao !== 'ir_para') alvo = cand.o.id; else acao = 'vagar';
   }
   return {
-    pensamento: String(r.pensamento || 'Hmm... deixa eu dar uma voltinha.').slice(0, 220),
+    pensamento: String(r.pensamento || 'Vou caminhar um pouco e observar.').slice(0, 220),
     fala: String(r.fala || '...').slice(0, 40),
     emoji: String(r.emoji || '🙂').slice(0, 4),
     acao, alvo,
@@ -717,23 +849,23 @@ async function callGemini(system, user, timeoutMs = CALL_TIMEOUT) {
 // --- Cérebro offline: escolhas aleatórias coerentes com os status ---
 const offlineBad = new Set(); // tipos que deram ruim (aprendizado offline simples)
 const FRASES = {
-  comer: [['Hora do lanchinho', 'Barriguinha roncando... isso aí parece comida, né? Vou arriscar.', '😋'], ['Nham nham?', 'Minha filosofia é simples: se parece gostoso, provavelmente é.', '🤤']],
-  beber: [['Água, minha paixão', 'A sede bateu. Água é tipo um abraço por dentro.', '💧'], ['Golinho básico', 'Uma capivara hidratada é uma capivara em paz.', '😌']],
-  nadar: [['Mergulho zen!', 'Toda célula do meu corpo está gritando: ÁGUA!', '🏊'], ['Bora boiar', 'Flutuar é só deitar com mais estilo.', '🌊']],
-  dormir: [['Soninho chegou', 'Minhas pálpebras pesam mais que meus problemas.', '😴'], ['Só cinco minutinhos', 'Dormir também é uma forma de explorar... os sonhos.', '💤']],
-  cheirar: [['Que cheirinho...', 'Meu focinho está muito curioso agora.', '👃'], ['Snif snif', 'Cada cheiro é uma história que o mundo me conta.', '🌸']],
-  sentar: [['Momento contemplativo', 'Se eu sentar aqui por tempo suficiente, será que viro paisagem?', '🧘'], ['Pausa filosófica', 'O tempo passa diferente quando a gente não tem pressa.', '🌅']],
-  investigar: [['O que é isso?', 'Nunca vi nada assim. Preciso entender de perto.', '🧐'], ['Hmm, curioso...', 'A curiosidade é o motor da capivara moderna.', '🤔']],
-  vagar: [['Passeiozinho', 'Sem destino, sem pressa. Esse é o caminho.', '🚶'], ['Explorando...', 'Será que o horizonte também está olhando pra mim?', '✨'], ['Vamos ver ali', 'Onde será que esse mundo acaba? Será que acaba?', '🌿']],
-  fugir: [['SOCORRO!', 'Nope. Nope. Nope. Vou ali e já volto.', '😱']],
+  comer: [['Talvez seja comida', 'A barriga pede algo. Vou provar isto com calma e ver o que acontece.', '🤔'], ['Vou experimentar', 'Não sei o gosto disto. A única forma de saber é provar.', '🌿']],
+  beber: [['Um pouco de água', 'A sede chegou devagar. A água parece limpa daqui.', '💧'], ['Hora de beber', 'Beber água devagar me devolve ao presente.', '💧']],
+  nadar: [['Vou entrar na água', 'O corpo pede a água. Lá dentro o mundo fica mais leve e silencioso.', '🌊'], ['Flutuar um pouco', 'Na água o peso desaparece. Talvez seja aqui o meu lugar.', '🌊']],
+  dormir: [['Preciso descansar', 'O cansaço pesa nas pernas. Descansar também é parte da jornada.', '😴'], ['Fechar os olhos', 'O mundo continua lá fora enquanto eu durmo. Isso me tranquiliza.', '😴']],
+  cheirar: [['Que cheiro é esse', 'Cada cheiro guarda uma informação. Vou prestar atenção.', '👃'], ['Cheirar com cuidado', 'O focinho percebe coisas que os olhos não alcançam.', '👃']],
+  sentar: [['Vou observar daqui', 'Daqui dá para ver o campo inteiro. O vento muda as folhas de lugar.', '🌅'], ['Um momento quieto', 'Quando paro, percebo sons que antes não escutava.', '🌅']],
+  investigar: [['O que será isso', 'Nunca vi isto antes. Quero entender de perto, sem pressa.', '🧐'], ['Olhar de perto', 'Cada coisa nova muda um pouco o mapa que tenho deste lugar.', '🧐']],
+  vagar: [['Caminhar um pouco', 'Sem destino certo. Andar também é uma forma de conhecer.', '🚶'], ['Explorar ao redor', 'Ainda há partes deste lugar que eu não conheço.', '🌿'], ['Seguir em frente', 'A luz mudou desde a última vez que olhei. O dia também caminha.', '🌿']],
+  fugir: [['Melhor me afastar', 'Algo aqui não parece seguro. Prefiro manter distância.', '😟']],
 };
 function offlineBrain(perc) {
   const s = state.stats, vis = perc.visiveis.map(v => v.o);
   const find = (acao, types) => vis.find(o => types.includes(o.type) && !offlineBad.has(o.type) && TYPES[o.type].efeitos[acao]);
   let acao = 'vagar', alvo = null, opts = [];
-  if (s.energia < 25) { const c = vis.find(o => o.type === 'caverna'); acao = 'dormir'; alvo = c ? c.id : null; }
-  else if (s.sede > 55 && (alvo = find('beber', ['lago', 'riacho'])?.id)) acao = 'beber';
-  else if (s.fome > 55 && (alvo = find('comer', ['arvore_frutas', 'cogumelo_marrom', 'cogumelo_vermelho', 'melancia', 'flores'])?.id)) acao = 'comer';
+  if (s.energia < 25) { const c = vis.find(o => o.type === 'caverna' || o.type === 'abrigo'); acao = 'dormir'; alvo = c ? c.id : null; }
+  else if (s.sede > 55 && (alvo = find('beber', ['lago', 'riacho', 'fonte'])?.id)) acao = 'beber';
+  else if (s.fome > 55 && (alvo = find('comer', ['arvore_frutas', 'cogumelo_marrom', 'cogumelo_vermelho', 'melancia', 'arbusto_amoras', 'capim_alto', 'arbusto_espinhos', 'arbusto_bagas_brancas'])?.id)) acao = 'comer';
   else {
     for (const o of vis) for (const a of Object.keys(TYPES[o.type].efeitos)) if (!offlineBad.has(o.type) || a !== 'comer') opts.push([a, o.id]);
     opts.push(['vagar', null], ['vagar', null]);
@@ -743,7 +875,9 @@ function offlineBrain(perc) {
   if (acao === 'dormir' && !alvo && s.energia > 25) acao = 'vagar';
   const [fala, pensamento, emoji] = pick(FRASES[acao] || FRASES.vagar);
   let aprendizado = null;
-  if (/enjoo/.test(memory.lastResult)) { aprendizado = 'Cogumelo vermelho com pintas me deixa enjoada. Evitar!'; offlineBad.add('cogumelo_vermelho'); }
+  if (/enjoo/.test(memory.lastResult)) { aprendizado = 'O cogumelo vermelho com pintas causa enjoo forte. Melhor evitar.'; offlineBad.add('cogumelo_vermelho'); }
+  if (/furaram|espetou/.test(memory.lastResult)) { aprendizado = 'As folhas pontudas machucam. As frutinhas amarelas não compensam.'; offlineBad.add('arbusto_espinhos'); }
+  if (/sonolência/.test(memory.lastResult)) { aprendizado = 'As bagas brancas trazem um sono pesado.'; offlineBad.add('arbusto_bagas_brancas'); }
   return { pensamento, fala, emoji, acao, alvo, aprendizado };
 }
 
@@ -766,6 +900,7 @@ function approachPoint(o) {
   if (o.type === 'lago') { const dir = from.clone().sub(new THREE.Vector3(LAKE.x, from.y, LAKE.z)).setY(0).normalize(); return new THREE.Vector3(LAKE.x + dir.x * (LAKE.r + 1.1), 0, LAKE.z + dir.z * (LAKE.r + 1.1)); }
   if (o.type === 'riacho') { let best = null, bd = 1e9; for (let x = LAKE.x + LAKE.r + 1; x < 28; x++) { const p = new THREE.Vector3(x, 0, streamZ(x) + (from.z > streamZ(x) ? 1.6 : -1.6)); const d = p.distanceTo(from); if (d < bd) { bd = d; best = p; } } return best; }
   if (o.type === 'caverna') return cave.entrance.clone();
+  if (o.type === 'abrigo') return abrigo.entrance.clone();
   const dir = from.clone().sub(o.pos).setY(0); if (dir.lengthSq() < 0.01) dir.set(1, 0, 0);
   dir.normalize();
   return o.pos.clone().addScaledVector(dir, (o.block || 0) + 1.1).setY(0);
@@ -823,6 +958,7 @@ async function executeAction(dec) {
     capy.swim = false;
   } else {
     if (o.type === 'caverna' && r.anim === 'dormir') faceTowards(new THREE.Vector3(0, 0, -5));
+    if (o.type === 'abrigo' && r.anim === 'dormir') faceTowards(new THREE.Vector3(15, 0, 20));
     capy.anim = r.anim; capy.animT = 0;
     await gameWait(ANIM_DUR[r.anim] * (r.anim === 'dormir' && isNight() ? 1.4 : 1));
   }
@@ -837,7 +973,7 @@ function removeObject(o) {
   if (!TYPES[o.type].surprise) gameWait(90).then(() => {
     const x = clamp(o.pos.x + rand(-3, 3), -26, 26), z = clamp(o.pos.z + rand(-3, 3), -26, 26);
     const p = new THREE.Vector3(x, 0, z);
-    if (isFree(p)) addObject(o.type, x, z, () => makeMushroom(o.type === 'cogumelo_vermelho'));
+    if (isFree(p)) addObject(o.type, x, z, MK[o.type]);
   });
 }
 
@@ -948,14 +1084,14 @@ function renderLog(animateLatest) {
     const div = document.createElement('div');
     div.className = 'entry' + (i === 0 ? ' latest' : '');
     const meta = document.createElement('div'); meta.className = 'meta';
-    meta.textContent = `${e.t} · ${e.acao}${e.alvo ? ' → ' + e.alvo : ''} · ${e.fonte === 'ia' ? '✨ IA' : '🎲 offline'}`;
-    const txt = document.createElement('div'); txt.textContent = `${e.emoji} ${i === 0 && animateLatest ? '' : e.pensamento}`;
+    meta.textContent = `${e.t} · ${e.acao.replace('_', ' ')}${e.alvo ? ' · ' + (TYPES[e.alvo.replace(/_\d+$/, '')]?.nome || e.alvo) : ''} · ${e.fonte === 'ia' ? 'IA' : 'offline'}`;
+    const txt = document.createElement('div'); txt.textContent = i === 0 && animateLatest ? '' : e.pensamento;
     div.append(meta, txt);
-    if (e.aprendizado) { const l = document.createElement('div'); l.className = 'learn'; l.textContent = '💡 ' + e.aprendizado; div.append(l); }
+    if (e.aprendizado) { const l = document.createElement('div'); l.className = 'learn'; l.textContent = 'Aprendizado: ' + e.aprendizado; div.append(l); }
     log.append(div);
     if (i === 0 && animateLatest) {   // efeito de digitação
       clearInterval(typingTimer); let k = 0; txt.classList.add('caret');
-      typingTimer = setInterval(() => { k++; txt.textContent = `${e.emoji} ${e.pensamento.slice(0, k)}`; if (k >= e.pensamento.length) { clearInterval(typingTimer); txt.classList.remove('caret'); } }, 28);
+      typingTimer = setInterval(() => { k++; txt.textContent = e.pensamento.slice(0, k); if (k >= e.pensamento.length) { clearInterval(typingTimer); txt.classList.remove('caret'); } }, 28);
     }
   });
   log.parentElement.scrollTop = 0;
@@ -1018,7 +1154,7 @@ $('cfg-reset').onclick = resetWorld;
 $('btn-reset').onclick = resetWorld;
 $('btn-surprise').onclick = () => {
   const kind = pick(['melancia', 'bola', 'caixa']);
-  const maker = { melancia: makeWatermelon, bola: makeBall, caixa: makeBox }[kind];
+  const maker = MK[kind];
   const fwd = new THREE.Vector3(Math.sin(capy.yaw), 0, Math.cos(capy.yaw));
   let p = capy.pos.clone().addScaledVector(fwd, 3.5);
   if (!isFree(p)) { const [i, j] = nearestFree(...cellOf(p)); p = cellCenter(i, j); }
