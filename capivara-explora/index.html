@@ -17,6 +17,7 @@
     <canvas id="c"></canvas>
     <div id="hud-day" class="hud">Dia 1</div>
     <div id="hud-brain" class="hud">⚪ Offline</div>
+    <div id="hud-rec" class="hud" hidden>🔴 Gravando</div>
     <div id="hud-time" class="hud">☀️ 07:00</div>
     <div id="flash"></div>
     <div id="emoji" class="emoji"></div>
@@ -38,12 +39,14 @@
       <button class="tab active" data-tab="thoughts">🧠 Log</button>
       <button class="tab" data-tab="diary">📖 Diário</button>
       <button class="tab" data-tab="photos">📷 Fotos</button>
+      <button class="tab" data-tab="vlog">🎬 Vlog</button>
       <button class="tab" data-tab="memory">📚 Memória</button>
       <button class="tab" data-tab="status">❤️ Status</button>
     </div>
     <div id="tab-thoughts" class="tabpane active"><div id="log"></div></div>
     <div id="tab-diary" class="tabpane"><div id="diary-list"></div></div>
     <div id="tab-photos" class="tabpane"><div id="photo-grid"></div></div>
+    <div id="tab-vlog" class="tabpane"><div id="vlog-list"></div></div>
     <div id="tab-memory" class="tabpane">
       <h3>Aprendizados</h3><ul id="mem-list"></ul>
       <h3>O que ela acredita</h3><div id="belief-list"></div>
@@ -56,6 +59,7 @@
   </section>
 </div>
 
+<div id="player" class="modal hidden"><video id="player-video" playsinline controls></video></div>
 <div id="lightbox" class="modal hidden"><figure class="lb"><img id="lb-img" alt=""><figcaption id="lb-cap"></figcaption></figure></div>
 
 <!-- ===== Configurações ===== -->

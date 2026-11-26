@@ -13,12 +13,14 @@
 // =====================================================================
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // ---------------------------------------------------------------------
 // 1. CONFIGURAÇÃO E PERSISTÊNCIA
 // ---------------------------------------------------------------------
 const DAY_LEN = 240;            // 1 dia = 4 minutos (segundos de jogo)
-const HALF = 30;                // mundo 60x60 m, de -30 a 30
+const HALF = 60;                // mundo 120x120 m, de -60 a 60 (gerado por semente)
+const LIM = HALF - 4;           // área útil (borda de segurança)
 const PERCEPTION_RADIUS = 15;
 const MIN_CALL_INTERVAL = 4000; // ms entre chamadas à IA
 const CALL_TIMEOUT = 10000;     // ms
@@ -54,7 +56,11 @@ state.trilhas ||= {};
 state.pesquisas ||= [];        // o que leu no computador: {q, titulo, resumo}
 state.temCamera ||= false;     // pegou a GoPro?          // desgaste do chão: "i,j" → passagens
 // gerador aleatório com semente fixa: os objetos espalhados ficam sempre no mesmo lugar (o mapa mental continua válido)
-let seed = 20261126;
+// mundo novo = semente nova; um save antigo (sem semente) era do mapa fixo, então o mapa mental e as trilhas são zerados
+const nextSeed = +lsGet('capivara_explora_seed_next');
+if (!state.seed) { state.seed = nextSeed || (Math.random() * 1e9) | 0; state.mapa = {}; state.trilhas = {}; }
+try { localStorage.removeItem('capivara_explora_seed_next'); } catch {}
+let seed = state.seed;
 const srand = (a, b) => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return a + (((t ^ (t >>> 14)) >>> 0) / 4294967296) * (b - a); };
 function save() {
   try {
@@ -79,8 +85,9 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x9fd8ff, 25, 70);
+scene.fog = new THREE.Fog(0x9fd8ff, 25, 62);
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 150);
+camera.layers.enable(1);
 
 // Luzes: só 2 (hemisférica + sol com sombra pequena) para rodar bem no celular
 const hemi = new THREE.HemisphereLight(0xfff1d6, 0x5a7a3a, 0.9);
@@ -91,29 +98,75 @@ sun.shadow.mapSize.set(1024, 1024);
 Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 70 });
 scene.add(sun, sun.target);
 
-// --- Terreno com relevo leve, lago e riacho ---
+// ---------------------------------------------------------------------
+// MUNDO PROCEDURAL: relevo e umidade vêm de ruído com a semente do mundo.
+// Biomas: campo (aberto), mata (úmida), brejo (perto da água), pedregal (alto e seco).
+// ---------------------------------------------------------------------
 let GROUND, GROUND_BASE;
-const LAKE = { x: 8, z: -6, r: 6 };
+const TSIZE = HALF * 2 + 8, TSEG = 104;
+const PERM = new Uint8Array(512);
+{ const p = [...Array(256).keys()]; for (let i = 255; i > 0; i--) { const k = Math.floor(srand(0, i + 1)); [p[i], p[k]] = [p[k], p[i]]; } for (let i = 0; i < 512; i++) PERM[i] = p[i & 255]; }
+function vnoise(x, z) {
+  const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi;
+  const h = (i, j) => PERM[(PERM[i & 255] + (j & 255)) & 511] / 255;
+  const u = xf * xf * (3 - 2 * xf), v = zf * zf * (3 - 2 * zf);
+  return lerp(lerp(h(xi, zi), h(xi + 1, zi), u), lerp(h(xi, zi + 1), h(xi + 1, zi + 1), u), v);
+}
+const fbm = (x, z) => (vnoise(x, z) * 0.5 + vnoise(x * 2.1, z * 2.1) * 0.27 + vnoise(x * 4.3, z * 4.3) * 0.15 + vnoise(x * 8.7, z * 8.7) * 0.08) / 1.0;
+const elev = (x, z) => fbm(x * 0.022 + 3.1, z * 0.022 + 7.7);
+const moist = (x, z) => fbm(x * 0.03 + 101.3, z * 0.03 + 57.9);
+
+// lago principal (com o jacaré), entre 16 e 28 m do ponto de partida, com espaço para o riacho correr até a borda leste
+const LAKE = { x: 18, z: -8, r: 7 };
+for (let i = 0; i < 60; i++) {
+  const a = srand(0, 6.28), d = srand(16, 28), x = Math.cos(a) * d, z = Math.sin(a) * d;
+  if (x + LAKE.r + 14 < HALF && Math.abs(z) < HALF - 14) { LAKE.x = x; LAKE.z = z; break; }
+}
 const WATER_Y = -0.45;
 const STREAM_Y = -0.62;
-const streamZ = x => LAKE.z + Math.sin(x * 0.35) * 1.6;
+const streamZ = x => LAKE.z + Math.sin((x - LAKE.x) * 0.18) * 3;
+const nearStream = (x, z) => x > LAKE.x + LAKE.r - 2 ? Math.abs(z - streamZ(x)) : 99;
+// lagoas pequenas nas áreas úmidas
+const PONDS = [];
+for (let i = 0; i < 400 && PONDS.length < 4; i++) {
+  const x = srand(-LIM + 6, LIM - 6), z = srand(-LIM + 6, LIM - 6), r = srand(2.6, 3.8);
+  if (moist(x, z) < 0.5 || Math.hypot(x, z) < 16 || Math.hypot(x - LAKE.x, z - LAKE.z) < LAKE.r + r + 12 || nearStream(x, z) < 9) continue;
+  if (PONDS.some(p => Math.hypot(p.x - x, p.z - z) < p.r + r + 14)) continue;
+  PONDS.push({ x, z, r });
+}
+const WATERS = [LAKE, ...PONDS];
+const waterDist = (x, z) => Math.min(...WATERS.map(w => Math.hypot(x - w.x, z - w.z) - w.r));
+function biomeAt(x, z) {
+  if (Math.hypot(x, z) < 11) return 'campo';               // clareira de partida
+  const e = elev(x, z), m = moist(x, z);
+  if ((waterDist(x, z) < 7 || nearStream(x, z) < 4) && m > 0.4) return 'brejo';
+  if (e > 0.6) return 'pedregal';
+  if (m > 0.53) return 'mata';
+  return 'campo';
+}
 function heightAt(x, z) {
-  let h = 0.55 * Math.sin(x * 0.15) * Math.cos(z * 0.13) + 0.25 * Math.sin(x * 0.37 + z * 0.21) + 0.15 * Math.cos(z * 0.5);
-  const dl = Math.hypot(x - LAKE.x, z - LAKE.z);
-  h = lerp(h, -1.4, smooth(LAKE.r + 3, LAKE.r - 1, dl));
-  if (x > LAKE.x + LAKE.r - 2) h = lerp(h, -0.9, smooth(2.2, 0.6, Math.abs(z - streamZ(x))));
+  let h = (elev(x, z) - 0.47) * 7 + 0.25 * Math.sin(x * 0.37 + z * 0.21);
+  h = lerp(h, 0.2, smooth(13, 6, Math.hypot(x, z)));        // clareira de partida plana
+  for (const w of WATERS) {
+    const d = Math.hypot(x - w.x, z - w.z);
+    h = lerp(h, 0.1, smooth(w.r + 10, w.r + 3, d));
+    h = lerp(h, -1.4, smooth(w.r + 3, w.r - 1, d));
+  }
+  const ds = nearStream(x, z);
+  if (ds < 8) { h = lerp(h, 0.1, smooth(7, 2.5, ds)); h = lerp(h, -0.9, smooth(2.2, 0.6, ds)); }
   return h;
 }
+const BIOME_COL = { campo: [0.26, 0.5, 0.44], mata: [0.31, 0.45, 0.31], brejo: [0.19, 0.32, 0.36], pedregal: [0.1, 0.16, 0.52] };
 {
-  const g = new THREE.PlaneGeometry(64, 64, 56, 56);
+  const g = new THREE.PlaneGeometry(TSIZE, TSIZE, TSEG, TSEG);
   g.rotateX(-Math.PI / 2);
   const p = g.attributes.position, colors = [];
   const c = new THREE.Color();
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), z = p.getZ(i), h = heightAt(x, z);
     p.setY(i, h);
-    if (h < -0.35) c.set(0xe8d29a);                         // areia
-    else c.setHSL(0.27 + Math.sin(x * 0.7 + z) * 0.02, 0.55, 0.42 + Math.random() * 0.06); // grama
+    if (h < -0.35) c.set(0xe8d29a);                         // areia na beira da água
+    else { const [hh, ss, ll] = BIOME_COL[biomeAt(x, z)]; c.setHSL(hh + Math.sin(x * 0.7 + z) * 0.015, ss, ll + srand(-0.03, 0.03)); }
     colors.push(c.r, c.g, c.b);
   }
   g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
@@ -124,14 +177,15 @@ function heightAt(x, z) {
   GROUND = ground; GROUND_BASE = Float32Array.from(colors);
 }
 const waterMat = new THREE.MeshLambertMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.85 });
-const lakeMesh = new THREE.Mesh(new THREE.CircleGeometry(LAKE.r + 1.2, 28), waterMat);
-lakeMesh.rotation.x = -Math.PI / 2;
-lakeMesh.position.set(LAKE.x, WATER_Y, LAKE.z);
-scene.add(lakeMesh);
-{ // riacho: fita de geometria acompanhando a curva
+const waterMeshes = WATERS.map(w => {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(w.r + 1.2, 28), waterMat);
+  m.rotation.x = -Math.PI / 2; m.position.set(w.x, WATER_Y, w.z); scene.add(m); return m;
+});
+const lakeMesh = waterMeshes[0];
+{ // riacho: fita de geometria acompanhando a curva, do lago até a borda leste
   const v = [], idx = [];
   let n = 0;
-  for (let x = LAKE.x + LAKE.r - 1; x <= 32; x += 1) {
+  for (let x = LAKE.x + LAKE.r - 1; x <= HALF + 4; x += 1) {
     const z = streamZ(x);
     v.push(x, STREAM_Y, z - 1.1, x, STREAM_Y, z + 1.1);
     if (n > 0) { const a = (n - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
@@ -157,8 +211,28 @@ scene.add(rain);
 // usa o modelo procedural equivalente (função de fallback).
 const MODEL_NAMES = ['capivara', 'arvore', 'arvore_frutas', 'arbusto_amoras', 'capim_alto', 'arbusto_espinhos', 'arbusto_bagas_brancas',
   'cogumelo_vermelho', 'cogumelo_marrom', 'pedra', 'caverna', 'flores', 'fonte', 'abrigo', 'passaro', 'melancia', 'bola', 'caixa', 'jacare',
-  'pinha', 'formigueiro', 'tronco_musgo', 'caramujo', 'ninho', 'teia', 'trevo', 'grama_seca', 'grama_baixa', 'coco', 'computador', 'gopro'];
+  'pinha', 'formigueiro', 'tronco_musgo', 'caramujo', 'ninho', 'teia', 'trevo', 'grama_seca', 'grama_baixa', 'coco', 'computador', 'gopro', 'taboa', 'cacto', 'samambaia', 'pedra_brilhante'];
 const MODELS = {};
+// Modelos animados mantêm as peças; os outros têm as peças fundidas, uma malha por cor
+// (cada objeto vira 2-5 chamadas de desenho em vez de dezenas: essencial com ~300 objetos no celular)
+const KEEP_PARTS = ['capivara', 'passaro', 'jacare'];
+function bake(root, matCache) {
+  root.updateMatrixWorld(true);
+  const groups = {};
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    let g = o.geometry.clone().applyMatrix4(o.matrixWorld);
+    for (const k of Object.keys(g.attributes)) if (k !== 'position' && k !== 'normal') g.deleteAttribute(k);
+    if (g.index) g = g.toNonIndexed();
+    (groups[o.material.color.getHex()] ||= []).push(g);
+  });
+  const out = new THREE.Group();
+  for (const hex in groups) {
+    const m = new THREE.Mesh(mergeGeometries(groups[hex]), matCache[hex] || (matCache[hex] = new THREE.MeshLambertMaterial({ color: +hex, flatShading: true })));
+    m.castShadow = true; out.add(m);
+  }
+  return out;
+}
 {
   const loader = new GLTFLoader(), matCache = {};
   await Promise.all(MODEL_NAMES.map(n => loader.loadAsync(`models/${n}.glb`).then(g => {
@@ -169,7 +243,7 @@ const MODELS = {};
       o.material = matCache[hex] || (matCache[hex] = new THREE.MeshLambertMaterial({ color: hex, flatShading: true }));
       o.castShadow = true;
     });
-    MODELS[n] = g.scene;
+    MODELS[n] = KEEP_PARTS.includes(n) ? g.scene : bake(g.scene, matCache);
   }).catch(e => console.warn('modelo ausente:', n, e.message))));
 }
 const model = (name, fallback, scale = 1) => {
@@ -413,6 +487,44 @@ const TYPES = {
       comer: () => ({ d: { humor: -15 }, msg: 'Você provou. Não. Definitivamente não.', anim: 'tremer' }),
     },
   },
+  lagoa: {
+    nome: 'lagoa', desc: 'uma lagoa pequena e rasa, de água parada, cercada de plantas',
+    efeitos: {
+      beber: () => ({ d: { sede: -35 }, msg: 'Você bebeu da lagoa. Água morna, com gosto de folha.', anim: 'beber' }),
+      nadar: () => ({ d: { humor: +15, energia: -6 }, msg: 'Você entrou na lagoa. É rasa, mas dá para boiar. Nenhum bicho de dentes por aqui.', anim: 'nadar' }),
+    },
+  },
+  taboa: {
+    nome: 'taboa', desc: 'uma touceira de folhas compridas com espigas marrons em forma de salsicha, na beira da água',
+    efeitos: {
+      comer: () => ({ d: { fome: -14, humor: +4 }, msg: 'Você mastigou os talos macios da base. Gosto de água doce. Muito bom.', anim: 'comer' }),
+      cheirar: () => ({ d: {}, msg: 'Cheiro de lama e de verde molhado.', anim: 'cheirar' }),
+    },
+  },
+  cacto: {
+    nome: 'cacto', desc: 'uma planta grossa e verde, cheia de pontinhos, com uma flor rosa no topo',
+    efeitos: {
+      comer: () => ({ d: { sede: -10, humor: -14 }, msg: 'Você mordeu a planta grossa: os pontinhos espetaram a boca, mas lá dentro tinha água. Doeu e matou um pouco a sede.', anim: 'tremer' }),
+      cheirar: () => ({ d: { humor: -3 }, msg: 'Você chegou perto demais e um espinho picou o nariz.', anim: 'tremer' }),
+      investigar: () => ({ d: { humor: +4 }, msg: 'A flor rosa nasce no meio dos espinhos. Bonita e protegida ao mesmo tempo.', anim: 'curiosa' }),
+    },
+  },
+  samambaia: {
+    nome: 'samambaia', desc: 'uma planta de folhas compridas e recortadas que se curvam até o chão',
+    efeitos: {
+      comer: () => ({ d: { fome: -2, humor: -6 }, msg: 'Você provou as folhas recortadas. Amargas. Não é comida boa.', anim: 'comer' }),
+      sentar: () => ({ d: { energia: +5, humor: +3 }, msg: 'Você deitou embaixo das folhas curvadas. Sombra fresca e úmida.', anim: 'sentar' }),
+      cheirar: () => ({ d: { humor: +1 }, msg: 'Cheiro de mata fechada.', anim: 'cheirar' }),
+    },
+  },
+  pedra_brilhante: {
+    nome: 'cristais', desc: 'pedras transparentes e pontudas que brilham quando a luz bate',
+    efeitos: {
+      investigar: () => ({ d: { humor: +9 }, msg: 'A luz entra nas pedras transparentes e sai colorida. Você ficou olhando por muito tempo.', anim: 'curiosa' }),
+      comer: () => ({ d: { humor: -8 }, msg: 'Duras como nada que você já mordeu. O dente doeu.', anim: 'tremer' }),
+      cheirar: () => ({ d: {}, msg: 'Não têm cheiro nenhum. São frias.', anim: 'cheirar' }),
+    },
+  },
   computador: {
     nome: 'computador', desc: 'uma caixinha fina e aberta em cima de um toco, com uma parte lisa que brilha como água parada',
     efeitos: {
@@ -529,7 +641,7 @@ const DISCOVERY_TEXT = {
 // --- Instâncias do mundo ---
 const objects = [];   // {id, type, pos, mesh, block}
 const counters = {};
-const PORCOES = { trevo: 3, grama_baixa: 3, grama_seca: 2, arvore_frutas: 3, arbusto_amoras: 3, capim_alto: 4, arbusto_espinhos: 2, arbusto_bagas_brancas: 2 };
+const PORCOES = { taboa: 3, trevo: 3, grama_baixa: 3, grama_seca: 2, arvore_frutas: 3, arbusto_amoras: 3, capim_alto: 4, arbusto_espinhos: 2, arbusto_bagas_brancas: 2 };
 const REGROW = 150; // segundos de jogo para frutificar de novo
 // partes comestíveis de cada modelo, reconhecidas pela cor (para sumir quando ela come tudo)
 const FRUTA = {
@@ -539,7 +651,7 @@ const FRUTA = {
   arbusto_bagas_brancas: h => h.l > 0.8,
 };
 function setFood(o, cheio) {
-  if (['capim_alto', 'trevo', 'grama_baixa', 'grama_seca'].includes(o.type)) { o.mesh.scale.y = (o.baseSy ??= o.mesh.scale.y) * (cheio ? 1 : 0.35); return; }
+  if (['capim_alto', 'trevo', 'grama_baixa', 'grama_seca', 'taboa'].includes(o.type)) { o.mesh.scale.y = (o.baseSy ??= o.mesh.scale.y) * (cheio ? 1 : 0.35); return; }
   const test = FRUTA[o.type]; if (!test || !o.mesh) return;
   const hsl = {};
   o.mesh.traverse(m => { if (m.isMesh && test(m.material.color.getHSL(hsl))) m.visible = cheio; });
@@ -574,79 +686,97 @@ const MK = {
   ninho: () => model('ninho', makeRock), teia: () => model('teia', makeRock),
   trevo: () => model('trevo', makeFlowers), grama_seca: () => model('grama_seca', makeFlowers, 1.3),
   grama_baixa: () => model('grama_baixa', makeFlowers, 1.4), coco: () => model('coco', makeRock),
+  taboa: () => model('taboa', makeFlowers), cacto: () => model('cacto', makeRock), samambaia: () => model('samambaia', makeFlowers), pedra_brilhante: () => model('pedra_brilhante', makeRock),
   computador: () => model('computador', makeRock), gopro: () => model('gopro', makeBox, 1.6),
   jacare: () => model('jacare', () => mesh(new THREE.BoxGeometry(0.8, 0.4, 2.6), 0x3d5a3a)),
 };
-addObject('arvore_frutas', -10, -10, MK.arvore_frutas, 1.1);
-addObject('arvore_frutas', -14, 7, MK.arvore_frutas, 1.1);
-[[-4, 13], [12, 13], [-21, -18], [20, -20], [-23, 15], [4, -19], [24, 6], [-26, 0], [15, 24], [-8, 24], [0, -26]].forEach(([x, z]) => addObject('arvore', x, z, MK.arvore, 1.1));
-addObject('cogumelo_vermelho', -6, -4, MK.cogumelo_vermelho);
-addObject('cogumelo_vermelho', 17, 9, MK.cogumelo_vermelho);
-addObject('cogumelo_marrom', -12, -2, MK.cogumelo_marrom);
-addObject('cogumelo_marrom', 3, 10, MK.cogumelo_marrom);
-addObject('cogumelo_marrom', -17, 12, MK.cogumelo_marrom);
-const lago = addObject('lago', LAKE.x, LAKE.z, null);
-lago.pos.y = WATER_Y;
-const riacho = addObject('riacho', 23, streamZ(23), null);
-riacho.pos.y = STREAM_Y;
-addObject('pedra', -2, 4, MK.pedra, 1.6);
-const cave = addObject('caverna', -21, -5, MK.caverna, 3.4);
-cave.mesh.rotation.y = 0;
-cave.entrance = new THREE.Vector3(-17, 0, -5);
-addObject('flores', 4, 4, MK.flores);
-addObject('flores', -16, -13, MK.flores);
-addObject('flores', 12, 18, MK.flores);
-// arbustos comestíveis espalhados
-[['arbusto_amoras', -6, 18], ['arbusto_amoras', 18, -12], ['arbusto_amoras', -24, -10],
- ['capim_alto', 0, -12], ['capim_alto', -9, 3], ['capim_alto', 20, 14], ['capim_alto', -18, 22],
- ['arbusto_espinhos', 6, 20], ['arbusto_espinhos', -12, -20], ['arbusto_bagas_brancas', 24, -11], ['arbusto_bagas_brancas', -4, -14]]
-  .forEach(([t, x, z]) => addObject(t, x, z, MK[t], 0.7));
-addObject('fonte', -19, 17, MK.fonte, 1.1);
-// o computador num toco, numa clareira; a câmera caída no chão perto das flores (se ainda não foi pega)
-const pc = addObject('computador', -5, -9, MK.computador, 0.7);
-pc.mesh.rotation.y = Math.PI * 0.8;
-let gopro = state.temCamera ? null : addObject('gopro', 6.5, 6, MK.gopro);
-// objetos menores espalhados em lugares livres (semente fixa = sempre os mesmos lugares)
-function freeSpot(minDist, test = () => true) {
-  for (let i = 0; i < 200; i++) {
-    const x = srand(-26, 26), z = srand(-26, 26), p = new THREE.Vector3(x, 0, z);
-    if (!isFreeRaw(p) || heightAt(x, z) < -0.3 || !test(p)) continue;
-    if (objects.some(o => !TYPES[o.type]?.mobile && Math.hypot(o.pos.x - x, o.pos.z - z) < minDist + (o.block || 0))) continue;
+// Água como objetos (com raio): lago principal, lagoas e o riacho
+const lago = addObject('lago', LAKE.x, LAKE.z, null); lago.pos.y = WATER_Y; lago.radius = LAKE.r;
+for (const p of PONDS) { const o = addObject('lagoa', p.x, p.z, null); o.pos.y = WATER_Y; o.radius = p.r; }
+const RX = LAKE.x + LAKE.r + 8;
+const riacho = addObject('riacho', RX, streamZ(RX), null); riacho.pos.y = STREAM_Y;
+
+const isFreeRaw = p => Math.abs(p.x) < LIM && Math.abs(p.z) < LIM && waterDist(p.x, p.z) > 1.5 && nearStream(p.x, p.z) > 2.5;
+const spaced = (p, minD, block = 0) => !objects.some(o => !o.radius && !TYPES[o.type]?.mobile && Math.hypot(o.pos.x - p.x, o.pos.z - p.z) < minD + block + (o.block || 0));
+// procura um ponto livre num anel em volta da partida (de preferência num dos biomas pedidos)
+function spot(biomes, rMin, rMax, minD = 3, block = 0) {
+  for (let pass = 0; pass < 2; pass++) for (let i = 0; i < 400; i++) {
+    const a = srand(0, 6.28), d = srand(rMin, rMax), p = new THREE.Vector3(Math.cos(a) * d, 0, Math.sin(a) * d);
+    if (!isFreeRaw(p) || !spaced(p, minD, block) || (pass === 0 && !biomes.includes(biomeAt(p.x, p.z)))) continue;
     return p;
   }
-  return null;
+  return new THREE.Vector3(rMin, 0, 0);
 }
-const isFreeRaw = p => Math.hypot(p.x - LAKE.x, p.z - LAKE.z) > LAKE.r + 1.5 && !(p.x > LAKE.x + LAKE.r - 2 && Math.abs(p.z - streamZ(p.x)) < 2.5);
-const SCATTER = [['grama_baixa', 8, 0], ['trevo', 5, 0], ['grama_seca', 5, 0], ['pinha', 3, 0], ['formigueiro', 2, 0.8],
-  ['tronco_musgo', 2, 1.2], ['ninho', 1, 0], ['teia', 2, 0.6]];
-for (const [t, n, block] of SCATTER) for (let i = 0; i < n; i++) { const p = freeSpot(2.5); if (p) addObject(t, p.x, p.z, MK[t], block); }
-for (let i = 0; i < 2; i++) {   // caramujos na beira do lago
-  const a = srand(0, 6.28), r = LAKE.r + srand(1.4, 2.2);
-  addObject('caramujo', LAKE.x + Math.cos(a) * r, LAKE.z + Math.sin(a) * r, MK.caramujo);
-}
-// tufos de grama decorativos: um único InstancedMesh (barato), com tons variados
+// marcos únicos
+const cp = spot(['pedregal'], 22, 50, 6, 3.4);
+const cave = addObject('caverna', cp.x, cp.z, MK.caverna, 3.4);
+cave.mesh.rotation.y = 0;
+cave.entrance = new THREE.Vector3(cp.x + 4.2, 0, cp.z);
+const ap = spot(['mata', 'campo'], 14, 30, 5, 1.6);
+const abrigo = addObject('abrigo', ap.x, ap.z, MK.abrigo, 1.6);
+abrigo.mesh.rotation.y = 0;                    // aberto para +Z
+abrigo.entrance = new THREE.Vector3(ap.x, 0, ap.z + 2.6);
+const fp = spot(['mata', 'campo'], 16, 40, 4, 1.1);
+addObject('fonte', fp.x, fp.z, MK.fonte, 1.1);
+// o computador num toco e a câmera caída no chão, os dois perto da clareira de partida
+const pcp = spot(['campo'], 6, 9, 3, 0.7);
+const pc = addObject('computador', pcp.x, pcp.z, MK.computador, 0.7);
+pc.mesh.rotation.y = Math.atan2(-pcp.x, -pcp.z);   // tela virada para o centro
+const gp = spot(['campo'], 5, 8, 2);
+let gopro = state.temCamera ? null : addObject('gopro', gp.x, gp.z, MK.gopro);
+
+// Espalha a vegetação e as coisas de cada bioma: [tipo, peso, raio de bloqueio]
+const BIOMA = {
+  campo: [['grama_baixa', 6, 0], ['trevo', 4, 0], ['capim_alto', 4, 0.7], ['flores', 3, 0], ['grama_seca', 2, 0], ['formigueiro', 1, 0.8], ['pinha', 0.7, 0],
+          ['arbusto_amoras', 2, 0.7], ['arbusto_espinhos', 1, 0.7], ['cogumelo_marrom', 1, 0], ['arvore', 1.2, 1.1], ['arvore_frutas', 0.6, 1.1], ['pedra', 0.4, 1.6]],
+  mata: [['arvore', 6, 1.1], ['arvore_frutas', 2, 1.1], ['samambaia', 3, 0], ['cogumelo_marrom', 2, 0], ['cogumelo_vermelho', 1.5, 0], ['tronco_musgo', 2, 1.2],
+         ['teia', 1.5, 0.6], ['ninho', 0.7, 0], ['arbusto_bagas_brancas', 1.5, 0.7], ['arbusto_amoras', 1, 0.7], ['pinha', 1, 0]],
+  brejo: [['taboa', 5, 0], ['capim_alto', 3, 0.7], ['grama_baixa', 2, 0], ['trevo', 1, 0], ['flores', 1, 0], ['samambaia', 1, 0]],
+  pedregal: [['pedra', 3, 1.6], ['cacto', 3, 0.6], ['pedra_brilhante', 1, 0.5], ['grama_seca', 3, 0], ['formigueiro', 1, 0.8], ['pinha', 0.5, 0]],
+};
 {
-  const N = 700, geo = new THREE.ConeGeometry(0.05, 0.38, 3); geo.translate(0, 0.19, 0);
+  let placed = 0;
+  for (let i = 0; i < 9000 && placed < 300; i++) {
+    const p = new THREE.Vector3(srand(-LIM, LIM), 0, srand(-LIM, LIM));
+    if (Math.hypot(p.x, p.z) < 4 || !isFreeRaw(p) || heightAt(p.x, p.z) < -0.3) continue;
+    const list = BIOMA[biomeAt(p.x, p.z)], tot = list.reduce((a, t) => a + t[1], 0);
+    let r = srand(0, tot), pickT = list[0];
+    for (const t of list) { if ((r -= t[1]) <= 0) { pickT = t; break; } }
+    const [t, , block] = pickT;
+    if (!spaced(p, 2.6, block)) continue;
+    addObject(t, p.x, p.z, MK[t], block); placed++;
+  }
+  // caramujos nas margens
+  for (const w of WATERS) for (let i = 0; i < (w === LAKE ? 2 : 1); i++) {
+    const a = srand(0, 6.28), r = w.r + srand(1.4, 2.2);
+    addObject('caramujo', w.x + Math.cos(a) * r, w.z + Math.sin(a) * r, MK.caramujo);
+  }
+}
+// tufos de grama decorativos: um único InstancedMesh (barato), com tons de cada bioma
+{
+  const N = 3600, geo = new THREE.ConeGeometry(0.05, 0.38, 3); geo.translate(0, 0.19, 0);
   const tufts = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ flatShading: true }), N);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), c = new THREE.Color();
   let k = 0;
   for (let i = 0; i < N * 3 && k < N; i++) {
-    const x = srand(-31, 31), z = srand(-31, 31), h = heightAt(x, z);
-    if (h < -0.25 || !isFreeRaw(new THREE.Vector3(x, 0, z))) continue;
+    const x = srand(-HALF, HALF), z = srand(-HALF, HALF), h = heightAt(x, z);
+    if (h < -0.25 || waterDist(x, z) < 1 || nearStream(x, z) < 1.5) continue;
+    const b = biomeAt(x, z);
+    if (b === 'pedregal' && srand(0, 1) < 0.7) continue;
     e.set(srand(-0.35, 0.35), srand(0, 6.28), srand(-0.35, 0.35)); q.setFromEuler(e);
-    const sc = srand(0.6, 1.5);
+    const sc = srand(0.6, 1.5) * (b === 'brejo' ? 1.5 : b === 'mata' ? 1.2 : 1);
     m4.compose(new THREE.Vector3(x, h, z), q, new THREE.Vector3(sc, sc * srand(0.7, 1.4), sc));
     tufts.setMatrixAt(k, m4);
-    const dry = Math.sin(x * 0.12 + z * 0.09) > 0.55;   // manchas de grama mais seca
-    tufts.setColorAt(k, c.setHSL(dry ? srand(0.12, 0.16) : srand(0.24, 0.32), dry ? 0.5 : 0.55, srand(0.36, 0.5)));
+    const dry = b === 'pedregal' || Math.sin(x * 0.12 + z * 0.09) > 0.6;
+    tufts.setColorAt(k, dry ? c.setHSL(srand(0.11, 0.15), 0.45, srand(0.45, 0.55))
+      : b === 'brejo' ? c.setHSL(srand(0.18, 0.22), 0.4, srand(0.3, 0.4))
+      : b === 'mata' ? c.setHSL(srand(0.28, 0.33), 0.5, srand(0.26, 0.36))
+      : c.setHSL(srand(0.24, 0.3), 0.55, srand(0.38, 0.5)));
     k++;
   }
   tufts.count = k; tufts.receiveShadow = true;
   scene.add(tufts);
 }
-const abrigo = addObject('abrigo', 15, 4, MK.abrigo, 1.6);
-abrigo.mesh.rotation.y = 0;                    // aberto para +Z
-abrigo.entrance = new THREE.Vector3(15, 0, 6.6);
 // Jacaré: vive no lago, às vezes toma sol na margem, espreita quem fica muito perto da água
 const jac = addObject('jacare', LAKE.x + 2, LAKE.z + 1, null);
 jac.mesh = MK.jacare(); scene.add(jac.mesh);
@@ -661,16 +791,20 @@ function scareBird() { bird.mode = 'flee'; bird.fleeUntil = gameTime + 8; bird.f
 // ---------------------------------------------------------------------
 // 3a. PATHFINDING: grade de 1 m + A* (contorna árvores, pedras, caverna e lago)
 // ---------------------------------------------------------------------
-const GN = 60;
+const GN = HALF * 2;   // células de 1 m
 const blocked = new Uint8Array(GN * GN);
 const cellOf = v => [clamp(Math.floor(v.x + HALF), 0, GN - 1), clamp(Math.floor(v.z + HALF), 0, GN - 1)];
 const cellCenter = (i, j) => new THREE.Vector3(i - HALF + 0.5, 0, j - HALF + 0.5);
 for (let i = 0; i < GN; i++) for (let j = 0; j < GN; j++) {
   const c = cellCenter(i, j);
-  let b = i < 2 || j < 2 || i > GN - 3 || j > GN - 3;
-  if (Math.hypot(c.x - LAKE.x, c.z - LAKE.z) < LAKE.r + 0.6) b = true;
-  for (const o of objects) if (o.block && Math.hypot(c.x - o.pos.x, c.z - o.pos.z) < o.block + 0.5) b = true;
-  blocked[i + j * GN] = b ? 1 : 0;
+  blocked[i + j * GN] = (i < 2 || j < 2 || i > GN - 3 || j > GN - 3 || waterDist(c.x, c.z) < 0.6) ? 1 : 0;
+}
+for (const o of objects) if (o.block) {   // marca só as células em volta de cada obstáculo
+  const R = Math.ceil(o.block + 0.5), [ci, cj] = cellOf(o.pos);
+  for (let i = ci - R; i <= ci + R; i++) for (let j = cj - R; j <= cj + R; j++) {
+    if (i < 0 || j < 0 || i >= GN || j >= GN) continue;
+    const c = cellCenter(i, j); if (Math.hypot(c.x - o.pos.x, c.z - o.pos.z) < o.block + 0.5) blocked[i + j * GN] = 1;
+  }
 }
 function nearestFree(i, j) {
   if (!blocked[i + j * GN]) return [i, j];
@@ -680,17 +814,21 @@ function nearestFree(i, j) {
   }
   return [i, j];
 }
+// A* com fila de prioridade (heap binário): rápido mesmo no mapa de 120 m
 function findPath(from, to) {
   const [si, sj] = nearestFree(...cellOf(from)), [ti, tj] = nearestFree(...cellOf(to));
   const start = si + sj * GN, goal = ti + tj * GN;
   const g = new Float32Array(GN * GN).fill(Infinity), came = new Int32Array(GN * GN).fill(-1), closed = new Uint8Array(GN * GN);
-  const open = [start]; g[start] = 0;
   const hf = k => Math.hypot((k % GN) - ti, Math.floor(k / GN) - tj);
+  const heap = [[hf(start), start]];
+  const push = it => { heap.push(it); let i = heap.length - 1; while (i) { const p = (i - 1) >> 1; if (heap[p][0] <= it[0]) break; heap[i] = heap[p]; i = p; } heap[i] = it; };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { let i = 0; for (;;) { let c = 2 * i + 1; if (c >= heap.length) break; if (c + 1 < heap.length && heap[c + 1][0] < heap[c][0]) c++; if (heap[c][0] >= last[0]) break; heap[i] = heap[c]; i = c; } heap[i] = last; } return top; };
+  g[start] = 0;
   let iter = 0;
-  while (open.length && iter++ < 4000) {
-    let bi = 0; for (let k = 1; k < open.length; k++) if (g[open[k]] + hf(open[k]) < g[open[bi]] + hf(open[bi])) bi = k;
-    const cur = open.splice(bi, 1)[0];
+  while (heap.length && iter++ < 30000) {
+    const [, cur] = pop();
     if (cur === goal) break;
+    if (closed[cur]) continue;
     closed[cur] = 1;
     const ci = cur % GN, cj = Math.floor(cur / GN);
     for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
@@ -700,13 +838,12 @@ function findPath(from, to) {
       if (blocked[n] || closed[n]) continue;
       if (di && dj && (blocked[ci + di + cj * GN] || blocked[ci + (cj + dj) * GN])) continue; // sem cortar quinas
       const ng = g[cur] + (di && dj ? 1.414 : 1);
-      if (ng < g[n]) { g[n] = ng; came[n] = cur; if (!open.includes(n)) open.push(n); }
+      if (ng < g[n]) { g[n] = ng; came[n] = cur; push([ng + hf(n), n]); }
     }
   }
   if (came[goal] === -1 && goal !== start) return [to.clone()];
   const path = []; let k = goal;
   while (k !== -1 && k !== start) { path.unshift(cellCenter(k % GN, Math.floor(k / GN))); k = came[k]; }
-  // suaviza: pula pontos intermediários alinhados
   const out = path.filter((p, i) => i % 2 === 1 || i === path.length - 1);
   out.push(to.clone());
   return out;
@@ -793,15 +930,15 @@ function dropPrint() {
   printIdx = (printIdx + 1) % PRINTS; prints.count = Math.min(PRINTS, prints.count + 1); prints.instanceMatrix.needsUpdate = true;
 }
 function wearGround(x, z, times = 1) {
-  const ix = Math.round((x + 32) / 64 * 56), iz = Math.round((z + 32) / 64 * 56);
-  if (ix < 0 || iz < 0 || ix > 56 || iz > 56) return;
+  const ix = Math.round((x + TSIZE / 2) / TSIZE * TSEG), iz = Math.round((z + TSIZE / 2) / TSIZE * TSEG);
+  if (ix < 0 || iz < 0 || ix > TSEG || iz > TSEG) return;
   const key = ix + ',' + iz;
   const w = state.trilhas[key] = (state.trilhas[key] || 0) + times;
-  const i = iz * 57 + ix, col = GROUND.geometry.attributes.color, t = Math.min(1, w / 14) * 0.75;
+  const i = iz * (TSEG + 1) + ix, col = GROUND.geometry.attributes.color, t = Math.min(1, w / 14) * 0.75;
   const c = new THREE.Color(GROUND_BASE[i * 3], GROUND_BASE[i * 3 + 1], GROUND_BASE[i * 3 + 2]).lerp(DIRT, t);
   col.setXYZ(i, c.r, c.g, c.b); col.needsUpdate = true;
 }
-for (const k in state.trilhas) { const [ix, iz] = k.split(',').map(Number); const v = state.trilhas[k]; state.trilhas[k] = 0; wearGround(ix / 56 * 64 - 32, iz / 56 * 64 - 32, v); }
+for (const k in state.trilhas) { const [ix, iz] = k.split(',').map(Number); const v = state.trilhas[k]; state.trilhas[k] = 0; wearGround(ix / TSEG * TSIZE - TSIZE / 2, iz / TSEG * TSIZE - TSIZE / 2, v); }
 
 function moveCapy(dt) {
   if (!capy.path.length) return;
@@ -821,7 +958,7 @@ function moveCapy(dt) {
   const step = Math.min(dist, sp * dt);
   capy.pos.addScaledVector(d, step);
   if (!capy.swim && (stepDist += step) > 0.45) { stepDist = 0; dropPrint(); }
-  const ck = Math.round((capy.pos.x + 32) / 64 * 56) + ',' + Math.round((capy.pos.z + 32) / 64 * 56);
+  const ck = Math.round((capy.pos.x + TSIZE / 2) / TSIZE * TSEG) + ',' + Math.round((capy.pos.z + TSIZE / 2) / TSIZE * TSEG);
   if (!capy.swim && ck !== lastCellKey) { lastCellKey = ck; wearGround(capy.pos.x, capy.pos.z); }
 }
 
@@ -907,7 +1044,7 @@ function updateWorld(dt) {
   if (state.clock > 0.78 && state.clock < 0.8 && state.diaryDay !== state.day) { state.diaryDay = state.day; pendingDiary = true; }
   if (s.fome > 85 || s.sede > 85) s.humor = clamp(s.humor - dt * 0.1);
   // água ondulando de leve
-  lakeMesh.position.y = WATER_Y + Math.sin(gameTime * 1.3) * 0.02;
+  for (const m of waterMeshes) m.position.y = WATER_Y + Math.sin(gameTime * 1.3) * 0.02;
   updateBird(dt);
   updateJacare(dt);
   updateSurprises(dt);
@@ -975,8 +1112,8 @@ function directionWord(p) {
   return A < 70 ? `à frente, à ${side}` : A < 115 ? `à ${side}` : `atrás, à ${side}`;
 }
 function distTo(o) {
-  if (o.type === 'lago') return Math.max(0, Math.hypot(capy.pos.x - LAKE.x, capy.pos.z - LAKE.z) - LAKE.r - 1);
-  if (o.type === 'riacho') { let best = 99; for (let x = LAKE.x + LAKE.r; x < 30; x += 1) best = Math.min(best, Math.hypot(capy.pos.x - x, capy.pos.z - streamZ(x)) - 1); return Math.max(0, best); }
+  if (o.radius) return Math.max(0, Math.hypot(capy.pos.x - o.pos.x, capy.pos.z - o.pos.z) - o.radius - 1);
+  if (o.type === 'riacho') { let best = 99; for (let x = LAKE.x + LAKE.r; x < HALF; x += 1) best = Math.min(best, Math.hypot(capy.pos.x - x, capy.pos.z - streamZ(x)) - 1); return Math.max(0, best); }
   return capy.pos.distanceTo(new THREE.Vector3(o.pos.x, capy.pos.y, o.pos.z));
 }
 function buildPerception() {
@@ -1002,7 +1139,7 @@ function buildPerception() {
       ...(visiveis.length ? visiveis.map(({ o, d }) => `- id "${o.id}": ${TYPES[o.type].desc}${vazio(o)} — ${d.toFixed(1)} m, ${directionWord(o.pos)}`) : ['- nada de especial, só grama']),
       'Lugares que você lembra de ter visto (fora da vista agora; pode ir até eles pelo id):',
       ...(lembrados.length ? lembrados.map(({ id, m, d }) => `- id "${id}": ${TYPES[m.t].desc} — uns ${Math.round(d)} m, ${directionWord(new THREE.Vector3(m.x, 0, m.z))}`) : ['- nenhum ainda']),
-      ...(state.temCamera ? ['Você carrega na cabeça a coisinha que guarda imagens: com a ação "fotografar" você guarda o que quiser (veja "legenda").'] : []),
+      ...(state.temCamera ? ['Você carrega na cabeça a coisinha que guarda imagens: com a ação "fotografar" você guarda uma imagem (veja "legenda"), e com "gravar": true você filma a próxima ação para o seu vlog (veja "narracao").'] : []),
       ...(state.descobertas.some(d => d.startsWith('investigar:computador|')) ? ['Você sabe que a caixinha brilhante responde perguntas: perto dela, use a ação "pesquisar" e escreva em "pesquisa" o que quer saber.'] : []),
       ...(state.pesquisas.length ? ['O que você já leu na caixinha brilhante:', ...state.pesquisas.slice(-3).map(p => `- "${p.q}": ${p.titulo ? p.titulo + ' — ' + p.resumo.slice(0, 140) : 'nada encontrado'}`)] : []),
       'Suas experiências anteriores (quantas vezes foi bom ou ruim):',
@@ -1019,9 +1156,10 @@ const FORMATO = `
 A cada turno você recebe sua percepção e decide UMA ação. Responda SOMENTE com JSON neste formato:
 {"pensamento":"1-2 frases em 1ª pessoa: o que observa, a hipótese que vai testar ou o que concluiu, usando os nomes que você inventou; sem emojis","emoji":"exatamente um destes: 🙂 😌 😋 🤔 😮 😟 😴 🤢 😱 💧 🥶 🥱 😣 📸 💻","acao":"ir_para | comer | beber | nadar | dormir | cheirar | sentar | investigar | fugir | vagar | necessidades | pegar | fotografar | pesquisar","alvo":"id de um objeto visível ou null","aprendizado":"conclusão curta sobre a última experiência, usando seus nomes inventados (ex: \"as bolinhas-roxas são doces e matam a fome\"), ou null"}
 Regras: "acao" deve ser exatamente uma das opções. "alvo" deve ser um id exatamente como aparece na percepção (ou null para vagar/fugir/dormir no lugar). Só registre "aprendizado" quando a última ação realmente te ensinou algo novo.
-Campos extras (inclua sempre, use null quando não se aplicam): "pesquisa": o que você quer saber, escrito do seu jeito (só com acao "pesquisar", perto da caixinha brilhante); "legenda": uma frase curta para a imagem (só com acao "fotografar", alvo = o que você quer guardar, ou null para a paisagem). Fotografe só o que realmente chama sua atenção ou você gosta.`;
+Campos extras (inclua sempre, use null quando não se aplicam): "pesquisa": o que você quer saber, escrito do seu jeito (só com acao "pesquisar", perto da caixinha brilhante); "legenda": uma frase curta para a imagem (só com acao "fotografar", alvo = o que você quer guardar, ou null para a paisagem). Fotografe só o que realmente chama sua atenção ou você gosta.
+Se você tem a câmera na cabeça, também pode gravar vídeo para o seu vlog: "gravar": true grava a ação que você vai fazer agora, do seu ponto de vista, e "narracao" é a frase curta que você diz para a câmera enquanto grava. Grave só momentos que valem a pena mostrar (algo novo, bonito, arriscado ou engraçado); no resto, "gravar": false e "narracao": null.`;
 
-const EMOJIS = ['🙂', '😌', '😋', '🤔', '😮', '😟', '😴', '🤢', '😱', '💧', '🥶', '🥱', '😣', '📸', '💻'];
+const EMOJIS = ['🙂', '😌', '😋', '🤔', '😮', '😟', '😴', '🤢', '😱', '💧', '🥶', '🥱', '😣', '📸', '💻', '🎥'];
 const memory = { keys: [], lastResult: 'Você acabou de acordar. Tudo é novo.', history: [] };
 const pendingNotes = [];
 
@@ -1046,6 +1184,8 @@ function normalizeDecision(raw, perc) {
     aprendizado: r.aprendizado && r.aprendizado !== 'null' ? String(r.aprendizado).slice(0, 160) : null,
     pesquisa: typeof r.pesquisa === 'string' && r.pesquisa !== 'null' ? r.pesquisa.slice(0, 80) : null,
     legenda: typeof r.legenda === 'string' && r.legenda !== 'null' ? r.legenda.slice(0, 120) : null,
+    gravar: !!r.gravar && state.temCamera,
+    narracao: typeof r.narracao === 'string' && r.narracao !== 'null' ? r.narracao.slice(0, 140) : null,
   };
 }
 
@@ -1111,7 +1251,8 @@ const NOMES = {
   flores: ['cores-que-cheiram', 'pontinhos-coloridos'], passaro: ['bicho-que-voa', 'pena-azul'], pinha: ['pedra-de-escamas', 'casca-dura'], formigueiro: ['montinho-que-anda', 'morro-de-pontinhos'],
   tronco_musgo: ['tronco-macio', 'madeira-verde'], caramujo: ['casinha-espiral', 'bolinha-lenta'], ninho: ['bolinhas-azuis', 'cesto-de-gravetos'],
   teia: ['fios-brilhantes', 'rede-de-luz'], trevo: ['folhas-redondas', 'tapete-de-três'], grama_seca: ['palha-amarela', 'capim-velho'],
-  grama_baixa: ['chão-verde', 'grama-curta'], computador: ['caixinha-brilhante', 'pedra-que-responde'], gopro: ['olho-de-guardar', 'coisinha-de-clique'], coco: ['meu-cheiro', 'bolinhas-marrons'], jacare: ['boca-de-dentes', 'tronco-que-morde'],
+  grama_baixa: ['chão-verde', 'grama-curta'], computador: ['caixinha-brilhante', 'pedra-que-responde'], lagoa: ['água-pequena', 'poça-grande'], taboa: ['salsicha-do-brejo', 'capim-de-espiga'],
+  cacto: ['planta-que-espeta', 'pote-de-espinhos'], samambaia: ['folha-que-curva', 'cortina-verde'], pedra_brilhante: ['pedra-de-luz', 'gelo-que-não-derrete'], gopro: ['olho-de-guardar', 'coisinha-de-clique'], coco: ['meu-cheiro', 'bolinhas-marrons'], jacare: ['boca-de-dentes', 'tronco-que-morde'],
   melancia: ['bola-listrada'], bola: ['coisa-que-rola'], caixa: ['caixa-com-laço'],
 };
 state.nomes ||= {};
@@ -1141,6 +1282,14 @@ const FRASES = {
   necessidades: [['A barriga está pesada. Preciso de um canto tranquilo, de preferência perto da água.', 'Hora de encontrar um canto. O corpo avisa e eu obedeço.', '😣']],
   fugir: [['Algo aqui não parece seguro. Melhor me afastar e pensar depois.', 'Prefiro manter distância.', '😟']],
 };
+const NARR = {
+  novo: ['Gravando. Encontrei {n} e nunca tentei {acao}. Vamos ver o que acontece.', 'Olha isso aqui: {n}. Vou testar com cuidado.', 'Primeira vez com {n}. Fica comigo.'],
+  lindo: ['O céu está mudando de cor. Queria que alguém visse isso comigo.', 'Fim de tarde. A luz fica dourada em tudo.'],
+  nadar: ['Hora do mergulho. Segura firme, câmera.', 'Vou entrar na água. É aqui que eu fico leve.'],
+  jac: ['Estou filmando de longe. Aquele é o {n}. Não chego perto.'],
+  pc: ['Vou perguntar uma coisa para a caixinha brilhante. Vem comigo.', 'Tenho uma dúvida. A caixinha deve saber.'],
+};
+const VERBO = { comer: 'comer', beber: 'beber', cheirar: 'cheirar', sentar: 'sentar', investigar: 'olhar de perto', nadar: 'nadar', pegar: 'pegar', ir_para: 'chegar perto' };
 function offlineBrain(perc) {
   const s = state.stats, vis = perc.visiveis.map(v => v.o);
   // candidatos: o que vê + o que lembra (mapa mental); prefere o que já deu certo e evita o que deu errado
@@ -1172,14 +1321,14 @@ function offlineBrain(perc) {
   else if (acao !== 'vagar') {}
   else if (s.frio > 65 && (alvo = find(isNight() || raining ? 'dormir' : 'sentar', ['abrigo', 'caverna', 'pedra'])?.id)) acao = isNight() || raining ? 'dormir' : 'sentar';
   else if (s.energia < 25) { const c = find('dormir', ['abrigo', 'caverna']); acao = 'dormir'; alvo = c ? c.id : null; }
-  else if (s.sede > 55 && (alvo = find('beber', ['lago', 'riacho', 'fonte'])?.id)) acao = 'beber';
+  else if (s.sede > 55 && (alvo = find('beber', ['lago', 'lagoa', 'riacho', 'fonte'])?.id)) acao = 'beber';
   else if (s.fome > 55 && (alvo = find('comer', ['arvore_frutas', 'cogumelo_marrom', 'cogumelo_vermelho', 'melancia', 'arbusto_amoras', 'capim_alto', 'arbusto_espinhos', 'arbusto_bagas_brancas'])?.id)) acao = 'comer';
   else {
     for (const o of vis) for (const a of Object.keys(TYPES[o.type].efeitos)) if (ok(a, o) && !(o === jac && medoJac) && !(medoJac && o.type === 'lago' && a === 'nadar' && Math.random() < 0.8)) opts.push([a, o.id]);
     // entediada: prefere o que nunca experimentou; se não houver, vai explorar longe
     if (s.tedio > 55) { const novas = opts.filter(([a, id]) => !state.crencas[a + ':' + objects.find(o => o.id === id)?.type]); opts = novas.length ? novas : [['vagar', null]]; }
     opts.push(['vagar', null], ['vagar', null]);
-    if (s.humor < 50 && s.frio < 50 && !medoJac && find('nadar', ['lago'])) opts.push(['nadar', find('nadar', ['lago']).id], ['nadar', find('nadar', ['lago']).id]);
+    if (s.humor < 50 && s.frio < 50 && !medoJac && find('nadar', ['lago', 'lagoa'])) opts.push(['nadar', find('nadar', ['lago', 'lagoa']).id], ['nadar', find('nadar', ['lago', 'lagoa']).id]);
     if (jacPerto) opts.push(['fugir', jac.id]);
     [acao, alvo] = pick(opts);
   }
@@ -1210,13 +1359,23 @@ function offlineBrain(perc) {
   if (/enjoo/.test(memory.lastResult)) { aprendizado = `Comer ${nomeDe('cogumelo_vermelho')} me deixou enjoada. Não vou repetir.`; offlineBad.add('cogumelo_vermelho'); }
   if (/furaram|espetou/.test(memory.lastResult)) { aprendizado = cap(`${nomeDe('arbusto_espinhos')} machuca o focinho. As frutinhas amarelas não compensam.`); offlineBad.add('arbusto_espinhos'); }
   if (/sonolência/.test(memory.lastResult)) { aprendizado = cap(`${nomeDe('arbusto_bagas_brancas')} dá um sono pesado.`); offlineBad.add('arbusto_bagas_brancas'); }
-  return { pensamento, emoji: acao === 'vagar' && s.tedio > 55 ? '🥱' : emoji, acao, alvo, aprendizado };
+  // vlog: ela grava momentos novos, bonitos, na água, de longe do jacaré ou no computador
+  let gravar = false, narracao = null;
+  if (state.temCamera && !['dormir', 'necessidades', 'fotografar'].includes(acao)) {
+    const motivo = lindo ? 'lindo' : acao === 'nadar' ? 'nadar' : alvo === jac.id ? 'jac' : acao === 'pesquisar' ? 'pc' : alvoTipo && !conhece ? 'novo' : null;
+    if (motivo && Math.random() < 0.55) {
+      gravar = true;
+      const nome = alvoTipo ? nomeDe(alvoTipo) : 'isto';
+      narracao = cap(pick(NARR[motivo]).replaceAll('{n}', nome).replaceAll('{acao}', VERBO[acao] || acao));
+    }
+  }
+  return { pensamento, emoji: acao === 'vagar' && s.tedio > 55 ? '🥱' : emoji, acao, alvo, aprendizado, gravar, narracao };
 }
 
 // ---------------------------------------------------------------------
 // 5c. EXECUÇÃO DA AÇÃO: anda até o alvo, anima, aplica efeitos ocultos
 // ---------------------------------------------------------------------
-function walkTo(point, { run = false, swim = false, maxTime = 25 } = {}) {
+function walkTo(point, { run = false, swim = false, maxTime = 50 } = {}) {
   return new Promise(resolve => {
     capy.speed = run ? 4.5 : 2.2;
     capy.path = swim ? [point.clone()] : findPath(capy.pos, point);
@@ -1229,8 +1388,8 @@ function walkTo(point, { run = false, swim = false, maxTime = 25 } = {}) {
 }
 function approachPoint(o) {
   const from = capy.pos.clone();
-  if (o.type === 'lago') { const dir = from.clone().sub(new THREE.Vector3(LAKE.x, from.y, LAKE.z)).setY(0).normalize(); return new THREE.Vector3(LAKE.x + dir.x * (LAKE.r + 1.1), 0, LAKE.z + dir.z * (LAKE.r + 1.1)); }
-  if (o.type === 'riacho') { let best = null, bd = 1e9; for (let x = LAKE.x + LAKE.r + 1; x < 28; x++) { const p = new THREE.Vector3(x, 0, streamZ(x) + (from.z > streamZ(x) ? 1.6 : -1.6)); const d = p.distanceTo(from); if (d < bd) { bd = d; best = p; } } return best; }
+  if (o.radius) { const dir = from.clone().sub(o.pos).setY(0).normalize(); return new THREE.Vector3(o.pos.x + dir.x * (o.radius + 1.1), 0, o.pos.z + dir.z * (o.radius + 1.1)); }
+  if (o.type === 'riacho') { let best = null, bd = 1e9; for (let x = LAKE.x + LAKE.r + 1; x < HALF - 2; x++) { const p = new THREE.Vector3(x, 0, streamZ(x) + (from.z > streamZ(x) ? 1.6 : -1.6)); const d = p.distanceTo(from); if (d < bd) { bd = d; best = p; } } return best; }
   if (o.type === 'caverna') return cave.entrance.clone();
   if (o.type === 'abrigo') return abrigo.entrance.clone();
   const dir = from.clone().sub(o.pos).setY(0); if (dir.lengthSq() < 0.01) dir.set(1, 0, 0);
@@ -1260,7 +1419,7 @@ async function executeAction(dec) {
       let p = null, best = -1;
       for (let i = 0; i < (longe ? 12 : 20); i++) {
         const q = capy.pos.clone().add(new THREE.Vector3(rand(-R, R), 0, rand(-R, R)));
-        if (!isFree(q) || Math.abs(q.x) > 27 || Math.abs(q.z) > 27) continue;
+        if (!isFree(q) || Math.abs(q.x) > LIM || Math.abs(q.z) > LIM) continue;
         const v = longe ? novidade(q) : 1;
         if (v > best) { best = v; p = q; } if (!longe) break;
       }
@@ -1272,7 +1431,7 @@ async function executeAction(dec) {
       const from = o ? o.pos : bird.pos;
       const dir = capy.pos.clone().sub(from).setY(0).normalize();
       let p = capy.pos.clone().addScaledVector(dir, 9);
-      p.x = clamp(p.x, -26, 26); p.z = clamp(p.z, -26, 26);
+      p.x = clamp(p.x, -LIM, LIM); p.z = clamp(p.z, -LIM, LIM);
       await walkTo(p, { run: true });
       return `Você saiu correndo${o ? ' para longe de ' + t.nome : ''}. Ufa, ficou segura.`;
     }
@@ -1287,7 +1446,7 @@ async function executeAction(dec) {
   if (!o) return 'Você ficou parada sem saber o que fazer.';
   // anda até o objeto (pássaro é alvo móvel: mira onde ele está agora)
   await walkTo(o.type === 'passaro' ? new THREE.Vector3(bird.pos.x, 0, bird.pos.z) : approachPoint(o));
-  faceTowards(o.type === 'lago' ? new THREE.Vector3(LAKE.x, 0, LAKE.z) : o.pos);
+  faceTowards(o.pos);
   if (dec.acao === 'ir_para') return `Você chegou perto de ${t.nome}.`;
   const efeito = t.efeitos[dec.acao];
   if (dec.acao === 'comer' && o.porcoes === 0) {   // já comeu tudo daqui: só folhas e galhos
@@ -1305,17 +1464,17 @@ async function executeAction(dec) {
   }
   const r = efeito(o);
   discover(`${dec.acao}:${o.type}`, DISCOVERY_TEXT[`${dec.acao}:${o.type}`] || `${dec.acao} ${t.nome}`);
-  if (r.anim === 'nadar' && o.type === 'lago') {          // entra no lago e dá uma voltinha
+  if (r.anim === 'nadar' && o.radius) {          // entra na água e dá uma voltinha
     const edge = capy.pos.clone();
     capy.swim = true; sfx('splash');
-    const c = new THREE.Vector3(LAKE.x, 0, LAKE.z);
+    const c = new THREE.Vector3(o.pos.x, 0, o.pos.z), sw = o.radius / 3.5;
     await walkTo(edge.clone().lerp(c, 0.55), { swim: true });
-    await walkTo(c.clone().add(new THREE.Vector3(rand(-2, 2), 0, rand(-2, 2))), { swim: true });
+    await walkTo(c.clone().add(new THREE.Vector3(rand(-sw, sw), 0, rand(-sw, sw))), { swim: true });
     await walkTo(edge, { swim: true });
     capy.swim = false;
   } else {
-    if (o.type === 'caverna' && r.anim === 'dormir') faceTowards(new THREE.Vector3(0, 0, -5));
-    if (o.type === 'abrigo' && r.anim === 'dormir') faceTowards(new THREE.Vector3(15, 0, 20));
+    if (o.type === 'caverna' && r.anim === 'dormir') faceTowards(cave.entrance.clone().add(new THREE.Vector3(5, 0, 0)));
+    if (o.type === 'abrigo' && r.anim === 'dormir') faceTowards(abrigo.entrance.clone().add(new THREE.Vector3(0, 0, 5)));
     capy.anim = r.anim; capy.animT = 0;
     await gameWait(ANIM_DUR[r.anim] * (r.anim === 'dormir' && isNight() ? 1.4 : 1));
   }
@@ -1344,7 +1503,7 @@ async function reactAttack() {
   capy.swim = false; capy.anim = 'tremer'; capy.animT = 0;
   await gameWait(0.8);
   const dir = capy.pos.clone().sub(new THREE.Vector3(LAKE.x, 0, LAKE.z)).setY(0).normalize();
-  const p = capy.pos.clone().addScaledVector(dir, 9); p.x = clamp(p.x, -26, 26); p.z = clamp(p.z, -26, 26);
+  const p = capy.pos.clone().addScaledVector(dir, 9); p.x = clamp(p.x, -LIM, LIM); p.z = clamp(p.z, -LIM, LIM);
   await walkTo(p, { run: true });
 }
 function lakePoint(r) { const a = rand(0, 6.28); return new THREE.Vector3(LAKE.x + Math.cos(a) * r, 0, LAKE.z + Math.sin(a) * r); }
@@ -1396,6 +1555,11 @@ const ENCICLOPEDIA = [
   [['vaga-lume', 'luzinha', 'luz'], 'Vaga-lume', 'Vaga-lumes produzem luz no próprio corpo para se comunicar, principalmente para encontrar parceiros à noite.'],
   [['foto', 'imagem', 'câmera'], 'Fotografia', 'Fotografia é guardar a luz de um momento. A primeira foto conhecida foi feita em 1826 e precisou de horas de exposição.'],
   [['sol', 'pôr', 'tarde'], 'Pôr do sol', 'No fim da tarde a luz do Sol atravessa mais ar até chegar aos olhos, e por isso o céu fica laranja e vermelho.'],
+  [['cacto', 'espinho'], 'Cactaceae', 'Cactos guardam água dentro do caule grosso e têm espinhos no lugar das folhas, o que os protege de bichos com sede.'],
+  [['taboa', 'espiga', 'brejo'], 'Taboa', 'A taboa cresce em brejos e beiras de lagoa. Tem folhas longas e uma espiga marrom; sua base é macia e comestível.'],
+  [['samambaia'], 'Samambaia', 'Samambaias são plantas antigas, que existem há mais de 300 milhões de anos. Gostam de sombra e umidade.'],
+  [['cristal', 'quartzo', 'pedra transparente'], 'Quartzo', 'O quartzo é um mineral transparente que se forma em cristais de seis lados. Quando a luz o atravessa, pode se separar em cores.'],
+  [['lagoa', 'poça'], 'Lagoa', 'Lagoas são corpos de água rasos e parados, cheios de plantas e pequenos animais.'],
   [['frio', 'temperatura'], 'Hipotermia', 'Animais perdem calor mais rápido quando estão molhados ou no vento. Abrigar-se e ficar seco ajuda a manter a temperatura.'],
 ];
 const norm = t => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1415,7 +1579,7 @@ async function pesquisarWeb(q) {
 }
 // o que ela pesquisaria sozinha (modo offline): coisas que viveu ou que a intrigam
 const PERGUNTAS = { jacare: 'jacaré', formigueiro: 'formiga', teia: 'teia de aranha', caramujo: 'caramujo', cogumelo_vermelho: 'cogumelo vermelho com pintas brancas',
-  trevo: 'trevo', arbusto_amoras: 'amora', pinha: 'pinha', ninho: 'ninho de pássaro', lago: 'por que a água do lago é calma' };
+  trevo: 'trevo', arbusto_amoras: 'amora', cacto: 'cacto', taboa: 'taboa', samambaia: 'samambaia', pedra_brilhante: 'cristal de quartzo', lagoa: 'lagoa', pinha: 'pinha', ninho: 'ninho de pássaro', lago: 'por que a água do lago é calma' };
 const CURIOSIDADES = ['capivara', 'por que fica escuro à noite', 'de onde vem a chuva', 'por que o céu fica laranja no fim da tarde', 'vaga-lume', 'como guardar imagens'];
 function perguntaOffline() {
   const vividos = [...new Set(memory.keys.map(k => k.split(':')[1]))].filter(t => PERGUNTAS[t] && !state.pesquisas.some(p => p.q === PERGUNTAS[t]));
@@ -1452,6 +1616,7 @@ function attachGoPro(o) {
   if (o) { const i = objects.indexOf(o); if (i >= 0) objects.splice(i, 1); scene.remove(o.mesh); delete state.mapa[o.id]; }
   const g = MK.gopro(); g.scale.setScalar(1.3);
   g.position.set(0, 0.27, 0.12);       // em cima da cabeça, lente para frente
+  g.traverse(m => m.layers.set(1));    // só a câmera principal vê a GoPro; a própria GoPro não aparece no vlog
   capy.parts.head.add(g);
   gopro = null;
 }
@@ -1476,11 +1641,11 @@ async function doFoto(dec, o) {
   let alvoPos = null, nome = 'a paisagem';
   if (o) {
     nome = nomeDe(o.type);
-    alvoPos = (o.type === 'lago' ? new THREE.Vector3(LAKE.x, WATER_Y, LAKE.z) : o.pos.clone()).add(new THREE.Vector3(0, 0.4, 0));
+    alvoPos = o.pos.clone().add(new THREE.Vector3(0, 0.4, 0));
     const dist = distTo(o);
     if (dist > 6 || dist < 2) {   // enquadra: nem longe demais nem colado
       const dir = capy.pos.clone().sub(alvoPos).setY(0).normalize();
-      await walkTo((o.type === 'lago' ? approachPoint(o) : alvoPos.clone().addScaledVector(dir, 3.2 + (o.block || 0))).setY(0));
+      await walkTo((o.radius ? approachPoint(o) : alvoPos.clone().addScaledVector(dir, 3.2 + (o.block || 0))).setY(0));
     }
     faceTowards(alvoPos);
   }
@@ -1493,12 +1658,147 @@ async function doFoto(dec, o) {
   return `Você apertou o botão e guardou uma imagem de ${nome}. "${legenda}"`;
 }
 
+// ---------------------------------------------------------------------
+// VLOG: ela mesma grava, pela câmera na cabeça, em vídeo vertical 9:16.
+// Um segundo renderizador (360x640) desenha o ponto de vista da GoPro; um canvas 2D
+// por cima põe "REC", data e a narração; o MediaRecorder grava esse canvas.
+// Os clipes ficam no IndexedDB deste aparelho (aba 🎬 Vlog).
+// ---------------------------------------------------------------------
+const VW = 360, VH = 640;
+const vlogGL = document.createElement('canvas'); vlogGL.width = VW; vlogGL.height = VH;
+const vlogComp = document.createElement('canvas'); vlogComp.width = VW; vlogComp.height = VH;
+const vctx = vlogComp.getContext('2d');
+const vlogCam = new THREE.PerspectiveCamera(88, VW / VH, 0.05, 150);
+const qFlip = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.12, Math.PI, 0));
+let vlogRenderer = null;
+const rec = { on: false, stopping: false, recorder: null, chunks: [], narr: '', fim: '', t0: 0, until: 0, last: 0, thumb: null, meta: null };
+const VLOG_MIME = ['video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+  .find(m => window.MediaRecorder?.isTypeSupported?.(m));
+function startClip(narr) {
+  if (rec.on || !state.temCamera || !VLOG_MIME || !vlogComp.captureStream) return false;
+  try {
+    vlogRenderer ||= new THREE.WebGLRenderer({ canvas: vlogGL, antialias: false, preserveDrawingBuffer: true });
+    vlogRenderer.setPixelRatio(1); vlogRenderer.setSize(VW, VH, false);
+    const stream = vlogComp.captureStream(24);
+    rec.recorder = new MediaRecorder(stream, { mimeType: VLOG_MIME, videoBitsPerSecond: 1500000 });
+  } catch (e) { console.warn('vlog indisponível', e); return false; }
+  rec.chunks = []; rec.narr = narr || ''; rec.fim = ''; rec.thumb = null;
+  const h = Math.floor(state.clock * 24), m = Math.floor((state.clock * 24 % 1) * 60);
+  rec.meta = { dia: state.day, t: `Dia ${state.day} · ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` };
+  rec.recorder.ondataavailable = e => e.data.size && rec.chunks.push(e.data);
+  rec.recorder.onstop = () => {
+    const blob = new Blob(rec.chunks, { type: VLOG_MIME.split(';')[0] });
+    saveClip({ id: Date.now(), ...rec.meta, narr: rec.narr, fim: rec.fim, thumb: rec.thumb, blob });
+  };
+  rec.recorder.start(500);
+  rec.on = true; rec.stopping = false; rec.t0 = performance.now(); rec.until = rec.t0 + 20000; rec.last = 0;
+  vlogCam.position.copy(capy.pos).add(new THREE.Vector3(0, 1.2, 0));
+  $('hud-rec').hidden = false;
+  return true;
+}
+// termina a gravação 2 s depois do fim da ação, mostrando o que aconteceu
+function endClip(resultado) {
+  if (!rec.on || rec.stopping) return;
+  rec.stopping = true;
+  rec.fim = (resultado || '').split(/(?<=[.!?])\s/)[0].slice(0, 110);
+  setTimeout(() => { if (rec.on) { rec.recorder.stop(); rec.on = false; $('hud-rec').hidden = true; } }, 2200);
+}
+const tmpQ = new THREE.Quaternion(), tmpP = new THREE.Vector3(), tmpE = new THREE.Euler();
+function wrapText(text, maxW) {
+  const words = text.split(' '), lines = []; let line = '';
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (vctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); return lines;
+}
+function renderVlogFrame(now) {
+  if (!rec.on) return;
+  if (now > rec.until) endClip('');
+  if (now - rec.last < 1000 / 24) return;
+  rec.last = now;
+  // câmera presa na cabeça: segue cada movimento (balança andando, olha pra baixo comendo)
+  const head = capy.parts.head; head.updateWorldMatrix(true, false);
+  head.localToWorld(tmpP.set(0, 0.42, 0.3));   // logo à frente da lente
+  head.getWorldQuaternion(tmpQ).multiply(qFlip);
+  tmpE.setFromQuaternion(tmpQ, 'YXZ'); tmpE.z *= 0.35; tmpQ.setFromEuler(tmpE);   // estabilização: corta 65% da inclinação lateral
+  vlogCam.position.lerp(tmpP, 0.6); vlogCam.quaternion.slerp(tmpQ, 0.45);
+  vlogRenderer.render(scene, vlogCam);
+  vctx.drawImage(vlogGL, 0, 0);
+  // sobreposição estilo vlog
+  vctx.textBaseline = 'top';
+  if (Math.floor((now - rec.t0) / 500) % 2 === 0) { vctx.fillStyle = '#ff3b3b'; vctx.beginPath(); vctx.arc(26, 30, 8, 0, 7); vctx.fill(); }
+  vctx.font = '800 17px system-ui, sans-serif'; vctx.fillStyle = '#fff'; vctx.shadowColor = 'rgba(0,0,0,.6)'; vctx.shadowBlur = 4;
+  vctx.fillText('REC', 40, 21);
+  const ts = rec.meta.t.toUpperCase(); vctx.fillText(ts, VW - 16 - vctx.measureText(ts).width, 21);
+  vctx.shadowBlur = 0;
+  const texto = rec.stopping && rec.fim ? rec.fim : rec.narr;
+  if (texto) {
+    vctx.font = (rec.stopping && rec.fim ? 'italic 600 ' : '700 ') + '19px system-ui, sans-serif';
+    const lines = wrapText(texto, VW - 56), lh = 25, boxH = lines.length * lh + 20, y0 = VH - 70 - boxH;
+    vctx.fillStyle = 'rgba(15,17,30,.62)'; vctx.beginPath(); vctx.roundRect(16, y0, VW - 32, boxH, 14); vctx.fill();
+    vctx.fillStyle = rec.stopping && rec.fim ? '#ffe39a' : '#fff';
+    lines.forEach((l, i) => vctx.fillText(l, 28, y0 + 10 + i * lh));
+  }
+  if (!rec.thumb && now - rec.t0 > 600) rec.thumb = vlogComp.toDataURL('image/jpeg', 0.6);
+}
+// ---- armazenamento dos clipes (IndexedDB) ----
+const idb = (() => {
+  let dbp = null;
+  const open = () => dbp ||= new Promise((res, rej) => { const r = indexedDB.open('capivara_vlog', 1); r.onupgradeneeded = () => r.result.createObjectStore('clipes', { keyPath: 'id' }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const tx = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction('clipes', mode), st = t.objectStore('clipes'); const out = fn(st); t.oncomplete = () => res(out?.result); t.onerror = () => rej(t.error); }); };
+  return { put: c => tx('readwrite', st => st.put(c)), all: () => tx('readonly', st => st.getAll()), del: id => tx('readwrite', st => st.delete(id)), clear: () => tx('readwrite', st => st.clear()) };
+})();
+let clipes = [];
+async function saveClip(c) {
+  try {
+    await idb.put(c);
+    clipes = (await idb.all()).sort((a, b) => a.id - b.id);
+    while (clipes.length > 24) { await idb.del(clipes[0].id); clipes.shift(); }
+  } catch (e) { console.warn('não deu para salvar o clipe', e); clipes.push(c); }
+  renderVlog();
+}
+const urls = new Map();
+const clipUrl = c => urls.get(c.id) || (urls.set(c.id, URL.createObjectURL(c.blob)), urls.get(c.id));
+function renderVlog() {
+  const el = $('vlog-list');
+  if (!clipes.length) {
+    el.innerHTML = `<p class="hint">${!VLOG_MIME ? 'Este navegador não consegue gravar vídeo.' : state.temCamera ? 'Ela ainda não gravou nenhum momento. Quando achar algo que vale mostrar, ela mesma liga a câmera.' : 'Quando ela pegar a câmera, poderá gravar a própria vida para o vlog.'}</p>`;
+    return;
+  }
+  const dias = [...new Set(clipes.map(c => c.dia))].sort((a, b) => b - a);
+  el.innerHTML = dias.map(d => {
+    const cs = clipes.filter(c => c.dia === d);
+    return `<section class="vday"><div class="vhead"><h4>Dia ${d} · ${cs.length} ${cs.length > 1 ? 'clipes' : 'clipe'}</h4><button data-dia="${d}">▶ Vlog do dia</button></div>
+      ${cs.map(c => `<div class="clip"><img src="${c.thumb || ''}" alt="" data-id="${c.id}"><div><b>${esc(c.t)}</b><p>${esc(c.narr || '')}</p>
+      <a href="${clipUrl(c)}" download="capivara-${c.id}.${c.blob.type.includes('mp4') ? 'mp4' : 'webm'}">⬇ baixar</a></div></div>`).join('')}</section>`;
+  }).join('');
+}
+// player: toca um clipe ou o dia inteiro em sequência
+let fila = [];
+function tocar(lista) {
+  fila = lista.slice(); if (!fila.length) return;
+  $('player').classList.remove('hidden'); proximo();
+}
+function proximo() {
+  const c = fila.shift(); const v = $('player-video');
+  if (!c) { $('player').classList.add('hidden'); v.pause(); return; }
+  v.src = clipUrl(c); v.play().catch(() => {});
+}
+function initVlogUI() {
+  $('player-video').onended = proximo;
+  $('player').onclick = e => { if (e.target.id === 'player') { fila = []; proximo(); } };
+  $('vlog-list').onclick = e => {
+    const d = e.target.dataset.dia, id = e.target.dataset.id;
+    if (d) tocar(clipes.filter(c => c.dia === +d));
+    if (id) tocar(clipes.filter(c => c.id === +id));
+  };
+  idb.all().then(cs => { clipes = (cs || []).sort((a, b) => a.id - b.id); renderVlog(); }).catch(() => renderVlog());
+}
+
 // Fazer cocô e xixi: procura um canto (de preferência perto de água, como capivaras de verdade)
 async function doNecessidades() {
   const medo = state.crencas['perto:jacare']?.ruim > 0;
-  const agua = objects.filter(o => (o.type === 'riacho' || (o.type === 'lago' && !medo)) && distTo(o) < 18).sort((a, b) => distTo(a) - distTo(b))[0];
+  const agua = objects.filter(o => (o.type === 'riacho' || o.type === 'lagoa' || (o.type === 'lago' && !medo)) && distTo(o) < 18).sort((a, b) => distTo(a) - distTo(b))[0];
   let p = agua ? approachPoint(agua) : null;
-  if (p && agua.type === 'lago') p.lerp(capy.pos, 0.25);
+  if (p && agua.radius) p.lerp(capy.pos, 0.25);
   if (!p) { for (let i = 0; i < 15; i++) { const q = capy.pos.clone().add(new THREE.Vector3(rand(-6, 6), 0, rand(-6, 6))); if (isFree(q)) { p = q; break; } } }
   await walkTo(p || capy.pos.clone());
   capy.anim = 'agachar'; capy.animT = 0;
@@ -1523,7 +1823,7 @@ function removeObject(o) {
   if (o.mesh) scene.remove(o.mesh);
   // cogumelos renascem depois de um tempo, num lugar próximo
   if (!TYPES[o.type].surprise && !TYPES[o.type].temp) gameWait(90).then(() => {
-    const x = clamp(o.pos.x + rand(-3, 3), -26, 26), z = clamp(o.pos.z + rand(-3, 3), -26, 26);
+    const x = clamp(o.pos.x + rand(-3, 3), -LIM, LIM), z = clamp(o.pos.z + rand(-3, 3), -LIM, LIM);
     const p = new THREE.Vector3(x, 0, z);
     if (isFree(p)) addObject(o.type, x, z, MK[o.type]);
   });
@@ -1667,7 +1967,9 @@ async function aiLoop() {
     const eraNova = dec.alvo && !state.descobertas.some(d => d.startsWith(dec.acao + ':' + (objects.find(o => o.id === dec.alvo)?.type) + '|'));
     // 4) EXECUÇÃO + efeitos ocultos
     let resultado;
+    const gravando = dec.gravar && startClip(dec.narracao || dec.pensamento);
     try { resultado = await executeAction(dec); } catch (e) { console.error(e); resultado = 'Você se distraiu.'; }
+    if (gravando) { endClip(resultado); discover('gravar:vlog', 'gravar o próprio vlog'); }
     capy.anim = 'idle'; capy.swim = false;
     if (lastOutcome) { const note = updateBelief(lastOutcome); if (note) resultado += ' ' + note; lastOutcome = null; }
     memory.lastResult = resultado;
@@ -1733,7 +2035,7 @@ function updateAudio() {
   audio.master.gain.setTargetAtTime(audio.on && !paused ? 0.8 : 0, t, 0.2);
   if (!audio.on || paused) return;
   audio.rain.gain.setTargetAtTime(raining ? 0.22 : 0, t, 0.8);
-  const dAgua = Math.min(...objects.filter(o => ['lago', 'riacho', 'fonte'].includes(o.type)).map(distTo));
+  const dAgua = Math.min(...objects.filter(o => ['lago', 'lagoa', 'riacho', 'fonte'].includes(o.type)).map(distTo));
   audio.water.gain.setTargetAtTime(dAgua < 9 ? (1 - dAgua / 9) * 0.14 : 0, t, 0.5);
   if (!isNight() && !raining && t > audio.nextBird) { chirp(t + 0.05); audio.nextBird = t + rand(2, 6); }
   if (isNight() && !raining && t > audio.nextCricket) { cricket(t + 0.05); audio.nextCricket = t + rand(0.3, 1); }
@@ -1846,7 +2148,7 @@ $('btn-show').onclick = () => { $('app').classList.remove('clean'); setTimeout(r
 let resetArmed = 0;
 const resetWorld = e => {
   const btn = e.currentTarget;
-  if (performance.now() - resetArmed < 3000) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('capivara_explora_fotos'); } catch {} location.reload(); return; }
+  if (performance.now() - resetArmed < 3000) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('capivara_explora_fotos'); idb.clear(); } catch {} location.reload(); return; }
   resetArmed = performance.now(); const old = btn.textContent;
   btn.textContent = btn.id === 'btn-reset' ? '❓' : 'Toque de novo para apagar tudo';
   setTimeout(() => { btn.textContent = old; }, 3000);
@@ -1953,6 +2255,7 @@ function frame(now) {
   camera.position.copy(camPos); camera.lookAt(camLook);
 
   renderer.render(scene, camera);
+  renderVlogFrame(now);
 
   // overlays HTML
   // acima do personagem só aparece um emoji simples
@@ -1960,7 +2263,11 @@ function frame(now) {
   if (gameTime < sickUntil) { emojiEl.textContent = '🤢'; emojiEl.style.opacity = 1; }
   else if (capy.anim === 'dormir') { emojiEl.textContent = '💤'; emojiEl.style.opacity = 1; }
   else emojiEl.style.opacity = now < emojiUntil ? 1 : 0;
-  if ((uiTick += realDt) > 0.25) { uiTick = 0; renderBars(); renderHUD(); updateAudio(); }
+  if ((uiTick += realDt) > 0.25) {
+    uiTick = 0; renderBars(); renderHUD(); updateAudio();
+    // esconde objetos longe da capivara (a neblina já os encobre)
+    for (const o of objects) if (o.mesh && !TYPES[o.type]?.mobile) o.mesh.visible = (o.pos.x - capy.pos.x) ** 2 + (o.pos.z - capy.pos.z) ** 2 < 3600;
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -1968,6 +2275,7 @@ function frame(now) {
 // ---------------------------------------------------------------------
 capy.pos.set(0, 0, -2);
 if (state.temCamera) attachGoPro(null);
+initVlogUI();
 renderLog(false); renderMemory(); renderDiary(); renderPhotos(); renderBars(); renderHUD();
 requestAnimationFrame(frame);
 aiLoop();

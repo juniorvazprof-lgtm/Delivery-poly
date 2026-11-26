@@ -49,4 +49,8 @@ SPECS = {
     "coco": dict(dims=(0.3, 0.3, 0.22), tris=300, desc="Cocozinho de capivara (bolinhas ovais marrons)."),
     "computador": dict(dims=(1.1, 1.1, 1.05), tris=500, desc="Notebook aberto, tela acesa, em cima de um toco de árvore."),
     "gopro": dict(dims=(0.2, 0.16, 0.16), tris=300, desc="Câmera de ação pequena, preta, com lente e alça."),
+    "taboa": dict(dims=(1.0, 1.0, 1.8), tris=600, desc="Touceira de taboa do brejo."),
+    "cacto": dict(dims=(1.0, 0.6, 1.6), tris=700, desc="Cacto com braços e uma flor."),
+    "samambaia": dict(dims=(1.6, 1.6, 0.9), tris=700, desc="Samambaia de folhas arqueadas."),
+    "pedra_brilhante": dict(dims=(0.8, 0.8, 0.8), tris=400, desc="Grupo de cristais translúcidos."),
 }

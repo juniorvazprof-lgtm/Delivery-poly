@@ -122,3 +122,16 @@ h3 { margin: 4px 0; font-size: 15px; color: #ffd35c; }
 #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
 #flash.go { animation: flash .45s ease-out; }
 @keyframes flash { 0% { opacity: .85; } 100% { opacity: 0; } }
+
+/* abas roláveis (6 abas) */
+#tabs { overflow-x: auto; scrollbar-width: none; } #tabs::-webkit-scrollbar { display: none; }
+.tab { flex: 0 0 auto; padding: 8px 9px; }
+/* vlog */
+#hud-rec { left: 50%; transform: translateX(-50%); top: max(10px, env(safe-area-inset-top)); font-size: 14px; background: rgba(150, 20, 30, .75); }
+#hud-rec[hidden] { display: none; } #app.clean #hud-rec { display: none; }
+.vday { margin-bottom: 14px; } .vhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.vhead h4 { margin: 0; color: #ffd35c; } .vhead button { border: 0; border-radius: 10px; background: #ff5a7a; color: #fff; font-weight: 800; padding: 7px 10px; }
+.clip { display: flex; gap: 10px; background: #2b3049; border-radius: 12px; padding: 8px; margin-bottom: 8px; }
+.clip img { width: 64px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 8px; background: #15172a; cursor: pointer; flex: 0 0 auto; }
+.clip b { font-size: 12px; color: #9aa3c7; } .clip p { margin: 2px 0 6px; font-size: 14px; } .clip a { color: #8fd3ff; font-size: 13px; }
+#player video { height: min(86vh, 720px); aspect-ratio: 9 / 16; max-width: 94vw; border-radius: 14px; background: #000; }
