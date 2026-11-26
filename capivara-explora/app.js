@@ -24,7 +24,7 @@ const MIN_CALL_INTERVAL = 4000; // ms entre chamadas à IA
 const CALL_TIMEOUT = 10000;     // ms
 const SAVE_KEY = 'capivara_explora_v1';
 const CFG_KEY = 'capivara_explora_cfg';
-const ACOES = ['ir_para', 'comer', 'beber', 'nadar', 'dormir', 'cheirar', 'sentar', 'investigar', 'fugir', 'vagar', 'necessidades'];
+const ACOES = ['ir_para', 'comer', 'beber', 'nadar', 'dormir', 'cheirar', 'sentar', 'investigar', 'fugir', 'vagar', 'necessidades', 'pegar', 'fotografar', 'pesquisar'];
 
 // Cérebros: 'deepseek' (padrão), 'gemini' ou 'offline'. Cada provedor tem sua chave e modelo.
 const cfg = Object.assign({ mode: 'deepseek', keys: { deepseek: '', gemini: '' },
@@ -50,7 +50,9 @@ state.diario ||= [];           // diário escrito ao anoitecer
 state.diaryDay ||= 0;
 state.stats.bexiga ??= 10;     // vontade de fazer cocô/xixi (0-100)
 state.stats.tedio ??= 20;      // tédio: sobe ao repetir, desce ao explorar coisas novas
-state.trilhas ||= {};          // desgaste do chão: "i,j" → passagens
+state.trilhas ||= {};
+state.pesquisas ||= [];        // o que leu no computador: {q, titulo, resumo}
+state.temCamera ||= false;     // pegou a GoPro?          // desgaste do chão: "i,j" → passagens
 // gerador aleatório com semente fixa: os objetos espalhados ficam sempre no mesmo lugar (o mapa mental continua válido)
 let seed = 20261126;
 const srand = (a, b) => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return a + (((t ^ (t >>> 14)) >>> 0) / 4294967296) * (b - a); };
@@ -155,7 +157,7 @@ scene.add(rain);
 // usa o modelo procedural equivalente (função de fallback).
 const MODEL_NAMES = ['capivara', 'arvore', 'arvore_frutas', 'arbusto_amoras', 'capim_alto', 'arbusto_espinhos', 'arbusto_bagas_brancas',
   'cogumelo_vermelho', 'cogumelo_marrom', 'pedra', 'caverna', 'flores', 'fonte', 'abrigo', 'passaro', 'melancia', 'bola', 'caixa', 'jacare',
-  'pinha', 'formigueiro', 'tronco_musgo', 'caramujo', 'ninho', 'teia', 'trevo', 'grama_seca', 'grama_baixa', 'coco'];
+  'pinha', 'formigueiro', 'tronco_musgo', 'caramujo', 'ninho', 'teia', 'trevo', 'grama_seca', 'grama_baixa', 'coco', 'computador', 'gopro'];
 const MODELS = {};
 {
   const loader = new GLTFLoader(), matCache = {};
@@ -411,6 +413,22 @@ const TYPES = {
       comer: () => ({ d: { humor: -15 }, msg: 'Você provou. Não. Definitivamente não.', anim: 'tremer' }),
     },
   },
+  computador: {
+    nome: 'computador', desc: 'uma caixinha fina e aberta em cima de um toco, com uma parte lisa que brilha como água parada',
+    efeitos: {
+      investigar: () => ({ d: { humor: +6 }, msg: 'Você encostou o focinho nas pecinhas de baixo e apareceram sinais na parte que brilha. Ela responde ao toque. Parece que dá para perguntar coisas a ela (ação pesquisar).', anim: 'curiosa' }),
+      cheirar: () => ({ d: {}, msg: 'Cheira a nada. É morna, como uma pedra no sol.', anim: 'cheirar' }),
+      comer: () => ({ d: { humor: -5 }, msg: 'Você mordeu a borda. Dura e sem gosto. Melhor não.', anim: 'curiosa' }),
+    },
+  },
+  gopro: {
+    nome: 'câmera', desc: 'uma coisinha preta e lisa com um olho de vidro azul na frente e uma alça', temp: true,
+    efeitos: {
+      pegar: () => ({ d: { humor: +6 }, msg: 'Você pegou a coisinha de olho azul e ela ficou presa na sua cabeça pela alça. Quando você aperta o botão, ela faz clique e guarda o que você está vendo (ação fotografar).', anim: 'comer', pickup: true }),
+      investigar: () => ({ d: { humor: +3 }, msg: 'Tem um botão vermelho. Quando você encostou, ouviu um clique e uma luz piscou. Talvez dê para levar com você (ação pegar).', anim: 'curiosa' }),
+      cheirar: () => ({ d: {}, msg: 'Cheiro de coisa nova, que não nasceu aqui.', anim: 'cheirar' }),
+    },
+  },
   jacare: {
     nome: 'jacaré', desc: 'dois olhinhos e um dorso escuro e rugoso boiando na água grande', mobile: true,
     efeitos: { investigar: o => jacareAtaca(o) },
@@ -556,6 +574,7 @@ const MK = {
   ninho: () => model('ninho', makeRock), teia: () => model('teia', makeRock),
   trevo: () => model('trevo', makeFlowers), grama_seca: () => model('grama_seca', makeFlowers, 1.3),
   grama_baixa: () => model('grama_baixa', makeFlowers, 1.4), coco: () => model('coco', makeRock),
+  computador: () => model('computador', makeRock), gopro: () => model('gopro', makeBox, 1.6),
   jacare: () => model('jacare', () => mesh(new THREE.BoxGeometry(0.8, 0.4, 2.6), 0x3d5a3a)),
 };
 addObject('arvore_frutas', -10, -10, MK.arvore_frutas, 1.1);
@@ -583,6 +602,10 @@ addObject('flores', 12, 18, MK.flores);
  ['arbusto_espinhos', 6, 20], ['arbusto_espinhos', -12, -20], ['arbusto_bagas_brancas', 24, -11], ['arbusto_bagas_brancas', -4, -14]]
   .forEach(([t, x, z]) => addObject(t, x, z, MK[t], 0.7));
 addObject('fonte', -19, 17, MK.fonte, 1.1);
+// o computador num toco, numa clareira; a câmera caída no chão perto das flores (se ainda não foi pega)
+const pc = addObject('computador', -5, -9, MK.computador, 0.7);
+pc.mesh.rotation.y = Math.PI * 0.8;
+let gopro = state.temCamera ? null : addObject('gopro', 6.5, 6, MK.gopro);
 // objetos menores espalhados em lugares livres (semente fixa = sempre os mesmos lugares)
 function freeSpot(minDist, test = () => true) {
   for (let i = 0; i < 200; i++) {
@@ -743,6 +766,7 @@ function animateCapy(dt) {
     case 'cheirar': hx = 0.45 + Math.sin(t * 22) * 0.04; break;
     case 'espirrar': hx = t < 0.7 ? -0.45 * (t / 0.7) : (t < 0.9 ? 0.6 : 0.1); mrx = t > 0.7 && t < 0.9 ? 0.15 : 0; break;
     case 'sentar': mrx = -0.35; my = -0.12; hx = -0.15; legFold = 0.6; break;
+    case 'digitar': mrx = -0.3; my = -0.12; legFold = 0.6; hx = 0.25 + Math.sin(t * 18) * 0.05; break;
     case 'agachar': mrx = -0.28; my = -0.18 + Math.sin(t * 2) * 0.02; hx = 0.1; legFold = 0.5; break;
   }
   if (gameTime < sickUntil) { mrz += Math.sin(t * 3) * 0.12; hz += Math.sin(t * 2.3) * 0.2; }
@@ -978,6 +1002,9 @@ function buildPerception() {
       ...(visiveis.length ? visiveis.map(({ o, d }) => `- id "${o.id}": ${TYPES[o.type].desc}${vazio(o)} — ${d.toFixed(1)} m, ${directionWord(o.pos)}`) : ['- nada de especial, só grama']),
       'Lugares que você lembra de ter visto (fora da vista agora; pode ir até eles pelo id):',
       ...(lembrados.length ? lembrados.map(({ id, m, d }) => `- id "${id}": ${TYPES[m.t].desc} — uns ${Math.round(d)} m, ${directionWord(new THREE.Vector3(m.x, 0, m.z))}`) : ['- nenhum ainda']),
+      ...(state.temCamera ? ['Você carrega na cabeça a coisinha que guarda imagens: com a ação "fotografar" você guarda o que quiser (veja "legenda").'] : []),
+      ...(state.descobertas.some(d => d.startsWith('investigar:computador|')) ? ['Você sabe que a caixinha brilhante responde perguntas: perto dela, use a ação "pesquisar" e escreva em "pesquisa" o que quer saber.'] : []),
+      ...(state.pesquisas.length ? ['O que você já leu na caixinha brilhante:', ...state.pesquisas.slice(-3).map(p => `- "${p.q}": ${p.titulo ? p.titulo + ' — ' + p.resumo.slice(0, 140) : 'nada encontrado'}`)] : []),
       'Suas experiências anteriores (quantas vezes foi bom ou ruim):',
       ...(crencas.length ? crencas.map(([k, c]) => `- ${k.split(':')[0]} ${TYPES[k.split(':')[1]].desc}: ${c.bom} vez(es) bom, ${c.ruim} vez(es) ruim`) : ['- nenhuma ainda']),
     ].join('\n'),
@@ -987,13 +1014,14 @@ function buildPerception() {
 // ---------------------------------------------------------------------
 // 5b. CÉREBRO
 // ---------------------------------------------------------------------
-const PERSONALIDADE = `Você é uma capivara jovem que acabou de despertar num mundo que não conhece. Você não sabe o nome de nada: não sabe o que é "árvore", "cogumelo" ou "lago". Quando encontra algo novo, descreve o que vê, cheira e sente, ou inventa um nome simples para ele (por exemplo "bolinhas-roxas", "pedra-de-sentar", "água-que-corre") e passa a usar sempre esse mesmo nome. Você aprende experimentando: forma hipóteses ("talvez isto seja comida"), testa e tira conclusões do resultado ("as bolinhas-roxas matam a fome; vou lembrar disso"). Na maior parte do tempo seus pensamentos são observações curtas e práticas; só às vezes, sem exagero, faz uma reflexão serena sobre o que descobriu. Ama água e não tem pressa. Fale em português brasileiro, simples, sem piadas, sem gírias e sem emojis no texto. Você NÃO sabe o que é seguro ou perigoso: só sabe o que está na sua memória. Não repita frases.`;
+const PERSONALIDADE = `Você é uma capivara jovem que acabou de despertar num mundo que não conhece. Você não sabe o nome de nada: não sabe o que é "árvore", "cogumelo" ou "lago". Quando encontra algo novo, descreve o que vê, cheira e sente, ou inventa um nome simples para ele (por exemplo "bolinhas-roxas", "pedra-de-sentar", "água-que-corre") e passa a usar sempre esse mesmo nome. Você aprende experimentando: forma hipóteses ("talvez isto seja comida"), testa e tira conclusões do resultado ("as bolinhas-roxas matam a fome; vou lembrar disso"). Na maior parte do tempo seus pensamentos são observações curtas e práticas; só às vezes, sem exagero, faz uma reflexão serena sobre o que descobriu. Ama água e não tem pressa. Gosta de céu, luz, plantas, bichos pequenos e de entender por que as coisas são como são; quando encontra algo que a intriga, quer saber mais. Fale em português brasileiro, simples, sem piadas, sem gírias e sem emojis no texto. Você NÃO sabe o que é seguro ou perigoso: só sabe o que está na sua memória. Não repita frases.`;
 const FORMATO = `
 A cada turno você recebe sua percepção e decide UMA ação. Responda SOMENTE com JSON neste formato:
-{"pensamento":"1-2 frases em 1ª pessoa: o que observa, a hipótese que vai testar ou o que concluiu, usando os nomes que você inventou; sem emojis","emoji":"exatamente um destes: 🙂 😌 😋 🤔 😮 😟 😴 🤢 😱 💧 🥶 🥱 😣","acao":"ir_para | comer | beber | nadar | dormir | cheirar | sentar | investigar | fugir | vagar | necessidades","alvo":"id de um objeto visível ou null","aprendizado":"conclusão curta sobre a última experiência, usando seus nomes inventados (ex: \"as bolinhas-roxas são doces e matam a fome\"), ou null"}
-Regras: "acao" deve ser exatamente uma das opções. "alvo" deve ser um id exatamente como aparece na percepção (ou null para vagar/fugir/dormir no lugar). Só registre "aprendizado" quando a última ação realmente te ensinou algo novo.`;
+{"pensamento":"1-2 frases em 1ª pessoa: o que observa, a hipótese que vai testar ou o que concluiu, usando os nomes que você inventou; sem emojis","emoji":"exatamente um destes: 🙂 😌 😋 🤔 😮 😟 😴 🤢 😱 💧 🥶 🥱 😣 📸 💻","acao":"ir_para | comer | beber | nadar | dormir | cheirar | sentar | investigar | fugir | vagar | necessidades | pegar | fotografar | pesquisar","alvo":"id de um objeto visível ou null","aprendizado":"conclusão curta sobre a última experiência, usando seus nomes inventados (ex: \"as bolinhas-roxas são doces e matam a fome\"), ou null"}
+Regras: "acao" deve ser exatamente uma das opções. "alvo" deve ser um id exatamente como aparece na percepção (ou null para vagar/fugir/dormir no lugar). Só registre "aprendizado" quando a última ação realmente te ensinou algo novo.
+Campos extras (inclua sempre, use null quando não se aplicam): "pesquisa": o que você quer saber, escrito do seu jeito (só com acao "pesquisar", perto da caixinha brilhante); "legenda": uma frase curta para a imagem (só com acao "fotografar", alvo = o que você quer guardar, ou null para a paisagem). Fotografe só o que realmente chama sua atenção ou você gosta.`;
 
-const EMOJIS = ['🙂', '😌', '😋', '🤔', '😮', '😟', '😴', '🤢', '😱', '💧', '🥶', '🥱', '😣'];
+const EMOJIS = ['🙂', '😌', '😋', '🤔', '😮', '😟', '😴', '🤢', '😱', '💧', '🥶', '🥱', '😣', '📸', '💻'];
 const memory = { keys: [], lastResult: 'Você acabou de acordar. Tudo é novo.', history: [] };
 const pendingNotes = [];
 
@@ -1003,7 +1031,9 @@ function normalizeDecision(raw, perc) {
   const r = ok ? raw : {};
   let acao = ACOES.includes(r.acao) ? r.acao : 'vagar';
   let alvo = typeof r.alvo === 'string' && objects.some(o => o.id === r.alvo) ? r.alvo : null;
-  const precisaAlvo = ['ir_para', 'comer', 'beber', 'nadar', 'cheirar', 'sentar', 'investigar'];
+  const precisaAlvo = ['ir_para', 'comer', 'beber', 'nadar', 'cheirar', 'sentar', 'investigar', 'pegar'];
+  if (acao === 'pesquisar') alvo = pc.id;                                 // sempre no computador
+  if (acao === 'fotografar' && !state.temCamera) acao = 'vagar';          // sem câmera não dá
   if (precisaAlvo.includes(acao) && !alvo) {
     // tenta achar algo visível adequado; senão, vaga
     const cand = perc.visiveis.find(({ o }) => TYPES[o.type].efeitos[acao]);
@@ -1014,6 +1044,8 @@ function normalizeDecision(raw, perc) {
     emoji: EMOJIS.includes(r.emoji) ? r.emoji : '🤔',
     acao, alvo,
     aprendizado: r.aprendizado && r.aprendizado !== 'null' ? String(r.aprendizado).slice(0, 160) : null,
+    pesquisa: typeof r.pesquisa === 'string' && r.pesquisa !== 'null' ? r.pesquisa.slice(0, 80) : null,
+    legenda: typeof r.legenda === 'string' && r.legenda !== 'null' ? r.legenda.slice(0, 120) : null,
   };
 }
 
@@ -1079,7 +1111,7 @@ const NOMES = {
   flores: ['cores-que-cheiram', 'pontinhos-coloridos'], passaro: ['bicho-que-voa', 'pena-azul'], pinha: ['pedra-de-escamas', 'casca-dura'], formigueiro: ['montinho-que-anda', 'morro-de-pontinhos'],
   tronco_musgo: ['tronco-macio', 'madeira-verde'], caramujo: ['casinha-espiral', 'bolinha-lenta'], ninho: ['bolinhas-azuis', 'cesto-de-gravetos'],
   teia: ['fios-brilhantes', 'rede-de-luz'], trevo: ['folhas-redondas', 'tapete-de-três'], grama_seca: ['palha-amarela', 'capim-velho'],
-  grama_baixa: ['chão-verde', 'grama-curta'], coco: ['meu-cheiro', 'bolinhas-marrons'], jacare: ['boca-de-dentes', 'tronco-que-morde'],
+  grama_baixa: ['chão-verde', 'grama-curta'], computador: ['caixinha-brilhante', 'pedra-que-responde'], gopro: ['olho-de-guardar', 'coisinha-de-clique'], coco: ['meu-cheiro', 'bolinhas-marrons'], jacare: ['boca-de-dentes', 'tronco-que-morde'],
   melancia: ['bola-listrada'], bola: ['coisa-que-rola'], caixa: ['caixa-com-laço'],
 };
 state.nomes ||= {};
@@ -1101,6 +1133,11 @@ const FRASES = {
   vagar: [['Já vi demais por aqui. Quero saber o que existe do outro lado.', 'Fazer sempre as mesmas coisas cansa. Vou procurar algo novo.', '🥱'],
           ['Vou andar um pouco para ver o que existe além daqui.', 'Caminhar também é uma forma de aprender o lugar.', '🙂'],
           ['Ainda há cantos que eu não conheço.', 'O dia mudou de cor desde que acordei. Será que ele também está indo a algum lugar?', '🙂']],
+  pegar: [['Uma coisinha preta com um olho de vidro. Vou levar comigo e descobrir para que serve.', 'Vou pegar isto.', '🤔']],
+  pesquisar: [['A caixinha brilhante responde quando eu pergunto. Tenho uma dúvida.', 'Vou perguntar à caixinha sobre algo que vi hoje.', '💻'],
+              ['Fico pensando no que encontrei. A caixinha talvez saiba.', 'Quero entender melhor uma coisa. Vou até a caixinha.', '💻']],
+  fotografar: [['Isto aqui merece ser guardado. Vou apertar o botão.', 'Quero lembrar de {n} exatamente assim.', '📸'],
+               ['A luz está bonita agora. Clique.', '{N} chamou minha atenção. Vou guardar uma imagem.', '📸']],
   necessidades: [['A barriga está pesada. Preciso de um canto tranquilo, de preferência perto da água.', 'Hora de encontrar um canto. O corpo avisa e eu obedeço.', '😣']],
   fugir: [['Algo aqui não parece seguro. Melhor me afastar e pensar depois.', 'Prefiro manter distância.', '😟']],
 };
@@ -1117,7 +1154,22 @@ function offlineBrain(perc) {
     return c.find(o => bom(acao, o.type) && !(medoJac && o.type === 'lago')) || c[0];
   };
   let acao = 'vagar', alvo = null, opts = [];
+  const pcVisto = vis.includes(pc) || state.mapa[pc.id];
+  const sabePc = state.descobertas.some(d => d.startsWith('investigar:computador|'));
+  // algo marcante acabou de acontecer: ela quer entender (vai perguntar à caixinha)
+  const intrigada = /saltou da água|enjoo|picaram|picadas|não sobrou|contradiz|rasante|sono pesado/.test(memory.lastResult);
+  const viuGoPro = gopro && (vis.includes(gopro) || state.mapa[gopro.id]);
+  // momentos "fotogênicos": pôr do sol, algo que ela gosta à vista, ou algo que acabou de descobrir
+  const lindo = state.clock > 0.7 && state.clock < 0.78 && !raining;
+  const gosto = vis.find(o => o !== jac && Object.keys(TYPES[o.type].efeitos).some(a => bom(a, o.type)));
   if (s.bexiga > 75) acao = 'necessidades';
+  else if (viuGoPro && Math.random() < 0.5) { acao = vis.includes(gopro) && Math.random() < 0.7 ? 'pegar' : 'investigar'; alvo = gopro.id; }
+  else if (pcVisto && !sabePc && Math.random() < 0.4) { acao = 'investigar'; alvo = pc.id; }
+  else if (pcVisto && sabePc && (s.tedio > 45 || Math.random() < (intrigada ? 0.6 : 0.2))) { acao = 'pesquisar'; alvo = pc.id; }
+  else if (state.temCamera && (lindo || gosto || (vis.includes(jac) && jac.mode === 'sol')) && Math.random() < 0.3) {
+    acao = 'fotografar'; alvo = lindo ? null : vis.includes(jac) && jac.mode === 'sol' ? jac.id : gosto.id;
+  }
+  else if (acao !== 'vagar') {}
   else if (s.frio > 65 && (alvo = find(isNight() || raining ? 'dormir' : 'sentar', ['abrigo', 'caverna', 'pedra'])?.id)) acao = isNight() || raining ? 'dormir' : 'sentar';
   else if (s.energia < 25) { const c = find('dormir', ['abrigo', 'caverna']); acao = 'dormir'; alvo = c ? c.id : null; }
   else if (s.sede > 55 && (alvo = find('beber', ['lago', 'riacho', 'fonte'])?.id)) acao = 'beber';
@@ -1137,7 +1189,7 @@ function offlineBrain(perc) {
   const conhece = alvoTipo && state.descobertas.some(d => d.startsWith(acao + ':' + alvoTipo + '|'));
   // sem alvo, as duas frases servem; nunca repete o pensamento anterior
   const opcoes = (FRASES[acao] || FRASES.vagar).flatMap(([nv, vs]) => !alvoTipo ? [nv, vs] : [conhece ? vs : nv])
-    .map(t => cap(t.replaceAll('{n}', alvoTipo ? nomeDe(alvoTipo) : 'isto')));
+    .map(t => cap(t.replaceAll('{N}', cap(alvoTipo ? nomeDe(alvoTipo) : 'isto')).replaceAll('{n}', alvoTipo ? nomeDe(alvoTipo) : 'isto')));
   if (acao === 'vagar') { const ent = s.tedio > 55; opcoes.splice(0, opcoes.length, ...(ent ? FRASES.vagar[0].slice(0, 2) : FRASES.vagar.slice(1).flatMap(f => f.slice(0, 2)))); }
   const pensamento = pick(opcoes.filter(t => t !== lastOfflineThought).length ? opcoes.filter(t => t !== lastOfflineThought) : opcoes);
   lastOfflineThought = pensamento;
@@ -1198,6 +1250,8 @@ async function executeAction(dec) {
   const t = o ? TYPES[o.type] : null;
   switch (dec.acao) {
     case 'necessidades': return doNecessidades();
+    case 'pesquisar': return doPesquisa(dec);
+    case 'fotografar': return doFoto(dec, o);
     case 'vagar': {
       // entediada, ela escolhe o ponto mais longe de tudo que já conhece (explorar); senão, passeio perto
       const longe = state.stats.tedio > 55, R = longe ? 18 : 10;
@@ -1266,6 +1320,7 @@ async function executeAction(dec) {
     await gameWait(ANIM_DUR[r.anim] * (r.anim === 'dormir' && isNight() ? 1.4 : 1));
   }
   applyDeltas(r.d);
+  if (r.pickup) attachGoPro(o);
   lastOutcome = { key: `${dec.acao}:${o.type}`, d: r.d };
   if (dec.acao === 'comer' && o.porcoes > 0 && --o.porcoes === 0) {
     setFood(o, false);
@@ -1321,6 +1376,123 @@ function updateJacare(dt) {
   if (jac.tail) jac.tail.rotation.y = Math.sin(gameTime * (jac.mode === 'sol' ? 0.5 : 2)) * (jac.mode === 'sol' ? 0.05 : 0.3);
   TYPES.jacare.desc = inWater ? 'dois olhinhos e um dorso escuro e rugoso boiando na água grande' : 'um bicho comprido, escuro e escamoso, deitado imóvel na margem da água grande';
 }
+// ---------------------------------------------------------------------
+// COMPUTADOR: pesquisa na Wikipédia (sem chave, funciona no navegador).
+// Sem internet (ou no artifact do claude.ai), usa uma pequena enciclopédia embutida.
+// ---------------------------------------------------------------------
+const ENCICLOPEDIA = [
+  [['capivara'], 'Capivara', 'A capivara é o maior roedor do mundo. Vive perto de rios e lagos, nada muito bem e passa boa parte do dia descansando e pastando.'],
+  [['jacaré', 'dentes', 'água'], 'Jacaré', 'Jacarés são répteis que vivem em rios, lagos e brejos. Ficam quase submersos, com só os olhos e as narinas para fora, esperando presas que chegam para beber.'],
+  [['formiga', 'montinho', 'pontinhos'], 'Formiga', 'Formigas vivem em colônias organizadas. Algumas espécies picam e soltam ácido fórmico para defender o ninho.'],
+  [['teia', 'aranha', 'fios'], 'Teia de aranha', 'A teia é feita de seda produzida pela própria aranha. O fio é muito fino, mas proporcionalmente mais resistente que o aço.'],
+  [['caramujo', 'espiral', 'concha'], 'Caramujo', 'Caramujos são moluscos que carregam uma concha em espiral. Recolhem-se nela quando se sentem ameaçados.'],
+  [['cogumelo', 'chapéu', 'pintas'], 'Amanita muscaria', 'É um cogumelo de chapéu vermelho com pintas brancas. É bonito, mas venenoso: causa enjoo e mal-estar se for comido.'],
+  [['trevo', 'três folhas'], 'Trevo', 'O trevo é uma planta baixa de folhas divididas em três. É comida apreciada por muitos herbívoros.'],
+  [['amora', 'roxa'], 'Amora', 'A amora é um fruto pequeno, escuro e doce, formado por várias bolinhas unidas.'],
+  [['pinha', 'escamas'], 'Pinha', 'A pinha é a estrutura onde ficam as sementes do pinheiro. É dura e lenhosa.'],
+  [['ninho', 'pássaro', 'ovo'], 'Ninho', 'Pássaros constroem ninhos com gravetos e folhas para chocar os ovos. Os pais defendem o ninho de qualquer bicho que se aproxima.'],
+  [['noite', 'escuro', 'estrela', 'céu'], 'Noite', 'A noite acontece quando o lado da Terra onde estamos fica de costas para o Sol. Sem a luz dele, dá para ver as estrelas.'],
+  [['chuva', 'nuvem'], 'Chuva', 'A chuva é água que evapora, forma nuvens e volta a cair quando as gotas ficam pesadas.'],
+  [['vaga-lume', 'luzinha', 'luz'], 'Vaga-lume', 'Vaga-lumes produzem luz no próprio corpo para se comunicar, principalmente para encontrar parceiros à noite.'],
+  [['foto', 'imagem', 'câmera'], 'Fotografia', 'Fotografia é guardar a luz de um momento. A primeira foto conhecida foi feita em 1826 e precisou de horas de exposição.'],
+  [['sol', 'pôr', 'tarde'], 'Pôr do sol', 'No fim da tarde a luz do Sol atravessa mais ar até chegar aos olhos, e por isso o céu fica laranja e vermelho.'],
+  [['frio', 'temperatura'], 'Hipotermia', 'Animais perdem calor mais rápido quando estão molhados ou no vento. Abrigar-se e ficar seco ajuda a manter a temperatura.'],
+];
+const norm = t => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+async function pesquisarWeb(q) {
+  const ctrl = new AbortController(), tm = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const busca = await fetch(`https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srlimit=1&format=json&origin=*`, { signal: ctrl.signal }).then(r => r.json());
+    const titulo = busca?.query?.search?.[0]?.title;
+    if (!titulo) return { titulo: null, resumo: '', fonte: 'Wikipédia' };
+    const res = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titulo.replace(/ /g, '_'))}`, { signal: ctrl.signal }).then(r => r.json());
+    const frases = (res.extract || '').split(/(?<=[.!?])\s+/).slice(0, 2).join(' ');
+    return { titulo, resumo: frases.slice(0, 340), fonte: 'Wikipédia' };
+  } catch {
+    const nq = norm(q), hit = ENCICLOPEDIA.find(([ks]) => ks.some(k => nq.includes(norm(k))));
+    return hit ? { titulo: hit[1], resumo: hit[2], fonte: 'memória da caixinha (sem internet)' } : { titulo: null, resumo: '', fonte: 'sem internet' };
+  } finally { clearTimeout(tm); }
+}
+// o que ela pesquisaria sozinha (modo offline): coisas que viveu ou que a intrigam
+const PERGUNTAS = { jacare: 'jacaré', formigueiro: 'formiga', teia: 'teia de aranha', caramujo: 'caramujo', cogumelo_vermelho: 'cogumelo vermelho com pintas brancas',
+  trevo: 'trevo', arbusto_amoras: 'amora', pinha: 'pinha', ninho: 'ninho de pássaro', lago: 'por que a água do lago é calma' };
+const CURIOSIDADES = ['capivara', 'por que fica escuro à noite', 'de onde vem a chuva', 'por que o céu fica laranja no fim da tarde', 'vaga-lume', 'como guardar imagens'];
+function perguntaOffline() {
+  const vividos = [...new Set(memory.keys.map(k => k.split(':')[1]))].filter(t => PERGUNTAS[t] && !state.pesquisas.some(p => p.q === PERGUNTAS[t]));
+  const pool = vividos.length ? vividos.map(t => PERGUNTAS[t]) : CURIOSIDADES.filter(q => !state.pesquisas.some(p => p.q === q));
+  return pick(pool.length ? pool : CURIOSIDADES);
+}
+async function doPesquisa(dec) {
+  await walkTo(approachPoint(pc));
+  faceTowards(pc.pos);
+  capy.anim = 'digitar'; capy.animT = 0;
+  const q = dec.pesquisa || perguntaOffline();
+  const [r] = await Promise.all([pesquisarWeb(q), gameWait(3)]);
+  state.pesquisas.push({ q, titulo: r.titulo, resumo: r.resumo }); state.pesquisas = state.pesquisas.slice(-12);
+  // entrada estilo terminal no log
+  const h = Math.floor(state.clock * 24), m = Math.floor((state.clock * 24 % 1) * 60);
+  state.log.push({ t: `Dia ${state.day} · ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} · caixinha-brilhante`, pc: true, acao: 'pesquisar',
+    pensamento: `> ${q}\n${r.titulo ? `[${r.titulo}] ${r.resumo}` : 'Nenhum resultado.'}\n(${r.fonte})` });
+  renderLog(true);
+  discover('pesquisar:computador', 'perguntar à caixinha brilhante');
+  lastOutcome = { key: 'pesquisar:computador', d: { humor: r.titulo ? 6 : 0 }, };
+  applyDeltas({ humor: r.titulo ? +6 : 0, tedio: r.titulo ? -20 : -5 });
+  return r.titulo ? `Você perguntou à caixinha brilhante "${q}" e ela mostrou: ${r.titulo}. ${r.resumo}` : `Você perguntou à caixinha brilhante "${q}", mas ela não mostrou nada.`;
+}
+
+// ---------------------------------------------------------------------
+// CÂMERA (GoPro na cabeça): renderiza o ponto de vista dela e guarda a foto
+// ---------------------------------------------------------------------
+const FOTO_KEY = 'capivara_explora_fotos';
+let fotos = safeJSON(lsGet(FOTO_KEY)) || [];
+const goproCam = new THREE.PerspectiveCamera(80, 4 / 3, 0.1, 150);
+const photoCanvas = document.createElement('canvas'); photoCanvas.width = 400; photoCanvas.height = 300;
+function attachGoPro(o) {
+  state.temCamera = true;
+  if (o) { const i = objects.indexOf(o); if (i >= 0) objects.splice(i, 1); scene.remove(o.mesh); delete state.mapa[o.id]; }
+  const g = MK.gopro(); g.scale.setScalar(1.3);
+  g.position.set(0, 0.27, 0.12);       // em cima da cabeça, lente para frente
+  capy.parts.head.add(g);
+  gopro = null;
+}
+function takePhoto(alvoPos, legenda) {
+  const head = capy.parts.head.getWorldPosition(new THREE.Vector3());
+  const fwd = new THREE.Vector3(Math.sin(capy.yaw), 0, Math.cos(capy.yaw));
+  goproCam.position.copy(head).addScaledVector(fwd, 0.55).add(new THREE.Vector3(0, 0.3, 0));
+  goproCam.lookAt(alvoPos || goproCam.position.clone().addScaledVector(fwd, 10).add(new THREE.Vector3(0, 1.2, 0)));
+  goproCam.aspect = canvas.width / canvas.height; goproCam.updateProjectionMatrix();
+  renderer.render(scene, goproCam);   // lê o canvas logo em seguida, no mesmo quadro
+  const cw = canvas.width, ch = canvas.height, sw = Math.min(cw, ch * 4 / 3), sh = sw * 3 / 4;
+  photoCanvas.getContext('2d').drawImage(canvas, (cw - sw) / 2, (ch - sh) / 2, sw, sh, 0, 0, 400, 300);
+  const h = Math.floor(state.clock * 24), m = Math.floor((state.clock * 24 % 1) * 60);
+  fotos.push({ url: photoCanvas.toDataURL('image/jpeg', 0.72), legenda, t: `Dia ${state.day} · ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` });
+  for (;;) { try { localStorage.setItem(FOTO_KEY, JSON.stringify(fotos.slice(-24))); break; } catch { if (fotos.length <= 1) break; fotos.shift(); } }
+  fotos = fotos.slice(-24);
+  const fl = $('flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+  sfx('clique'); renderPhotos();
+}
+const LEGENDAS = ['{N}, do jeito que eu vi hoje.', '{N}. Quero lembrar disso.', 'Encontrei {n} e precisei guardar.', '{N} sob esta luz.'];
+async function doFoto(dec, o) {
+  let alvoPos = null, nome = 'a paisagem';
+  if (o) {
+    nome = nomeDe(o.type);
+    alvoPos = (o.type === 'lago' ? new THREE.Vector3(LAKE.x, WATER_Y, LAKE.z) : o.pos.clone()).add(new THREE.Vector3(0, 0.4, 0));
+    const dist = distTo(o);
+    if (dist > 6 || dist < 2) {   // enquadra: nem longe demais nem colado
+      const dir = capy.pos.clone().sub(alvoPos).setY(0).normalize();
+      await walkTo((o.type === 'lago' ? approachPoint(o) : alvoPos.clone().addScaledVector(dir, 3.2 + (o.block || 0))).setY(0));
+    }
+    faceTowards(alvoPos);
+  }
+  capy.anim = 'curiosa'; capy.animT = 0; showEmoji('📸');
+  await gameWait(1.2);
+  const legenda = dec.legenda || cap(pick(LEGENDAS).replace('{N}', cap(nome)).replace('{n}', nome));
+  takePhoto(alvoPos, legenda);
+  discover('fotografar:' + (o?.type || 'paisagem'), 'guardar uma imagem');
+  applyDeltas({ humor: +4, tedio: -10 });
+  return `Você apertou o botão e guardou uma imagem de ${nome}. "${legenda}"`;
+}
+
 // Fazer cocô e xixi: procura um canto (de preferência perto de água, como capivaras de verdade)
 async function doNecessidades() {
   const medo = state.crencas['perto:jacare']?.ruim > 0;
@@ -1553,6 +1725,7 @@ function sfx(kind) {
   const g = ctx.createGain(); g.gain.setValueAtTime(kind === 'ataque' ? 0.7 : 0.35, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
   src.connect(f).connect(g).connect(audio.master); src.start(t); src.stop(t + 0.8);
   if (kind === 'ataque') beep(70, t, 0.5, 0.3, 'sawtooth', 45);
+  if (kind === 'clique') { g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06); f.frequency.value = 4000; beep(1800, t + 0.07, 0.05, 0.05, 'square'); }
 }
 function updateAudio() {
   if (!audio.ctx) return;
@@ -1593,6 +1766,7 @@ function renderLog(animateLatest) {
     div.className = 'entry' + (i === 0 ? ' latest' : '');
     const meta = document.createElement('div'); meta.className = 'meta';
     if (e.diario) div.classList.add('diary');
+    if (e.pc) div.classList.add('pc');
     meta.textContent = e.diario ? e.t : `${e.t} · ${e.acao.replace('_', ' ')}${e.alvo ? ' · ' + nomeDe(e.alvo.replace(/_\d+$/, '')) : ''}`;
     const txt = document.createElement('div'); txt.textContent = i === 0 && animateLatest ? '' : e.pensamento;
     div.append(meta, txt);
@@ -1617,6 +1791,15 @@ function renderMemory() {
       <div class="track"><div class="fill" style="width:${Math.round(conf * 100)}%;background:hsl(${conf * 120},65%,50%)"></div></div></div>`;
   }).join('') : '<i>Ainda não tem experiências suficientes.</i>';
 }
+function renderPhotos() {
+  $('photo-grid').innerHTML = fotos.length ? fotos.slice().reverse().map((f, i) => `<figure data-i="${fotos.length - 1 - i}"><img src="${f.url}" alt="${esc(f.legenda)}"><figcaption><b>${esc(f.t)}</b> ${esc(f.legenda)}</figcaption></figure>`).join('')
+    : `<p class="hint">${state.temCamera ? 'Ela ainda não guardou nenhuma imagem.' : 'Existe uma coisinha preta com um olho de vidro perto das flores. Quando ela pegar, as fotos aparecem aqui.'}</p>`;
+}
+$('photo-grid').onclick = e => {
+  const f = fotos[e.target.closest('figure')?.dataset.i]; if (!f) return;
+  $('lb-img').src = f.url; $('lb-cap').textContent = `${f.t} · ${f.legenda}`; $('lightbox').classList.remove('hidden');
+};
+$('lightbox').onclick = () => $('lightbox').classList.add('hidden');
 function renderDiary() {
   $('diary-list').innerHTML = state.diario.length ? state.diario.slice().reverse().map(d => `<article class="page"><h4>Dia ${d.dia}</h4><p>${esc(d.texto)}</p></article>`).join('')
     : '<i>O diário é escrito ao anoitecer de cada dia (por volta das 19h no relógio do jogo).</i>';
@@ -1663,7 +1846,7 @@ $('btn-show').onclick = () => { $('app').classList.remove('clean'); setTimeout(r
 let resetArmed = 0;
 const resetWorld = e => {
   const btn = e.currentTarget;
-  if (performance.now() - resetArmed < 3000) { try { localStorage.removeItem(SAVE_KEY); } catch {} location.reload(); return; }
+  if (performance.now() - resetArmed < 3000) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('capivara_explora_fotos'); } catch {} location.reload(); return; }
   resetArmed = performance.now(); const old = btn.textContent;
   btn.textContent = btn.id === 'btn-reset' ? '❓' : 'Toque de novo para apagar tudo';
   setTimeout(() => { btn.textContent = old; }, 3000);
@@ -1784,6 +1967,7 @@ function frame(now) {
 // START
 // ---------------------------------------------------------------------
 capy.pos.set(0, 0, -2);
-renderLog(false); renderMemory(); renderDiary(); renderBars(); renderHUD();
+if (state.temCamera) attachGoPro(null);
+renderLog(false); renderMemory(); renderDiary(); renderPhotos(); renderBars(); renderHUD();
 requestAnimationFrame(frame);
 aiLoop();

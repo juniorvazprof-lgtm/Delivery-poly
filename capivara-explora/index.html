@@ -18,6 +18,7 @@
     <div id="hud-day" class="hud">Dia 1</div>
     <div id="hud-brain" class="hud">⚪ Offline</div>
     <div id="hud-time" class="hud">☀️ 07:00</div>
+    <div id="flash"></div>
     <div id="emoji" class="emoji"></div>
     <button id="btn-show" class="btn-show" title="Mostrar interface">👁️</button>
   </section>
@@ -36,11 +37,13 @@
     <div id="tabs">
       <button class="tab active" data-tab="thoughts">🧠 Log</button>
       <button class="tab" data-tab="diary">📖 Diário</button>
+      <button class="tab" data-tab="photos">📷 Fotos</button>
       <button class="tab" data-tab="memory">📚 Memória</button>
       <button class="tab" data-tab="status">❤️ Status</button>
     </div>
     <div id="tab-thoughts" class="tabpane active"><div id="log"></div></div>
     <div id="tab-diary" class="tabpane"><div id="diary-list"></div></div>
+    <div id="tab-photos" class="tabpane"><div id="photo-grid"></div></div>
     <div id="tab-memory" class="tabpane">
       <h3>Aprendizados</h3><ul id="mem-list"></ul>
       <h3>O que ela acredita</h3><div id="belief-list"></div>
@@ -52,6 +55,8 @@
     </div>
   </section>
 </div>
+
+<div id="lightbox" class="modal hidden"><figure class="lb"><img id="lb-img" alt=""><figcaption id="lb-cap"></figcaption></figure></div>
 
 <!-- ===== Configurações ===== -->
 <div id="settings" class="modal hidden">

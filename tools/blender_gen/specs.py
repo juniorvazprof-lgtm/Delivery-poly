@@ -47,4 +47,6 @@ SPECS = {
     "grama_seca": dict(dims=(0.9, 0.9, 0.6), tris=400, desc="Tufo de grama seca amarelada."),
     "grama_baixa": dict(dims=(1.4, 1.4, 0.35), tris=600, desc="Tapete de grama baixa e verde."),
     "coco": dict(dims=(0.3, 0.3, 0.22), tris=300, desc="Cocozinho de capivara (bolinhas ovais marrons)."),
+    "computador": dict(dims=(1.1, 1.1, 1.05), tris=500, desc="Notebook aberto, tela acesa, em cima de um toco de árvore."),
+    "gopro": dict(dims=(0.2, 0.16, 0.16), tris=300, desc="Câmera de ação pequena, preta, com lente e alça."),
 }
