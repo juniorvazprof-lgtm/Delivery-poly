@@ -768,12 +768,13 @@ function buildPerception() {
 // ---------------------------------------------------------------------
 // 5b. CÉREBRO
 // ---------------------------------------------------------------------
-const PERSONALIDADE = `Você é uma capivara jovem que acabou de despertar num mundo desconhecido. É calma, observadora e contemplativa. Explora devagar, presta atenção em texturas, cheiros, sons, luz e no passar do tempo, e tira conclusões com cuidado, como uma naturalista escrevendo um diário de campo. Ama água e não tem pressa. De vez em quando faz uma reflexão serena sobre a existência, sem piadas. Fale em português brasileiro, em tom sóbrio e simples. Não use emojis nem gírias no pensamento nem na fala. Você NÃO sabe o que é seguro ou perigoso: só sabe o que está na sua memória e o que aprendeu experimentando. Varie as frases e não se repita.`;
+const PERSONALIDADE = `Você é uma capivara jovem que acabou de despertar num mundo que não conhece. Você não sabe o nome de nada: não sabe o que é "árvore", "cogumelo" ou "lago". Quando encontra algo novo, descreve o que vê, cheira e sente, ou inventa um nome simples para ele (por exemplo "bolinhas-roxas", "pedra-de-sentar", "água-que-corre") e passa a usar sempre esse mesmo nome. Você aprende experimentando: forma hipóteses ("talvez isto seja comida"), testa e tira conclusões do resultado ("as bolinhas-roxas matam a fome; vou lembrar disso"). Na maior parte do tempo seus pensamentos são observações curtas e práticas; só às vezes, sem exagero, faz uma reflexão serena sobre o que descobriu. Ama água e não tem pressa. Fale em português brasileiro, simples, sem piadas, sem gírias e sem emojis no texto. Você NÃO sabe o que é seguro ou perigoso: só sabe o que está na sua memória. Não repita frases.`;
 const FORMATO = `
 A cada turno você recebe sua percepção e decide UMA ação. Responda SOMENTE com JSON neste formato:
-{"pensamento":"monólogo em 1ª pessoa, 1-2 frases, sóbrio e contemplativo, sem emojis","fala":"balão curto de 2-6 palavras, sem emojis","emoji":"um único emoji que resume a emoção (aparece só sobre a cabeça)","acao":"ir_para | comer | beber | nadar | dormir | cheirar | sentar | investigar | fugir | vagar","alvo":"id de um objeto visível ou null","aprendizado":"algo novo aprendido com a última experiência, ou null"}
+{"pensamento":"1-2 frases em 1ª pessoa: o que observa, a hipótese que vai testar ou o que concluiu, usando os nomes que você inventou; sem emojis","emoji":"exatamente um destes: 🙂 😌 😋 🤔 😮 😟 😴 🤢 😱 💧","acao":"ir_para | comer | beber | nadar | dormir | cheirar | sentar | investigar | fugir | vagar","alvo":"id de um objeto visível ou null","aprendizado":"conclusão curta sobre a última experiência, usando seus nomes inventados (ex: \"as bolinhas-roxas são doces e matam a fome\"), ou null"}
 Regras: "acao" deve ser exatamente uma das opções. "alvo" deve ser um id exatamente como aparece na percepção (ou null para vagar/fugir/dormir no lugar). Só registre "aprendizado" quando a última ação realmente te ensinou algo novo.`;
 
+const EMOJIS = ['🙂', '😌', '😋', '🤔', '😮', '😟', '😴', '🤢', '😱', '💧'];
 const memory = { lastResult: 'Você acabou de acordar. Tudo é novo.', history: [] };
 const pendingNotes = [];
 
@@ -791,8 +792,7 @@ function normalizeDecision(raw, perc) {
   }
   return {
     pensamento: String(r.pensamento || 'Vou caminhar um pouco e observar.').slice(0, 220),
-    fala: String(r.fala || '...').slice(0, 40),
-    emoji: String(r.emoji || '🙂').slice(0, 4),
+    emoji: EMOJIS.includes(r.emoji) ? r.emoji : '🤔',
     acao, alvo,
     aprendizado: r.aprendizado && r.aprendizado !== 'null' ? String(r.aprendizado).slice(0, 160) : null,
   };
@@ -847,17 +847,38 @@ async function callGemini(system, user, timeoutMs = CALL_TIMEOUT) {
 }
 
 // --- Cérebro offline: escolhas aleatórias coerentes com os status ---
+let lastOfflineThought = '';
 const offlineBad = new Set(); // tipos que deram ruim (aprendizado offline simples)
+// Nomes que a capivara inventa para o que não conhece (offline). Ficam salvos para ela usar sempre o mesmo.
+const NOMES = {
+  arvore_frutas: ['árvore-de-bolinhas-vermelhas', 'planta-alta-de-frutinhas'], arvore: ['gigante-verde', 'planta-que-faz-sombra'],
+  arbusto_amoras: ['bolinhas-roxas', 'moita-roxa'], capim_alto: ['folhas-macias', 'capim-de-cócegas'],
+  arbusto_espinhos: ['moita-pontuda', 'folhas-que-espetam'], arbusto_bagas_brancas: ['pérolas-de-moita', 'bolinhas-brancas'],
+  cogumelo_vermelho: ['chapéu-vermelho-pintado', 'guarda-chuva-vermelho'], cogumelo_marrom: ['chapéu-marrom', 'guarda-chuva-de-terra'],
+  lago: ['água-grande', 'espelho-de-água'], riacho: ['água-que-corre', 'fio-de-água'], fonte: ['água-que-cai', 'bacia-de-pedras'],
+  pedra: ['pedra-de-sentar', 'rocha-morna'], caverna: ['buraco-escuro', 'casa-de-pedra'], abrigo: ['telhado-de-galhos', 'cabana-de-folhas'],
+  flores: ['cores-que-cheiram', 'pontinhos-coloridos'], passaro: ['bicho-que-voa', 'pena-azul'],
+  melancia: ['bola-listrada'], bola: ['coisa-que-rola'], caixa: ['caixa-com-laço'],
+};
+state.nomes ||= {};
+const cap = t => t.replace(/(^|[.!?] )(\p{Ll})/gu, (m, a, b) => a + b.toUpperCase());
+// conclusões que o cérebro offline tira de experiências boas
+const LICAO = { comer: '{n} mata a fome. Vou lembrar disso.', beber: '{n} mata a sede.', nadar: 'Dentro de {n} o corpo fica leve e o humor melhora.',
+  dormir: 'Dormir em {n} devolve as forças.', sentar: 'Ficar perto de {n} acalma.', cheirar: '{n} tem um cheiro bom.', investigar: '{n} é interessante de perto.' };
+const nomeDe = t => state.nomes[t] ||= pick(NOMES[t] || ['coisa-nova']);
+// [pensamento quando ainda não conhece, pensamento quando já conhece, emoji]; {n} = nome inventado
 const FRASES = {
-  comer: [['Talvez seja comida', 'A barriga pede algo. Vou provar isto com calma e ver o que acontece.', '🤔'], ['Vou experimentar', 'Não sei o gosto disto. A única forma de saber é provar.', '🌿']],
-  beber: [['Um pouco de água', 'A sede chegou devagar. A água parece limpa daqui.', '💧'], ['Hora de beber', 'Beber água devagar me devolve ao presente.', '💧']],
-  nadar: [['Vou entrar na água', 'O corpo pede a água. Lá dentro o mundo fica mais leve e silencioso.', '🌊'], ['Flutuar um pouco', 'Na água o peso desaparece. Talvez seja aqui o meu lugar.', '🌊']],
-  dormir: [['Preciso descansar', 'O cansaço pesa nas pernas. Descansar também é parte da jornada.', '😴'], ['Fechar os olhos', 'O mundo continua lá fora enquanto eu durmo. Isso me tranquiliza.', '😴']],
-  cheirar: [['Que cheiro é esse', 'Cada cheiro guarda uma informação. Vou prestar atenção.', '👃'], ['Cheirar com cuidado', 'O focinho percebe coisas que os olhos não alcançam.', '👃']],
-  sentar: [['Vou observar daqui', 'Daqui dá para ver o campo inteiro. O vento muda as folhas de lugar.', '🌅'], ['Um momento quieto', 'Quando paro, percebo sons que antes não escutava.', '🌅']],
-  investigar: [['O que será isso', 'Nunca vi isto antes. Quero entender de perto, sem pressa.', '🧐'], ['Olhar de perto', 'Cada coisa nova muda um pouco o mapa que tenho deste lugar.', '🧐']],
-  vagar: [['Caminhar um pouco', 'Sem destino certo. Andar também é uma forma de conhecer.', '🚶'], ['Explorar ao redor', 'Ainda há partes deste lugar que eu não conheço.', '🌿'], ['Seguir em frente', 'A luz mudou desde a última vez que olhei. O dia também caminha.', '🌿']],
-  fugir: [['Melhor me afastar', 'Algo aqui não parece seguro. Prefiro manter distância.', '😟']],
+  comer: [['Não sei se isto aqui se come. Vou chamar de {n} e provar um pedaço pequeno.', 'Vou comer {n} de novo. Quero ver se acontece o mesmo da outra vez.', '🤔'],
+          ['A barriga pede algo. {n} tem cara de comida, mas só provando para saber.', 'Já conheço {n}. Hora de comer.', '😋']],
+  beber: [['Isto parece água. Vou chamar de {n} e testar com a língua.', 'A sede voltou. {n} me ajudou antes.', '💧']],
+  nadar: [['E se eu entrar em {n}? Vou testar com o corpo inteiro.', 'Quero voltar para dentro de {n}. Lá o corpo fica leve.', '😌']],
+  dormir: [['O corpo está pesado. Talvez {n} seja um bom lugar para descansar.', 'Vou dormir em {n}. Da outra vez funcionou.', '😴']],
+  cheirar: [['Que cheiro tem {n}? O focinho vai me contar.', 'Vou cheirar {n} de novo para comparar.', '🤔']],
+  sentar: [['Vou sentar perto de {n} e só observar por um tempo.', 'Volto para {n}. Daqui o mundo parece mais calmo.', '😌']],
+  investigar: [['Nunca vi isto. Vou chamar de {n} e olhar de perto.', 'Ainda não entendi tudo sobre {n}. Vou olhar de novo.', '😮']],
+  vagar: [['Vou andar um pouco para ver o que existe além daqui.', 'Caminhar também é uma forma de aprender o lugar.', '🙂'],
+          ['Ainda há cantos que eu não conheço.', 'O dia mudou de cor desde que acordei. Será que ele também está indo a algum lugar?', '🙂']],
+  fugir: [['Algo aqui não parece seguro. Melhor me afastar e pensar depois.', 'Prefiro manter distância.', '😟']],
 };
 function offlineBrain(perc) {
   const s = state.stats, vis = perc.visiveis.map(v => v.o);
@@ -873,12 +894,23 @@ function offlineBrain(perc) {
     [acao, alvo] = pick(opts);
   }
   if (acao === 'dormir' && !alvo && s.energia > 25) acao = 'vagar';
-  const [fala, pensamento, emoji] = pick(FRASES[acao] || FRASES.vagar);
+  const alvoTipo = alvo && objects.find(o => o.id === alvo)?.type;
+  const [novo, visto, emoji] = pick(FRASES[acao] || FRASES.vagar);
+  const conhece = alvoTipo && state.descobertas.some(d => d.startsWith(acao + ':' + alvoTipo + '|'));
+  // sem alvo, as duas frases servem; nunca repete o pensamento anterior
+  const opcoes = (FRASES[acao] || FRASES.vagar).flatMap(([nv, vs]) => !alvoTipo ? [nv, vs] : [conhece ? vs : nv])
+    .map(t => cap(t.replaceAll('{n}', alvoTipo ? nomeDe(alvoTipo) : 'isto')));
+  const pensamento = pick(opcoes.filter(t => t !== lastOfflineThought).length ? opcoes.filter(t => t !== lastOfflineThought) : opcoes);
+  lastOfflineThought = pensamento;
   let aprendizado = null;
-  if (/enjoo/.test(memory.lastResult)) { aprendizado = 'O cogumelo vermelho com pintas causa enjoo forte. Melhor evitar.'; offlineBad.add('cogumelo_vermelho'); }
-  if (/furaram|espetou/.test(memory.lastResult)) { aprendizado = 'As folhas pontudas machucam. As frutinhas amarelas não compensam.'; offlineBad.add('arbusto_espinhos'); }
-  if (/sonolência/.test(memory.lastResult)) { aprendizado = 'As bagas brancas trazem um sono pesado.'; offlineBad.add('arbusto_bagas_brancas'); }
-  return { pensamento, fala, emoji, acao, alvo, aprendizado };
+  const last = memory.history.at(-1) || '';
+  const lastTipo = Object.keys(TYPES).find(t => last.includes(TYPES[t].nome));
+  if (lastTipo && /fome diminuiu|matou|encheu|sede passou|Geladinha|limpa, fria|maravilhosa|reparador|Recuperou/.test(memory.lastResult) && Math.random() < 0.6)
+    aprendizado = cap(LICAO[last.split(' ')[0].replace(':', '')]?.replaceAll('{n}', nomeDe(lastTipo)) || `${nomeDe(lastTipo)} parece bom. Vou lembrar.`);
+  if (/enjoo/.test(memory.lastResult)) { aprendizado = `Comer ${nomeDe('cogumelo_vermelho')} me deixou enjoada. Não vou repetir.`; offlineBad.add('cogumelo_vermelho'); }
+  if (/furaram|espetou/.test(memory.lastResult)) { aprendizado = cap(`${nomeDe('arbusto_espinhos')} machuca o focinho. As frutinhas amarelas não compensam.`); offlineBad.add('arbusto_espinhos'); }
+  if (/sonolência/.test(memory.lastResult)) { aprendizado = cap(`${nomeDe('arbusto_bagas_brancas')} dá um sono pesado.`); offlineBad.add('arbusto_bagas_brancas'); }
+  return { pensamento, emoji, acao, alvo, aprendizado };
 }
 
 // ---------------------------------------------------------------------
@@ -1004,7 +1036,7 @@ async function maybeSummarizeMemory() {
 //   │   monta PROMPT (personalidade + percepção + memória + último resultado + últimas 5 ações)
 //   │   chama o cérebro (DeepSeek ou Gemini, timeout 10 s; falhou → offline nesse ciclo)
 //   │   VALIDA a resposta (ação/alvo inválidos → vagar)
-//   │   mostra pensamento, fala e emoji
+//   │   mostra o pensamento no log e o emoji sobre a cabeça
 //   │   EXECUTA a ação → efeitos ocultos → texto do resultado
 //   │   guarda resultado + histórico + aprendizado
 //   └── espera o intervalo mínimo de 4 s desde a última chamada
@@ -1061,8 +1093,8 @@ async function aiLoop() {
 // 6. INTERFACE
 // ---------------------------------------------------------------------
 const $ = id => document.getElementById(id);
-const emojiEl = $('emoji'), bubbleEl = $('bubble'), zzzEl = $('zzz'), bannerEl = $('banner');
-let bubbleUntil = 0, emojiUntil = 0, zoomUntil = 0;
+const emojiEl = $('emoji');
+let emojiUntil = 0, zoomUntil = 0;
 
 function showEmoji(e) {
   emojiEl.textContent = e; emojiEl.classList.remove('pop'); void emojiEl.offsetWidth; emojiEl.classList.add('pop');
@@ -1070,7 +1102,6 @@ function showEmoji(e) {
 }
 function showThought(dec, fonte) {
   showEmoji(dec.emoji);
-  bubbleEl.textContent = dec.fala; bubbleEl.classList.add('show'); bubbleUntil = performance.now() + 4500;
   const h = Math.floor(state.clock * 24), m = Math.floor((state.clock * 24 % 1) * 60);
   const entry = { t: `Dia ${state.day} · ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`, ...dec, fonte };
   state.log.push(entry); state.log = state.log.slice(-40);
@@ -1084,7 +1115,7 @@ function renderLog(animateLatest) {
     const div = document.createElement('div');
     div.className = 'entry' + (i === 0 ? ' latest' : '');
     const meta = document.createElement('div'); meta.className = 'meta';
-    meta.textContent = `${e.t} · ${e.acao.replace('_', ' ')}${e.alvo ? ' · ' + (TYPES[e.alvo.replace(/_\d+$/, '')]?.nome || e.alvo) : ''} · ${e.fonte === 'ia' ? 'IA' : 'offline'}`;
+    meta.textContent = `${e.t} · ${e.acao.replace('_', ' ')}${e.alvo ? ' · ' + (state.nomes[e.alvo.replace(/_\d+$/, '')] || 'algo novo') : ''}`;
     const txt = document.createElement('div'); txt.textContent = i === 0 && animateLatest ? '' : e.pensamento;
     div.append(meta, txt);
     if (e.aprendizado) { const l = document.createElement('div'); l.className = 'learn'; l.textContent = 'Aprendizado: ' + e.aprendizado; div.append(l); }
@@ -1102,20 +1133,12 @@ function renderMemory() {
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-// Descobertas: banner animado na primeira vez
-const bannerQueue = []; let bannerBusy = false;
+// Descobertas: registradas na aba Memória (sem aviso sobre o personagem); zoom leve na câmera
 function discover(key, label) {
   if (state.descobertas.some(d => d.startsWith(key + '|'))) return;
   state.descobertas.push(key + '|' + label);
-  bannerQueue.push('🏆 Nova descoberta: ' + label);
   if (!key.startsWith('ver:')) zoomUntil = performance.now() + 3500;
-  pumpBanner(); renderMemory();
-}
-function pumpBanner() {
-  if (bannerBusy || !bannerQueue.length) return;
-  bannerBusy = true; bannerEl.textContent = bannerQueue.shift();
-  bannerEl.classList.remove('show'); void bannerEl.offsetWidth; bannerEl.classList.add('show');
-  setTimeout(() => { bannerBusy = false; pumpBanner(); }, 3000);
+  renderMemory();
 }
 
 // Barras de status
@@ -1239,13 +1262,11 @@ function frame(now) {
   renderer.render(scene, camera);
 
   // overlays HTML
-  placeOverlay(emojiEl, 2.3, bubbleEl.classList.contains('show') ? bubbleEl.offsetHeight + 18 : 0);
-  placeOverlay(bubbleEl, 1.95);
-  placeOverlay(zzzEl, 1.6, -10);
+  // acima do personagem só aparece um emoji simples
+  placeOverlay(emojiEl, 2.1);
   if (gameTime < sickUntil) { emojiEl.textContent = '🤢'; emojiEl.style.opacity = 1; }
+  else if (capy.anim === 'dormir') { emojiEl.textContent = '💤'; emojiEl.style.opacity = 1; }
   else emojiEl.style.opacity = now < emojiUntil ? 1 : 0;
-  if (now > bubbleUntil) bubbleEl.classList.remove('show');
-  zzzEl.style.display = capy.anim === 'dormir' ? 'block' : 'none';
   if ((uiTick += realDt) > 0.25) { uiTick = 0; renderBars(); renderHUD(); }
 }
 
