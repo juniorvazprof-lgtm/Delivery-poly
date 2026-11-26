@@ -26,19 +26,23 @@
     <div id="controls">
       <button id="btn-pause" title="Pausar">⏸️</button>
       <button id="btn-speed" title="Velocidade">1x</button>
-      <button id="btn-surprise" class="wide">🎁 Soltar surpresa</button>
+      <button id="btn-surprise" class="wide">🎁 Surpresa</button>
+      <button id="btn-sound" title="Som">🔇</button>
       <button id="btn-hide" title="Ocultar interface">🎬</button>
       <button id="btn-reset" title="Resetar mundo">🔄</button>
       <button id="btn-settings" title="Configurações">⚙️</button>
     </div>
     <div id="tabs">
-      <button class="tab active" data-tab="thoughts">🧠 Pensamentos</button>
+      <button class="tab active" data-tab="thoughts">🧠 Log</button>
+      <button class="tab" data-tab="diary">📖 Diário</button>
       <button class="tab" data-tab="memory">📚 Memória</button>
       <button class="tab" data-tab="status">❤️ Status</button>
     </div>
     <div id="tab-thoughts" class="tabpane active"><div id="log"></div></div>
+    <div id="tab-diary" class="tabpane"><div id="diary-list"></div></div>
     <div id="tab-memory" class="tabpane">
       <h3>Aprendizados</h3><ul id="mem-list"></ul>
+      <h3>O que ela acredita</h3><div id="belief-list"></div>
       <h3>Descobertas</h3><div id="disc-list"></div>
     </div>
     <div id="tab-status" class="tabpane">

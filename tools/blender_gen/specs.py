@@ -33,5 +33,7 @@ SPECS = {
                                                         "Asas como objetos separados chamados exatamente 'wing_l' e 'wing_r' (placas finas azul-escuras) presas na lateral do corpo.")),
     "melancia": dict(dims=(0.9, 0.7, 0.7), tris=500, desc="Melancia inteira oval verde (#2e9a3c) com listras verde-escuras."),
     "bola": dict(dims=(0.7, 0.7, 0.7), tris=500, desc="Bola de praia colorida com gomos rosa, amarelo e azul (pode ser esfera com faixas toroidais)."),
+    "jacare": dict(dims=(1.1, 2.9, 0.55), tris=1500, desc=("Jacaré low poly verde-escuro (#3d5a3a) com barriga clara, focinho longo para -Y. "
+        "Nós obrigatórios: 'jaw' (mandíbula inferior, pivô na articulação), 'tail' (pivô na base da cauda), olhos salientes no topo da cabeça.")),
     "caixa": dict(dims=(0.75, 0.75, 0.9), tris=300, desc="Caixa de presente roxa (#a45cff) com fitas douradas em cruz e um laço dourado em cima."),
 }
