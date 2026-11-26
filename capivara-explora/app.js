@@ -1766,9 +1766,9 @@ function renderVlog() {
   const dias = [...new Set(clipes.map(c => c.dia))].sort((a, b) => b - a);
   el.innerHTML = dias.map(d => {
     const cs = clipes.filter(c => c.dia === d);
-    return `<section class="vday"><div class="vhead"><h4>Dia ${d} · ${cs.length} ${cs.length > 1 ? 'clipes' : 'clipe'}</h4><button data-dia="${d}">▶ Vlog do dia</button></div>
+    return `<section class="vday"><div class="vhead"><h4>Dia ${d} · ${cs.length} ${cs.length > 1 ? 'clipes' : 'clipe'}</h4><button data-dia="${d}">Assistir o dia</button></div>
       ${cs.map(c => `<div class="clip"><img src="${c.thumb || ''}" alt="" data-id="${c.id}"><div><b>${esc(c.t)}</b><p>${esc(c.narr || '')}</p>
-      <button class="dl" data-dl="${c.id}">⬇ baixar</button></div></div>`).join('')}</section>`;
+      <button class="dl" data-dl="${c.id}">Baixar vídeo</button></div></div>`).join('')}</section>`;
   }).join('');
 }
 // player: toca um clipe ou o dia inteiro em sequência
@@ -1790,8 +1790,8 @@ async function baixarClipe(c, btn) {
   downloadsP ||= window.claude?.use ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
   const dl = await downloadsP;
   if (dl) {
-    try { await dl.save({ filename, data: c.blob }); btn.textContent = '✅ salvo'; }
-    catch (e) { btn.textContent = e?.code === 'declined' ? '⬇ baixar' : '❌ não foi possível salvar aqui'; }
+    try { await dl.save({ filename, data: c.blob }); btn.textContent = 'Salvo'; }
+    catch (e) { btn.textContent = e?.code === 'declined' ? 'Baixar vídeo' : 'Não foi possível salvar aqui'; }
     return;
   }
   const a = document.createElement('a'); a.href = clipUrl(c); a.download = filename; document.body.append(a); a.click(); a.remove();
@@ -2060,6 +2060,7 @@ function updateAudio() {
 // 6. INTERFACE
 // ---------------------------------------------------------------------
 const $ = id => document.getElementById(id);
+const icon = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const emojiEl = $('emoji');
 let emojiUntil = 0, zoomUntil = 0;
 
@@ -2098,14 +2099,14 @@ function renderLog(animateLatest) {
 }
 function renderMemory() {
   $('mem-list').innerHTML = state.aprendizados.length ? state.aprendizados.map(a => `<li>${esc(a)}</li>`).join('') : '<li><i>Ainda não aprendeu nada...</i></li>';
-  $('disc-list').innerHTML = state.descobertas.map(d => `<span class="chip">🏆 ${esc(d.split('|')[1] || d)}</span>`).join('');
+  $('disc-list').innerHTML = state.descobertas.map(d => `<span class="chip">${icon('paw')}${esc(d.split('|')[1] || d)}</span>`).join('');
   // crenças com nível de confiança
   const cr = Object.entries(state.crencas).filter(([k]) => TYPES[k.split(':')[1]]);
   $('belief-list').innerHTML = cr.length ? cr.map(([k, c]) => {
     const [a, t] = k.split(':'), conf = confianca(c), label = conf > 0.6 ? 'bom' : conf < 0.4 ? 'ruim' : 'incerto';
     const quem = k === 'perto:jacare' ? `chegar perto de ${nomeDe('jacare')}` : k === 'necessidades:coco' ? 'fazer as necessidades' : `${a.replace('_', ' ')} ${nomeDe(t)}`;
     return `<div class="belief"><div class="lbl"><span>${esc(cap(quem))}</span><span class="tag ${label}">${label} · ${c.bom + c.ruim}x</span></div>
-      <div class="track"><div class="fill" style="width:${Math.round(conf * 100)}%;background:hsl(${conf * 120},65%,50%)"></div></div></div>`;
+      <div class="track"><div class="fill" style="width:${Math.round(conf * 100)}%;background:${conf > 0.6 ? 'var(--good)' : conf < 0.4 ? 'var(--alert)' : 'var(--ochre)'}"></div></div></div>`;
   }).join('') : '<i>Ainda não tem experiências suficientes.</i>';
 }
 function renderPhotos() {
@@ -2132,16 +2133,16 @@ function discover(key, label) {
 }
 
 // Barras de status
-const BARS = [['fome', '🍎 Fome', true], ['sede', '💧 Sede', true], ['energia', '⚡ Energia', false], ['humor', '😊 Humor', false], ['frio', '🥶 Frio', true], ['bexiga', '🚻 Necessidade', true], ['tedio', '🥱 Tédio', true]];
-$('bars').innerHTML = BARS.map(([k, l]) => `<div class="bar"><div class="lbl"><span>${l}</span><span id="v-${k}"></span></div><div class="track"><div class="fill" id="f-${k}"></div></div></div>`).join('');
+const BARS = [['fome', 'Fome', true, 'berry'], ['sede', 'Sede', true, 'drop'], ['energia', 'Energia', false, 'bolt'], ['humor', 'Humor', false, 'smile'], ['frio', 'Frio', true, 'snow'], ['bexiga', 'Necessidade', true, 'bush'], ['tedio', 'Tédio', true, 'spiral']];
+$('bars').innerHTML = BARS.map(([k, l, , ic]) => `<div class="bar"><div class="lbl"><span>${icon(ic)}${l}</span><span id="v-${k}"></span></div><div class="track"><div class="fill" id="f-${k}"></div></div></div>`).join('');
 function renderBars() {
   for (const [k, , inverse] of BARS) {
     const v = state.stats[k], good = inverse ? 100 - v : v;
     $('v-' + k).textContent = Math.round(v);
     const f = $('f-' + k); f.style.width = v + '%';
-    f.style.background = `hsl(${good * 1.2}, 75%, 55%)`;
+    f.style.background = good > 60 ? 'var(--good)' : good > 30 ? 'var(--ochre)' : 'var(--alert)';
   }
-  $('brain-info').textContent = `${brainStatus}${gameTime < sickUntil ? ' · 🤢 enjoada' : ''}${raining ? ' · 🌧️ chovendo' : ''}`;
+  $('brain-info').textContent = `${brainStatus.replace(/^\S+\s/, '')}${gameTime < sickUntil ? ' · enjoada' : ''}${raining ? ' · chovendo' : ''}`;
 }
 
 // Abas
@@ -2153,10 +2154,10 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
 $('btn-sound').onclick = () => {
   if (!audio.ctx) startAudio();
   audio.on = !audio.on; audio.ctx.resume();
-  $('btn-sound').textContent = audio.on ? '🔊' : '🔇';
+  $('btn-sound').innerHTML = icon(audio.on ? 'sound' : 'mute'); $('btn-sound').classList.toggle('on', audio.on);
 };
-$('btn-pause').onclick = () => { paused = !paused; $('btn-pause').textContent = paused ? '▶️' : '⏸️'; };
-$('btn-speed').onclick = () => { timeScale = timeScale === 1 ? 2 : 1; $('btn-speed').textContent = timeScale + 'x'; };
+$('btn-pause').onclick = () => { paused = !paused; $('btn-pause').innerHTML = icon(paused ? 'play' : 'pause'); $('btn-pause').classList.toggle('on', paused); };
+$('btn-speed').onclick = () => { timeScale = timeScale === 1 ? 2 : 1; $('btn-speed').textContent = timeScale + '×'; $('btn-speed').classList.toggle('on', timeScale === 2); };
 $('btn-hide').onclick = () => { $('app').classList.add('clean'); setTimeout(resize, 450); };
 $('btn-show').onclick = () => { $('app').classList.remove('clean'); setTimeout(resize, 450); };
 // Reset com confirmação na própria tela (toque duas vezes em 3 s)
@@ -2164,12 +2165,12 @@ let resetArmed = 0;
 const resetWorld = e => {
   const btn = e.currentTarget;
   if (performance.now() - resetArmed < 3000) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('capivara_explora_fotos'); idb.clear(); } catch {} location.reload(); return; }
-  resetArmed = performance.now(); const old = btn.textContent;
-  btn.textContent = btn.id === 'btn-reset' ? '❓' : 'Toque de novo para apagar tudo';
-  setTimeout(() => { btn.textContent = old; }, 3000);
+  resetArmed = performance.now(); const old = btn.innerHTML;
+  if (btn.id === 'btn-reset') { btn.classList.add('armed'); btn.title = 'Toque de novo para apagar tudo'; } else btn.textContent = 'Toque de novo para apagar tudo';
+  setTimeout(() => { btn.innerHTML = old; btn.classList.remove('armed'); }, 3000);
 };
 $('cfg-reset').onclick = resetWorld;
-$('btn-reset').onclick = resetWorld;
+if ($('btn-reset')) $('btn-reset').onclick = resetWorld;   // o reset fica nas configurações
 $('btn-surprise').onclick = () => {
   const kind = pick(['melancia', 'bola', 'caixa']);
   const maker = MK[kind];
@@ -2194,13 +2195,15 @@ $('cfg-test').onclick = async () => {
   readCfgFields();
   const m = $('cfg-mode').value, out = $('cfg-test-res');
   if (m === 'offline') { out.textContent = 'O modo offline não usa chave.'; return; }
-  if (!cfg.keys[m]) { out.textContent = '❌ Cole uma chave primeiro.'; return; }
+  out.className = 'hint';
+  if (!cfg.keys[m]) { out.className = 'hint err'; out.textContent = 'Cole uma chave primeiro.'; return; }
   out.textContent = `Testando ${PROVIDERS[m]}...`;
   const prev = cfg.mode; cfg.mode = m; const t0 = performance.now();
   try {
     const r = await callAI('Responda apenas com JSON.', 'Responda {"ok": true}');
-    out.textContent = r ? `✅ ${PROVIDERS[m]} respondeu em ${((performance.now() - t0) / 1000).toFixed(1)} s. A chave está funcionando.` : '❌ Resposta vazia.';
-  } catch (e) { out.textContent = `❌ ${PROVIDERS[m]}: ${apiErro(e)}.`; }
+    out.className = r ? 'hint ok' : 'hint err';
+    out.textContent = r ? `Funcionando: ${PROVIDERS[m]} respondeu em ${((performance.now() - t0) / 1000).toFixed(1)} s.` : 'Resposta vazia.';
+  } catch (e) { out.className = 'hint err'; out.textContent = `${PROVIDERS[m]} não respondeu: ${apiErro(e)}.`; }
   finally { cfg.mode = prev; }
 };
 $('cfg-mode').onchange = () => { readCfgFields(); fillCfgFields(); };
@@ -2223,12 +2226,15 @@ function placeOverlay(el, worldY, extraPx = 0) {
 
 // HUD
 function renderHUD() {
-  $('hud-day').textContent = `Dia ${state.day}`;
+  $('hud-day').querySelector('b').textContent = state.day;
   const prov = PROVIDERS[cfg.mode] || '';
-  $('hud-brain').textContent = brainState === 'ok' ? `🟢 ${prov}` : brainState === 'falha' ? `🟠 ${prov} falhando` : '⚪ Offline';
+  const hb = $('hud-brain'); hb.className = 'tag brain ' + brainState;
+  hb.querySelector('span').textContent = brainState === 'ok' ? prov : brainState === 'falha' ? `${prov} falhando` : 'Offline';
   const h = Math.floor(state.clock * 24), m = Math.floor((state.clock * 24 % 1) * 60);
-  const icon = raining ? '🌧️' : isNight() ? '🌙' : (h < 7 || h > 17) ? '🌅' : '☀️';
-  $('hud-time').textContent = `${icon} ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  const ic = raining ? 'rain' : isNight() ? 'moon' : (h < 7 || h > 17) ? 'dusk' : 'sun';
+  const ht = $('hud-time'); ht.className = 'tag mono ' + (raining ? 'rain' : isNight() ? 'night' : '');
+  if (ht.dataset.ic !== ic) { ht.dataset.ic = ic; ht.querySelector('use').setAttribute('href', '#i-' + ic); }
+  ht.querySelector('span').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 // ---------------------------------------------------------------------

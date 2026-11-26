@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#1b1e2b">
+<meta name="theme-color" content="#121a12">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <title>Capivara Explora</title>
 <link rel="stylesheet" href="style.css">
 <script type="importmap">
@@ -11,38 +13,74 @@
 </script>
 </head>
 <body>
+<!-- Ícones próprios (traço 1.8, cantos arredondados). Uso: <svg class="ic"><use href="#i-nome"/></svg> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-paw" viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="4.6" ry="3.8" fill="currentColor"/><ellipse cx="5.6" cy="10.6" rx="1.7" ry="2.3" fill="currentColor" transform="rotate(-18 5.6 10.6)"/><ellipse cx="9.6" cy="7.2" rx="1.7" ry="2.4" fill="currentColor"/><ellipse cx="14.4" cy="7.2" rx="1.7" ry="2.4" fill="currentColor"/><ellipse cx="18.4" cy="10.6" rx="1.7" ry="2.3" fill="currentColor" transform="rotate(18 18.4 10.6)"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="3.6" height="14" rx="1.6" fill="currentColor"/><rect x="13.9" y="5" width="3.6" height="14" rx="1.6" fill="currentColor"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.6v12.8a1 1 0 0 0 1.5.86l10.2-6.4a1 1 0 0 0 0-1.72L9.5 4.74A1 1 0 0 0 8 5.6z" fill="currentColor"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M3 9h18M12 9v11"/><path d="M12 9c-1.5-3.5-5.5-4-5.5-1.6C6.5 9 9.5 9 12 9zm0 0c1.5-3.5 5.5-4 5.5-1.6C17.5 9 14.5 9 12 9z"/></g></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.6 7.6 0 0 1 0 11"/></g></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></g></symbol>
+    <symbol id="i-frame" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/></g></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 1 0 2.1-5"/><path d="M4.5 4.5v4h4"/></g></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/></g></symbol>
+    <symbol id="i-log" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h10.5A1.5 1.5 0 0 1 18 5v14.5a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 19V4.5a1 1 0 0 1 1-1z"/><path d="M8.5 8h6M8.5 11.5h6M8.5 15h3.5"/></g></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5 7 4.6 3.5 5v13c3.5-.4 6.5 0 8.5 1.5 2-1.5 5-1.9 8.5-1.5V5C17 4.6 14 5 12 6.5z"/><path d="M12 6.5v13"/></g></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12.5" rx="2.5"/><path d="M8.5 7l1.3-2.5h4.4L15.5 7"/><circle cx="12" cy="13.2" r="3.4"/></g></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2.2"/><path d="M16 10.5l4.6-2.6a.6.6 0 0 1 .9.5v7.2a.6.6 0 0 1-.9.5L16 13.5"/><circle cx="7.2" cy="10" r="1.3" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6.5l5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/></g></symbol>
+    <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M2.5 12.5h4l2-5 3.5 10 2.5-7 1.5 2h5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></g></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.6A7.8 7.8 0 0 1 9.4 4.5a7.8 7.8 0 1 0 10.1 10.1z" fill="currentColor"/></symbol>
+    <symbol id="i-dusk" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 16a5 5 0 0 1 10 0" fill="currentColor"/><path d="M3 19.5h18M12 5v2.5M4.8 9.3l1.7 1.4M19.2 9.3l-1.7 1.4"/></g></symbol>
+    <symbol id="i-rain" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14.5a4 4 0 0 1-.4-8 5.5 5.5 0 0 1 10.6 1.4A3.3 3.3 0 0 1 17 14.5z" fill="currentColor"/><path d="M8 17.5l-1 2.5M12 17.5l-1 2.5M16 17.5l-1 2.5"/></g></symbol>
+    <symbol id="i-berry" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="15" r="4"/><circle cx="15.5" cy="15" r="4"/><path d="M8.5 11c0-3 1.5-5 3.5-6.5M15.5 11c0-3-1.5-5-3.5-6.5M12 4.5c1.5-1 3.5-1 5 0"/></g></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5c3 4 6 7.2 6 10.6a6 6 0 0 1-12 0c0-3.4 3-6.6 6-10.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5.5 13.5H11L10 21l7.5-10.5H12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-smile" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 14a4.5 4.5 0 0 0 7.4 0"/><circle cx="9" cy="10" r=".9" fill="currentColor"/><circle cx="15" cy="10" r=".9" fill="currentColor"/></g></symbol>
+    <symbol id="i-snow" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9.5 4.5L12 6.5l2.5-2M9.5 19.5L12 17.5l2.5 2"/></g></symbol>
+    <symbol id="i-bush" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17a3.5 3.5 0 0 1 1-6.8A4.5 4.5 0 0 1 14.6 8a3.8 3.8 0 0 1 4.4 6.2A3 3 0 0 1 18 17z"/><path d="M12 17v3.5"/></g></symbol>
+    <symbol id="i-spiral" viewBox="0 0 24 24"><path d="M12 12.2a1.4 1.4 0 1 1 1.4 1.4 3 3 0 1 1-3-3 4.6 4.6 0 1 1-4.6 4.6 6.4 6.4 0 1 1 6.4 6.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5V8M15 3.5V8M6.5 8h11v3a5.5 5.5 0 0 1-11 0zM12 16.5V21"/></g></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></g></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
 <div id="app">
   <!-- ===== Metade de cima: mundo 3D ===== -->
   <section id="stage">
     <canvas id="c"></canvas>
-    <div id="hud-day" class="hud">Dia 1</div>
-    <div id="hud-brain" class="hud">⚪ Offline</div>
-    <div id="hud-rec" class="hud" hidden>🔴 Gravando</div>
-    <div id="hud-time" class="hud">☀️ 07:00</div>
+    <div class="hud-top">
+      <div class="tag" id="hud-day"><svg class="ic paw"><use href="#i-paw"/></svg><span class="lbl">Dia</span><b>1</b></div>
+      <div class="tag rec" id="hud-rec" hidden><i class="dot"></i>REC</div>
+      <div class="tag mono" id="hud-time"><svg class="ic"><use href="#i-sun"/></svg><span>07:00</span></div>
+    </div>
+    <div class="tag brain off" id="hud-brain"><i class="dot"></i><span>Offline</span></div>
     <div id="flash"></div>
     <div id="emoji" class="emoji"></div>
-    <button id="btn-show" class="btn-show" title="Mostrar interface">👁️</button>
+    <button id="btn-show" class="btn-show" title="Mostrar interface" aria-label="Mostrar interface"><svg class="ic"><use href="#i-frame"/></svg></button>
   </section>
 
   <!-- ===== Metade de baixo: painel ===== -->
   <section id="panel">
     <div id="controls">
-      <button id="btn-pause" title="Pausar">⏸️</button>
-      <button id="btn-speed" title="Velocidade">1x</button>
-      <button id="btn-surprise" class="wide">🎁 Surpresa</button>
-      <button id="btn-sound" title="Som">🔇</button>
-      <button id="btn-hide" title="Ocultar interface">🎬</button>
-      <button id="btn-reset" title="Resetar mundo">🔄</button>
-      <button id="btn-settings" title="Configurações">⚙️</button>
+      <button id="btn-pause" class="ib" title="Pausar" aria-label="Pausar"><svg class="ic"><use href="#i-pause"/></svg></button>
+      <button id="btn-speed" class="ib mono" title="Velocidade" aria-label="Velocidade">1×</button>
+      <button id="btn-surprise" class="wide" aria-label="Soltar surpresa"><svg class="ic"><use href="#i-gift"/></svg><span>Surpresa</span></button>
+      <button id="btn-sound" class="ib" title="Som" aria-label="Ligar som"><svg class="ic"><use href="#i-mute"/></svg></button>
+      <button id="btn-hide" class="ib" title="Modo gravação limpa" aria-label="Ocultar interface"><svg class="ic"><use href="#i-frame"/></svg></button>
+      <button id="btn-settings" class="ib" title="Configurações" aria-label="Configurações"><svg class="ic"><use href="#i-gear"/></svg></button>
     </div>
-    <div id="tabs">
-      <button class="tab active" data-tab="thoughts">🧠 Log</button>
-      <button class="tab" data-tab="diary">📖 Diário</button>
-      <button class="tab" data-tab="photos">📷 Fotos</button>
-      <button class="tab" data-tab="vlog">🎬 Vlog</button>
-      <button class="tab" data-tab="memory">📚 Memória</button>
-      <button class="tab" data-tab="status">❤️ Status</button>
-    </div>
+    <nav id="tabs">
+      <button class="tab active" data-tab="thoughts"><svg class="ic"><use href="#i-log"/></svg>Log</button>
+      <button class="tab" data-tab="diary"><svg class="ic"><use href="#i-book"/></svg>Diário</button>
+      <button class="tab" data-tab="photos"><svg class="ic"><use href="#i-camera"/></svg>Fotos</button>
+      <button class="tab" data-tab="vlog"><svg class="ic"><use href="#i-film"/></svg>Vlog</button>
+      <button class="tab" data-tab="memory"><svg class="ic"><use href="#i-map"/></svg>Memória</button>
+      <button class="tab" data-tab="status"><svg class="ic"><use href="#i-pulse"/></svg>Status</button>
+    </nav>
     <div id="tab-thoughts" class="tabpane active"><div id="log"></div></div>
     <div id="tab-diary" class="tabpane"><div id="diary-list"></div></div>
     <div id="tab-photos" class="tabpane"><div id="photo-grid"></div></div>
@@ -65,7 +103,7 @@
 <!-- ===== Configurações ===== -->
 <div id="settings" class="modal hidden">
   <div class="modal-box">
-    <h2>⚙️ Configurações</h2>
+    <h2>Configurações</h2>
     <label>Cérebro
       <select id="cfg-mode">
         <option value="deepseek">DeepSeek (IA)</option>
@@ -81,13 +119,13 @@
         <input id="cfg-model" type="text">
       </label>
     </div>
-    <button id="cfg-test" class="test">🔌 Testar chave</button>
+    <button id="cfg-test" class="test"><svg class="ic"><use href="#i-plug"/></svg>Testar chave</button>
     <p class="hint" id="cfg-test-res"></p>
     <p class="hint" id="cfg-hint">A chave fica salva só neste aparelho (localStorage).</p>
     <p class="hint warn" id="cfg-warn"></p>
     <div class="row">
-      <button id="cfg-reset" class="danger">🔄 Resetar mundo</button>
-      <button id="cfg-close">Salvar</button>
+      <button id="cfg-reset" class="danger">Resetar mundo</button>
+      <button id="cfg-close" class="primary">Salvar</button>
     </div>
   </div>
 </div>
