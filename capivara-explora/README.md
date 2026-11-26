@@ -1,20 +1,44 @@
-# 🦫 Capivara Explora
+# 🦫 Capivara Explora (beta)
 
-Web app 3D (Three.js, mobile-first, tela vertical) em que uma capivara controlada por IA explora um mundo low poly,
-aprende com as consequências das próprias ações e mostra o que está pensando.
+Uma capivara controlada por IA explora sozinha um mundo 3D low poly gerado por semente,
+aprende com as consequências das próprias ações, tira fotos, pesquisa no computador
+e grava o próprio vlog vertical (9:16) pela GoPro na cabeça. Feito para celular.
 
-## Como rodar
-Arquivos estáticos, sem build. Sirva a pasta com qualquer servidor HTTP:
-
+## Rodar localmente
+Site estático, sem build:
 ```bash
 cd capivara-explora && python3 -m http.server 8000
-# abra http://localhost:8000 (ou o IP da máquina no celular)
+# abra http://localhost:8000 (no celular: http://IP-do-computador:8000)
 ```
 
-## Cérebro
-- ⚙️ → **DeepSeek** (padrão, modelo `deepseek-flash`), **Gemini** ou **Offline**. Cada um guarda sua própria chave no localStorage.
-- Gemini: modelo padrão `gemini-2.5-flash`.
-- **Offline**: ações aleatórias coerentes com os status e frases prontas — para testar sem gastar.
+## Publicar no Netlify (beta)
+O `netlify.toml` na raiz do repositório já configura tudo (pasta publicada, cabeçalhos, sem build).
+- **Pelo Git:** no Netlify, *Add new site → Import an existing project*, escolha este repositório e a branch. Nada a preencher.
+- **Arrastando:** abra https://app.netlify.com/drop e solte a pasta `capivara-explora`.
 
-O loop de IA está em `app.js` (seção 5e `aiLoop`): percepção → prompt → DeepSeek ou Gemini (timeout 10 s, fallback offline)
-→ validação → execução com efeitos ocultos → memória. Uma chamada por vez, intervalo mínimo de 4 s.
+No celular, use *Adicionar à tela inicial* para abrir como app (ícone e tela cheia).
+
+## Cérebro
+⚙️ → **DeepSeek** (padrão, `deepseek-flash`), **Gemini** (`gemini-2.5-flash`) ou **Offline**.
+Cada provedor guarda a própria chave no aparelho; o botão **Testar chave** confirma se está funcionando.
+A pesquisa do computador usa a Wikipédia em português (sem chave).
+
+## Estrutura do código (`src/`)
+| Pasta | O que tem |
+|---|---|
+| `core/` | `config.js` (estado salvo, configuração, utilidades), `runtime.js` (G e H compartilhados) |
+| `engine/` | renderizador, cena, câmera, luzes |
+| `world/` | terreno e biomas, céu, modelos, tipos de objeto (efeitos ocultos), posicionamento, A*, simulação |
+| `capy/` | a capivara: modelo, animações, movimento, pegadas e trilhas |
+| `brain/` | percepção, cérebro (IA/offline), execução das ações, loop de IA |
+| `features/` | computador, câmera/fotos, vlog, sons |
+| `ui/` | interface e HUD |
+| `main.js` | loop de render e início |
+
+Cada módulo só importa módulos anteriores na ordem acima. Variáveis alteradas por vários
+módulos ficam em `G` (ex.: `G.paused`); funções de módulos posteriores são acessadas por `H`
+(ex.: `H.showEmoji`). Para criar um objeto novo: modelo em `tools/blender_gen/scripts/`,
+tipo e efeitos em `world/types.js`, bioma em `world/objects.js` (tabela `BIOMA`).
+
+## Modelos 3D
+Gerados no Blender a partir de scripts em `tools/blender_gen/` (ver o README de lá).

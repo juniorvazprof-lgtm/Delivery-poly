@@ -1,0 +1,16 @@
+{
+  "name": "Capivara Explora",
+  "short_name": "Capivara",
+  "description": "Uma capivara controlada por IA explora um mundo 3D, aprende e grava o próprio vlog.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f150f",
+  "theme_color": "#121a12",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,27 @@
+# Netlify — Capivara Explora (beta)
+# Site estático: nenhum passo de build. O Netlify publica a pasta capivara-explora.
+# Deploy: conecte este repositório no Netlify (o arquivo já define tudo) ou arraste a pasta
+# capivara-explora em app.netlify.com/drop.
+[build]
+  base = "capivara-explora"
+  publish = "."
+  command = "echo 'Capivara Explora: site estático, sem build'"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Robots-Tag = "noindex"          # beta: fora dos buscadores
+
+[[headers]]
+  for = "/models/*"
+  [headers.values]
+    Content-Type = "model/gltf-binary"
+    Cache-Control = "public, max-age=604800"
+
+# código muda a cada beta: o celular sempre confere se há versão nova
+[[headers]]
+  for = "/src/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
