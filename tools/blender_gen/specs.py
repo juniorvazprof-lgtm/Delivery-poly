@@ -36,4 +36,15 @@ SPECS = {
     "jacare": dict(dims=(1.1, 2.9, 0.55), tris=1500, desc=("Jacaré low poly verde-escuro (#3d5a3a) com barriga clara, focinho longo para -Y. "
         "Nós obrigatórios: 'jaw' (mandíbula inferior, pivô na articulação), 'tail' (pivô na base da cauda), olhos salientes no topo da cabeça.")),
     "caixa": dict(dims=(0.75, 0.75, 0.9), tris=300, desc="Caixa de presente roxa (#a45cff) com fitas douradas em cruz e um laço dourado em cima."),
+    # --- rodada 4 (modelados à mão pelo Claude, sem DeepSeek) ---
+    "pinha": dict(dims=(0.3, 0.3, 0.4), tris=400, desc="Pinha marrom caída no chão."),
+    "formigueiro": dict(dims=(1.2, 1.2, 0.6), tris=600, desc="Montinho de terra com formigas."),
+    "tronco_musgo": dict(dims=(0.9, 2.6, 0.75), tris=500, desc="Tronco caído coberto de musgo."),
+    "caramujo": dict(dims=(0.35, 0.45, 0.3), tris=500, desc="Caramujo com concha espiral."),
+    "ninho": dict(dims=(0.7, 0.7, 0.35), tris=700, desc="Ninho de gravetos com ovinhos azuis."),
+    "teia": dict(dims=(1.3, 0.1, 1.5), tris=700, desc="Teia de aranha entre dois galhos."),
+    "trevo": dict(dims=(1.2, 1.2, 0.25), tris=1100, desc="Moita baixa de trevos."),
+    "grama_seca": dict(dims=(0.9, 0.9, 0.6), tris=400, desc="Tufo de grama seca amarelada."),
+    "grama_baixa": dict(dims=(1.4, 1.4, 0.35), tris=600, desc="Tapete de grama baixa e verde."),
+    "coco": dict(dims=(0.3, 0.3, 0.22), tris=300, desc="Cocozinho de capivara (bolinhas ovais marrons)."),
 }

@@ -16,6 +16,7 @@
   <section id="stage">
     <canvas id="c"></canvas>
     <div id="hud-day" class="hud">Dia 1</div>
+    <div id="hud-brain" class="hud">⚪ Offline</div>
     <div id="hud-time" class="hud">☀️ 07:00</div>
     <div id="emoji" class="emoji"></div>
     <button id="btn-show" class="btn-show" title="Mostrar interface">👁️</button>
@@ -71,6 +72,8 @@
         <input id="cfg-model" type="text">
       </label>
     </div>
+    <button id="cfg-test" class="test">🔌 Testar chave</button>
+    <p class="hint" id="cfg-test-res"></p>
     <p class="hint" id="cfg-hint">A chave fica salva só neste aparelho (localStorage).</p>
     <p class="hint warn" id="cfg-warn"></p>
     <div class="row">

@@ -100,3 +100,9 @@ h3 { margin: 4px 0; font-size: 15px; color: #ffd35c; }
 #controls { gap: 5px; padding: 8px max(8px, env(safe-area-inset-left, 0px)); }
 #controls button { padding: 8px 4px; min-width: 38px; font-size: 17px; flex: 0 0 auto; }
 #controls .wide { flex: 1 1 auto; min-width: 0; font-size: 15px; white-space: nowrap; overflow: hidden; }
+
+/* indicador do cérebro e teste de chave */
+#hud-brain { left: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 40px); font-size: 13px; padding: 4px 10px; }
+#app.clean #hud-brain { display: none; }
+.modal .test { width: 100%; margin-bottom: 6px; background: #2e6b6b; }
+#cfg-test-res { min-height: 1.2em; color: #e8ecff; }
