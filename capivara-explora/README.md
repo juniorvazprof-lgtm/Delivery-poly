@@ -12,8 +12,9 @@ cd capivara-explora && python3 -m http.server 8000
 ```
 
 ## Cérebro
-- ⚙️ → escolha **Gemini** e cole a chave da API (fica no localStorage). Modelo padrão: `gemini-2.5-flash`.
+- ⚙️ → **DeepSeek** (padrão, modelo `deepseek-flash`), **Gemini** ou **Offline**. Cada um guarda sua própria chave no localStorage.
+- Gemini: modelo padrão `gemini-2.5-flash`.
 - **Offline**: ações aleatórias coerentes com os status e frases prontas — para testar sem gastar.
 
-O loop de IA está em `app.js` (seção 5e `aiLoop`): percepção → prompt → Gemini (timeout 10 s, fallback offline)
+O loop de IA está em `app.js` (seção 5e `aiLoop`): percepção → prompt → DeepSeek ou Gemini (timeout 10 s, fallback offline)
 → validação → execução com efeitos ocultos → memória. Uma chamada por vez, intervalo mínimo de 4 s.

@@ -84,3 +84,4 @@ h3 { margin: 4px 0; font-size: 15px; color: #ffd35c; }
 .modal .row { display: flex; gap: 8px; } .modal .row button { flex: 1; }
 .modal .danger { background: #a63a4a; }
 .hint { font-size: 13px; color: #9aa3c7; }
+.hint.warn { color: #ff9a9a; }

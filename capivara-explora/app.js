@@ -8,7 +8,7 @@
 //   2. Mundo 3D (terreno, água, céu, chuva, objetos)
 //   3. Capivara (modelo, animações, movimento com A*)
 //   4. Efeitos ocultos (só o código conhece)
-//   5. Cérebro (Gemini / offline) e LOOP DE IA
+//   5. Cérebro (DeepSeek / Gemini / offline) e LOOP DE IA
 //   6. Interface (balão, emoji, painel, botões)
 // =====================================================================
 import * as THREE from 'three';
@@ -25,10 +25,13 @@ const SAVE_KEY = 'capivara_explora_v1';
 const CFG_KEY = 'capivara_explora_cfg';
 const ACOES = ['ir_para', 'comer', 'beber', 'nadar', 'dormir', 'cheirar', 'sentar', 'investigar', 'fugir', 'vagar'];
 
-const cfg = Object.assign({ mode: 'offline', key: '', model: 'gemini-2.5-flash' },
-  safeJSON(localStorage.getItem(CFG_KEY)) || {});
-if (!cfg.key) cfg.mode = 'offline';
+// Cérebros: 'deepseek' (padrão), 'gemini' ou 'offline'. Cada provedor tem sua chave e modelo.
+const cfg = Object.assign({ mode: 'deepseek', keys: { deepseek: '', gemini: '' },
+  models: { deepseek: 'deepseek-flash', gemini: 'gemini-2.5-flash' } }, safeJSON(lsGet(CFG_KEY)) || {});
+const PROVIDERS = { deepseek: 'DeepSeek', gemini: 'Gemini' };
+const hasBrain = () => cfg.mode !== 'offline' && !!cfg.keys[cfg.mode];
 
+function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function safeJSON(s) { try { return JSON.parse(s); } catch { return null; } }
 
 const defaultState = () => ({
@@ -38,7 +41,7 @@ const defaultState = () => ({
   descobertas: [],                // chaves "acao:tipo" ou "ver:tipo"
   log: [],
 });
-const state = Object.assign(defaultState(), safeJSON(localStorage.getItem(SAVE_KEY)) || {});
+const state = Object.assign(defaultState(), safeJSON(lsGet(SAVE_KEY)) || {});
 function save() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({ ...state, log: state.log.slice(-30) }));
@@ -663,16 +666,41 @@ function normalizeDecision(raw, perc) {
   };
 }
 
+// --- Chamada à IA: escolhe o provedor configurado. Sempre devolve o JSON já parseado. ---
+function callAI(system, user) { return cfg.mode === 'gemini' ? callGemini(system, user) : callDeepSeek(system, user); }
+const parseJSONText = txt => JSON.parse(String(txt).replace(/^```(json)?|```$/g, '').trim());
+
+// --- DeepSeek (API compatível com OpenAI, modo JSON, sem "thinking" para responder rápido) ---
+async function callDeepSeek(system, user, timeoutMs = CALL_TIMEOUT) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST', signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + cfg.keys.deepseek },
+      body: JSON.stringify({
+        model: cfg.models.deepseek, temperature: 1.1, max_tokens: 600,
+        thinking: { type: 'disabled' },
+        response_format: { type: 'json_object' },
+        messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+      }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    return parseJSONText(data?.choices?.[0]?.message?.content || '');
+  } finally { clearTimeout(timer); }
+}
+
 // --- Gemini ---
 async function callGemini(system, user, timeoutMs = CALL_TIMEOUT) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const generationConfig = { responseMimeType: 'application/json', temperature: 1.0, maxOutputTokens: 600 };
-    if (/2\.5/.test(cfg.model)) generationConfig.thinkingConfig = { thinkingBudget: 0 }; // resposta rápida
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent`, {
+    if (/2\.5/.test(cfg.models.gemini)) generationConfig.thinkingConfig = { thinkingBudget: 0 }; // resposta rápida
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.models.gemini)}:generateContent`, {
       method: 'POST', signal: ctrl.signal,
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.key },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.keys.gemini },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
         contents: [{ role: 'user', parts: [{ text: user }] }],
@@ -682,7 +710,7 @@ async function callGemini(system, user, timeoutMs = CALL_TIMEOUT) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     const txt = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-    return JSON.parse(txt.replace(/^```(json)?|```$/g, '').trim());
+    return parseJSONText(txt);
   } finally { clearTimeout(timer); }
 }
 
@@ -819,9 +847,9 @@ function removeObject(o) {
 async function maybeSummarizeMemory() {
   if (state.aprendizados.length <= 20) return;
   let novo = null;
-  if (cfg.mode === 'gemini' && cfg.key) {
+  if (hasBrain()) {
     try {
-      const r = await callGemini('Você resume a memória de uma capivara exploradora. Responda JSON: {"aprendizados":["..."]}',
+      const r = await callAI('Você resume a memória de uma capivara exploradora. Responda JSON: {"aprendizados":["..."]}',
         `Resuma estes aprendizados em no máximo 10 itens curtos, juntando repetidos e mantendo os mais úteis (o que é bom, o que é perigoso, onde ficam as coisas):\n- ${state.aprendizados.join('\n- ')}`);
       if (Array.isArray(r.aprendizados)) novo = r.aprendizados.slice(0, 10).map(String);
     } catch {}
@@ -838,7 +866,7 @@ async function maybeSummarizeMemory() {
 //
 //   ┌─> monta PERCEPÇÃO (só descrições visuais, distância, direção, clima, status)
 //   │   monta PROMPT (personalidade + percepção + memória + último resultado + últimas 5 ações)
-//   │   chama o cérebro (Gemini com timeout 10 s; falhou → offline nesse ciclo)
+//   │   chama o cérebro (DeepSeek ou Gemini, timeout 10 s; falhou → offline nesse ciclo)
 //   │   VALIDA a resposta (ação/alvo inválidos → vagar)
 //   │   mostra pensamento, fala e emoji
 //   │   EXECUTA a ação → efeitos ocultos → texto do resultado
@@ -868,10 +896,11 @@ async function aiLoop() {
     // 2) CÉREBRO
     lastCall = performance.now();
     let raw, fonte = 'offline';
-    if (cfg.mode === 'gemini' && cfg.key) {
-      try { raw = await callGemini(PERSONALIDADE + '\n' + FORMATO, prompt); fonte = 'gemini'; brainStatus = '🟢 Gemini respondeu'; }
-      catch (e) { raw = offlineBrain(perc); brainStatus = `🟠 Gemini falhou (${e.name === 'AbortError' ? 'timeout' : e.message}) — usei o cérebro offline`; }
-    } else { raw = offlineBrain(perc); brainStatus = '⚪ Cérebro offline'; }
+    if (hasBrain()) {
+      const nome = PROVIDERS[cfg.mode];
+      try { raw = await callAI(PERSONALIDADE + '\n' + FORMATO, prompt); fonte = 'ia'; brainStatus = `🟢 ${nome} respondeu`; }
+      catch (e) { raw = offlineBrain(perc); brainStatus = `🟠 ${nome} falhou (${e.name === 'AbortError' ? 'timeout' : e.message}) — usei o cérebro offline`; }
+    } else { raw = offlineBrain(perc); brainStatus = cfg.mode === 'offline' ? '⚪ Cérebro offline' : `⚪ Sem chave do ${PROVIDERS[cfg.mode]} — cérebro offline`; }
 
     // 3) VALIDAÇÃO
     const dec = normalizeDecision(raw, perc);
@@ -919,7 +948,7 @@ function renderLog(animateLatest) {
     const div = document.createElement('div');
     div.className = 'entry' + (i === 0 ? ' latest' : '');
     const meta = document.createElement('div'); meta.className = 'meta';
-    meta.textContent = `${e.t} · ${e.acao}${e.alvo ? ' → ' + e.alvo : ''} · ${e.fonte === 'gemini' ? '✨ IA' : '🎲 offline'}`;
+    meta.textContent = `${e.t} · ${e.acao}${e.alvo ? ' → ' + e.alvo : ''} · ${e.fonte === 'ia' ? '✨ IA' : '🎲 offline'}`;
     const txt = document.createElement('div'); txt.textContent = `${e.emoji} ${i === 0 && animateLatest ? '' : e.pensamento}`;
     div.append(meta, txt);
     if (e.aprendizado) { const l = document.createElement('div'); l.className = 'learn'; l.textContent = '💡 ' + e.aprendizado; div.append(l); }
@@ -976,7 +1005,15 @@ $('btn-pause').onclick = () => { paused = !paused; $('btn-pause').textContent = 
 $('btn-speed').onclick = () => { timeScale = timeScale === 1 ? 2 : 1; $('btn-speed').textContent = timeScale + 'x'; };
 $('btn-hide').onclick = () => { $('app').classList.add('clean'); setTimeout(resize, 450); };
 $('btn-show').onclick = () => { $('app').classList.remove('clean'); setTimeout(resize, 450); };
-const resetWorld = () => { if (confirm('Resetar o mundo e apagar a memória da capivara?')) { localStorage.removeItem(SAVE_KEY); location.reload(); } };
+// Reset com confirmação na própria tela (toque duas vezes em 3 s)
+let resetArmed = 0;
+const resetWorld = e => {
+  const btn = e.currentTarget;
+  if (performance.now() - resetArmed < 3000) { try { localStorage.removeItem(SAVE_KEY); } catch {} location.reload(); return; }
+  resetArmed = performance.now(); const old = btn.textContent;
+  btn.textContent = btn.id === 'btn-reset' ? '❓' : 'Toque de novo para apagar tudo';
+  setTimeout(() => { btn.textContent = old; }, 3000);
+};
 $('cfg-reset').onclick = resetWorld;
 $('btn-reset').onclick = resetWorld;
 $('btn-surprise').onclick = () => {
@@ -990,12 +1027,22 @@ $('btn-surprise').onclick = () => {
   showEmoji('😮');
 };
 // Configurações
-$('btn-settings').onclick = () => { $('cfg-mode').value = cfg.mode; $('cfg-key').value = cfg.key; $('cfg-model').value = cfg.model; $('settings').classList.remove('hidden'); };
+// Ao trocar o seletor, mostra a chave/modelo do provedor escolhido
+let cfgShown = cfg.mode;
+function fillCfgFields() {
+  const m = $('cfg-mode').value, ia = m !== 'offline';
+  $('cfg-ia').style.display = ia ? 'block' : 'none';
+  if (ia) { $('cfg-key').value = cfg.keys[m] || ''; $('cfg-model').value = cfg.models[m]; $('cfg-key-lbl').textContent = `Chave da API do ${PROVIDERS[m]}`; }
+  cfgShown = m;
+}
+function readCfgFields() { if (cfgShown !== 'offline') { cfg.keys[cfgShown] = $('cfg-key').value.trim(); cfg.models[cfgShown] = $('cfg-model').value.trim() || cfg.models[cfgShown]; } }
+$('cfg-mode').onchange = () => { readCfgFields(); fillCfgFields(); };
+$('btn-settings').onclick = () => { $('cfg-mode').value = cfg.mode; fillCfgFields(); $('settings').classList.remove('hidden'); };
 $('cfg-close').onclick = () => {
-  cfg.key = $('cfg-key').value.trim(); cfg.model = $('cfg-model').value.trim() || 'gemini-2.5-flash';
-  cfg.mode = $('cfg-mode').value === 'gemini' && cfg.key ? 'gemini' : 'offline';
-  if ($('cfg-mode').value === 'gemini' && !cfg.key) alert('Sem chave da API: usando o cérebro offline.');
-  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+  readCfgFields(); cfg.mode = $('cfg-mode').value;
+  if (cfg.mode !== 'offline' && !cfg.keys[cfg.mode]) { $('cfg-warn').textContent = 'Cole uma chave da API ou escolha Offline.'; return; }
+  $('cfg-warn').textContent = '';
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch {}
   $('settings').classList.add('hidden');
 };
 

@@ -57,17 +57,21 @@
     <h2>⚙️ Configurações</h2>
     <label>Cérebro
       <select id="cfg-mode">
+        <option value="deepseek">DeepSeek (IA)</option>
         <option value="gemini">Gemini (IA)</option>
         <option value="offline">Offline (sem API)</option>
       </select>
     </label>
-    <label>Chave da API do Gemini
-      <input id="cfg-key" type="password" placeholder="AIza..." autocomplete="off">
-    </label>
-    <label>Modelo
-      <input id="cfg-model" type="text" placeholder="gemini-2.5-flash">
-    </label>
-    <p class="hint">A chave fica salva só neste aparelho (localStorage).</p>
+    <div id="cfg-ia">
+      <label><span id="cfg-key-lbl">Chave da API</span>
+        <input id="cfg-key" type="password" placeholder="cole sua chave aqui" autocomplete="off">
+      </label>
+      <label>Modelo
+        <input id="cfg-model" type="text">
+      </label>
+    </div>
+    <p class="hint" id="cfg-hint">A chave fica salva só neste aparelho (localStorage).</p>
+    <p class="hint warn" id="cfg-warn"></p>
     <div class="row">
       <button id="cfg-reset" class="danger">🔄 Resetar mundo</button>
       <button id="cfg-close">Salvar</button>
