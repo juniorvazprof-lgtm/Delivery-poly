@@ -76,6 +76,13 @@ function updateWorld(dt) {
   if (abrigada && sleeping) dF -= 0.8;
   s.frio = clamp(s.frio + dF * dt);
   // bem alimentada, hidratada e aquecida, o humor volta devagar para o equilíbrio
+  // saúde: extremos machucam; dormir e estar bem cuidam
+  if (s.fome > 90) s.saude = clamp(s.saude - dt * 0.15);
+  if (s.sede > 90) s.saude = clamp(s.saude - dt * 0.2);
+  if (s.frio > 80) s.saude = clamp(s.saude - dt * 0.1);
+  if (sleeping) s.saude = clamp(s.saude + dt * 0.25);
+  else if (s.fome < 70 && s.sede < 70 && s.frio < 60) s.saude = clamp(s.saude + dt * 0.02);
+  if (s.saude <= 0 && !G.desmaiada) { G.desmaiada = true; pendingNotes.push('Tudo ficou escuro: você desmaiou de fraqueza.'); }
   s.bexiga = clamp(s.bexiga + dt * 0.05);
   if (s.bexiga > 90) s.humor = clamp(s.humor - dt * 0.2);              // segurar demais incomoda
   if (!sleeping) s.tedio = clamp(s.tedio + dt * 0.06);

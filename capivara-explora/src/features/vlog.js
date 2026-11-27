@@ -22,7 +22,9 @@ const rec = { on: false, stopping: false, recorder: null, chunks: [], narr: '', 
 const VLOG_MIME = ['video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
   .find(m => window.MediaRecorder?.isTypeSupported?.(m));
 function startClip(narr) {
-  if (rec.on || !state.temCamera || !VLOG_MIME || !vlogComp.captureStream) return false;
+  if (!state.temCamera || !VLOG_MIME || !vlogComp.captureStream) return false;
+  if (rec.on && !rec.stopping) return false;          // já gravando esta ação
+  if (rec.on && rec.stopping) finishClip();           // o clipe anterior ainda fechava: fecha agora e começa o novo
   try {
     vlogRenderer ||= new THREE.WebGLRenderer({ canvas: vlogGL, antialias: false, preserveDrawingBuffer: true });
     vlogRenderer.setPixelRatio(1); vlogRenderer.setSize(VW, VH, false);
@@ -32,10 +34,13 @@ function startClip(narr) {
   rec.chunks = []; rec.narr = narr || ''; rec.fim = ''; rec.thumb = null;
   const h = Math.floor(state.clock * 24), m = Math.floor((state.clock * 24 % 1) * 60);
   rec.meta = { dia: state.day, t: `Dia ${state.day} · ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` };
-  rec.recorder.ondataavailable = e => e.data.size && rec.chunks.push(e.data);
+  // cada clipe guarda os próprios dados (o próximo pode começar antes deste terminar de salvar)
+  const clip = { chunks: rec.chunks, meta: rec.meta, rec: rec.recorder };
+  rec.clip = clip;
+  rec.recorder.ondataavailable = e => e.data.size && clip.chunks.push(e.data);
   rec.recorder.onstop = () => {
-    const blob = new Blob(rec.chunks, { type: VLOG_MIME.split(';')[0] });
-    saveClip({ id: Date.now(), ...rec.meta, narr: rec.narr, fim: rec.fim, thumb: rec.thumb, blob });
+    const blob = new Blob(clip.chunks, { type: VLOG_MIME.split(';')[0] });
+    saveClip({ id: Date.now(), ...clip.meta, narr: clip.narr, fim: clip.fim, thumb: clip.thumb, blob });
   };
   rec.recorder.start(500);
   rec.on = true; rec.stopping = false; rec.t0 = performance.now(); rec.until = rec.t0 + 20000; rec.last = 0;
@@ -48,7 +53,14 @@ function endClip(resultado) {
   if (!rec.on || rec.stopping) return;
   rec.stopping = true;
   rec.fim = (resultado || '').split(/(?<=[.!?])\s/)[0].slice(0, 110);
-  setTimeout(() => { if (rec.on) { rec.recorder.stop(); rec.on = false; $('hud-rec').hidden = true; } }, 2200);
+  const clip = rec.clip;
+  setTimeout(() => { if (rec.clip === clip) finishClip(); }, 2200);
+}
+function finishClip() {
+  const clip = rec.clip; if (!clip) return;
+  Object.assign(clip, { narr: rec.narr, fim: rec.fim, thumb: rec.thumb });
+  if (clip.rec.state !== 'inactive') clip.rec.stop();
+  rec.on = false; rec.stopping = false; rec.clip = null; $('hud-rec').hidden = true;
 }
 const tmpQ = new THREE.Quaternion(), tmpP = new THREE.Vector3(), tmpE = new THREE.Euler();
 function wrapText(text, maxW) {

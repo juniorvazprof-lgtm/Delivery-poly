@@ -68,6 +68,15 @@ async function aiLoop() {
     // 0) DIÁRIO: ao anoitecer, escreve um resumo do dia (antes da próxima decisão)
     if (G.pendingDiary) { G.pendingDiary = false; await writeDiary(); }
 
+    // desmaio (saúde zerada): dorme no lugar e acorda fraca
+    if (G.desmaiada) {
+      H.showThought({ pensamento: 'Tudo ficou escuro. Não consigo mais ficar em pé.', emoji: '😴', acao: 'dormir', alvo: null }, 'offline');
+      await executeAction({ acao: 'dormir', alvo: null });
+      state.stats.saude = Math.max(state.stats.saude, 30); G.desmaiada = false; capy.anim = 'idle';
+      memory.lastResult = 'Você desmaiou e acordou fraca, com a saúde baixa. Precisa se cuidar: comer, beber e dormir num lugar protegido.';
+      continue;
+    }
+    state.ciclo++;
     // 1) PERCEPÇÃO
     const perc = buildPerception();
     if (pendingNotes.length) { memory.lastResult += ' ' + pendingNotes.join(' '); pendingNotes.length = 0; }
@@ -97,7 +106,10 @@ async function aiLoop() {
     const eraNova = dec.alvo && !state.descobertas.some(d => d.startsWith(dec.acao + ':' + (objects.find(o => o.id === dec.alvo)?.type) + '|'));
     // 4) EXECUÇÃO + efeitos ocultos
     let resultado;
+    // rede de segurança do vlog: muito tempo sem gravar + algo inédito = a câmera grava sozinha
+    if (!dec.gravar && state.temCamera && eraNova && state.ciclo - state.ultimoClipe > 6) dec.gravar = true;
     const gravando = dec.gravar && startClip(dec.narracao || dec.pensamento);
+    if (gravando) state.ultimoClipe = state.ciclo;
     try { resultado = await executeAction(dec); } catch (e) { console.error(e); resultado = 'Você se distraiu.'; }
     if (gravando) { endClip(resultado); H.discover('gravar:vlog', 'gravar o próprio vlog'); }
     capy.anim = 'idle'; capy.swim = false;

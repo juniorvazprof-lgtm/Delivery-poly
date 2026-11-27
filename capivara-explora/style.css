@@ -175,3 +175,10 @@ h3:first-child { margin-top: 2px; }
 #cfg-test-res.ok { color: var(--good); } #cfg-test-res.err { color: #f09a8f; }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* manual da câmera no log (papel dobrado) */
+.entry.manual { white-space: pre-wrap; background: #ece5d3; color: #2a2a22; border-radius: 6px; padding: 10px 12px; margin: 8px 0; font-size: 14px; font-weight: 500; transform: rotate(-.4deg); border-bottom: 0; }
+.entry.manual.latest { font-size: 14.5px; }
+.entry.manual .meta { color: #7b6f55; }
+/* dano: flash vermelho */
+#flash.hurt { background: radial-gradient(ellipse at center, rgba(226, 87, 75, 0) 35%, rgba(200, 30, 20, .85) 100%); }

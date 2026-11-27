@@ -42,6 +42,7 @@ function renderLog(animateLatest) {
     const meta = document.createElement('div'); meta.className = 'meta';
     if (e.diario) div.classList.add('diary');
     if (e.pc) div.classList.add('pc');
+    if (e.manual) div.classList.add('manual');
     meta.textContent = e.diario ? e.t : `${e.t} · ${e.acao.replace('_', ' ')}${e.alvo ? ' · ' + nomeDe(e.alvo.replace(/_\d+$/, '')) : ''}`;
     const txt = document.createElement('div'); txt.textContent = i === 0 && animateLatest ? '' : e.pensamento;
     div.append(meta, txt);
@@ -89,7 +90,7 @@ function discover(key, label) {
 }
 
 // Barras de status
-const BARS = [['fome', 'Fome', true, 'berry'], ['sede', 'Sede', true, 'drop'], ['energia', 'Energia', false, 'bolt'], ['humor', 'Humor', false, 'smile'], ['frio', 'Frio', true, 'snow'], ['bexiga', 'Necessidade', true, 'bush'], ['tedio', 'Tédio', true, 'spiral']];
+const BARS = [['saude', 'Saúde', false, 'heart'], ['fome', 'Fome', true, 'berry'], ['sede', 'Sede', true, 'drop'], ['energia', 'Energia', false, 'bolt'], ['humor', 'Humor', false, 'smile'], ['frio', 'Frio', true, 'snow'], ['bexiga', 'Necessidade', true, 'bush'], ['tedio', 'Tédio', true, 'spiral']];
 $('bars').innerHTML = BARS.map(([k, l, , ic]) => `<div class="bar"><div class="lbl"><span>${icon(ic)}${l}</span><span id="v-${k}"></span></div><div class="track"><div class="fill" id="f-${k}"></div></div></div>`).join('');
 function renderBars() {
   for (const [k, , inverse] of BARS) {

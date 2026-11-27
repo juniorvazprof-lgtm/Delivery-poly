@@ -23,6 +23,16 @@ No celular, use *Adicionar à tela inicial* para abrir como app (ícone e tela c
 Cada provedor guarda a própria chave no aparelho; o botão **Testar chave** confirma se está funcionando.
 A pesquisa do computador usa a Wikipédia em português (sem chave).
 
+## O que a capivara faz
+- **Explora** o mapa de 120×120 m (36 regiões de 20 m): a IA recebe as regiões que ela nunca visitou e pode viajar até elas.
+- **Câmera:** ao pegar a GoPro ela lê o *manual da câmera* (aparece no log) e passa a fotografar e gravar o vlog;
+  se passar muito tempo sem gravar e fizer algo inédito, a câmera grava sozinha.
+- **Computador:** pesquisa na Wikipédia (tenta a frase inteira e depois as palavras-chave).
+- **Saúde:** cai com mordidas do jacaré, picadas, espinhos, cogumelo vermelho e fome/sede/frio extremos; dormir recupera.
+  Com saúde zerada ela desmaia e acorda fraca.
+- **Jacaré:** chegar a menos de 3–4 m dele (na água ou na margem) = mordida.
+- **Depuração:** abra com `#debug` no endereço para ter `window.__dbg` (capy, jac, state, G) no console.
+
 ## Estrutura do código (`src/`)
 | Pasta | O que tem |
 |---|---|

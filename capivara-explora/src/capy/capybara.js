@@ -2,7 +2,7 @@
 // (módulo 9/20 da Capivara Explora)
 import * as THREE from 'three';
 import { G } from '../core/runtime.js';
-import { state } from '../core/config.js';
+import { lerp, regiaoDe, state } from '../core/config.js';
 import { scene } from '../engine/scene.js';
 import { GROUND, GROUND_BASE, TSEG, TSIZE, WATER_Y, heightAt } from '../world/terrain.js';
 import { M, MODELS, mesh } from '../world/models.js';
@@ -41,34 +41,44 @@ if (MODELS.capivara) {
 }
 const groundY = v => capy.swim ? WATER_Y - 0.45 : heightAt(v.x, v.z);
 
-// Animações procedurais (sem arquivos externos)
+// Animações procedurais. A pose-alvo de cada animação é suavizada (lerp), então ela não "pula"
+// entre poses: deita devagar, levanta devagar.
+const pose = { my: 0, mrx: 0, mrz: 0, mox: 0, hx: 0, hz: 0, legFold: 0, eyeS: 1 };
 function animateCapy(dt) {
   const { body, head, eyes, legs } = capy.parts, t = (capy.animT += dt), a = capy.anim;
-  // pose neutra
-  let my = 0, mrx = 0, mrz = 0, hx = 0, hz = 0, ox = 0, legSwing = 0, legFold = 0, eyeS = 1;
+  const T = { my: 0, mrx: 0, mrz: 0, mox: 0, hx: 0, hz: 0, legFold: 0, eyeS: 1 };   // pose-alvo
+  let ox = 0, legSwing = 0, bob = 0, rate = 7;
   const breath = Math.sin(t * 2) * 0.015;
   switch (a) {
-    case 'andar': legSwing = Math.sin(t * 11) * 0.55; my = Math.abs(Math.sin(t * 11)) * 0.05; break;
-    case 'correr': legSwing = Math.sin(t * 18) * 0.8; my = Math.abs(Math.sin(t * 18)) * 0.1; mrx = 0.08; break;
-    case 'comer': hx = 0.65 + Math.sin(t * 9) * 0.12; mrx = 0.1; break;
-    case 'beber': hx = 0.8 + Math.sin(t * 12) * 0.06; mrx = 0.15; break;
-    case 'nadar': legSwing = Math.sin(t * 14) * 0.7; my = Math.sin(t * 2.5) * 0.05; hx = -0.2; break;
-    case 'dormir': legFold = 1.4; my = -0.32; hx = 0.25; eyeS = 0.12; mrz = Math.sin(t * 1.2) * 0.02; break;
-    case 'pular': my = Math.abs(Math.sin(t * 7)) * 0.7; legSwing = Math.sin(t * 14) * 0.4; hx = -0.2; break;
-    case 'tremer': ox = Math.sin(t * 70) * 0.05; hx = 0.25; eyeS = 1.4; break;
-    case 'curiosa': hz = Math.sin(Math.min(t, 1) * 1.5) * 0.45; hx = -0.1; break;
-    case 'cheirar': hx = 0.45 + Math.sin(t * 22) * 0.04; break;
-    case 'espirrar': hx = t < 0.7 ? -0.45 * (t / 0.7) : (t < 0.9 ? 0.6 : 0.1); mrx = t > 0.7 && t < 0.9 ? 0.15 : 0; break;
-    case 'sentar': mrx = -0.35; my = -0.12; hx = -0.15; legFold = 0.6; break;
-    case 'digitar': mrx = -0.3; my = -0.12; legFold = 0.6; hx = 0.25 + Math.sin(t * 18) * 0.05; break;
-    case 'agachar': mrx = -0.28; my = -0.18 + Math.sin(t * 2) * 0.02; hx = 0.1; legFold = 0.5; break;
+    case 'andar': legSwing = Math.sin(t * 11) * 0.55; bob = Math.abs(Math.sin(t * 11)) * 0.05; break;
+    case 'correr': legSwing = Math.sin(t * 18) * 0.8; bob = Math.abs(Math.sin(t * 18)) * 0.1; T.mrx = 0.08; break;
+    case 'comer': T.hx = 0.65 + Math.sin(t * 9) * 0.12; T.mrx = 0.1; break;
+    case 'beber': T.hx = 0.8 + Math.sin(t * 12) * 0.06; T.mrx = 0.15; break;
+    case 'nadar': legSwing = Math.sin(t * 14) * 0.7; bob = Math.sin(t * 2.5) * 0.05; T.hx = -0.2; break;
+    case 'dormir':
+      // 1) dobra as patas e deita de barriga  2) apoia a cabeça e fecha os olhos  3) rola de lado
+      rate = 2.2;
+      T.legFold = 1.45; T.my = -0.3; T.hx = t > 1 ? 0.38 : 0.15; T.eyeS = t > 1.6 ? 0.1 : 1;
+      if (t > 3.2) { T.mrz = 1.22; T.mox = -0.55; T.my = 0.12; T.hz = -0.55; T.hx = 0.1; T.legFold = 0.9; }
+      bob = Math.sin(t * 1.1) * 0.012;   // respiração lenta
+      break;
+    case 'pular': bob = Math.abs(Math.sin(t * 7)) * 0.7; legSwing = Math.sin(t * 14) * 0.4; T.hx = -0.2; break;
+    case 'tremer': ox = Math.sin(t * 70) * 0.05; T.hx = 0.25; T.eyeS = 1.4; rate = 14; break;
+    case 'curiosa': T.hz = Math.sin(Math.min(t, 1) * 1.5) * 0.45; T.hx = -0.1; break;
+    case 'cheirar': T.hx = 0.45 + Math.sin(t * 22) * 0.04; rate = 12; break;
+    case 'espirrar': T.hx = t < 0.7 ? -0.45 * (t / 0.7) : (t < 0.9 ? 0.6 : 0.1); T.mrx = t > 0.7 && t < 0.9 ? 0.15 : 0; rate = 18; break;
+    case 'sentar': T.mrx = -0.35; T.my = -0.12; T.hx = -0.15; T.legFold = 0.6; break;
+    case 'digitar': T.mrx = -0.3; T.my = -0.12; T.legFold = 0.6; T.hx = 0.25 + Math.sin(t * 18) * 0.05; rate = 12; break;
+    case 'agachar': T.mrx = -0.28; T.my = -0.18 + Math.sin(t * 2) * 0.02; T.hx = 0.1; T.legFold = 0.5; break;
   }
-  if (G.gameTime < G.sickUntil) { mrz += Math.sin(t * 3) * 0.12; hz += Math.sin(t * 2.3) * 0.2; }
-  capy.model.position.set(ox, my + breath, 0);
-  capy.model.rotation.set(mrx, 0, mrz);
-  head.rotation.set(hx, 0, hz);
-  legs.forEach((l, i) => { l.rotation.x = (i % 3 === 0 ? 1 : -1) * legSwing + legFold * (i < 2 ? -1 : 1); });
-  eyes.forEach(e => { e.userData.sy ??= e.scale.y; e.scale.y = e.userData.sy * eyeS; });
+  if (G.gameTime < G.sickUntil) { T.mrz += Math.sin(t * 3) * 0.12; T.hz += Math.sin(t * 2.3) * 0.2; }
+  const k = Math.min(1, dt * rate);
+  for (const key in pose) pose[key] = lerp(pose[key], T[key], k);
+  capy.model.position.set(ox + pose.mox, pose.my + bob + breath, 0);
+  capy.model.rotation.set(pose.mrx, 0, pose.mrz);
+  head.rotation.set(pose.hx, 0, pose.hz);
+  legs.forEach((l, i) => { l.rotation.x = (i % 3 === 0 ? 1 : -1) * legSwing + pose.legFold * (i < 2 ? -1 : 1); });
+  eyes.forEach(e => { e.userData.sy ??= e.scale.y; e.scale.y = e.userData.sy * pose.eyeS; });
   body.userData.sy ??= body.scale.y; body.scale.y = body.userData.sy * (1 + breath);
 }
 
@@ -111,7 +121,8 @@ function moveCapy(dt) {
   const wantYaw = Math.atan2(d.x, d.z);
   let dy = wantYaw - capy.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
   capy.yaw += dy * Math.min(1, dt * 8);
-  const sp = capy.speed * (G.gameTime < G.sickUntil ? 0.6 : 1);
+  const sp = capy.speed * (G.gameTime < G.sickUntil ? 0.6 : 1) * (state.stats.saude < 30 ? 0.7 : 1);   // enjoada ou machucada anda devagar
+  state.regioes[regiaoDe(capy.pos.x, capy.pos.z)] = 1;
   const step = Math.min(dist, sp * dt);
   capy.pos.addScaledVector(d, step);
   if (!capy.swim && (stepDist += step) > 0.45) { stepDist = 0; dropPrint(); }

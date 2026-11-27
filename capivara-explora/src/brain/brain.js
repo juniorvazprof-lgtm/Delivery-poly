@@ -12,12 +12,13 @@ import { raining } from '../world/simulation.js';
 const PERSONALIDADE = `Você é uma capivara jovem que acabou de despertar num mundo que não conhece. Você não sabe o nome de nada: não sabe o que é "árvore", "cogumelo" ou "lago". Quando encontra algo novo, descreve o que vê, cheira e sente, ou inventa um nome simples para ele (por exemplo "bolinhas-roxas", "pedra-de-sentar", "água-que-corre") e passa a usar sempre esse mesmo nome. Você aprende experimentando: forma hipóteses ("talvez isto seja comida"), testa e tira conclusões do resultado ("as bolinhas-roxas matam a fome; vou lembrar disso"). Na maior parte do tempo seus pensamentos são observações curtas e práticas; só às vezes, sem exagero, faz uma reflexão serena sobre o que descobriu. Ama água e não tem pressa. Gosta de céu, luz, plantas, bichos pequenos e de entender por que as coisas são como são; quando encontra algo que a intriga, quer saber mais. Fale em português brasileiro, simples, sem piadas, sem gírias e sem emojis no texto. Você NÃO sabe o que é seguro ou perigoso: só sabe o que está na sua memória. Não repita frases.`;
 const FORMATO = `
 A cada turno você recebe sua percepção e decide UMA ação. Responda SOMENTE com JSON neste formato:
-{"pensamento":"1-2 frases em 1ª pessoa: o que observa, a hipótese que vai testar ou o que concluiu, usando os nomes que você inventou; sem emojis","emoji":"exatamente um destes: 🙂 😌 😋 🤔 😮 😟 😴 🤢 😱 💧 🥶 🥱 😣 📸 💻","acao":"ir_para | comer | beber | nadar | dormir | cheirar | sentar | investigar | fugir | vagar | necessidades | pegar | fotografar | pesquisar","alvo":"id de um objeto visível ou null","aprendizado":"conclusão curta sobre a última experiência, usando seus nomes inventados (ex: \"as bolinhas-roxas são doces e matam a fome\"), ou null"}
+{"pensamento":"1-2 frases em 1ª pessoa: o que observa, a hipótese que vai testar ou o que concluiu, usando os nomes que você inventou; sem emojis","emoji":"exatamente um destes: 🙂 😌 😋 🤔 😮 😟 😴 🤢 😱 💧 🥶 🥱 😣 📸 💻 🤕","acao":"ir_para | comer | beber | nadar | dormir | cheirar | sentar | investigar | fugir | vagar | necessidades | pegar | fotografar | pesquisar","alvo":"id de um objeto visível ou null","aprendizado":"conclusão curta sobre a última experiência, usando seus nomes inventados (ex: \"as bolinhas-roxas são doces e matam a fome\"), ou null"}
 Regras: "acao" deve ser exatamente uma das opções. "alvo" deve ser um id exatamente como aparece na percepção (ou null para vagar/fugir/dormir no lugar). Só registre "aprendizado" quando a última ação realmente te ensinou algo novo.
-Campos extras (inclua sempre, use null quando não se aplicam): "pesquisa": o que você quer saber, escrito do seu jeito (só com acao "pesquisar", perto da caixinha brilhante); "legenda": uma frase curta para a imagem (só com acao "fotografar", alvo = o que você quer guardar, ou null para a paisagem). Fotografe só o que realmente chama sua atenção ou você gosta.
-Se você tem a câmera na cabeça, também pode gravar vídeo para o seu vlog: "gravar": true grava a ação que você vai fazer agora, do seu ponto de vista, e "narracao" é a frase curta que você diz para a câmera enquanto grava. Grave só momentos que valem a pena mostrar (algo novo, bonito, arriscado ou engraçado); no resto, "gravar": false e "narracao": null.`;
+Campos extras (inclua sempre, use null quando não se aplicam): "pesquisa": 1 a 3 palavras-chave do que você quer saber (só com acao "pesquisar"); "destino": id de uma região nova (só com acao "explorar"); "legenda": uma frase curta para a imagem (só com acao "fotografar", alvo = o que você quer guardar, ou null para a paisagem). Fotografe só o que realmente chama sua atenção ou você gosta.
+Se você tem a câmera na cabeça, também pode gravar vídeo para o seu vlog: "gravar": true grava a ação que você vai fazer agora, do seu ponto de vista, e "narracao" é a frase curta que você diz para a câmera enquanto grava. Grave com frequência os momentos que valem a pena mostrar (algo novo, bonito, arriscado ou engraçado); no resto, "gravar": false e "narracao": null.
+Explorar: você vive num mundo grande. Quando estiver entediada, sem nada novo por perto ou curiosa, use "explorar" para viajar até uma região onde nunca esteve.`;
 
-const EMOJIS = ['🙂', '😌', '😋', '🤔', '😮', '😟', '😴', '🤢', '😱', '💧', '🥶', '🥱', '😣', '📸', '💻', '🎥'];
+const EMOJIS = ['🙂', '😌', '😋', '🤔', '😮', '😟', '😴', '🤢', '😱', '💧', '🥶', '🥱', '😣', '📸', '💻', '🎥', '🤕'];
 const memory = { keys: [], lastResult: 'Você acabou de acordar. Tudo é novo.', history: [] };
 
 // Validação: ação fora da lista, alvo inexistente ou JSON quebrado → "vagar"
@@ -43,6 +44,7 @@ function normalizeDecision(raw, perc) {
     legenda: typeof r.legenda === 'string' && r.legenda !== 'null' ? r.legenda.slice(0, 120) : null,
     gravar: !!r.gravar && state.temCamera,
     narracao: typeof r.narracao === 'string' && r.narracao !== 'null' ? r.narracao.slice(0, 140) : null,
+    destino: typeof r.destino === 'string' && /^\d+,\d+$/.test(r.destino) ? r.destino : null,
   };
 }
 
@@ -131,6 +133,8 @@ const FRASES = {
   vagar: [['Já vi demais por aqui. Quero saber o que existe do outro lado.', 'Fazer sempre as mesmas coisas cansa. Vou procurar algo novo.', '🥱'],
           ['Vou andar um pouco para ver o que existe além daqui.', 'Caminhar também é uma forma de aprender o lugar.', '🙂'],
           ['Ainda há cantos que eu não conheço.', 'O dia mudou de cor desde que acordei. Será que ele também está indo a algum lugar?', '🙂']],
+  explorar: [['Já conheço bem este canto. Lá longe deve haver coisas que eu nunca vi.', 'Vou atravessar o mapa até onde ainda não estive.', '🙂'],
+             ['O mundo é maior do que este pedaço. Vou descobrir o que existe do outro lado.', 'Hora de uma viagem longa.', '🤔']],
   pegar: [['Uma coisinha preta com um olho de vidro. Vou levar comigo e descobrir para que serve.', 'Vou pegar isto.', '🤔']],
   pesquisar: [['A caixinha brilhante responde quando eu pergunto. Tenho uma dúvida.', 'Vou perguntar à caixinha sobre algo que vi hoje.', '💻'],
               ['Fico pensando no que encontrei. A caixinha talvez saiba.', 'Quero entender melhor uma coisa. Vou até a caixinha.', '💻']],
@@ -144,9 +148,10 @@ const NARR = {
   lindo: ['O céu está mudando de cor. Queria que alguém visse isso comigo.', 'Fim de tarde. A luz fica dourada em tudo.'],
   nadar: ['Hora do mergulho. Segura firme, câmera.', 'Vou entrar na água. É aqui que eu fico leve.'],
   jac: ['Estou filmando de longe. Aquele é o {n}. Não chego perto.'],
+  explorar: ['Partiu viagem. Vou até onde eu nunca fui.', 'Lugar novo à vista. Vem comigo.'],
   pc: ['Vou perguntar uma coisa para a caixinha brilhante. Vem comigo.', 'Tenho uma dúvida. A caixinha deve saber.'],
 };
-const VERBO = { comer: 'comer', beber: 'beber', cheirar: 'cheirar', sentar: 'sentar', investigar: 'olhar de perto', nadar: 'nadar', pegar: 'pegar', ir_para: 'chegar perto' };
+const VERBO = { explorar: 'explorar', comer: 'comer', beber: 'beber', cheirar: 'cheirar', sentar: 'sentar', investigar: 'olhar de perto', nadar: 'nadar', pegar: 'pegar', ir_para: 'chegar perto' };
 function offlineBrain(perc) {
   const s = state.stats, vis = perc.visiveis.map(v => v.o);
   // candidatos: o que vê + o que lembra (mapa mental); prefere o que já deu certo e evita o que deu errado
@@ -172,6 +177,7 @@ function offlineBrain(perc) {
   else if (viuGoPro && Math.random() < 0.5) { acao = vis.includes(G.gopro) && Math.random() < 0.7 ? 'pegar' : 'investigar'; alvo = G.gopro.id; }
   else if (pcVisto && !sabePc && Math.random() < 0.4) { acao = 'investigar'; alvo = pc.id; }
   else if (pcVisto && sabePc && (s.tedio > 45 || Math.random() < (intrigada ? 0.6 : 0.2))) { acao = 'pesquisar'; alvo = pc.id; }
+  else if ((s.tedio > 50 && Math.random() < 0.6) || Math.random() < 0.1) acao = 'explorar';   // viagem longa para uma região nova
   else if (state.temCamera && (lindo || gosto || (vis.includes(jac) && jac.mode === 'sol')) && Math.random() < 0.3) {
     acao = 'fotografar'; alvo = lindo ? null : vis.includes(jac) && jac.mode === 'sol' ? jac.id : gosto.id;
   }
@@ -219,7 +225,7 @@ function offlineBrain(perc) {
   // vlog: ela grava momentos novos, bonitos, na água, de longe do jacaré ou no computador
   let gravar = false, narracao = null;
   if (state.temCamera && !['dormir', 'necessidades', 'fotografar'].includes(acao)) {
-    const motivo = lindo ? 'lindo' : acao === 'nadar' ? 'nadar' : alvo === jac.id ? 'jac' : acao === 'pesquisar' ? 'pc' : alvoTipo && !conhece ? 'novo' : null;
+    const motivo = lindo ? 'lindo' : acao === 'nadar' ? 'nadar' : alvo === jac.id ? 'jac' : acao === 'pesquisar' ? 'pc' : acao === 'explorar' ? 'explorar' : alvoTipo && !conhece ? 'novo' : null;
     if (motivo && Math.random() < 0.55) {
       gravar = true;
       const nome = alvoTipo ? nomeDe(alvoTipo) : 'isto';

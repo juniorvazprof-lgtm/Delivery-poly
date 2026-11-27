@@ -2,9 +2,9 @@
 // (módulo 13/20 da Capivara Explora)
 import * as THREE from 'three';
 import { G, H } from '../core/runtime.js';
-import { HALF, LIM, clamp, hasBrain, isNight, lerp, pick, rand, save, state } from '../core/config.js';
+import { HALF, LIM, NREG, centroRegiao, clamp, hasBrain, isNight, lerp, pendingNotes, pick, rand, regiaoDe, save, state } from '../core/config.js';
 import { scene } from '../engine/scene.js';
-import { LAKE, WATER_Y, heightAt, streamZ } from '../world/terrain.js';
+import { LAKE, WATER_Y, biomeAt, heightAt, streamZ } from '../world/terrain.js';
 import { DISCOVERY_TEXT, TYPES } from '../world/types.js';
 import { MK, PORCOES, REGROW, abrigo, addObject, bird, cave, jac, objects, setFood } from '../world/objects.js';
 import { findPath, isFree } from '../world/pathfinding.js';
@@ -50,6 +50,7 @@ async function executeAction(dec) {
   const t = o ? TYPES[o.type] : null;
   switch (dec.acao) {
     case 'necessidades': return doNecessidades();
+    case 'explorar': return doExplorar(dec);
     case 'pesquisar': return H.doPesquisa(dec);
     case 'fotografar': return H.doFoto(dec, o);
     case 'vagar': {
@@ -130,6 +131,31 @@ async function executeAction(dec) {
   return r.msg;
 }
 
+// ---- Explorar: viagem até uma região onde ela nunca esteve ----
+const BIOMA_TXT = { campo: 'um campo aberto de grama e flores', mata: 'uma mata fechada, úmida e sombreada', brejo: 'um brejo de plantas altas e chão molhado', pedregal: 'um pedregal alto, seco e cheio de pedras' };
+async function doExplorar(dec) {
+  let alvoReg = dec.destino && !state.regioes[dec.destino] ? dec.destino : null;
+  if (!alvoReg) {   // escolhe uma região nova a uns 30 m (nem colada, nem do outro lado do mundo)
+    const cands = [];
+    for (let i = 0; i < NREG; i++) for (let j = 0; j < NREG; j++) {
+      const k = i + ',' + j; if (state.regioes[k]) continue;
+      const c = centroRegiao(k); cands.push({ k, d: Math.hypot(c.x - capy.pos.x, c.z - capy.pos.z) });
+    }
+    if (!cands.length) return 'Você já esteve em todas as regiões. Caminhou um pouco e reconheceu cada canto.';
+    cands.sort((x, y) => Math.abs(x.d - 32) - Math.abs(y.d - 32));
+    alvoReg = pick(cands.slice(0, 3)).k;
+  }
+  const c = centroRegiao(alvoReg);
+  let p = new THREE.Vector3(c.x + rand(-5, 5), 0, c.z + rand(-5, 5));
+  for (let i = 0; i < 20 && !isFree(p); i++) p = new THREE.Vector3(c.x + rand(-9, 9), 0, c.z + rand(-9, 9));
+  await walkTo(p, { maxTime: 75 });
+  const chegou = regiaoDe(capy.pos.x, capy.pos.z) === alvoReg;
+  const bio = biomeAt(capy.pos.x, capy.pos.z);
+  H.discover('explorar:' + bio, 'chegar a ' + BIOMA_TXT[bio].split(' de ')[0].split(',')[0]);
+  applyDeltas({ tedio: -25, energia: -6 });
+  return chegou ? `Depois de uma longa caminhada, você chegou a uma região nova: ${BIOMA_TXT[bio]}.` : `Você caminhou muito em direção a uma região nova e parou em ${BIOMA_TXT[bio]}.`;
+}
+
 // ---- Jacaré ----
 function jacareAmeaca() {
   return jac.mode === 'nadar' && G.gameTime > (jac.calmUntil || 0) && Math.hypot(jac.pos.x - capy.pos.x, jac.pos.z - capy.pos.z) < 8 && Math.random() < 0.55;
@@ -138,7 +164,8 @@ function jacareAtaca() {
   jac.mode = 'ataque'; jac.until = G.gameTime + 2.5; jac.calmUntil = G.gameTime + 120;   // depois de atacar, fica um tempo quieto
   jac.target = capy.pos.clone().lerp(jac.pos, 0.35);
   H.showEmoji('😱'); H.sfx('ataque');
-  return { d: { humor: -30, energia: -10 }, msg: 'Quando você chegou perto, um bicho comprido e escuro saltou da água com a boca cheia de dentes! Você fugiu correndo, com o coração disparado.', anim: 'tremer' };
+  hurtFx();
+  return { d: { humor: -30, energia: -10, saude: -30 }, msg: 'Quando você chegou perto, um bicho comprido e escuro saltou da água com a boca cheia de dentes e te mordeu! Doeu muito. Você fugiu correndo, com o coração disparado.', anim: 'tremer' };
 }
 async function reactAttack() {
   capy.swim = false; capy.anim = 'tremer'; capy.animT = 0;
@@ -148,7 +175,25 @@ async function reactAttack() {
   await walkTo(p, { run: true });
 }
 function lakePoint(r) { const a = rand(0, 6.28); return new THREE.Vector3(LAKE.x + Math.cos(a) * r, 0, LAKE.z + Math.sin(a) * r); }
+// efeito de dano na tela (flash vermelho)
+function hurtFx() { const fl = document.getElementById('flash'); fl.classList.remove('go', 'hurt'); void fl.offsetWidth; fl.classList.add('go', 'hurt'); }
+// Mordida por proximidade: chegou perto demais (na água ou na margem), o jacaré dá o bote
+function jacareMorde() {
+  jac.mode = 'ataque'; jac.until = G.gameTime + 1.6; jac.calmUntil = G.gameTime + 90;
+  jac.target = capy.pos.clone().lerp(jac.pos, 0.3);
+  H.showEmoji('😱'); H.sfx('ataque'); hurtFx();
+  applyDeltas({ saude: capy.swim ? -40 : -30, humor: -30, energia: -10 });
+  const c = state.crencas['perto:jacare'] ||= { bom: 0, ruim: 0 }; c.ruim++;
+  pendingNotes.push('De repente o bicho comprido e escuro saltou e te MORDEU! Doeu muito e você saiu correndo. Chegar perto dele é perigoso.');
+  // foge correndo para longe dele, interrompendo o que estava fazendo
+  capy.swim = false;
+  const dir = capy.pos.clone().sub(jac.pos).setY(0).normalize();
+  const p = capy.pos.clone().addScaledVector(dir, 10); p.x = clamp(p.x, -LIM, LIM); p.z = clamp(p.z, -LIM, LIM);
+  capy.speed = 4.5; capy.path = findPath(capy.pos, p); capy.anim = 'correr'; capy.animT = 0;
+}
 function updateJacare(dt) {
+  const dCapy = Math.hypot(jac.pos.x - capy.pos.x, jac.pos.z - capy.pos.z);
+  if (jac.mode !== 'ataque' && G.gameTime > (jac.calmUntil || 0) && capy.anim !== 'dormir' && dCapy < (jac.mode === 'sol' ? 3 : 4)) jacareMorde();
   const capyNearWater = Math.hypot(capy.pos.x - LAKE.x, capy.pos.z - LAKE.z) < LAKE.r + 4;
   if (jac.mode === 'nadar') {
     // espreita: se a capivara fica perto da margem, vai devagar na direção dela
@@ -216,7 +261,7 @@ function removeObject(o) {
 // Confiança: cada experiência conta como boa ou ruim; contradições viram nota para o próximo ciclo
 G.lastContradiction = null;
 function updateBelief({ key, d, extra }) {
-  const score = -(d.fome || 0) - (d.sede || 0) + (d.energia || 0) + (d.humor || 0);
+  const score = -(d.fome || 0) - (d.sede || 0) + (d.energia || 0) + (d.humor || 0) + (d.saude || 0) * 1.5;
   const res = score > 3 ? 'bom' : score < -3 ? 'ruim' : null;
   if (!res) return null;
   const keys = [key, extra].filter(Boolean);

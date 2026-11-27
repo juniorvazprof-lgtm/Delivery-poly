@@ -36,16 +36,28 @@ const ENCICLOPEDIA = [
   [['frio', 'temperatura'], 'Hipotermia', 'Animais perdem calor mais rápido quando estão molhados ou no vento. Abrigar-se e ficar seco ajuda a manter a temperatura.'],
 ];
 const norm = t => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+// Uma chamada só: busca + resumo (as 2 primeiras frases do artigo). Funciona direto do navegador (origin=*).
+const WIKI = q => `https://pt.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&generator=search&gsrlimit=1&gsrsearch=${encodeURIComponent(q)}&prop=extracts&exintro=1&explaintext=1&exsentences=2`;
+const STOP = new Set('a o as os um uma de do da dos das e é em no na nos nas por para que qual quais como porque por que se sobre com sem ao à isso isto este esta esse essa meu minha'.split(' '));
+// palavras-chave: as últimas costumam ser o assunto ("... por que tem dentes o jacaré" -> "jacare")
+const palavras = q => q.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, ' ').split(/\s+/).filter(w => w.length > 2 && !STOP.has(norm(w)));
+async function buscaWiki(q, signal) {
+  const j = await fetch(WIKI(q), { signal }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+  const pg = Object.values(j?.query?.pages || {})[0];
+  return pg ? { titulo: pg.title, resumo: (pg.extract || '').replace(/\s+/g, ' ').slice(0, 340), fonte: 'Wikipédia' } : null;
+}
 async function pesquisarWeb(q) {
-  const ctrl = new AbortController(), tm = setTimeout(() => ctrl.abort(), 8000);
+  const ctrl = new AbortController(), tm = setTimeout(() => ctrl.abort(), 9000);
   try {
-    const busca = await fetch(`https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srlimit=1&format=json&origin=*`, { signal: ctrl.signal }).then(r => r.json());
-    const titulo = busca?.query?.search?.[0]?.title;
-    if (!titulo) return { titulo: null, resumo: '', fonte: 'Wikipédia' };
-    const res = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titulo.replace(/ /g, '_'))}`, { signal: ctrl.signal }).then(r => r.json());
-    const frases = (res.extract || '').split(/(?<=[.!?])\s+/).slice(0, 2).join(' ');
-    return { titulo, resumo: frases.slice(0, 340), fonte: 'Wikipédia' };
-  } catch {
+    // 1) a frase como ela escreveu; 2) só as palavras-chave (frases longas costumam não achar nada)
+    let r = await buscaWiki(q, ctrl.signal);
+    const ws = palavras(q);
+    const tentativas = [ws.slice(-2).join(' '), ws.slice(-1)[0], [...ws].sort((a, b) => b.length - a.length)[0]].filter((t, i, a) => t && t !== q.toLowerCase() && a.indexOf(t) === i);
+    for (const t of tentativas) { if (r) break; r = await buscaWiki(t, ctrl.signal); }
+    if (r) return r;
+    return { titulo: null, resumo: '', fonte: 'Wikipédia' };
+  } catch (e) {
+    console.warn('Wikipédia indisponível, usando a enciclopédia embutida:', e?.message);
     const nq = norm(q), hit = ENCICLOPEDIA.find(([ks]) => ks.some(k => nq.includes(norm(k))));
     return hit ? { titulo: hit[1], resumo: hit[2], fonte: 'memória da caixinha (sem internet)' } : { titulo: null, resumo: '', fonte: 'sem internet' };
   } finally { clearTimeout(tm); }

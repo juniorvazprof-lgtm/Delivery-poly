@@ -24,7 +24,7 @@ import { lerp, state } from './core/config.js';
 import { camera, renderer, scene, stageEl } from './engine/scene.js';
 import { heightAt } from './world/terrain.js';
 import { TYPES } from './world/types.js';
-import { objects } from './world/objects.js';
+import { jac, objects } from './world/objects.js';
 import { animateCapy, capy, groundY, moveCapy } from './capy/capybara.js';
 import { updateWorld, waiters } from './world/simulation.js';
 import { attachGoPro } from './features/camera.js';
@@ -86,6 +86,7 @@ function frame(now) {
   placeOverlay(emojiEl, 2.1);
   if (G.gameTime < G.sickUntil) { emojiEl.textContent = '🤢'; emojiEl.style.opacity = 1; }
   else if (capy.anim === 'dormir') { emojiEl.textContent = '💤'; emojiEl.style.opacity = 1; }
+  else if (state.stats.saude < 25 && now > emojiUntil) { emojiEl.textContent = '🤕'; emojiEl.style.opacity = 1; }   // machucada
   else emojiEl.style.opacity = now < emojiUntil ? 1 : 0;
   if ((uiTick += realDt) > 0.25) {
     uiTick = 0; renderBars(); renderHUD(); updateAudio();
@@ -108,3 +109,7 @@ aiLoop();
 Object.defineProperties(H, {
   resize: { get: () => resize },
 });
+
+// Modo de depuração: abra o app com #debug no endereço para inspecionar pelo console
+// (window.__dbg.capy, .jac, .state, .G). Não aparece no uso normal.
+if (location.hash === '#debug') window.__dbg = { capy, jac, state, G, objects };

@@ -44,7 +44,7 @@ const TYPES = {
   arbusto_espinhos: {
     nome: 'arbusto de folhas pontudas', desc: 'um arbusto de folhas pontudas com frutinhas amarelas no meio',
     efeitos: {
-      comer: () => ({ d: { fome: -10, humor: -16 }, msg: 'Você tentou alcançar as frutinhas amarelas e as folhas pontudas furaram o focinho. Comeu pouco e doeu.', anim: 'tremer' }),
+      comer: () => ({ d: { fome: -10, humor: -16, saude: -4 }, msg: 'Você tentou alcançar as frutinhas amarelas e as folhas pontudas furaram o focinho. Comeu pouco e doeu.', anim: 'tremer' }),
       cheirar: () => ({ d: { humor: -3 }, msg: 'Ao cheirar de perto, uma folha pontuda espetou o nariz.', anim: 'tremer' }),
     },
   },
@@ -98,8 +98,8 @@ const TYPES = {
     nome: 'formigueiro', desc: 'um montinho de terra com um furo no topo e muitos pontinhos escuros andando',
     efeitos: {
       cheirar: () => ({ d: {}, msg: 'Cheiro ácido. Os pontinhos andam em fila, sem parar, como se soubessem para onde vão.', anim: 'cheirar' }),
-      investigar: () => ({ d: { humor: -12 }, msg: 'Você enfiou o focinho no montinho e os pontinhos subiram pelo nariz e picaram! Ardeu bastante.', anim: 'tremer' }),
-      comer: () => ({ d: { humor: -15, fome: -1 }, msg: 'Você abocanhou a terra do montinho. Dezenas de picadas na boca. Péssima ideia.', anim: 'tremer' }),
+      investigar: () => ({ d: { humor: -12, saude: -5 }, msg: 'Você enfiou o focinho no montinho e os pontinhos subiram pelo nariz e picaram! Ardeu bastante.', anim: 'tremer' }),
+      comer: () => ({ d: { humor: -15, fome: -1, saude: -7 }, msg: 'Você abocanhou a terra do montinho. Dezenas de picadas na boca. Péssima ideia.', anim: 'tremer' }),
     },
   },
   tronco_musgo: {
@@ -157,7 +157,7 @@ const TYPES = {
   cacto: {
     nome: 'cacto', desc: 'uma planta grossa e verde, cheia de pontinhos, com uma flor rosa no topo',
     efeitos: {
-      comer: () => ({ d: { sede: -10, humor: -14 }, msg: 'Você mordeu a planta grossa: os pontinhos espetaram a boca, mas lá dentro tinha água. Doeu e matou um pouco a sede.', anim: 'tremer' }),
+      comer: () => ({ d: { sede: -10, humor: -14, saude: -5 }, msg: 'Você mordeu a planta grossa: os pontinhos espetaram a boca, mas lá dentro tinha água. Doeu e matou um pouco a sede.', anim: 'tremer' }),
       cheirar: () => ({ d: { humor: -3 }, msg: 'Você chegou perto demais e um espinho picou o nariz.', anim: 'tremer' }),
       investigar: () => ({ d: { humor: +4 }, msg: 'A flor rosa nasce no meio dos espinhos. Bonita e protegida ao mesmo tempo.', anim: 'curiosa' }),
     },
@@ -189,7 +189,7 @@ const TYPES = {
   gopro: {
     nome: 'câmera', desc: 'uma coisinha preta e lisa com um olho de vidro azul na frente e uma alça', temp: true,
     efeitos: {
-      pegar: () => ({ d: { humor: +6 }, msg: 'Você pegou a coisinha de olho azul e ela ficou presa na sua cabeça pela alça. Quando você aperta o botão, ela faz clique e guarda o que você está vendo (ação fotografar).', anim: 'comer', pickup: true }),
+      pegar: () => ({ d: { humor: +6 }, msg: 'Você pegou a coisinha de olho azul e ela ficou presa na sua cabeça pela alça. Junto dela havia um papel dobrado com instruções, que você leu com atenção: o MANUAL DA CÂMERA agora faz parte do que você sabe.', anim: 'comer', pickup: true }),
       investigar: () => ({ d: { humor: +3 }, msg: 'Tem um botão vermelho. Quando você encostou, ouviu um clique e uma luz piscou. Talvez dê para levar com você (ação pegar).', anim: 'curiosa' }),
       cheirar: () => ({ d: {}, msg: 'Cheiro de coisa nova, que não nasceu aqui.', anim: 'cheirar' }),
     },
@@ -201,7 +201,7 @@ const TYPES = {
   cogumelo_vermelho: {
     nome: 'cogumelo vermelho com pintas', desc: 'um cogumelo de chapéu vermelho vivo com pintinhas brancas, muito bonito',
     efeitos: {
-      comer: () => { G.sickUntil = G.gameTime + 20; return { d: { humor: -30, fome: -5 }, msg: 'Você comeu o cogumelo vermelho com pintas. Sentiu um enjoo fortíssimo e o mundo começou a girar!', anim: 'tremer', remove: true }; },
+      comer: () => { G.sickUntil = G.gameTime + 20; return { d: { humor: -30, fome: -5, saude: -12 }, msg: 'Você comeu o cogumelo vermelho com pintas. Sentiu um enjoo fortíssimo e o mundo começou a girar!', anim: 'tremer', remove: true }; },
       cheirar: () => ({ d: {}, msg: 'O cogumelo vermelho tem um cheiro estranho, meio azedo.', anim: 'cheirar' }),
     },
   },
@@ -229,7 +229,7 @@ const TYPES = {
     nome: 'pedra grande', desc: 'uma pedra grande, lisa e cinzenta',
     efeitos: {
       sentar: () => ({ d: { energia: +10, humor: +5 }, msg: 'Você sentou na pedra grande e ficou contemplando o horizonte. Um momento de paz profunda.', anim: 'sentar' }),
-      comer: () => ({ d: { humor: -8 }, msg: 'Você tentou morder a pedra. Doeu o dente!', anim: 'tremer' }),
+      comer: () => ({ d: { humor: -8, saude: -2 }, msg: 'Você tentou morder a pedra. Doeu o dente!', anim: 'tremer' }),
     },
   },
   caverna: {

@@ -18,7 +18,13 @@ const FOTO_KEY = 'capivara_explora_fotos';
 let fotos = safeJSON(lsGet(FOTO_KEY)) || [];
 const goproCam = new THREE.PerspectiveCamera(80, 4 / 3, 0.1, 150);
 const photoCanvas = document.createElement('canvas'); photoCanvas.width = 400; photoCanvas.height = 300;
+const MANUAL_TXT = 'MANUAL DA CÂMERA\n1. Aperte o botão para guardar uma imagem do que está à sua frente.\n2. Segure o botão para filmar o que você faz; fale com quem vai assistir.\n3. Guarde as primeiras vezes, a luz do fim da tarde, a água, os bichos e os lugares novos.\n4. Registre o caminho: uma imagem ou um vídeo a cada poucos passos.';
 function attachGoPro(o) {
+  if (o) {   // leu o manual que veio junto: aparece no log
+    const h = Math.floor(state.clock * 24), m = Math.floor((state.clock * 24 % 1) * 60);
+    state.log.push({ t: `Dia ${state.day} · ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} · papel da câmera`, manual: true, acao: 'ler', pensamento: MANUAL_TXT });
+    H.renderLog(true);
+  }
   state.temCamera = true;
   if (o) { const i = objects.indexOf(o); if (i >= 0) objects.splice(i, 1); scene.remove(o.mesh); delete state.mapa[o.id]; }
   const g = MK.gopro(); g.scale.setScalar(1.3);
@@ -41,7 +47,7 @@ function takePhoto(alvoPos, legenda) {
   for (;;) { try { localStorage.setItem(FOTO_KEY, JSON.stringify(fotos.slice(-24))); break; } catch { if (fotos.length <= 1) break; fotos.shift(); } }
   fotos = fotos.slice(-24);
   const fl = $('flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
-  H.sfx('clique'); H.renderPhotos();
+  H.sfx('clique'); state.ultimaFoto = state.ciclo; H.renderPhotos();
 }
 const LEGENDAS = ['{N}, do jeito que eu vi hoje.', '{N}. Quero lembrar disso.', 'Encontrei {n} e precisei guardar.', '{N} sob esta luz.'];
 async function doFoto(dec, o) {

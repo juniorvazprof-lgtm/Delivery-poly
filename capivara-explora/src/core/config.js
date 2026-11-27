@@ -12,7 +12,7 @@ const MIN_CALL_INTERVAL = 4000; // ms entre chamadas à IA
 const CALL_TIMEOUT = 10000;     // ms
 const SAVE_KEY = 'capivara_explora_v1';
 const CFG_KEY = 'capivara_explora_cfg';
-const ACOES = ['ir_para', 'comer', 'beber', 'nadar', 'dormir', 'cheirar', 'sentar', 'investigar', 'fugir', 'vagar', 'necessidades', 'pegar', 'fotografar', 'pesquisar'];
+const ACOES = ['ir_para', 'comer', 'beber', 'nadar', 'dormir', 'cheirar', 'sentar', 'investigar', 'fugir', 'vagar', 'necessidades', 'pegar', 'fotografar', 'pesquisar', 'explorar'];
 
 // Cérebros: 'deepseek' (padrão), 'gemini' ou 'offline'. Cada provedor tem sua chave e modelo.
 const cfg = Object.assign({ mode: 'deepseek', keys: { deepseek: '', gemini: '' },
@@ -40,7 +40,11 @@ state.stats.bexiga ??= 10;     // vontade de fazer cocô/xixi (0-100)
 state.stats.tedio ??= 20;      // tédio: sobe ao repetir, desce ao explorar coisas novas
 state.trilhas ||= {};
 state.pesquisas ||= [];        // o que leu no computador: {q, titulo, resumo}
-state.temCamera ||= false;     // pegou a GoPro?          // desgaste do chão: "i,j" → passagens
+state.temCamera ||= false;
+state.stats.saude ??= 100;     // saúde: cai com mordidas, picadas, fome/sede/frio extremos; sobe dormindo
+state.regioes ||= {};          // regiões de 20 m já visitadas ("i,j" -> 1)
+state.ciclo ||= 0;             // nº de decisões tomadas
+state.ultimaFoto ??= -99; state.ultimoClipe ??= -99;     // pegou a GoPro?          // desgaste do chão: "i,j" → passagens
 // gerador aleatório com semente fixa: os objetos espalhados ficam sempre no mesmo lugar (o mapa mental continua válido)
 // mundo novo = semente nova; um save antigo (sem semente) era do mapa fixo, então o mapa mental e as trilhas são zerados
 const nextSeed = +lsGet('capivara_explora_seed_next');
@@ -61,6 +65,11 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 function smooth(a, b, x) { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
 
+// O mapa é dividido em regiões de 20 m (6 x 6) para a capivara saber onde ainda não foi
+const REG = 20, NREG = Math.ceil(HALF * 2 / REG);
+const regiaoDe = (x, z) => `${clamp(Math.floor((x + HALF) / REG), 0, NREG - 1)},${clamp(Math.floor((z + HALF) / REG), 0, NREG - 1)}`;
+const centroRegiao = key => { const [i, j] = key.split(',').map(Number); return { x: -HALF + (i + 0.5) * REG, z: -HALF + (j + 0.5) * REG }; };
+
 // atalhos de interface e regras simples usados em vários módulos
 const $ = id => document.getElementById(id);
 const icon = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
@@ -75,4 +84,4 @@ const confianca = c => (c.bom + 1) / (c.bom + c.ruim + 2);   // 0..1, começa em
 const ruim = (a, t) => { const c = state.crencas[a + ':' + t]; return c && confianca(c) < 0.4; };
 const bom = (a, t) => { const c = state.crencas[a + ':' + t]; return c && confianca(c) > 0.6; };
 
-export { $, ACOES, CALL_TIMEOUT, CFG_KEY, DAY_LEN, HALF, LIM, MIN_CALL_INTERVAL, PERCEPTION_RADIUS, PROVIDERS, SAVE_KEY, bom, cfg, clamp, confianca, esc, hasBrain, icon, isNight, lerp, lsGet, pendingNotes, periodName, pick, rand, ruim, safeJSON, save, smooth, srand, state };
+export { $, ACOES, CALL_TIMEOUT, CFG_KEY, DAY_LEN, HALF, LIM, MIN_CALL_INTERVAL, PERCEPTION_RADIUS, PROVIDERS, SAVE_KEY, bom, cfg, clamp, confianca, esc, hasBrain, icon, isNight, lerp, lsGet, pendingNotes, periodName, pick, rand, ruim, safeJSON, save, smooth, srand, state, REG, NREG, regiaoDe, centroRegiao };
