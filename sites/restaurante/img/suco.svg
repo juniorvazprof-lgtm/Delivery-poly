@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180">
+  <g stroke="#1F1B18" stroke-width="4" fill="none">
+    <!-- copo -->
+    <path d="M90,50 L150,50 L140,150 Q140,160 120,160 Q100,160 100,150 Z" fill="#FFF8E7"/>
+    <!-- suco -->
+    <path d="M92,70 L148,70 L138,148 Q138,155 120,155 Q102,155 102,148 Z" fill="#F2B705" stroke-width="3"/>
+    <!-- laranja -->
+    <circle cx="120" cy="110" r="15" fill="#B3261E" stroke-width="3"/>
+    <!-- folha -->
+    <path d="M105,95 Q120,85 130,90 Q120,95 105,95 Z" fill="#2E6B3A" stroke-width="2"/>
+    <!-- canudo -->
+    <line x1="110" y1="70" x2="130" y2="40" stroke="#B3261E" stroke-width="4"/>
+  </g>
+</svg>

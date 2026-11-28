@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180">
+  <g stroke="#1F1B18" stroke-width="4" fill="none">
+    <!-- lata -->
+    <rect x="80" y="60" width="80" height="100" rx="10" fill="#B3261E"/>
+    <!-- topo -->
+    <ellipse cx="120" cy="60" rx="40" ry="10" fill="#F2B705"/>
+    <!-- anel de abertura -->
+    <rect x="110" y="55" width="20" height="8" rx="2" fill="#1F1B18" stroke="none"/>
+    <!-- rótulo -->
+    <rect x="90" y="90" width="60" height="40" fill="#F2B705" stroke-width="2"/>
+    <text x="120" y="115" font-family="Arial" font-size="16" fill="#1F1B18" text-anchor="middle" stroke="none">COLA</text>
+  </g>
+</svg>

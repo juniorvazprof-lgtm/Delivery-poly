@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <!-- Fundo -->
+  <rect width="800" height="400" fill="#FFF8E7" />
+  
+  <!-- Ruas -->
+  <line x1="0" y1="300" x2="800" y2="300" stroke="#1F1B18" stroke-width="6" />
+  <line x1="200" y1="400" x2="200" y2="0" stroke="#1F1B18" stroke-width="4" />
+  <line x1="500" y1="400" x2="500" y2="0" stroke="#1F1B18" stroke-width="4" />
+  <line x1="100" y1="200" x2="700" y2="200" stroke="#1F1B18" stroke-width="4" />
+  <line x1="300" y1="100" x2="750" y2="100" stroke="#1F1B18" stroke-width="4" />
+  
+  <!-- Nomes das ruas -->
+  <text x="120" y="285" font-family="Arial, sans-serif" font-size="18" fill="#1F1B18">Rua dos Exemplos</text>
+  <text x="215" y="160" font-family="Arial, sans-serif" font-size="16" fill="#1F1B18">Av. Principal</text>
+  <text x="510" y="285" font-family="Arial, sans-serif" font-size="16" fill="#1F1B18">Rua das Flores</text>
+  <text x="310" y="85" font-family="Arial, sans-serif" font-size="16" fill="#1F1B18">Rua do Comércio</text>
+  <text x="610" y="230" font-family="Arial, sans-serif" font-size="16" fill="#1F1B18">Travessa Fictícia</text>
+  
+  <!-- Blocos de construção (opcional) -->
+  <rect x="230" y="240" width="60" height="30" fill="#E0D5C1" stroke="#1F1B18" stroke-width="2" rx="4" />
+  <rect x="530" y="240" width="60" height="30" fill="#E0D5C1" stroke="#1F1B18" stroke-width="2" rx="4" />
+  <rect x="230" y="320" width="60" height="30" fill="#E0D5C1" stroke="#1F1B18" stroke-width="2" rx="4" />
+  <rect x="530" y="320" width="60" height="30" fill="#E0D5C1" stroke="#1F1B18" stroke-width="2" rx="4" />
+  
+  <!-- Pino grande tomate na localização -->
+  <g transform="translate(400,220)">
+    <circle cx="0" cy="0" r="28" fill="#B3261E" stroke="#1F1B18" stroke-width="4" />
+    <path d="M0,28 L0,55" stroke="#1F1B18" stroke-width="6" stroke-linecap="round" />
+    <text x="0" y="6" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#FFF8E7" text-anchor="middle">Zé</text>
+  </g>
+</svg>

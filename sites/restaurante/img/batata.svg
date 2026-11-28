@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180">
+  <g stroke="#1F1B18" stroke-width="4" fill="none">
+    <!-- cone -->
+    <path d="M70,110 L120,150 L170,110 Q120,100 70,110 Z" fill="#F2B705"/>
+    <!-- batatas -->
+    <rect x="85" y="90" width="16" height="30" rx="3" fill="#F2B705" stroke-width="3" transform="rotate(-15 93 105)"/>
+    <rect x="105" y="80" width="18" height="35" rx="3" fill="#F2B705" stroke-width="3" transform="rotate(10 114 97)"/>
+    <rect x="125" y="75" width="20" height="38" rx="3" fill="#F2B705" stroke-width="3" transform="rotate(-5 135 94)"/>
+    <rect x="145" y="85" width="16" height="30" rx="3" fill="#F2B705" stroke-width="3" transform="rotate(20 153 100)"/>
+    <rect x="100" y="95" width="14" height="25" rx="3" fill="#F2B705" stroke-width="3" transform="rotate(-30 107 107)"/>
+    <rect x="130" y="90" width="15" height="28" rx="3" fill="#F2B705" stroke-width="3" transform="rotate(25 137 104)"/>
+  </g>
+</svg>

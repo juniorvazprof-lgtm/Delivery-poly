@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brasa do Zé — Lanches na Chapa</title>
+  <meta name="description" content="Brasa do Zé — Lanches na Chapa. Cardápio, horário de funcionamento e contato. Rua dos Exemplos, 000 — Bairro Fictício, Cidade Modelo/UF.">
+  <meta property="og:title" content="Brasa do Zé — Lanches na Chapa">
+  <meta property="og:description" content="Lanches na chapa, porções e bebidas. Peça pelo WhatsApp.">
+  <meta property="og:type" content="restaurant">
+  <meta property="og:image" content="og.svg">
+  <meta property="og:url" content="https://exemplo.com.br/">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/anton.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    "name": "Brasa do Zé — Lanches na Chapa",
+    "servesCuisine": "Lanches, Porções, Bebidas",
+    "priceRange": "R$4 - R$25",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Rua dos Exemplos, 000",
+      "addressLocality": "Cidade Modelo",
+      "addressRegion": "UF",
+      "addressCountry": "BR"
+    },
+    "telephone": "+5500900000000",
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Tuesday","Wednesday","Thursday","Friday"],
+        "opens": "18:00",
+        "closes": "23:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": "Saturday",
+        "opens": "11:00",
+        "closes": "23:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": "Sunday",
+        "opens": "11:00",
+        "closes": "22:00"
+      }
+    ],
+    "menu": [
+      {
+        "@type": "MenuSection",
+        "name": "Lanches",
+        "hasMenuItem": [
+          {"@type": "MenuItem", "name": "X-Burger da Brasa", "offers": {"@type": "Offer", "price": "18.90", "priceCurrency": "BRL"}},
+          {"@type": "MenuItem", "name": "X-Tudo do Zé", "offers": {"@type": "Offer", "price": "24.90", "priceCurrency": "BRL"}},
+          {"@type": "MenuItem", "name": "Misto na Chapa", "offers": {"@type": "Offer", "price": "12.90", "priceCurrency": "BRL"}}
+        ]
+      },
+      {
+        "@type": "MenuSection",
+        "name": "Porções",
+        "hasMenuItem": [
+          {"@type": "MenuItem", "name": "Batata Frita Crocante", "offers": {"@type": "Offer", "price": "15.90", "priceCurrency": "BRL"}},
+          {"@type": "MenuItem", "name": "Onion Rings da Casa", "offers": {"@type": "Offer", "price": "17.90", "priceCurrency": "BRL"}},
+          {"@type": "MenuItem", "name": "Frango a Passarinho", "offers": {"@type": "Offer", "price": "22.90", "priceCurrency": "BRL"}}
+        ]
+      },
+      {
+        "@type": "MenuSection",
+        "name": "Bebidas",
+        "hasMenuItem": [
+          {"@type": "MenuItem", "name": "Refrigerante Lata", "offers": {"@type": "Offer", "price": "6.00", "priceCurrency": "BRL"}},
+          {"@type": "MenuItem", "name": "Suco de Laranja Natural", "offers": {"@type": "Offer", "price": "8.90", "priceCurrency": "BRL"}},
+          {"@type": "MenuItem", "name": "Água Mineral", "offers": {"@type": "Offer", "price": "4.00", "priceCurrency": "BRL"}}
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main" class="skip-link">Pular para conteúdo principal</a>
+  <header>
+    <div class="header-container">
+      <span class="marca">Brasa do Zé <span>Lanches na Chapa</span></span>
+      <nav aria-label="Navegação principal">
+        <a href="#cardapio">Cardápio</a>
+        <a href="#horario">Horário</a>
+        <a href="#mapa">Mapa</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="hero" class="hero">
+      <div class="hero-content">
+        <div class="hero-sign">
+          <span class="parafuso parafuso-tl" aria-hidden="true"></span>
+          <span class="parafuso parafuso-tr" aria-hidden="true"></span>
+          <span class="parafuso parafuso-bl" aria-hidden="true"></span>
+          <span class="parafuso parafuso-br" aria-hidden="true"></span>
+          <h1>Brasa do Zé</h1>
+          <p class="subtitle">Lanches na Chapa</p>
+          <p class="endereco">Rua dos Exemplos, 000 — Bairro Fictício, Cidade Modelo/UF</p>
+          <a href="https://wa.me/5500900000000?text=Ol%C3%A1%2C%20gostaria%20de%20fazer%20um%20pedido." class="btn-cta">Pedir pelo WhatsApp</a>
+        </div>
+        <img src="img/hero.svg" alt="Hambúrguer da Brasa do Zé" width="320" height="240" class="hero-burger" loading="eager">
+      </div>
+    </section>
+
+    <section id="cardapio" aria-labelledby="cardapio-titulo">
+      <h2 id="cardapio-titulo">Cardápio</h2>
+      <div class="quadro-precos">
+        <div class="categoria">
+          <h3>Lanches</h3>
+          <ul class="lista-itens">
+            <li class="item-cardapio" data-nome="X-Burger da Brasa" data-preco="18.90">
+              <img src="img/burger.svg" alt="Ilustração do X-Burger da Brasa" width="64" height="48" loading="lazy">
+              <div class="info-item">
+                <div class="linha-nome-preco">
+                  <span class="nome">X-Burger da Brasa</span>
+                  <span class="linha-pontilhada" aria-hidden="true"></span>
+                  <span class="preco">R$ 18,90</span>
+                </div>
+                <p class="descricao">Pão, carne, queijo</p>
+              </div>
+              <button class="btn-adicionar" data-nome="X-Burger da Brasa" data-preco="18.90" aria-label="Adicionar X-Burger da Brasa">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </li>
+            <li class="item-cardapio" data-nome="X-Tudo do Zé" data-preco="24.90">
+              <img src="img/xtudo.svg" alt="Ilustração do X-Tudo do Zé" width="64" height="48" loading="lazy">
+              <div class="info-item">
+                <div class="linha-nome-preco">
+                  <span class="nome">X-Tudo do Zé</span>
+                  <span class="linha-pontilhada" aria-hidden="true"></span>
+                  <span class="preco">R$ 24,90</span>
+                </div>
+                <p class="descricao">Pão, carne, bacon, ovo, queijo, alface, tomate</p>
+              </div>
+              <button class="btn-adicionar" data-nome="X-Tudo do Zé" data-preco="24.90" aria-label="Adicionar X-Tudo do Zé">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </li>
+            <li class="item-cardapio" data-nome="Misto na Chapa" data-preco="12.90">
+              <img src="img/misto.svg" alt="Ilustração do Misto na Chapa" width="64" height="48" loading="lazy">
+              <div class="info-item">
+                <div class="linha-nome-preco">
+                  <span class="nome">Misto na Chapa</span>
+                  <span class="linha-pontilhada" aria-hidden="true"></span>
+                  <span class="preco">R$ 12,90</span>
+                </div>
+                <p class="descricao">Pão, presunto, queijo</p>
+              </div>
+              <button class="btn-adicionar" data-nome="Misto na Chapa" data-preco="12.90" aria-label="Adicionar Misto na Chapa">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="categoria">
+          <h3>Porções</h3>
+          <ul class="lista-itens">
+            <li class="item-cardapio" data-nome="Batata Frita Crocante" data-preco="15.90">
+              <img src="img/batata.svg" alt="Ilustração da Batata Frita Crocante" width="64" height="48" loading="lazy">
+              <div class="info-item">
+                <div class="linha-nome-preco">
+                  <span class="nome">Batata Frita Crocante</span>
+                  <span class="linha-pontilhada" aria-hidden="true"></span>
+                  <span class="preco">R$ 15,90</span>
+                </div>
+                <p class="descricao">Porção individual</p>
+              </div>
+              <button class="btn-adicionar" data-nome="Batata Frita Crocante" data-preco="15.90" aria-label="Adicionar Batata Frita Crocante">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </li>
+            <li class="item-cardapio" data-nome="Onion Rings da Casa" data-preco="17.90">
+              <img src="img/onionrings.svg" alt="Ilustração de Onion Rings da Casa" width="64" height="48" loading="lazy">
+              <div class="info-item">
+                <div class="linha-nome-preco">
+                  <span class="nome">Onion Rings da Casa</span>
+                  <span class="linha-pontilhada" aria-hidden="true"></span>
+                  <span class="preco">R$ 17,90</span>
+                </div>
+                <p class="descricao">Anéis de cebola empanados</p>
+              </div>
+              <button class="btn-adicionar" data-nome="Onion Rings da Casa" data-preco="17.90" aria-label="Adicionar Onion Rings da Casa">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </li>
+            <li class="item-cardapio" data-nome="Frango a Passarinho" data-preco="22.90">
+              <img src="img/frango.svg" alt="Ilustração de Frango a Passarinho" width="64" height="48" loading="lazy">
+              <div class="info-item">
+                <div class="linha-nome-preco">
+                  <span class="nome">Frango a Passarinho</span>
+                  <span class="linha-pontilhada" aria-hidden="true"></span>
+                  <span class="preco">R$ 22,90</span>
+                </div>
+                <p class="descricao">Temperado e frito</p>
+              </div>
+              <button class="btn-adicionar" data-nome="Frango a Passarinho" data-preco="22.90" aria-label="Adicionar Frango a Passarinho">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="categoria">
+          <h3>Bebidas</h3>
+          <ul class="lista-itens">
+            <li class="item-cardapio" data-nome="Refrigerante Lata" data-preco="6.00">
+              <img src="img/refrigerante.svg" alt="Ilustração de Refrigerante Lata" width="64" height="48" loading="lazy">
+              <div class="info-item">
+                <div class="linha-nome-preco">
+                  <span class="nome">Refrigerante Lata</span>
+                  <span class="linha-pontilhada" aria-hidden="true"></span>
+                  <span class="preco">R$ 6,00</span>
+                </div>
+                <p class="descricao">350ml</p>
+              </div>
+              <button class="btn-adicionar" data-nome="Refrigerante Lata" data-preco="6.00" aria-label="Adicionar Refrigerante Lata">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </li>
+            <li class="item-cardapio" data-nome="Suco de Laranja Natural" data-preco="8.90">
+              <img src="img/suco.svg" alt="Ilustração de Suco de Laranja Natural" width="64" height="48" loading="lazy">
+              <div class="info-item">
+                <div class="linha-nome-preco">
+                  <span class="nome">Suco de Laranja Natural</span>
+                  <span class="linha-pontilhada" aria-hidden="true"></span>
+                  <span class="preco">R$ 8,90</span>
+                </div>
+                <p class="descricao">300ml</p>
+              </div>
+              <button class="btn-adicionar" data-nome="Suco de Laranja Natural" data-preco="8.90" aria-label="Adicionar Suco de Laranja Natural">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </li>
+            <li class="item-cardapio" data-nome="Água Mineral" data-preco="4.00">
+              <img src="img/agua.svg" alt="Ilustração de Água Mineral" width="64" height="48" loading="lazy">
+              <div class="info-item">
+                <div class="linha-nome-preco">
+                  <span class="nome">Água Mineral</span>
+                  <span class="linha-pontilhada" aria-hidden="true"></span>
+                  <span class="preco">R$ 4,00</span>
+                </div>
+                <p class="descricao">500ml</p>
+              </div>
+              <button class="btn-adicionar" data-nome="Água Mineral" data-preco="4.00" aria-label="Adicionar Água Mineral">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="horario" aria-labelledby="horario-titulo">
+      <h2 id="horario-titulo">Horário de Funcionamento</h2>
+      <table class="horario-table">
+        <thead>
+          <tr>
+            <th scope="col">Dia</th>
+            <th scope="col">Abertura</th>
+            <th scope="col">Fechamento</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-dia="0"><td>Domingo</td><td>11:00</td><td>22:00</td></tr>
+          <tr data-dia="1"><td>Segunda-feira</td><td>Fechado</td><td>Fechado</td></tr>
+          <tr data-dia="2"><td>Terça-feira</td><td>18:00</td><td>23:00</td></tr>
+          <tr data-dia="3"><td>Quarta-feira</td><td>18:00</td><td>23:00</td></tr>
+          <tr data-dia="4"><td>Quinta-feira</td><td>18:00</td><td>23:00</td></tr>
+          <tr data-dia="5"><td>Sexta-feira</td><td>18:00</td><td>23:00</td></tr>
+          <tr data-dia="6"><td>Sábado</td><td>11:00</td><td>23:00</td></tr>
+        </tbody>
+      </table>
+      <p id="status-horario" class="status-horario" aria-live="polite"></p>
+    </section>
+
+    <section id="mapa" aria-labelledby="mapa-titulo">
+      <h2 id="mapa-titulo">Onde Estamos</h2>
+      <div class="mapa-svg-container">
+        <img src="img/mapa.svg" alt="Mapa estilizado fictício mostrando a localização da Brasa do Zé na Rua dos Exemplos" width="800" height="400" loading="lazy">
+      </div>
+      <div class="mapa-links">
+        <a href="https://www.google.com/maps/search/?api=1&query=Cidade+Modelo" target="_blank" rel="noopener">Ver no Google Maps</a>
+        <a href="#" aria-label="Avaliações no Google (demonstração)">Avaliações no Google</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p class="selo">Projeto conceitual — dados fictícios</p>
+    <p>CNPJ: 00.000.000/0000-00</p>
+    <p>Telefone/WhatsApp: (00) 90000-0000</p>
+  </footer>
+
+  <div id="carrinho" class="carrinho-fixo" aria-live="polite">
+    <div class="carrinho-info">
+      <span id="itens-carrinho">0 item(ns)</span>
+      <span id="total-carrinho">Total: R$ 0,00</span>
+    </div>
+    <button id="btn-pedir-whatsapp" class="btn-pedir">Pedir pelo WhatsApp</button>
+  </div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
+  <!-- Fundo transparente -->
+  <!-- Pão inferior -->
+  <ellipse cx="160" cy="190" rx="130" ry="45" fill="#F2B705" stroke="#1F1B18" stroke-width="4"/>
+  <!-- Hambúrguer (carne) -->
+  <rect x="40" y="150" width="240" height="30" rx="6" fill="#1F1B18"/>
+  <!-- Queijo -->
+  <path d="M55,150 L55,165 L220,165 L265,150 Z" fill="#F2B705" stroke="#1F1B18" stroke-width="3"/>
+  <!-- Alface -->
+  <path d="M50,120 Q80,100 110,120 Q140,100 170,120 Q200,100 230,120 Q260,140 270,120 L270,145 Q240,165 210,145 Q180,165 150,145 Q120,165 90,145 Q60,165 50,145 Z" fill="#2E6B3A" stroke="#1F1B18" stroke-width="3"/>
+  <!-- Tomate -->
+  <circle cx="100" cy="115" r="14" fill="#B3261E" stroke="#1F1B18" stroke-width="3"/>
+  <circle cx="220" cy="115" r="14" fill="#B3261E" stroke="#1F1B18" stroke-width="3"/>
+  <!-- Pão superior -->
+  <path d="M30,100 Q40,40 160,30 Q280,40 290,100 Q280,120 160,120 Q40,120 30,100 Z" fill="#F2B705" stroke="#1F1B18" stroke-width="4"/>
+  <!-- Sementes de gergelim -->
+  <ellipse cx="110" cy="60" rx="5" ry="2" fill="#FFF8E7" opacity="0.9"/>
+  <ellipse cx="160" cy="50" rx="5" ry="2" fill="#FFF8E7" opacity="0.9"/>
+  <ellipse cx="210" cy="60" rx="5" ry="2" fill="#FFF8E7" opacity="0.9"/>
+  <ellipse cx="135" cy="75" rx="5" ry="2" fill="#FFF8E7" opacity="0.9"/>
+  <ellipse cx="190" cy="75" rx="5" ry="2" fill="#FFF8E7" opacity="0.9"/>
+</svg>
