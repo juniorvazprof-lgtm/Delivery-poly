@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#EDEBE6"/>
+  <circle cx="600" cy="315" r="200" fill="none" stroke="#B42318" stroke-width="6" stroke-dasharray="12 8"/>
+  <text x="600" y="300" font-family="Georgia, 'Times New Roman', serif" font-size="60" font-weight="700" fill="#1A1A1A" text-anchor="middle">Estúdio Rascunho</text>
+  <text x="600" y="370" font-family="system-ui, sans-serif" font-size="30" fill="#1A1A1A" text-anchor="middle">sites para pequenos negócios</text>
+  <text x="600" y="420" font-family="system-ui, sans-serif" font-size="24" fill="#1D4ED8" text-anchor="middle">rascunho.invalid</text>
+</svg>
