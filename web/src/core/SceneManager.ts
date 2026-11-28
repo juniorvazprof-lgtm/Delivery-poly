@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 
+/** Celular/tablet: toque como entrada principal. Usado para aliviar sombras e resolução. */
+export const IS_MOBILE = matchMedia('(pointer: coarse)').matches;
+
 export interface GameScene {
   readonly scene: THREE.Scene;
   readonly camera: THREE.Camera;
@@ -17,7 +20,7 @@ export class SceneManager {
 
   constructor(container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, IS_MOBILE ? 1.5 : 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;

@@ -52,6 +52,7 @@ async function boot(): Promise<void> {
     document.body.appendChild(o);
   }
 
+  hud.onZoom = (d) => explore.setZoom(explore.zoomLevel + d * 1.5);
   sm.switchTo(explore);
   hud.refresh();
   if (import.meta.env.DEV) Object.assign(window, { __debug: { explore, state, battleCb: (id: string, amb: boolean) => (explore as unknown as { cb: { onEncounter: (e: unknown, a: boolean) => void } }).cb.onEncounter(VILLAGE.encounters.find((e) => e.id === id), amb) } });

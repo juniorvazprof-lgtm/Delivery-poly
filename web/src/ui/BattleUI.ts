@@ -84,7 +84,7 @@ export class BattleUI {
     const desc = el('div', 'menu-desc', 'Passe o mouse sobre uma ação.');
     return new Promise((res) => {
       options.forEach(({ skill, usable }, i) => {
-        const btn = el('button', 'skill-btn', `<span class="k">${i + 1}</span>${skill.name}<span class="cost">${skill.cost ? '◆'.repeat(skill.cost) : '+◆'}</span>`);
+        const btn = el('button', 'skill-btn', `<span class="k">${i + 1}</span><span class="sname">${skill.name}<small class="sdesc">${skill.description}</small></span><span class="cost">${skill.cost ? '◆'.repeat(skill.cost) : '+◆'}</span>`);
         btn.disabled = !usable;
         btn.onmouseenter = () => { desc.textContent = skill.description || skill.name; };
         btn.onclick = () => { this.menu.classList.add('hidden'); window.removeEventListener('keydown', keys); res(skill); };

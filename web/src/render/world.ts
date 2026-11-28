@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { IS_MOBILE } from '../core/SceneManager';
 import * as P from './props';
 import type { PropDef } from '../data/village';
 
@@ -12,7 +13,7 @@ export function setupNightAtmosphere(scene: THREE.Scene, fogNear = 14, fogFar = 
   const moon = new THREE.DirectionalLight(0x8a9ad0, 1.1);
   moon.position.set(-12, 22, 8);
   moon.castShadow = true;
-  moon.shadow.mapSize.set(2048, 2048);
+  moon.shadow.mapSize.setScalar(IS_MOBILE ? 1024 : 2048);
   const c = moon.shadow.camera;
   c.left = -30; c.right = 30; c.top = 30; c.bottom = -30; c.far = 80;
   moon.shadow.bias = -0.0008;

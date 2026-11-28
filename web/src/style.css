@@ -91,10 +91,82 @@ h1, .menu-title, .banner, .obj b, .hc-top b { font-family: Cinzel, serif; letter
 .end-screen button { all: unset; cursor: pointer; margin: 10px auto 0; padding: 8px 26px; border: 1px solid var(--gold); font-family: Cinzel, serif; color: var(--gold); }
 .end-screen button:hover { background: rgba(217,164,65,.12); }
 
-@media (max-width: 720px) {
-  .hero-card { width: 150px; padding: 4px 8px; font-size: 13px; }
-  .action-menu { width: calc(100% - 190px); min-width: 170px; }
-  .enemy-bars { top: 64px; min-width: 0; }
-  .help { display: none; }
-  .mini-party { flex-wrap: wrap; right: 16px; }
+#app canvas { touch-action: none; -webkit-tap-highlight-color: transparent; }
+button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.sname { display: flex; flex-direction: column; min-width: 0; }
+.sdesc { display: none; font-size: 12px; color: var(--muted); font-style: italic; line-height: 1.2; }
+.zoom { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: auto; }
+.zoom button { all: unset; cursor: pointer; width: 40px; height: 40px; display: grid; place-items: center; font-family: Cinzel, serif; font-size: 22px; color: var(--gold);
+  background: var(--panel); border: 1px solid var(--gold-dim); }
+.zoom button:active { background: #2a1e14; }
+.help-touch { display: none; }
+
+/* ---------- toque: descrições visíveis (não há hover), alvos maiores ---------- */
+@media (pointer: coarse) {
+  .sdesc { display: block; }
+  .menu-desc, .help { display: none; }
+  .help-touch { display: block; position: absolute; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; text-align: center;
+    color: var(--muted); font-size: 13px; font-style: italic; padding: 0 16px; text-shadow: 0 1px 2px #000; }
+  .skill-btn { min-height: 44px; }
+  .target-hint button { padding: 10px 14px; }
+}
+
+/* ---------- celular em pé ---------- */
+@media (max-width: 720px) and (orientation: portrait) {
+  .obj { font-size: 13px; padding: 7px 10px; }
+  .mini-party { left: max(8px, env(safe-area-inset-left, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 6px 8px; }
+  .mini-party span { font-size: 12px; }
+  .mini-party .hpbar { width: auto; }
+  .story { top: 22%; font-size: 16px; padding: 10px 14px; }
+
+  .timeline { top: calc(6px + env(safe-area-inset-top, 0px)); padding: 4px 6px; gap: 3px; max-width: calc(100% - 16px); }
+  .tl-label { display: none; }
+  .tl-chip { width: 28px; height: 28px; font-size: 11px; }
+  .tl-chip.now { width: 34px; height: 34px; }
+  .party-panel { top: calc(52px + env(safe-area-inset-top, 0px)); bottom: auto; left: 8px; right: 8px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .hero-card { width: auto; padding: 4px 8px; font-size: 13px; }
+  .hero-card.active { transform: none; }
+  .hc-hp, .hc-top small { display: none; }
+  .pips i { width: 8px; height: 8px; }
+  .enemy-bars { top: calc(190px + env(safe-area-inset-top, 0px)); right: 8px; left: 8px; min-width: 0; padding: 5px 10px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+  .enemy-row { font-size: 12px; margin: 0; }
+  .battle-log { display: none; }
+  .action-menu { left: 8px; right: 8px; width: auto; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); padding: 8px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .menu-title { grid-column: 1 / -1; font-size: 13px; margin: 0; }
+  .skill-btn { font-size: 14px; padding: 6px 8px; gap: 6px; }
+  .skill-btn .k { display: none; }
+  .target-hint { left: 8px; right: 8px; transform: none; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); flex-wrap: wrap; justify-content: center; font-size: 14px; }
+  .banner { font-size: 24px; top: 44%; padding: 0 16px; }
+  .end-screen h1 { font-size: 34px; }
+  .end-screen p { font-size: 16px; }
+  .float { font-size: 18px; }
+  .float.crit { font-size: 24px; }
+}
+
+/* ---------- celular deitado (pouca altura) ---------- */
+@media (max-height: 500px) and (orientation: landscape) {
+  .obj { font-size: 12px; padding: 5px 9px; }
+  .help, .help-touch { display: none; }
+  .mini-party { bottom: calc(6px + env(safe-area-inset-bottom, 0px)); padding: 5px 8px; gap: 10px; }
+  .timeline { top: 4px; padding: 3px 6px; }
+  .tl-chip { width: 26px; height: 26px; font-size: 10px; }
+  .tl-chip.now { width: 32px; height: 32px; }
+  .party-panel { bottom: 6px; left: max(6px, env(safe-area-inset-left, 0px)); gap: 3px; }
+  .hero-card { width: 170px; padding: 2px 8px; font-size: 12px; }
+  .hc-hp, .st, .hc-top small { display: none; }
+  .pips i { width: 7px; height: 7px; }
+  .enemy-bars { top: 44px; right: max(6px, env(safe-area-inset-right, 0px)); padding: 4px 8px; min-width: 170px; }
+  .enemy-row { font-size: 12px; margin: 1px 0; }
+  .battle-log { display: none; }
+  .action-menu { right: max(6px, env(safe-area-inset-right, 0px)); bottom: 6px; width: 300px; padding: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .menu-title { grid-column: 1 / -1; font-size: 12px; margin: 0; }
+  .skill-btn { font-size: 13px; padding: 4px 6px; min-height: 36px; }
+  .skill-btn .k, .sdesc { display: none; }
+  .target-hint { bottom: 6px; font-size: 13px; }
+  .end-screen h1 { font-size: 30px; }
+  .banner { font-size: 22px; top: 22%; }
 }

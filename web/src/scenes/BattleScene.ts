@@ -27,6 +27,7 @@ export class BattleScene implements GameScene {
   private camBase = new THREE.Vector3(-5.0, 4.6, 8.6);
   private camLook = new THREE.Vector3(-1.5, 1.0, 0.2);
   private shake = 0;
+  private camDist = 1;
   private hovered: string | null = null;
   private pick: ((uid: string | null) => void) | null = null;
   private pickable: Set<string> = new Set();
@@ -357,7 +358,7 @@ export class BattleScene implements GameScene {
     }
     // câmera: leve deriva cinematográfica + tremor
     const drift = new THREE.Vector3(Math.sin(this.time * 0.25) * 0.4, 0, Math.cos(this.time * 0.2) * 0.3);
-    this.camera.position.copy(this.camBase).add(drift);
+    this.camera.position.copy(this.camLook).add(this.camBase.clone().sub(this.camLook).multiplyScalar(this.camDist)).add(drift);
     if (this.shake > 0) {
       this.camera.position.add(new THREE.Vector3((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake, 0));
       this.shake = Math.max(0, this.shake - dt * 1.2);
@@ -366,8 +367,15 @@ export class BattleScene implements GameScene {
   }
 
   resize(w: number, h: number): void {
-    this.camera.aspect = w / h;
-    this.camera.fov = w / h < 1 ? 60 : 38; // retrato (celular): abre o campo de visão
+    // Mantém o campo de visão horizontal (~64°) em qualquer proporção; na tela em pé,
+    // limita o vertical e afasta a câmera para os dois grupos caberem lado a lado.
+    const a = w / h;
+    this.camera.aspect = a;
+    const hfov = THREE.MathUtils.degToRad(64);
+    const want = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hfov / 2) / a));
+    this.camera.fov = Math.min(want, 72);
+    const k = Math.tan(THREE.MathUtils.degToRad(want) / 2) / Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
+    this.camDist = Math.max(1, k);
     this.camera.updateProjectionMatrix();
   }
 }

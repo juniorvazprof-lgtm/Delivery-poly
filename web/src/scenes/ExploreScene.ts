@@ -74,7 +74,9 @@ export class ExploreScene implements GameScene {
     this.marker.position.y = 0.15;
     this.scene.add(this.marker);
 
-    this.dom.addEventListener('pointerdown', this.onPointer);
+    this.dom.addEventListener('pointerdown', this.onDown);
+    this.dom.addEventListener('pointermove', this.onMove);
+    for (const t of ['pointerup', 'pointercancel', 'pointerleave'] as const) this.dom.addEventListener(t, this.onUp);
     this.dom.addEventListener('wheel', this.onWheel, { passive: true });
   }
 
@@ -116,22 +118,52 @@ export class ExploreScene implements GameScene {
     this.packs.push({ def: e, root, alerted: false, home: root.position.clone(), phase: Math.random() * 6 });
   }
 
-  // ---------- entrada ----------
-  private onPointer = (ev: PointerEvent): void => {
-    if (this.paused || ev.button !== 0) return;
+  // ---------- entrada (mouse e toque) ----------
+  // 1 dedo/botão: toque para andar, segure e arraste para ir guiando; 2 dedos: pinça para zoom.
+  private pointers = new Map<number, { x: number; y: number }>();
+  private pinchDist = 0;
+
+  private onDown = (ev: PointerEvent): void => {
+    this.pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if (this.pointers.size === 2) { this.pinchDist = this.pinchSpan(); this.target = null; return; }
+    if (this.pointers.size === 1) this.onPointer(ev, true);
+  };
+  private onMove = (ev: PointerEvent): void => {
+    if (!this.pointers.has(ev.pointerId)) return;
+    this.pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if (this.pointers.size === 2) {
+      const d = this.pinchSpan();
+      if (this.pinchDist > 0) this.setZoom(this.zoom * (this.pinchDist / d));
+      this.pinchDist = d;
+    } else if (this.pointers.size === 1 && !this.targetPack) this.onPointer(ev, false);
+  };
+  private onUp = (ev: PointerEvent): void => { this.pointers.delete(ev.pointerId); if (this.pointers.size < 2) this.pinchDist = 0; };
+  private pinchSpan(): number {
+    const [a, b] = [...this.pointers.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y) || 1;
+  }
+
+  get zoomLevel(): number { return this.zoom; }
+  setZoom(z: number): void {
+    this.zoom = THREE.MathUtils.clamp(z, 5, 16);
+    this.resize(window.innerWidth, window.innerHeight);
+  }
+
+  private onPointer(ev: PointerEvent, fresh: boolean): void {
+    if (this.paused || ev.button > 0) return;
     const r = this.dom.getBoundingClientRect();
     const ndc = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     this.ray.setFromCamera(ndc, this.camera);
     // clicou num inimigo? persegue e ataca primeiro se ainda não foi visto
     const live = this.packs.filter((p) => p.root.visible);
-    const hitPack = this.ray.intersectObjects(live.map((p) => p.root), true)[0];
+    const hitPack = fresh ? this.ray.intersectObjects(live.map((p) => p.root), true)[0] : undefined;
     if (hitPack) {
       const pack = live.find((p) => isDescendant(hitPack.object, p.root))!;
       this.targetPack = pack;
       this.target = pack.root.position.clone();
       return;
     }
-    if (this.heroes[0].position.distanceTo(this.well) < 3 && this.ray.ray.distanceToPoint(this.well) < 1.6) {
+    if (fresh && this.heroes[0].position.distanceTo(this.well) < 3 && this.ray.ray.distanceToPoint(this.well) < 1.6) {
       this.cb.onRest();
       return;
     }
@@ -142,11 +174,10 @@ export class ExploreScene implements GameScene {
       this.marker.position.set(this.target.x, 0.15, this.target.z);
       (this.marker.material as THREE.MeshBasicMaterial).opacity = 1;
     }
-  };
+  }
 
   private onWheel = (ev: WheelEvent): void => {
-    this.zoom = THREE.MathUtils.clamp(this.zoom + Math.sign(ev.deltaY) * 0.8, 6, 14);
-    this.resize(window.innerWidth, window.innerHeight);
+    this.setZoom(this.zoom + Math.sign(ev.deltaY) * 0.8);
   };
 
   // ---------- ciclo ----------
@@ -262,7 +293,8 @@ export class ExploreScene implements GameScene {
   }
 
   resize(w: number, h: number): void {
-    const a = w / h, z = this.zoom;
+    // em pé (celular) a tela é estreita: garante ~6m de mundo para cada lado do herói
+    const a = w / h, z = Math.max(this.zoom, 6 / a);
     Object.assign(this.camera, { left: -z * a, right: z * a, top: z, bottom: -z });
     this.camera.updateProjectionMatrix();
   }
