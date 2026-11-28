@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <!-- Ilustração abstrata de linha contínua - Dra. Helena Exemplo -->
+  <path d="M 50 140 C 48 100, 55 70, 80 65 C 100 60, 110 75, 105 90 C 100 105, 80 110, 70 105 C 60 100, 65 85, 78 85 C 88 85, 85 95, 82 98 M 82 98 C 85 110, 95 120, 95 135" stroke="#0E4D5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="60" cy="58" r="4" fill="#E07A5F"/>
+</svg>

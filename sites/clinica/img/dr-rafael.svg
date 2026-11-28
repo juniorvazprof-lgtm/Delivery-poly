@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <!-- Ilustração abstrata de linha contínua - Dr. Rafael Fictício -->
+  <path d="M 50 140 C 50 110, 52 78, 80 73 C 105 68, 115 85, 108 100 C 102 112, 82 112, 74 104 C 68 98, 74 86, 84 88 C 92 90, 88 100, 86 105 M 86 105 C 88 115, 98 125, 98 140" stroke="#0E4D5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="110" cy="82" r="4" fill="#E07A5F"/>
+</svg>

@@ -4,3 +4,4 @@ Todas as ilustrações são SVG próprios, criados para este projeto. Nenhuma fo
 
 ## Fontes
 - Anton (Vernon Adams), SIL Open Font License 1.1 — via @fontsource/anton, auto-hospedada em sites/restaurante/fonts/.
+- Fraunces (Undercase Type), SIL Open Font License 1.1 — via @fontsource/fraunces, auto-hospedada em sites/clinica/fonts/.
