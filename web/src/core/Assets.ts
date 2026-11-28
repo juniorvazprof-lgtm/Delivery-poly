@@ -6,7 +6,9 @@ const cache = new Map<string, THREE.Object3D>();
 export async function loadModels(names: string[]): Promise<void> {
   const loader = new GLTFLoader();
   await Promise.all(names.map(async (n) => {
-    const g = await loader.loadAsync(`${import.meta.env.BASE_URL}models/${n}.glb`);
+    // Modelos embutidos (ex.: versão publicada como página única) têm prioridade sobre os arquivos.
+    const embedded = (globalThis as { __MODEL_URLS?: Record<string, string> }).__MODEL_URLS?.[n];
+    const g = await loader.loadAsync(embedded ?? `${import.meta.env.BASE_URL}models/${n}.glb`);
     g.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.isMesh) {
