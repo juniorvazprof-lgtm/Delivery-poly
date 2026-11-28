@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feira — Lista de compras compartilhada e divisão de gastos</title>
+  <meta name="description" content="Feira organiza a lista de compras da casa e divide os gastos entre quem mora junto. Crie sua conta grátis.">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="Feira — A lista da casa, finalmente de todo mundo">
+  <meta property="og:description" content="Organize a lista de compras e divida os gastos com quem mora com você.">
+  <meta property="og:image" content="og.svg">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Feira",
+    "operatingSystem": "Web, Android, iOS",
+    "applicationCategory": "LifestyleApplication",
+    "description": "Aplicativo fictício para organizar lista de compras compartilhada e divisão de gastos.",
+    "offers": {
+      "@type": "AggregateOffer",
+      "lowPrice": "0",
+      "highPrice": "19.90",
+      "priceCurrency": "BRL",
+      "offerCount": "3"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "1234"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Preciso pagar para usar o Feira?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "O plano Grátis inclui lista compartilhada e divisão automática. Planos pagos adicionam histórico de preços e lembretes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Como funciona a divisão de gastos?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Você marca quem comprou cada item e o Feira calcula quanto cada pessoa deve, considerando o que consumiu."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Posso usar com pessoas que não moram comigo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim, você pode criar listas com qualquer pessoa. A divisão de gastos funciona por lista."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "O Feira funciona offline?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim, você pode ver e riscar itens sem internet. As alterações sincronizam quando você conectar novamente."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Meus dados estão seguros?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Seus dados são criptografados e nunca vendemos informações. Somente você e sua casa acessam suas listas."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Posso cancelar a qualquer momento?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim, sem multa. O plano pago continua ativo até o fim do ciclo já pago."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+  <header class="cabecalho">
+    <div class="container cabecalho-inner">
+      <a href="#" class="logo" aria-label="Feira — página inicial">
+        <img src="img/favicon.svg" alt="" width="32" height="32">
+        <span>Feira</span>
+      </a>
+
+      <details class="menu-mobile">
+        <summary>Menu <span aria-hidden="true">▾</span></summary>
+        <nav class="nav-mobile" aria-label="Navegação principal móvel">
+          <ul>
+            <li><a href="#beneficios">Benefícios</a></li>
+            <li><a href="#como-funciona">Como funciona</a></li>
+            <li><a href="#planos">Planos</a></li>
+            <li><a href="#faq">Perguntas</a></li>
+          </ul>
+        </nav>
+      </details>
+
+      <nav class="nav-desktop" aria-label="Navegação principal">
+        <ul>
+          <li><a href="#beneficios">Benefícios</a></li>
+          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#planos">Planos</a></li>
+          <li><a href="#faq">Perguntas</a></li>
+        </ul>
+      </nav>
+
+      <a class="botao botao-pequeno" href="#cadastro">Criar conta grátis</a>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <section class="hero" aria-labelledby="hero-titulo">
+      <div class="container hero-inner">
+        <div class="hero-texto">
+          <h1 id="hero-titulo">A lista da casa,<br>finalmente de todo mundo.</h1>
+          <p class="subtitulo">Feira organiza as compras da casa e divide os gastos entre quem mora junto — sem planilha, sem confusão.</p>
+          <a class="botao botao-principal" href="#cadastro">Criar conta grátis</a>
+        </div>
+        <div class="hero-ticket">
+          <div class="ticket-wrapper">
+            <div class="ticket" aria-label="Exemplo de lista de compras no Feira">
+              <div class="ticket-cabecalho">
+                <span class="ticket-titulo">Lista da semana</span>
+                <span class="ticket-data">12 de maio</span>
+              </div>
+              <ul class="ticket-itens">
+                <li class="ticket-item riscar"><span>Arroz 5kg</span><span>R$ 22,90</span></li>
+                <li class="ticket-item riscar"><span>Feijão preto</span><span>R$ 8,50</span></li>
+                <li class="ticket-item"><span>Tomate</span><span>R$ 5,00</span></li>
+                <li class="ticket-item"><span>Café</span><span>R$ 18,90</span></li>
+              </ul>
+              <div class="ticket-total">
+                <span>Total</span>
+                <span>R$ 55,30</span>
+              </div>
+              <div class="ticket-carimbo" aria-hidden="true">Feira</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="beneficios" class="beneficios" aria-labelledby="beneficios-titulo">
+      <div class="container">
+        <h2 id="beneficios-titulo">Por que usar o Feira?</h2>
+        <ul class="recibo">
+          <li class="recibo-item">
+            <span class="recibo-nome">Lista compartilhada em tempo real</span>
+            <span class="recibo-valor">tempo real</span>
+          </li>
+          <li class="recibo-item">
+            <span class="recibo-nome">Divisão automática de gastos</span>
+            <span class="recibo-valor">automático</span>
+          </li>
+          <li class="recibo-item">
+            <span class="recibo-nome">Histórico de preços por mercado</span>
+            <span class="recibo-valor">a partir do Casa</span>
+          </li>
+          <li class="recibo-item">
+            <span class="recibo-nome">Lembrete do que está acabando</span>
+            <span class="recibo-valor">incluído</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="como-funciona" class="como-funciona" aria-labelledby="como-funciona-titulo">
+      <div class="container como-inner">
+        <div class="como-mockup">
+          <img src="img/tela.svg" alt="Interface do aplicativo Feira em um celular mostrando a lista de compras" width="300" height="600">
+        </div>
+        <div class="como-passos">
+          <h2 id="como-funciona-titulo">Como funciona</h2>
+          <ol class="passos">
+            <li class="passo">
+              <span class="passo-numero" aria-hidden="true">1</span>
+              <div class="passo-texto">
+                <h3>Crie sua conta</h3>
+                <p>Leva menos de um minuto — só nome e e-mail.</p>
+              </div>
+            </li>
+            <li class="passo">
+              <span class="passo-numero" aria-hidden="true">2</span>
+              <div class="passo-texto">
+                <h3>Convide a casa</h3>
+                <p>Compartilhe o link com quem mora junto. Todo mundo vê a lista.</p>
+              </div>
+            </li>
+            <li class="passo">
+              <span class="passo-numero" aria-hidden="true">3</span>
+              <div class="passo-texto">
+                <h3>Marque e divida</h3>
+                <p>Risque itens comprados e o Feira calcula a parte de cada um.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="planos" class="planos" aria-labelledby="planos-titulo">
+      <div class="container">
+        <h2 id="planos-titulo">Planos</h2>
+        <p class="intro-planos">Escolha o que faz sentido para sua casa. Sem taxa de adesão, cancele quando quiser.</p>
+
+        <!-- Blocos mobile (visíveis apenas < 768px) -->
+        <div class="planos-mobile" aria-label="Planos em blocos">
+          <article class="plano-mobile">
+            <h3 class="plano-nome-mobile">Grátis</h3>
+            <p class="plano-preco-mobile">R$ 0 <span>para sempre</span></p>
+            <ul class="recursos-mobile">
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Lista compartilhada</span><span class="sr-only">Incluído</span></li>
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Divisão automática de gastos</span><span class="sr-only">Incluído</span></li>
+              <li class="nao"><span aria-hidden="true">—</span> <span>Histórico de preços</span><span class="sr-only">Não incluído</span></li>
+              <li class="nao"><span aria-hidden="true">—</span> <span>Lembrete de itens acabando</span><span class="sr-only">Não incluído</span></li>
+              <li class="nao"><span aria-hidden="true">—</span> <span>Convites ilimitados</span><span class="sr-only">Não incluído</span></li>
+            </ul>
+          </article>
+
+          <article class="plano-mobile plano-destaque-mobile">
+            <h3 class="plano-nome-mobile">Casa</h3>
+            <p class="plano-preco-mobile">R$ 9,90 <span>por mês</span></p>
+            <ul class="recursos-mobile">
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Lista compartilhada</span><span class="sr-only">Incluído</span></li>
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Divisão automática de gastos</span><span class="sr-only">Incluído</span></li>
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Histórico de preços</span><span class="sr-only">Incluído</span></li>
+              <li class="nao"><span aria-hidden="true">—</span> <span>Lembrete de itens acabando</span><span class="sr-only">Não incluído</span></li>
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Convites ilimitados</span><span class="sr-only">Incluído</span></li>
+            </ul>
+          </article>
+
+          <article class="plano-mobile">
+            <h3 class="plano-nome-mobile">República</h3>
+            <p class="plano-preco-mobile">R$ 19,90 <span>por mês</span></p>
+            <ul class="recursos-mobile">
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Lista compartilhada</span><span class="sr-only">Incluído</span></li>
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Divisão automática de gastos</span><span class="sr-only">Incluído</span></li>
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Histórico de preços</span><span class="sr-only">Incluído</span></li>
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Lembrete de itens acabando</span><span class="sr-only">Incluído</span></li>
+              <li><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Convites ilimitados</span><span class="sr-only">Incluído</span></li>
+            </ul>
+          </article>
+        </div>
+
+        <!-- Tabela semântica (visível apenas ≥ 768px) -->
+        <div class="tabela-wrapper">
+          <table class="tabela-planos">
+            <thead>
+              <tr>
+                <th scope="col">Recurso</th>
+                <th scope="col">
+                  <span class="plano-nome">Grátis</span>
+                  <span class="plano-preco">R$ 0</span>
+                  <span class="plano-periodo">para sempre</span>
+                </th>
+                <th scope="col" class="plano-destaque">
+                  <span class="plano-nome">Casa</span>
+                  <span class="plano-preco">R$ 9,90</span>
+                  <span class="plano-periodo">por mês</span>
+                </th>
+                <th scope="col">
+                  <span class="plano-nome">República</span>
+                  <span class="plano-preco">R$ 19,90</span>
+                  <span class="plano-periodo">por mês</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Lista compartilhada</th>
+                <td><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+                <td class="plano-destaque"><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+                <td><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Divisão automática de gastos</th>
+                <td><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+                <td class="plano-destaque"><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+                <td><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Histórico de preços</th>
+                <td><span class="nao-incluido" aria-hidden="true">—</span><span class="sr-only">Não incluído</span></td>
+                <td class="plano-destaque"><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+                <td><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Lembrete de itens acabando</th>
+                <td><span class="nao-incluido" aria-hidden="true">—</span><span class="sr-only">Não incluído</span></td>
+                <td class="plano-destaque"><span class="nao-incluido" aria-hidden="true">—</span><span class="sr-only">Não incluído</span></td>
+                <td><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Convites ilimitados</th>
+                <td><span class="nao-incluido" aria-hidden="true">—</span><span class="sr-only">Não incluído</span></td>
+                <td class="plano-destaque"><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+                <td><svg class="icone-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Incluído</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="nota-planos">Valores fictícios para demonstração.</p>
+      </div>
+    </section>
+
+    <section id="faq" class="faq" aria-labelledby="faq-titulo">
+      <div class="container">
+        <h2 id="faq-titulo">Perguntas frequentes</h2>
+        <div class="faq-lista">
+          <details>
+            <summary>Preciso pagar para usar o Feira?</summary>
+            <p>O plano Grátis inclui lista compartilhada e divisão automática. Planos pagos adicionam histórico de preços e lembretes.</p>
+          </details>
+          <details>
+            <summary>Como funciona a divisão de gastos?</summary>
+            <p>Você marca quem comprou cada item e o Feira calcula quanto cada pessoa deve, considerando o que consumiu.</p>
+          </details>
+          <details>
+            <summary>Posso usar com pessoas que não moram comigo?</summary>
+            <p>Sim, você pode criar listas com qualquer pessoa. A divisão de gastos funciona por lista.</p>
+          </details>
+          <details>
+            <summary>O Feira funciona offline?</summary>
+            <p>Sim, você pode ver e riscar itens sem internet. As alterações sincronizam quando você conectar novamente.</p>
+          </details>
+          <details>
+            <summary>Meus dados estão seguros?</summary>
+            <p>Seus dados são criptografados e nunca vendemos informações. Somente você e sua casa acessam suas listas.</p>
+          </details>
+          <details>
+            <summary>Posso cancelar a qualquer momento?</summary>
+            <p>Sim, sem multa. O plano pago continua ativo até o fim do ciclo já pago.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="cadastro" class="cadastro" aria-labelledby="cadastro-titulo">
+      <div class="container">
+        <h2 id="cadastro-titulo">Crie sua conta grátis</h2>
+        <p class="subtitulo-cadastro">Comece a organizar a lista da casa em minutos.</p>
+        <form id="form-cadastro" class="form-cadastro" novalidate>
+          <div class="campo">
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Seu nome">
+          </div>
+          <div class="campo">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" required autocomplete="email" placeholder="voce@exemplo.com">
+          </div>
+          <div class="campo">
+            <label for="tamanho-casa">Tamanho da casa</label>
+            <select id="tamanho-casa" name="tamanho-casa" required>
+              <option value="">Selecione...</option>
+              <option value="1">Moro sozinho(a)</option>
+              <option value="2">2 pessoas</option>
+              <option value="3-4">3 a 4 pessoas</option>
+              <option value="5+">5 ou mais pessoas</option>
+            </select>
+          </div>
+          <div class="campo checkbox">
+            <input type="checkbox" id="termos" name="termos" required>
+            <label for="termos">Li e aceito os <a href="#">termos de uso</a> e a <a href="#">política de privacidade</a> fictícios.</label>
+          </div>
+          <button type="submit" class="botao botao-principal">Criar conta grátis</button>
+          <p id="mensagem-cadastro" class="mensagem-cadastro" aria-live="polite" role="status"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div class="container">
+      <p class="selo">Projeto conceitual — dados fictícios</p>
+      <p class="info-empresa">Feira Tecnologia Ltda. CNPJ 00.000.000/0000-03 · oi@feira.invalid</p>
+      <p class="nota-app">App inexistente; nenhuma loja de aplicativos.</p>
+    </div>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

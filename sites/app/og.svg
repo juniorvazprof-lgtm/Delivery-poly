@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#FFFDF6"/>
+  <rect x="60" y="60" width="1080" height="510" fill="#1E5B3A" rx="16"/>
+  <text x="120" y="180" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#FFFDF6">Feira</text>
+  <text x="120" y="260" font-family="Arial, sans-serif" font-size="40" fill="#D7F25C">A lista da casa, finalmente de todo mundo.</text>
+  <text x="120" y="340" font-family="Arial, sans-serif" font-size="28" fill="#FFFDF6">Organize as compras e divida os gastos com quem mora junto.</text>
+  <rect x="120" y="400" width="240" height="64" rx="8" fill="#D7F25C"/>
+  <text x="165" y="442" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#12201A">Criar conta grátis</text>
+</svg>

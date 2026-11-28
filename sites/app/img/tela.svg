@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="600" viewBox="0 0 300 600">
+  <!-- Corpo do celular -->
+  <rect x="10" y="10" width="280" height="580" rx="30" fill="#12201A"/>
+  <!-- Tela -->
+  <rect x="20" y="30" width="260" height="540" rx="20" fill="#FFFDF6"/>
+  <!-- Cabeçalho do app -->
+  <rect x="20" y="30" width="260" height="80" rx="20" fill="#1E5B3A"/>
+  <circle cx="45" cy="70" r="10" fill="#D7F25C"/>
+  <text x="65" y="78" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#FFFDF6">Feira</text>
+  <!-- Lista de itens -->
+  <text x="40" y="140" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#12201A">Lista da semana</text>
+  <line x1="40" y1="150" x2="260" y2="150" stroke="#E8E4DA" stroke-width="2" stroke-dasharray="4 4"/>
+  <!-- Item 1 riscado -->
+  <text x="40" y="180" font-family="Arial, sans-serif" font-size="16" fill="#12201A">Arroz 5kg</text>
+  <line x1="40" y1="176" x2="100" y2="176" stroke="#C8361E" stroke-width="3"/>
+  <text x="220" y="180" font-family="Arial, sans-serif" font-size="16" fill="#12201A" text-anchor="end">R$ 22,90</text>
+  <!-- Item 2 riscado -->
+  <text x="40" y="220" font-family="Arial, sans-serif" font-size="16" fill="#12201A">Feijão preto</text>
+  <line x1="40" y1="216" x2="115" y2="216" stroke="#C8361E" stroke-width="3"/>
+  <text x="220" y="220" font-family="Arial, sans-serif" font-size="16" fill="#12201A" text-anchor="end">R$ 8,50</text>
+  <!-- Item 3 -->
+  <text x="40" y="260" font-family="Arial, sans-serif" font-size="16" fill="#12201A">Tomate</text>
+  <text x="220" y="260" font-family="Arial, sans-serif" font-size="16" fill="#12201A" text-anchor="end">R$ 5,00</text>
+  <!-- Item 4 -->
+  <text x="40" y="300" font-family="Arial, sans-serif" font-size="16" fill="#12201A">Café</text>
+  <text x="220" y="300" font-family="Arial, sans-serif" font-size="16" fill="#12201A" text-anchor="end">R$ 18,90</text>
+  <!-- Total -->
+  <line x1="40" y1="340" x2="260" y2="340" stroke="#E8E4DA" stroke-width="2"/>
+  <text x="40" y="370" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#1E5B3A">Total</text>
+  <text x="220" y="370" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#1E5B3A" text-anchor="end">R$ 55,30</text>
+  <!-- Botão fictício -->
+  <rect x="40" y="400" width="220" height="50" rx="8" fill="#1E5B3A"/>
+  <text x="150" y="432" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#FFFDF6" text-anchor="middle">Convidar casa</text>
+  <!-- Carimbo -->
+  <rect x="180" y="500" width="80" height="40" rx="4" fill="none" stroke="#C8361E" stroke-width="3" transform="rotate(-15 220 520)"/>
+  <text x="220" y="528" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#C8361E" text-anchor="middle" transform="rotate(-15 220 520)">Feira</text>
+</svg>
