@@ -1,0 +1,16 @@
+Crie um site estático (HTML + CSS + JS mínimo, sem frameworks, sem CDN) para um escritório de advocacia FICTÍCIO.
+Arquivos: index.html, style.css, app.js, sitemap.xml, robots.txt, og.svg, img/favicon.svg, e um monograma SVG próprio img/monograma.svg.
+
+Marca: "Exemplo & Modelo Advogados Associados" (inventada). Sócios fictícios: Dra. Beatriz Exemplo (OAB/UF 000.000) e Dr. Otávio Modelo (OAB/UF 000.001). Av. dos Protótipos, 000, sala 00 — Centro Fictício, Cidade Modelo/UF. Telefone (00) 0000-0000, e-mail contato@exemplo.invalid. CNPJ 00.000.000/0000-02. Registro da sociedade OAB/UF nº 0000 (falso).
+
+REGRAS DA OAB (Código de Ética e Provimento 205/2021) — OBRIGATÓRIO: tom informativo e discreto; NENHUMA promessa de resultado ("garantimos", "ganhe sua causa", "sucesso garantido" são proibidos); NENHUM preço/honorário; NENHUM depoimento; nada de "o melhor", estatísticas de vitórias, chamadas mercantilistas ("ligue já", "oferta", "grátis") nem botão flutuante de WhatsApp. CTA neutro: "Entrar em contato".
+
+Conceito visual: "papel timbrado e coluna de pedra" — sóbrio, institucional, muito espaço em branco, uma grade rígida de 12 colunas, filete vertical à esquerda das seções como margem de documento jurídico, monograma "E&M" em SVG.
+Paleta: tinta #1C2431 (texto e fundo do rodapé), papel #FBFAF7 (fundo), pedra #D9D4CA (filetes, blocos), verde-garrafa #2F4A3E (links, botão com texto branco), latão #8A6D3B (só filetes/monograma, nunca texto pequeno). Contraste ≥4,5:1.
+Fontes: títulos "Cormorant Garamond" peso 600 (arquivo local fonts/cormorant.woff2 já existe, declare @font-face com font-display swap); corpo system-ui 1.0625rem, line-height 1.65.
+Evitar: gradientes, cards com sombra, emojis, eyebrows caixa-alta, setas →, numeração 01/02 (as áreas não são sequência), estética creme+terracota, balança da justiça/martelo clichê.
+
+Seções: 1) herói textual (sem imagem): nome do escritório, frase institucional discreta sobre atuação, endereço curto, link "Entrar em contato"; 2) Áreas de atuação (6: Cível, Família e Sucessões, Trabalhista empresarial, Contratos, Imobiliário, Direito do Consumidor) — cada uma com parágrafo descritivo informativo, em lista de definição <dl> estilo índice; 3) Sobre: história fictícia breve, os 2 sócios com OAB falsa e formação fictícia, SEM fotos (use iniciais tipográficas); 4) Contato: endereço, telefone, e-mail, horário, link Google Maps https://www.google.com/maps/search/?api=1&query=Cidade+Modelo e formulário (nome, e-mail, assunto select das áreas, mensagem textarea) com <label>s e aviso de que o envio não implica relação advogado-cliente; ao enviar NÃO envia: mostra mensagem de demonstração em aria-live; 5) rodapé tinta com selo "Projeto conceitual — dados fictícios", CNPJ, registro OAB falsos e nota "Conteúdo informativo, conforme o Provimento 205/2021 do CFOAB".
+
+Requisitos: mobile-first, sem rolagem horizontal em 360px, alvos ≥44px, foco visível 3px, skip-link, teclado, prefers-reduced-motion, H1 único, lang pt-BR, meta description, Open Graph (og.svg), JSON-LD "LegalService" com address, telephone, areaServed, knowsAbout. <img> com width/height e alt. Lighthouse mobile ≥90.
+Entregue TODOS os arquivos listados, completos. Responda apenas com blocos ===FILE: caminho=== conteúdo ===END===, sem cercas de código.

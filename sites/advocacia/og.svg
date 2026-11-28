@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#1C2431"/>
+  <text x="600" y="240" text-anchor="middle" font-family="Georgia, serif" font-size="72" font-weight="600" fill="#FBFAF7">Exemplo &amp; Modelo</text>
+  <text x="600" y="330" text-anchor="middle" font-family="Georgia, serif" font-size="48" fill="#D9D4CA">Advogados Associados</text>
+  <line x1="400" y1="380" x2="800" y2="380" stroke="#8A6D3B" stroke-width="4"/>
+</svg>

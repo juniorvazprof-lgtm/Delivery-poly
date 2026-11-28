@@ -1,0 +1,401 @@
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("fonts/cormorant.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --tinta: #1C2431;
+  --papel: #FBFAF7;
+  --pedra: #D9D4CA;
+  --verde: #2F4A3E;
+  --latao: #8A6D3B;
+  --branco: #FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--tinta);
+  background-color: var(--papel);
+  min-height: 100vh;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+h1, h2, h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 600;
+  color: var(--tinta);
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0;
+}
+
+h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+a {
+  color: var(--verde);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--verde);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 0;
+  background: var(--tinta);
+  color: var(--papel);
+  padding: 0.75rem 1.5rem;
+  z-index: 1000;
+  text-decoration: none;
+  font-weight: 600;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.site-header {
+  background-color: var(--papel);
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--pedra);
+}
+
+.header-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+  color: var(--tinta);
+}
+
+.brand img {
+  width: 48px;
+  height: 48px;
+}
+
+nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  list-style: none;
+}
+
+nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.25rem 0.5rem;
+  color: var(--tinta);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+nav a:hover {
+  border-bottom-color: var(--verde);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--verde);
+  color: var(--branco);
+  text-decoration: none;
+  border: 2px solid var(--verde);
+  border-radius: 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: var(--tinta);
+  border-color: var(--tinta);
+}
+
+.hero {
+  padding: 4rem 0;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.hero-frase {
+  font-size: 1.25rem;
+  max-width: 60ch;
+  margin-bottom: 1.5rem;
+}
+
+.hero-endereco {
+  font-style: normal;
+  color: var(--tinta);
+  margin-bottom: 2rem;
+  max-width: 60ch;
+}
+
+section {
+  padding: 4rem 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.filet {
+  width: 4px;
+  height: 3rem;
+  background-color: var(--latao);
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.areas-lista {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem 3rem;
+}
+
+.area-item {
+  border-bottom: 1px solid var(--pedra);
+  padding-bottom: 2rem;
+}
+
+.area-item dt {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--tinta);
+  margin-bottom: 0.5rem;
+}
+
+.area-item dd {
+  margin-left: 0;
+  max-width: 65ch;
+}
+
+.sobre-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.socios {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.socio .iniciais {
+  width: 72px;
+  height: 72px;
+  border: 2px solid var(--latao);
+  border-radius: 50%;
+  background-color: var(--pedra);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--tinta);
+  margin-bottom: 1rem;
+}
+
+.socio .oab {
+  font-size: 0.9375rem;
+  color: var(--verde);
+  margin-bottom: 0.5rem;
+}
+
+.contato-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.contato-info address {
+  font-style: normal;
+  margin-bottom: 1.5rem;
+}
+
+.contato-info p {
+  margin-bottom: 0.75rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem;
+  border: 1px solid var(--pedra);
+  background-color: var(--branco);
+  color: var(--tinta);
+  font: inherit;
+  border-radius: 0;
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.aviso-legal {
+  font-size: 0.9375rem;
+  color: var(--tinta);
+  margin-bottom: 1.5rem;
+  max-width: 60ch;
+}
+
+.form-status {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.site-footer {
+  background-color: var(--tinta);
+  color: var(--papel);
+  padding: 3rem 0;
+  font-size: 0.9375rem;
+}
+
+.site-footer p {
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 48em) {
+  .hero-grid,
+  .contato-grid {
+    grid-template-columns: repeat(12, 1fr);
+  }
+
+  .hero-content {
+    grid-column: 2 / 12;
+  }
+
+  .areas-lista {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sobre-grid {
+    grid-template-columns: repeat(12, 1fr);
+    gap: 2rem;
+  }
+
+  .sobre-texto {
+    grid-column: 1 / 7;
+  }
+
+  .socios {
+    grid-column: 8 / 13;
+    grid-template-columns: 1fr;
+  }
+
+  .contato-info {
+    grid-column: 1 / 5;
+  }
+
+  .contato-form {
+    grid-column: 6 / 12;
+  }
+}
+
+@media (min-width: 75em) {
+  .socios {
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skip-link {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
