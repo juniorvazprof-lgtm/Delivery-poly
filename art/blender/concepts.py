@@ -172,7 +172,8 @@ def build(name, out):
     bpy.ops.render.render(write_still=True)
 
 
-argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-out = argv[0] if argv else "/tmp"
-for n in (argv[1:] or STYLES):
-    build(n, out)
+if __name__ == "__main__":
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    out = argv[0] if argv else "/tmp"
+    for n in (argv[1:] or STYLES):
+        build(n, out)
